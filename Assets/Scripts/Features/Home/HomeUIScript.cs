@@ -1,9 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
-using Assets.Scripts.UI.Base;
+using LayerLab.ArtMakerUnity;
+using Assets.Scripts.UI.Dialog;
 
-namespace LayerLab.ArtMakerUnity
+namespace Assets.Scripts.Features.Home
 {
     public class HomeUIScript : MonoBehaviour
     {

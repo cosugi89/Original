@@ -1,63 +1,64 @@
-﻿using Assets.Scripts.UI.Base;
-using LayerLab.ArtMakerUnity;
+﻿using LayerLab.ArtMakerUnity;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class AvatarDialog : DialogBase<bool>
+namespace Assets.Scripts.UI.Dialog
 {
-    [Header("UI")]
-    [SerializeField] private Button closeButton;
-
-    [Header("Scripts")]
-    [SerializeField] private AnimationControl animationControl;
-    [SerializeField] private PanelPartsControl panelPartsControl;
-    [SerializeField] private PanelPartsListControl panelPartsListControl;
-    [SerializeField] private ColorPicker colorPicker;
-    [SerializeField] private ColorPresetManager colorPresetManager;
-    [SerializeField] private ColorFavoriteManager colorFavoriteManager;
-
-    private Player currentPlayer;
-
-    public override void Setup(Player player)
+    public class AvatarDialog : DialogBase<bool>
     {
-        base.Setup();
-        currentPlayer = player;
-        currentPlayer.Init();
-        //cameraControl.Init(player.transform); // 別場所に移動
+        [Header("UI")]
+        [SerializeField] private Button closeButton;
 
-        colorPicker.Init(player.PartsManager);
-        colorPresetManager.Init(player.PartsManager);
-        colorFavoriteManager.Init();
-        panelPartsListControl.Init(player.PartsManager);
-        panelPartsControl.Init(player.PartsManager,
-        panelPartsListControl);
-        animationControl.Init(player.PartsManager);
-        closeButton.onClick.AddListener(OnClickClose);
-    }
+        [Header("Scripts")]
+        [SerializeField] private AnimationControl animationControl;
+        [SerializeField] private PanelPartsControl panelPartsControl;
+        [SerializeField] private PanelPartsListControl panelPartsListControl;
+        [SerializeField] private ColorPicker colorPicker;
+        [SerializeField] private ColorPresetManager colorPresetManager;
+        [SerializeField] private ColorFavoriteManager colorFavoriteManager;
 
-    protected override void OnClickClose()
-    {
-        Close(false);
-    }
+        private Player currentPlayer;
 
-    /// <summary>
-    /// 参照なし
-    /// </summary>
-    public void RandomizeCharacter()
-    {
-        currentPlayer.PartsManager.RandomizeAll();
-
-        if (colorPresetManager != null)
+        public override void Setup(Player player)
         {
-            colorPresetManager.SetRandomColor(ColorTargetType.Skin);
-            colorPresetManager.SetRandomColor(ColorTargetType.Hair);
-            colorPresetManager.SetRandomColor(ColorTargetType.Beard);
+            base.Setup();
+            currentPlayer = player;
+            currentPlayer.Init();
+            //cameraControl.Init(player.transform); // 別場所に移動
+
+            colorPicker.Init(player.PartsManager);
+            colorPresetManager.Init(player.PartsManager);
+            colorFavoriteManager.Init();
+            panelPartsListControl.Init(player.PartsManager);
+            panelPartsControl.Init(player.PartsManager, panelPartsListControl);
+            animationControl.Init(player.PartsManager);
+            closeButton.onClick.AddListener(OnClickClose);
         }
 
-        // 現在選択されているカテゴリのパーツリストリフレッシュ
-        if (panelPartsControl != null)
+        protected override void OnClickClose()
         {
-            panelPartsControl.RefreshCurrentSlot();
+            Close(false);
+        }
+
+        /// <summary>
+        /// 参照なし
+        /// </summary>
+        public void RandomizeCharacter()
+        {
+            currentPlayer.PartsManager.RandomizeAll();
+
+            if (colorPresetManager != null)
+            {
+                colorPresetManager.SetRandomColor(ColorTargetType.Skin);
+                colorPresetManager.SetRandomColor(ColorTargetType.Hair);
+                colorPresetManager.SetRandomColor(ColorTargetType.Beard);
+            }
+
+            // 現在選択されているカテゴリのパーツリストリフレッシュ
+            if (panelPartsControl != null)
+            {
+                panelPartsControl.RefreshCurrentSlot();
+            }
         }
     }
 }

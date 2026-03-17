@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.Scripts.UI
+namespace Assets.Scripts.UI.Dialog
 {
     public class DialogBackgroundManager : MonoBehaviour
     {

@@ -2,8 +2,8 @@
 using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
-namespace Assets.Scripts.UI.Base
-{
+namespace Assets.Scripts.UI.Dialog
+{ 
     public abstract class DialogBase<TResult> : MonoBehaviour, IDialogBackgroundHandler
     {
         [Header("Background")]

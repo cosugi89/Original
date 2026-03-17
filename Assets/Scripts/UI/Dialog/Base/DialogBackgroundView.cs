@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace Assets.Scripts.UI
+namespace Assets.Scripts.UI.Dialog
 {
     public sealed class DialogBackgroundView : MonoBehaviour, IPointerClickHandler
     {

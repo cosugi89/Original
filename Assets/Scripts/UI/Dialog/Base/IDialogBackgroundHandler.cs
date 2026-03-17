@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Assets.Scripts.UI
+namespace Assets.Scripts.UI.Dialog
 {
     public interface IDialogBackgroundHandler
     {
