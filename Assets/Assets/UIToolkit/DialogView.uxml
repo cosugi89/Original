@@ -1,0 +1,7 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Style.uss?fileID=7433441132597879392&amp;guid=ee610019b1dbb0a4ba06903d31319dec&amp;type=3#Style"/>
+    <ui:VisualElement class="dialog">
+        <ui:Label text="ダイアログ" class="common-text" style="-unity-font-definition: url(&quot;project://database/Assets/Assets/Fonts/MRT-%E3%81%BE%E3%82%8B%E3%81%93%E3%81%84%E3%81%82%E3%81%99%CE%B1.ttf?fileID=12800000&amp;guid=18945d4350d87c9469e287bb6a98f10a&amp;type=3#MRT-まるこいあすα&quot;);"/>
+        <ui:Button text="とじる" name="closeButton" class="common-button start-button"/>
+    </ui:VisualElement>
+</ui:UXML>
