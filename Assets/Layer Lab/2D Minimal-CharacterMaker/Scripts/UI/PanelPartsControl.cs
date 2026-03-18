@@ -195,7 +195,7 @@ namespace LayerLab.ArtMakerUnity
             var subTypes = UICategoryConfig.GetSubTypes(slot.UICategory);
             if (subTypes.Length == 1) return subTypes[0];
 
-            // 그룹: 첫 번째 visible 서브타입
+            // グループ: 最初に表示されているサブタイプを返す
             foreach (var type in subTypes)
             {
                 if (_partsManager.IsPartsVisible(type))
@@ -235,14 +235,14 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// 그룹 카테고리 전체 아이템을 순회합니다.
-        /// 현재 타입의 마지막 아이템에서 다음 타입의 첫 아이템으로 넘어갑니다.
+        /// グループカテゴリ内の全アイテムを巡回します。
+        /// 現在のタイプの最後のアイテムから次のタイプの最初のアイテムに移動します。
         /// </summary>
         private void NavigateGroup(UICategory category, int direction)
         {
             var subTypes = UICategoryConfig.GetSubTypes(category);
 
-            // 전체 아이템을 (type, index) 리스트로 구성
+            // 全アイテムを (type, index) のリストにまとめる
             var allItems = new System.Collections.Generic.List<(PartsType type, int index)>();
             foreach (var type in subTypes)
             {
@@ -252,7 +252,7 @@ namespace LayerLab.ArtMakerUnity
             }
             if (allItems.Count == 0) return;
 
-            // 현재 위치 찾기 (이 그룹 내에서 visible인 타입 기준)
+            // 現在位置を見つける（このグループ内で表示されているタイプを基準）
             PartsType? activeType = null;
             foreach (var type in subTypes)
             {
@@ -271,11 +271,11 @@ namespace LayerLab.ArtMakerUnity
                 { currentPos = i; break; }
             }
 
-            // 이동
+            // 移動
             int newPos = (currentPos + direction + allItems.Count) % allItems.Count;
             var (newType, newIndex) = allItems[newPos];
 
-            // 타입이 바뀌면 visibility 전환
+            // タイプが変わったらグループ内の表示タイプを切り替える
             if (activeType.HasValue && newType != activeType.Value)
             {
                 _partsManager.ToggleParts(activeType.Value, false);

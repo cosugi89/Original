@@ -6,8 +6,10 @@ using UnityEngine;
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// Manages character parts (sprites) including equipping, toggling visibility,
+    /// Manages character parts (sprites) including equipping,
     /// color application, and preset serialization.
+    /// Visibility toggle from UI has been removed; internal visibility state
+    /// is still used for synchronization between related parts.
     /// </summary>
     public class PartsManager : MonoBehaviour
     {
@@ -325,12 +327,12 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Toggles the visibility of the given parts type.
-        /// Only works if the category supports toggling.
+        /// Sets the active visible subtype for a grouped UI category.
+        /// Hides other subtypes in the same group and shows the chosen one.
         /// </summary>
-        /// <param name="type">The parts type to toggle.</param>
-        /// <param name="visible">Whether the part should be visible.</param>
         public void ToggleParts(PartsType type, bool visible)
+        /// <param name="category">The UI category representing a group.</param>
+        /// <param name="visibleType">The subtype to make visible.</param>
         {
             var cat = GetCategory(type);
             if (cat == null || !cat.canToggle) return;
@@ -612,7 +614,7 @@ namespace LayerLab.ArtMakerUnity
                         continue;
                     }
 
-                    // 이전 UnequipParts로 Visibility가 false일 수 있으므로 복원
+                    // previous UnequipParts might have set Visibility false, so restore
                     if (Visibility.TryGetValue(cat.type, out var v) && !v)
                         ToggleParts(cat.type, true);
                 }
@@ -692,13 +694,16 @@ namespace LayerLab.ArtMakerUnity
 
             foreach (var entry in item.visibility)
             {
-                // Arrow, HelmetHair는 자동 동기화되므로 프리셋에서 직접 설정하지 않음
+                // Arrow, HelmetHair are auto-synced and not set directly from preset
                 if (entry.type == PartsType.Arrow || entry.type == PartsType.HelmetHair)
                     continue;
-                ToggleParts(entry.type, entry.visible);
+                var cat = GetCategory(entry.type);
+                if (cat == null) continue;
+                Visibility[entry.type] = entry.visible;
+                SetRenderersActive(cat, entry.visible);
             }
 
-            // 프리셋 적용 후 자동 동기화 재실행
+            // Re-run sync after applying preset
             SyncArrowVisibility();
             SyncHelmetHairVisibility();
         }

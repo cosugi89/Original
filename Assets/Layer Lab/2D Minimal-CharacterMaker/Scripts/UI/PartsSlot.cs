@@ -6,8 +6,8 @@ namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
     /// Represents a single parts category slot in the parts panel.
-    /// Displays a thumbnail, handles visibility toggling, and responds to pointer events
-    /// for selection and focus highlighting.
+    /// Displays a thumbnail and responds to pointer events for selection and focus highlighting.
+    /// Visibility toggle feature removed.
     /// </summary>
     public class PartsSlot : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
@@ -54,13 +54,12 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Initializes the slot with the given <see cref="PartsManager"/> and sprite sets.
-        /// Subscribes to parts, visibility, and color change events, then refreshes the display.
+        /// Initializes the slot with the given <see cref="PartsManager"/> and background sprites.
+        /// Subscribes to parts and color change events, then refreshes the display.
         /// </summary>
         /// <param name="pm">The PartsManager controlling character customization.</param>
-        /// <param name="bgSprites">Background sprites for empty, hidden, and visible states.</param>
-        /// <param name="visibleSprites">Eye icon sprites for hidden and visible states.</param>
         public void Init(PartsManager pm, Sprite[] bgSprites, Sprite[] visibleSprites)
+        /// <param name="bgSprites">Background sprites for empty and equipped states.</param>
         {
             _partsManager = pm;
             _bgSprites = bgSprites;
@@ -169,7 +168,7 @@ namespace LayerLab.ArtMakerUnity
             // Group category (e.g., HandRight/HandLeft with multiple sub-types)
             if (UICategoryConfig.IsGroup(uiCategory))
             {
-                // 그룹: equipped + visible인 첫 번째 서브타입 찾기
+                // Find the first sub-type that is equipped and visible
                 bool foundEquipped = false;
                 bool foundVisible = false;
                 foreach (var type in subTypes)
@@ -194,8 +193,8 @@ namespace LayerLab.ArtMakerUnity
 
                 if (foundEquipped && !foundVisible)
                 {
-                    // 장착은 되어있지만 숨김 상태 → 마지막으로 보였던 아이템 썸네일 표시
                     PartsType target = _lastVisibleType ?? subTypes[0];
+                    // Equipped but hidden -> display the last-visible item's thumbnail (fallback to first)
                     if (_partsManager.IsEquipped(target))
                     {
                         int idx = _partsManager.GetActiveIndex(target);

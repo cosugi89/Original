@@ -177,7 +177,6 @@ namespace LayerLab.ArtMakerUnity
 
             if (UICategoryConfig.IsGroup(_activeCategory))
             {
-                // 그룹: 선택한 타입만 visible, 나머지 숨김
                 foreach (var type in _currentSubTypes)
                 {
                     if (type == slotType)
@@ -185,6 +184,7 @@ namespace LayerLab.ArtMakerUnity
                     else if (_partsManager.CanToggle(type))
                         _partsManager.ToggleParts(type, false);
                 }
+                // グループ: 選択したタイプのみ表示し、他のタイプは非表示にする
                 _activeType = slotType;
             }
             else
@@ -227,11 +227,11 @@ namespace LayerLab.ArtMakerUnity
             if (UICategoryConfig.IsGroup(_activeCategory))
             {
                 // Find the slot matching the equipped sub-type in the group
-                // Visible이 꺼져 있어도 장착된 아이템의 선택 프레임은 유지
+                // 表示がオフでも装備されているアイテムの選択フレームは維持
                 foreach (var type in _currentSubTypes)
                 {
                     if (!_partsManager.IsEquipped(type)) continue;
-                    // visible인 타입 우선, 없으면 _activeType 사용
+                    // 表示されているタイプを優先し、なければ _activeType を使用
                     if (!_partsManager.IsPartsVisible(type) && type != _activeType)
                         continue;
 
