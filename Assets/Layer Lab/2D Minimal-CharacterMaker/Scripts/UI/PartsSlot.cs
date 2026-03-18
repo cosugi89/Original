@@ -11,10 +11,7 @@ namespace LayerLab.ArtMakerUnity
     /// </summary>
     public class PartsSlot : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
-        private const float HIDDEN_ALPHA = 0.3f;
-
         [SerializeField] private UICategory uiCategory;
-        [SerializeField] private Button buttonVisible;
         [SerializeField] private Image imageIcon;
         [SerializeField] private Image imageBg;
         [SerializeField] private Image imageItem;
@@ -25,32 +22,15 @@ namespace LayerLab.ArtMakerUnity
         /// </summary>
         public UICategory UICategory => uiCategory;
 
-        private Image _imageVisible;
         private PartsManager _partsManager;
         private Sprite[] _bgSprites;
-        private Sprite[] _visibleSprites;
-        private bool _isHidden;
         private bool _hasItem;
-        private PartsType? _lastVisibleType;
 
         private void OnValidate()
         {
             imageBg ??= GetComponent<Image>();
-            buttonVisible ??= transform.Find("Button_Eye")?.GetComponent<Button>();
             imageIcon ??= transform.Find("Icon")?.GetComponent<Image>();
             imageItem ??= transform.Find("Item")?.GetComponent<Image>();
-        }
-
-        private void OnEnable()
-        {
-            if (buttonVisible != null)
-                buttonVisible.onClick.AddListener(OnClickVisible);
-        }
-
-        private void OnDisable()
-        {
-            if (buttonVisible != null)
-                buttonVisible.onClick.RemoveListener(OnClickVisible);
         }
 
         /// <summary>
@@ -58,18 +38,15 @@ namespace LayerLab.ArtMakerUnity
         /// Subscribes to parts and color change events, then refreshes the display.
         /// </summary>
         /// <param name="pm">The PartsManager controlling character customization.</param>
-        public void Init(PartsManager pm, Sprite[] bgSprites, Sprite[] visibleSprites)
         /// <param name="bgSprites">Background sprites for empty and equipped states.</param>
+        public void Init(PartsManager pm, Sprite[] bgSprites)
         {
             _partsManager = pm;
             _bgSprites = bgSprites;
-            _visibleSprites = visibleSprites;
-            _imageVisible = buttonVisible.GetComponent<Image>();
 
             if (_partsManager == null) return;
 
             _partsManager.OnPartsChanged += OnPartsChanged;
-            _partsManager.OnVisibilityChanged += OnVisibilityChanged;
             _partsManager.OnColorChanged += OnColorChanged;
 
             RefreshDisplay();
@@ -79,52 +56,10 @@ namespace LayerLab.ArtMakerUnity
         {
             if (_partsManager == null) return;
             _partsManager.OnPartsChanged -= OnPartsChanged;
-            _partsManager.OnVisibilityChanged -= OnVisibilityChanged;
             _partsManager.OnColorChanged -= OnColorChanged;
         }
 
-        private void OnClickVisible()
-        {
-            if (_partsManager == null) return;
-
-            var subTypes = UICategoryConfig.GetSubTypes(uiCategory);
-
-            if (subTypes.Length == 1)
-            {
-                if (!_partsManager.CanToggle(subTypes[0])) return;
-                _partsManager.ToggleParts(subTypes[0], _isHidden);
-            }
-            else if (UICategoryConfig.IsGroup(uiCategory))
-            {
-                if (_isHidden)
-                {
-                    // 숨김 → 보이기: 이전에 숨겼던 타입을 복원
-                    if (_lastVisibleType.HasValue && _partsManager.CanToggle(_lastVisibleType.Value))
-                        _partsManager.ToggleParts(_lastVisibleType.Value, true);
-                }
-                else
-                {
-                    // 보이기 → 숨김: 현재 visible인 파츠를 기억하고 숨기기
-                    _lastVisibleType = null;
-                    foreach (var type in subTypes)
-                    {
-                        if (_partsManager.IsPartsVisible(type) && _partsManager.CanToggle(type))
-                        {
-                            _lastVisibleType = type;
-                            _partsManager.ToggleParts(type, false);
-                        }
-                    }
-                }
-            }
-        }
-
         private void OnPartsChanged(PartsType type, int index)
-        {
-            if (IsRelevantType(type))
-                RefreshDisplay();
-        }
-
-        private void OnVisibilityChanged(PartsType type, bool visible)
         {
             if (IsRelevantType(type))
                 RefreshDisplay();
@@ -193,8 +128,8 @@ namespace LayerLab.ArtMakerUnity
 
                 if (foundEquipped && !foundVisible)
                 {
-                    PartsType target = _lastVisibleType ?? subTypes[0];
                     // Equipped but hidden -> display the last-visible item's thumbnail (fallback to first)
+                    PartsType target = subTypes.Length > 0 ? subTypes[0] : default;
                     if (_partsManager.IsEquipped(target))
                     {
                         int idx = _partsManager.GetActiveIndex(target);
@@ -206,15 +141,6 @@ namespace LayerLab.ArtMakerUnity
                         }
                         hasItem = true;
                     }
-                    _isHidden = true;
-                }
-                else if (!foundEquipped)
-                {
-                    _isHidden = false; // empty
-                }
-                else
-                {
-                    _isHidden = false; // visible
                 }
 
                 ApplyItemColor(Color.white);
@@ -225,16 +151,8 @@ namespace LayerLab.ArtMakerUnity
                 var partsType = subTypes[0];
                 bool equipped = _partsManager.IsEquipped(partsType);
 
-                if (!equipped)
+                if (equipped)
                 {
-                    // State 1: Empty
-                    _isHidden = false;
-                }
-                else
-                {
-                    // State 2 or 3
-                    _isHidden = !_partsManager.IsPartsVisible(partsType);
-
                     int idx = _partsManager.GetActiveIndex(partsType);
                     Sprite thumb = _partsManager.GetThumbnail(partsType, idx);
                     if (imageItem != null)
@@ -261,9 +179,7 @@ namespace LayerLab.ArtMakerUnity
             if (imageIcon != null) imageIcon.gameObject.SetActive(!hasItem);
             if (imageItem != null) imageItem.gameObject.SetActive(hasItem);
 
-            UpdateItemAlpha();
             UpdateBg();
-            UpdateVisibleIcon();
         }
 
         private void ApplyItemColor(Color color)
@@ -279,46 +195,8 @@ namespace LayerLab.ArtMakerUnity
 
             if (!_hasItem)
                 imageBg.sprite = _bgSprites[0];  // Empty
-            else if (_isHidden)
-                imageBg.sprite = _bgSprites[1];  // 장착 + 숨김
             else
-                imageBg.sprite = _bgSprites[2];  // 장착 + 보임
-        }
-
-        private void UpdateVisibleIcon()
-        {
-            if (buttonVisible == null) return;
-
-            bool equipped = false;
-            var subTypes = UICategoryConfig.GetSubTypes(uiCategory);
-            if (UICategoryConfig.IsGroup(uiCategory))
-            {
-                foreach (var type in subTypes)
-                {
-                    if (_partsManager != null && _partsManager.IsEquipped(type))
-                    { equipped = true; break; }
-                }
-            }
-            else if (subTypes.Length == 1)
-            {
-                equipped = _partsManager != null && _partsManager.IsEquipped(subTypes[0]);
-            }
-
-            // Skin, Eye → 항상 숨김 / Empty → 버튼 숨김 / 장착 상태 → 버튼 보임
-            if (UICategoryConfig.IsSkin(uiCategory) || uiCategory == UICategory.Eye)
-                equipped = false;
-            buttonVisible.gameObject.SetActive(equipped);
-
-            if (equipped && _imageVisible != null && _visibleSprites != null && _visibleSprites.Length >= 2)
-                _imageVisible.sprite = _isHidden ? _visibleSprites[0] : _visibleSprites[1];
-        }
-
-        private void UpdateItemAlpha()
-        {
-            if (imageItem == null) return;
-            var c = imageItem.color;
-            c.a = _isHidden ? HIDDEN_ALPHA : 1f;
-            imageItem.color = c;
+                imageBg.sprite = _bgSprites[2];  // Equipped
         }
 
         /// <summary>

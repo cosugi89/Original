@@ -177,20 +177,18 @@ namespace LayerLab.ArtMakerUnity
 
             if (UICategoryConfig.IsGroup(_activeCategory))
             {
-                foreach (var type in _currentSubTypes)
-                {
-                    if (type == slotType)
-                        _partsManager.ToggleParts(type, true);
-                    else if (_partsManager.CanToggle(type))
-                        _partsManager.ToggleParts(type, false);
-                }
                 // グループ: 選択したタイプのみ表示し、他のタイプは非表示にする
+                _partsManager.SetGroupActiveType(_activeCategory, slotType);
                 _activeType = slotType;
             }
             else
             {
                 if (!_partsManager.IsPartsVisible(_activeType) && _partsManager.CanToggle(_activeType))
-                    _partsManager.ToggleParts(_activeType, true);
+                {
+                    // Visibility toggle removed from manager API; re-apply current index to restore visibility
+                    int idx = _partsManager.GetActiveIndex(_activeType);
+                    _partsManager.EquipParts(_activeType, idx);
+                }
             }
 
             _partsManager.EquipParts(slotType, slot.SlotIndex);

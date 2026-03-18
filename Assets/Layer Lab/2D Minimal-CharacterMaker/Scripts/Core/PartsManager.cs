@@ -32,6 +32,7 @@ namespace LayerLab.ArtMakerUnity
 
         /// <summary>
         /// Visibility state for each parts type. True if the part is visible.
+        /// Kept for internal synchronization but UI toggle removed.
         /// </summary>
         public Dictionary<PartsType, bool> Visibility { get; private set; } = new();
 
@@ -44,11 +45,6 @@ namespace LayerLab.ArtMakerUnity
         /// Invoked when a parts type is equipped or changed. Parameters: parts type, new index.
         /// </summary>
         public event Action<PartsType, int> OnPartsChanged;
-
-        /// <summary>
-        /// Invoked when a parts type visibility is toggled. Parameters: parts type, visible state.
-        /// </summary>
-        public event Action<PartsType, bool> OnVisibilityChanged;
 
         /// <summary>
         /// Invoked when a color target color changes. Parameters: color target type, new color.
@@ -275,7 +271,6 @@ namespace LayerLab.ArtMakerUnity
             {
                 Visibility[type] = true;
                 SetRenderersActive(cat, true);
-                OnVisibilityChanged?.Invoke(type, true);
             }
 
             OnPartsChanged?.Invoke(type, index);
@@ -315,7 +310,6 @@ namespace LayerLab.ArtMakerUnity
             SetRenderersActive(cat, false);
 
             OnPartsChanged?.Invoke(type, -1);
-            OnVisibilityChanged?.Invoke(type, false);
 
             // Sync Arrow when Bow or Crossbow is unequipped
             if (type == PartsType.Bow || type == PartsType.Crossbow)
@@ -330,25 +324,24 @@ namespace LayerLab.ArtMakerUnity
         /// Sets the active visible subtype for a grouped UI category.
         /// Hides other subtypes in the same group and shows the chosen one.
         /// </summary>
-        public void ToggleParts(PartsType type, bool visible)
         /// <param name="category">The UI category representing a group.</param>
         /// <param name="visibleType">The subtype to make visible.</param>
+        public void SetGroupActiveType(UICategory category, PartsType visibleType)
         {
-            var cat = GetCategory(type);
-            if (cat == null || !cat.canToggle) return;
+            var subTypes = UICategoryConfig.GetSubTypes(category);
+            foreach (var type in subTypes)
+            {
+                var cat = GetCategory(type);
+                if (cat == null) continue;
 
-            Visibility[type] = visible;
-            SetRenderersActive(cat, visible);
+                bool show = type == visibleType;
+                Visibility[type] = show;
+                SetRenderersActive(cat, show);
+            }
 
-            OnVisibilityChanged?.Invoke(type, visible);
-
-            // Sync Arrow when Bow or Crossbow visibility changes
-            if (IsHandRightWeapon(type))
-                SyncArrowVisibility();
-
-            // Sync HelmetHair when Helmet or Hair visibility changes
-            if (type == PartsType.Helmet || type == PartsType.Hair)
-                SyncHelmetHairVisibility();
+            // Sync dependent visibilities
+            SyncArrowVisibility();
+            SyncHelmetHairVisibility();
         }
 
         /// <summary>
@@ -461,7 +454,6 @@ namespace LayerLab.ArtMakerUnity
 
             bool showAny = bowVisible || crossbowVisible;
             Visibility[PartsType.Arrow] = showAny;
-            OnVisibilityChanged?.Invoke(PartsType.Arrow, showAny);
         }
 
         /// <summary>
@@ -502,8 +494,6 @@ namespace LayerLab.ArtMakerUnity
                 SetRenderersActive(helmetHairCat, false);
                 Visibility[PartsType.HelmetHair] = false;
             }
-
-            OnVisibilityChanged?.Invoke(PartsType.HelmetHair, Visibility[PartsType.HelmetHair]);
         }
 
         /// <summary>
@@ -616,21 +606,26 @@ namespace LayerLab.ArtMakerUnity
 
                     // previous UnequipParts might have set Visibility false, so restore
                     if (Visibility.TryGetValue(cat.type, out var v) && !v)
-                        ToggleParts(cat.type, true);
+                    {
+                        Visibility[cat.type] = true;
+                        SetRenderersActive(cat, true);
+                    }
                 }
 
                 // 그룹 서브타입: 선택된 것만 visible, 나머지 숨김
                 if (IsHandRightWeapon(cat.type))
                 {
                     bool picked = groupPicks.TryGetValue(UICategory.HandRight, out var hr) && hr == cat.type;
-                    ToggleParts(cat.type, picked);
+                    Visibility[cat.type] = picked;
+                    SetRenderersActive(cat, picked);
                     if (picked) EquipParts(cat.type, UnityEngine.Random.Range(0, count));
                     continue;
                 }
                 if (cat.type == PartsType.Shield || cat.type == PartsType.SubItem)
                 {
                     bool picked = groupPicks.TryGetValue(UICategory.HandLeft, out var hl) && hl == cat.type;
-                    ToggleParts(cat.type, picked);
+                    Visibility[cat.type] = picked;
+                    SetRenderersActive(cat, picked);
                     if (picked) EquipParts(cat.type, UnityEngine.Random.Range(0, count));
                     continue;
                 }
@@ -667,7 +662,12 @@ namespace LayerLab.ArtMakerUnity
                 EquipParts(kvp.Key, kvp.Value);
 
             foreach (var kvp in other.Visibility)
-                ToggleParts(kvp.Key, kvp.Value);
+            {
+                var cat = GetCategory(kvp.Key);
+                if (cat == null) continue;
+                Visibility[kvp.Key] = kvp.Value;
+                SetRenderersActive(cat, kvp.Value);
+            }
 
             foreach (var kvp in other.Colors)
                 SetColor(kvp.Key, kvp.Value);

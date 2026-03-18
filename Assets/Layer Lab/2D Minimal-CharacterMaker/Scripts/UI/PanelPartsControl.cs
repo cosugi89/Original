@@ -12,15 +12,12 @@ namespace LayerLab.ArtMakerUnity
     {
         public static PanelPartsControl Instance;
 
-        private const string ASSET_STORE_URL = "https://assetstore.unity.com/publishers/81675";
-
         [SerializeField] private GameObject focusFrame;
         [SerializeField] private GameObject selectFrame;
         [SerializeField] private GameObject groupArrow;
         [SerializeField] private Button buttonPrevious;
         [SerializeField] private Button buttonNext;
         [SerializeField] private Button buttonSavePrefab;
-        [SerializeField] private Button buttonAssetStore;
         [SerializeField] private Sprite[] spriteBgs;
         [SerializeField] private Sprite[] spriteVisibles;
 
@@ -71,7 +68,6 @@ namespace LayerLab.ArtMakerUnity
             buttonPrevious.onClick.AddListener(OnClickPrevious);
             buttonNext.onClick.AddListener(OnClickNext);
             buttonSavePrefab.onClick.AddListener(OnClickSavePrefab);
-            buttonAssetStore.onClick.AddListener(OnClickAssetStore);
 
             if (buttonPresetPrev != null)
                 buttonPresetPrev.onClick.AddListener(OnClickPresetPrev);
@@ -84,7 +80,6 @@ namespace LayerLab.ArtMakerUnity
             buttonPrevious.onClick.RemoveListener(OnClickPrevious);
             buttonNext.onClick.RemoveListener(OnClickNext);
             buttonSavePrefab.onClick.RemoveListener(OnClickSavePrefab);
-            buttonAssetStore.onClick.RemoveListener(OnClickAssetStore);
 
             if (buttonPresetPrev != null)
                 buttonPresetPrev.onClick.RemoveListener(OnClickPresetPrev);
@@ -105,7 +100,7 @@ namespace LayerLab.ArtMakerUnity
 
             _partsSlots = GetComponentsInChildren<PartsSlot>();
             foreach (var slot in _partsSlots)
-                slot.Init(pm, spriteBgs, spriteVisibles);
+                slot.Init(pm, spriteBgs);
 
             if (groupArrow != null)
                 groupArrow.SetActive(false);
@@ -278,8 +273,7 @@ namespace LayerLab.ArtMakerUnity
             // タイプが変わったらグループ内の表示タイプを切り替える
             if (activeType.HasValue && newType != activeType.Value)
             {
-                _partsManager.ToggleParts(activeType.Value, false);
-                _partsManager.ToggleParts(newType, true);
+                _partsManager.SetGroupActiveType(category, newType);
             }
 
             _partsManager.EquipParts(newType, newIndex);
@@ -299,11 +293,6 @@ namespace LayerLab.ArtMakerUnity
 #if UNITY_EDITOR
             CharacterPrefabSaver.Save(_partsManager, thumbnailCameraSize, thumbnailCameraOffset);
 #endif
-        }
-
-        private void OnClickAssetStore()
-        {
-            Application.OpenURL(ASSET_STORE_URL);
         }
 
         #region Equipment Preset
