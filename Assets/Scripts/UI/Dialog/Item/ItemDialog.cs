@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.UI.Base;
+﻿using Assets.Scripts.UI.Dialog;
 using LayerLab.ArtMakerUnity;
 using UnityEngine;
 using UnityEngine.UI;
