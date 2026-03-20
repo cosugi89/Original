@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace LayerLab.ArtMakerUnity
 {
+    #region parts
     /// <summary>
     /// Assets parts の分類
     /// </summary>
@@ -55,47 +56,6 @@ namespace LayerLab.ArtMakerUnity
     }
 
     /// <summary>
-    /// デモシーンで使用するゲームモードの定義
-    /// </summary>
-    public enum GameMode
-    {
-        /// <summary>キャラクターカスタマイズモード</summary>
-        Home,
-        /// <summary>移動操作などを行う体験モード</summary>
-        Experience
-    }
-
-    /// <summary>
-    /// キャラクターアセットの見た目テーマの種類
-    /// </summary>
-    public enum ThemeType
-    {
-        Fantasy,
-        Military,
-        SciFi
-    }
-
-    public enum AnimationType
-    {
-        Idle = 0,
-        Walk = 1,
-        Attack = 2,
-        Skill = 3,
-        Run = 4,
-        Roll = 5,
-        Jump = 6,
-        JumpAttack = 7,
-        Dance = 8,
-        Victory = 9,
-        Defeat = 10,
-        Stun = 11,
-        Dead1 = 12,
-        Dead2 = 13,
-        Dead3 = 14,
-        DoubleAttack = 15,
-    }
-
-    /// <summary>
     /// UICategoryに対応するPartsTypeのグループ定義および参照機能を提供するクラス
     /// </summary>
     public static class UICategoryConfig
@@ -135,4 +95,50 @@ namespace LayerLab.ArtMakerUnity
         public static bool IsGroup(UICategory category) =>
             SubTypes.TryGetValue(category, out var types) && types.Length > 1;
     }
+    #endregion parts
+
+    #region animation
+    public enum AnimationType
+    {
+        Idle = 0,
+        Walk = 1,
+        Attack = 2,
+        Skill = 3,
+        Run = 4,
+        Roll = 5,
+        Jump = 6,
+        JumpAttack = 7,
+        Dance = 8,
+        Victory = 9,
+        Defeat = 10,
+        Stun = 11,
+        Dead1 = 12,
+        Dead2 = 13,
+        Dead3 = 14,
+        DoubleAttack = 15,
+    }
+    #endregion animation
+
+    #region other
+    /// <summary>
+    /// デモシーンで使用するゲームモードの定義
+    /// </summary>
+    public enum GameMode
+    {
+        /// <summary>キャラクターカスタマイズモード</summary>
+        Home,
+        /// <summary>移動操作などを行う体験モード</summary>
+        Experience
+    }
+
+    /// <summary>
+    /// キャラクターアセットの見た目テーマの種類
+    /// </summary>
+    public enum ThemeType
+    {
+        Fantasy,
+        Military,
+        SciFi
+    }
+    #endregion other
 }

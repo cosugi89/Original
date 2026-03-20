@@ -4,61 +4,61 @@ using UnityEngine;
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// Defines a character parts category containing sprite renderers, thumbnails,
-    /// and configuration for toggling and color changes.
+    /// キャラクターのパーツカテゴリを定義するクラス。
+    /// スプライトレンダラー、サムネイル、表示切替やカラー変更の設定を含む。
     /// </summary>
     [Serializable]
     public class PartsCategory
     {
-        /// <summary>The parts type this category represents.</summary>
+        /// <summary>このカテゴリが表すパーツタイプ</summary>
         public PartsType type;
 
-        /// <summary>The human-readable display name shown in the UI.</summary>
+        /// <summary>UIに表示される人間向けの表示名</summary>
         public string displayName;
 
-        /// <summary>Array of part renderers, each mapping a SpriteRenderer to its available sprites.</summary>
+        /// <summary>SpriteRendererと対応するスプライト配列を持つパートレンダラーの配列</summary>
         public PartRenderer[] renderers;
 
-        /// <summary>Whether this category can be toggled on/off (equipped/unequipped).</summary>
+        /// <summary>このカテゴリが表示/非表示（装備/解除）の切り替え可能かどうか</summary>
         public bool canToggle = true;
 
-        /// <summary>Whether this category supports color customization.</summary>
+        /// <summary>このカテゴリがカラー変更に対応しているかどうか</summary>
         public bool canChangeColor;
 
-        /// <summary>The color target type used when applying color changes.</summary>
+        /// <summary>カラー変更時に使用する対象タイプ</summary>
         public ColorTargetType colorTarget;
 
-        /// <summary>Whether this category is shared across all themes.</summary>
+        /// <summary>このカテゴリがすべてのテーマで共通かどうか</summary>
         public bool isCommon;
 
-        /// <summary>Optional dedicated thumbnail sprites for the parts list UI.</summary>
+        /// <summary>パーツ一覧UIで使用する専用サムネイルスプライト（任意）</summary>
         public Sprite[] thumbnails;
 
         /// <summary>
-        /// Returns the number of available sprites from the first renderer.
-        /// Returns 0 if renderers or sprites are null or empty.
+        /// 最初のレンダラーに登録されているスプライト数を返す。
+        /// renderersやspritesがnullまたは空の場合は0を返す。
         /// </summary>
         public int SpriteCount => renderers != null && renderers.Length > 0 && renderers[0].sprites != null
             ? renderers[0].sprites.Length
             : 0;
 
         /// <summary>
-        /// Returns the number of available thumbnail sprites.
+        /// サムネイルスプライトの数を返す。
         /// </summary>
         public int ThumbnailCount => thumbnails != null ? thumbnails.Length : 0;
     }
 
     /// <summary>
-    /// Maps a <see cref="SpriteRenderer"/> to an array of interchangeable sprites
-    /// representing different visual options for a character part.
+    /// SpriteRendererと、そのレンダラーに割り当て可能なスプライト配列を紐付けるクラス。
+    /// キャラクターパーツの見た目バリエーションを表現する。
     /// </summary>
     [Serializable]
     public class PartRenderer
     {
-        /// <summary>The target SpriteRenderer component on the character.</summary>
+        /// <summary>キャラクターに設定される対象のSpriteRenderer</summary>
         public SpriteRenderer renderer;
 
-        /// <summary>Array of sprite options that can be assigned to the renderer.</summary>
+        /// <summary>このレンダラーに設定可能なスプライトの配列</summary>
         public Sprite[] sprites;
     }
 }

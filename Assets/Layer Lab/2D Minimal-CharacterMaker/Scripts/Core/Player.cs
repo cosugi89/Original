@@ -4,8 +4,8 @@ using UnityEngine;
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// Singleton player controller that manages character parts, game mode switching,
-    /// and click-to-move behavior in Experience mode.
+    /// キャラクターパーツの管理、ゲームモードの切り替え、
+    /// およびExperienceモードにおけるクリック移動を管理するシングルトンのプレイヤーコントローラ。
     /// </summary>
     public class Player : MonoBehaviour
     {
@@ -15,7 +15,7 @@ namespace LayerLab.ArtMakerUnity
         private const float ARRIVAL_DISTANCE = 0.1f;
 
         /// <summary>
-        /// Singleton instance of the Player.
+        /// Playerのシングルトンインスタンス。
         /// </summary>
         public static Player Instance { get; private set; }
 
@@ -24,12 +24,13 @@ namespace LayerLab.ArtMakerUnity
         [SerializeField] private float moveSpeed = 3f;
 
         /// <summary>
-        /// The PartsManager component used for character customization.
+        /// キャラクターカスタマイズに使用されるPartsManagerコンポーネント。
         /// </summary>
         public PartsManager PartsManager => partsManager;
 
         /// <summary>
-        /// Invoked when the game mode changes. Parameter: the new game mode.
+        /// ゲームモードが変更されたときに呼び出されるイベント。
+        /// 引数：変更後のゲームモード。
         /// </summary>
         public event Action<GameMode> OnModeChanged;
 
@@ -50,7 +51,7 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Initializes the player by setting up the PartsManager and switching to Home mode.
+        /// プレイヤーを初期化し、PartsManagerのセットアップとHomeモードへの切り替えを行う。
         /// </summary>
         public void Init()
         {
@@ -61,9 +62,9 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Switches the current game mode, stopping movement and resetting animation.
+        /// 現在のゲームモードを切り替え、移動を停止しアニメーションをリセットする。
         /// </summary>
-        /// <param name="mode">The game mode to switch to.</param>
+        /// <param name="mode">切り替えるゲームモード。</param>
         public void SetMode(GameMode mode)
         {
             currentMode = mode;
