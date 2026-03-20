@@ -4,11 +4,6 @@ using UnityEngine.UI;
 
 namespace LayerLab.ArtMakerUnity
 {
-    /// <summary>
-    /// Represents a single parts category slot in the parts panel.
-    /// Displays a thumbnail and responds to pointer events for selection and focus highlighting.
-    /// Visibility toggle feature removed.
-    /// </summary>
     public class PartsSlot : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private UICategory uiCategory;
@@ -16,10 +11,6 @@ namespace LayerLab.ArtMakerUnity
         [SerializeField] private Image imageBg;
         [SerializeField] private Image imageItem;
 
-
-        /// <summary>
-        /// Gets the UI category this slot represents.
-        /// </summary>
         public UICategory UICategory => uiCategory;
 
         private PartsManager _partsManager;
@@ -33,12 +24,6 @@ namespace LayerLab.ArtMakerUnity
             imageItem ??= transform.Find("Item")?.GetComponent<Image>();
         }
 
-        /// <summary>
-        /// Initializes the slot with the given <see cref="PartsManager"/> and background sprites.
-        /// Subscribes to parts and color change events, then refreshes the display.
-        /// </summary>
-        /// <param name="pm">The PartsManager controlling character customization.</param>
-        /// <param name="bgSprites">Background sprites for empty and equipped states.</param>
         public void Init(PartsManager pm, Sprite[] bgSprites)
         {
             _partsManager = pm;
@@ -88,7 +73,6 @@ namespace LayerLab.ArtMakerUnity
             {
                 if (st == type) return true;
             }
-
             return false;
         }
 
@@ -97,55 +81,31 @@ namespace LayerLab.ArtMakerUnity
             if (_partsManager == null) return;
 
             var subTypes = UICategoryConfig.GetSubTypes(uiCategory);
-
             bool hasItem = false;
 
-            // Group category (e.g., HandRight/HandLeft with multiple sub-types)
+            // Group category
             if (UICategoryConfig.IsGroup(uiCategory))
             {
-                // Find the first sub-type that is equipped and visible
-                bool foundEquipped = false;
-                bool foundVisible = false;
                 foreach (var type in subTypes)
                 {
                     if (!_partsManager.IsEquipped(type)) continue;
-                    foundEquipped = true;
 
-                    if (_partsManager.IsPartsVisible(type))
-                    {
-                        int idx = _partsManager.GetActiveIndex(type);
-                        Sprite thumb = _partsManager.GetThumbnail(type, idx);
-                        if (imageItem != null)
-                        {
-                            imageItem.sprite = thumb;
-                            imageItem.SetNativeSize();
-                        }
-                        foundVisible = true;
-                        hasItem = true;
-                        break;
-                    }
-                }
+                    int idx = _partsManager.GetActiveIndex(type);
+                    Sprite thumb = _partsManager.GetThumbnail(type, idx);
 
-                if (foundEquipped && !foundVisible)
-                {
-                    // Equipped but hidden -> display the last-visible item's thumbnail (fallback to first)
-                    PartsType target = subTypes.Length > 0 ? subTypes[0] : default;
-                    if (_partsManager.IsEquipped(target))
+                    if (imageItem != null)
                     {
-                        int idx = _partsManager.GetActiveIndex(target);
-                        Sprite thumb = _partsManager.GetThumbnail(target, idx);
-                        if (imageItem != null)
-                        {
-                            imageItem.sprite = thumb;
-                            imageItem.SetNativeSize();
-                        }
-                        hasItem = true;
+                        imageItem.sprite = thumb;
+                        imageItem.SetNativeSize();
                     }
+
+                    hasItem = true;
+                    break;
                 }
 
                 ApplyItemColor(Color.white);
             }
-            // Single type (one sub-type per category)
+            // Single type
             else if (subTypes.Length == 1)
             {
                 var partsType = subTypes[0];
@@ -155,11 +115,13 @@ namespace LayerLab.ArtMakerUnity
                 {
                     int idx = _partsManager.GetActiveIndex(partsType);
                     Sprite thumb = _partsManager.GetThumbnail(partsType, idx);
+
                     if (imageItem != null)
                     {
                         imageItem.sprite = thumb;
                         imageItem.SetNativeSize();
                     }
+
                     hasItem = true;
 
                     if (_partsManager.CanChangeColor(partsType))
@@ -180,6 +142,7 @@ namespace LayerLab.ArtMakerUnity
             if (imageItem != null) imageItem.gameObject.SetActive(hasItem);
 
             UpdateBg();
+            UpdateItemAlpha();
         }
 
         private void ApplyItemColor(Color color)
@@ -191,33 +154,29 @@ namespace LayerLab.ArtMakerUnity
 
         private void UpdateBg()
         {
-            if (imageBg == null || _bgSprites == null || _bgSprites.Length < 3) return;
+            if (imageBg == null || _bgSprites == null || _bgSprites.Length < 2) return;
 
-            if (!_hasItem)
-                imageBg.sprite = _bgSprites[0];  // Empty
-            else
-                imageBg.sprite = _bgSprites[2];  // Equipped
+            imageBg.sprite = _hasItem ? _bgSprites[1] : _bgSprites[0];
         }
 
-        /// <summary>
-        /// Handles pointer click to select this slot in the parts panel.
-        /// </summary>
+        private void UpdateItemAlpha()
+        {
+            if (imageItem == null) return;
+            var c = imageItem.color;
+            c.a = 1f;
+            imageItem.color = c;
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
             PanelPartsControl.SelectSlot(this);
         }
 
-        /// <summary>
-        /// Handles pointer enter to apply focus highlighting on this slot.
-        /// </summary>
         public void OnPointerEnter(PointerEventData eventData)
         {
             PanelPartsControl.FocusSlot(this);
         }
 
-        /// <summary>
-        /// Handles pointer exit to remove focus highlighting from this slot.
-        /// </summary>
         public void OnPointerExit(PointerEventData eventData)
         {
             PanelPartsControl.UnfocusSlot(this);
