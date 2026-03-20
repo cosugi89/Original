@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// Defines the available character part types (e.g., Eye, Hair, weapons).
+    /// Assets parts の分類
     /// </summary>
     public enum PartsType
     {
@@ -29,7 +29,7 @@ namespace LayerLab.ArtMakerUnity
     }
 
     /// <summary>
-    /// Defines UI panel categories used to group related parts types together.
+    /// PartsType のカテゴリー
     /// </summary>
     public enum UICategory
     {
@@ -44,7 +44,7 @@ namespace LayerLab.ArtMakerUnity
     }
 
     /// <summary>
-    /// Defines color target types for character customization (Skin, Hair, Eye, Beard).
+    /// キャラクターカラーの変更対象タイプ（肌、髪、目、ヒゲ）
     /// </summary>
     public enum ColorTargetType
     {
@@ -55,18 +55,18 @@ namespace LayerLab.ArtMakerUnity
     }
 
     /// <summary>
-    /// Defines the game modes available in the demo scene.
+    /// デモシーンで使用するゲームモードの定義
     /// </summary>
     public enum GameMode
     {
-        /// <summary>Character customization mode.</summary>
+        /// <summary>キャラクターカスタマイズモード</summary>
         Home,
-        /// <summary>Gameplay experience mode with movement controls.</summary>
+        /// <summary>移動操作などを行う体験モード</summary>
         Experience
     }
 
     /// <summary>
-    /// Defines the visual theme types for character assets.
+    /// キャラクターアセットの見た目テーマの種類
     /// </summary>
     public enum ThemeType
     {
@@ -75,12 +75,34 @@ namespace LayerLab.ArtMakerUnity
         SciFi
     }
 
+    public enum AnimationType
+    {
+        Idle = 0,
+        Walk = 1,
+        Attack = 2,
+        Skill = 3,
+        Run = 4,
+        Roll = 5,
+        Jump = 6,
+        JumpAttack = 7,
+        Dance = 8,
+        Victory = 9,
+        Defeat = 10,
+        Stun = 11,
+        Dead1 = 12,
+        Dead2 = 13,
+        Dead3 = 14,
+        DoubleAttack = 15,
+    }
+
     /// <summary>
-    /// Provides configuration and lookup utilities for <see cref="UICategory"/> groupings.
-    /// Maps each UI category to its associated <see cref="PartsType"/> sub-types.
+    /// UICategoryに対応するPartsTypeのグループ定義および参照機能を提供するクラス
     /// </summary>
     public static class UICategoryConfig
     {
+        /// <summary>
+        /// カテゴリとパーツの対応表
+        /// </summary>
         private static readonly Dictionary<UICategory, PartsType[]> SubTypes = new()
         {
             { UICategory.Hair, new[] { PartsType.Hair } },
@@ -102,27 +124,15 @@ namespace LayerLab.ArtMakerUnity
         };
 
         /// <summary>
-        /// Returns the array of <see cref="PartsType"/> sub-types for the given UI category.
+        /// 指定したカテゴリに含まれるPartsTypeの配列を返す
         /// </summary>
-        /// <param name="category">The UI category to query.</param>
-        /// <returns>An array of associated parts types, or empty if not found.</returns>
         public static PartsType[] GetSubTypes(UICategory category) =>
             SubTypes.TryGetValue(category, out var types) ? types : Array.Empty<PartsType>();
 
         /// <summary>
-        /// Checks whether the given UI category is a group containing multiple sub-types.
+        /// 指定したカテゴリが複数のPartsTypeを持つカテゴリかどうか判定する
         /// </summary>
-        /// <param name="category">The UI category to check.</param>
-        /// <returns>True if the category has more than one sub-type.</returns>
         public static bool IsGroup(UICategory category) =>
             SubTypes.TryGetValue(category, out var types) && types.Length > 1;
-
-        /// <summary>
-        /// Checks whether the given UI category represents the Skin category.
-        /// Skin is always equipped and cannot be toggled or unequipped.
-        /// </summary>
-        /// <param name="category">The UI category to check.</param>
-        /// <returns>True if the category is Skin.</returns>
-        public static bool IsSkin(UICategory category) => category == UICategory.Skin;
     }
 }
