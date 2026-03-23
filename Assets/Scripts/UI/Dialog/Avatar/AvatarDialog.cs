@@ -68,7 +68,7 @@ namespace Assets.Scripts.UI.Dialog
         {
             currentPlayer.PartsManager.Init();
             currentPlayer.PartsManager.CopyFrom(dialogPlayer);
-            panelPartsControl.SaveCurrentPreset();
+            panelPartsControl.SaveCurrentAppearance();
             if (previewRenderer != null)
                 previewRenderer.ClearPreview();
 

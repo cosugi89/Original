@@ -7,7 +7,7 @@ namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
     /// キャラクターのパーツ（スプライト）を管理します。
-    /// 装備、色の適用、プリセットのシリアライズなどを担当します。
+    /// 装備、色の適用、アバター状態のシリアライズなどを担当します。
     /// UIからの表示トグルは削除されていますが、
     /// 内部的な表示状態は関連パーツとの同期のために保持されています。
     /// </summary>
@@ -676,15 +676,15 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// 保存済みのプリセットをこのキャラクターに適用し、
+        /// 保存済みのアバター状態をこのキャラクターに適用し、
         /// パーツ、色、表示状態を復元します。
         /// </summary>
-        /// <param name="item">適用するプリセットデータ。</param>
-        public void ApplyPresetItem(PresetData.PresetItem item)
+        /// <param name="appearanceData">適用するアバター状態データ。</param>
+        public void ApplyAppearanceData(AvatarAppearanceData appearanceData)
         {
-            if (item == null || item.isEmpty) return;
+            if (appearanceData == null) return;
 
-            foreach (var entry in item.parts)
+            foreach (var entry in appearanceData.parts)
             {
                 if (entry.index < 0)
                     UnequipParts(entry.type);
@@ -692,12 +692,12 @@ namespace LayerLab.ArtMakerUnity
                     EquipParts(entry.type, entry.index);
             }
 
-            foreach (var entry in item.colors)
+            foreach (var entry in appearanceData.colors)
                 SetColor(entry.target, entry.color);
 
-            foreach (var entry in item.visibility)
+            foreach (var entry in appearanceData.visibility)
             {
-                // Arrow と HelmetHair は自動同期されるため、プリセットから直接設定しない
+                // Arrow と HelmetHair は自動同期されるため、保存データから直接設定しない
                 if (entry.type == PartsType.Arrow || entry.type == PartsType.HelmetHair)
                     continue;
 
@@ -707,29 +707,29 @@ namespace LayerLab.ArtMakerUnity
                 SetRenderersActive(cat, entry.visible);
             }
 
-            // プリセット適用後に同期を再実行
+            // 適用後に同期を再実行
             SyncArrowVisibility();
             SyncHelmetHairVisibility();
         }
 
         /// <summary>
-        /// 現在のキャラクター状態をプリセットデータとしてシリアライズします。
+        /// 現在のキャラクター状態をアバター状態データとしてシリアライズします。
         /// </summary>
-        /// <returns>現在の状態を格納した新しい <see cref="PresetData.PresetItem"/>。</returns>
-        public PresetData.PresetItem ToPresetItem()
+        /// <returns>現在の状態を格納した新しい <see cref="AvatarAppearanceData"/>。</returns>
+        public AvatarAppearanceData CreateAppearanceData()
         {
-            var item = new PresetData.PresetItem { isEmpty = false };
+            var appearanceData = new AvatarAppearanceData();
 
             foreach (var kvp in ActiveIndices)
-                item.parts.Add(new PresetData.PartsEntry { type = kvp.Key, index = kvp.Value });
+                appearanceData.parts.Add(new AvatarAppearanceData.PartsEntry { type = kvp.Key, index = kvp.Value });
 
             foreach (var kvp in Colors)
-                item.colors.Add(new PresetData.ColorEntry { target = kvp.Key, color = kvp.Value });
+                appearanceData.colors.Add(new AvatarAppearanceData.ColorEntry { target = kvp.Key, color = kvp.Value });
 
             foreach (var kvp in Visibility)
-                item.visibility.Add(new PresetData.VisibilityEntry { type = kvp.Key, visible = kvp.Value });
+                appearanceData.visibility.Add(new AvatarAppearanceData.VisibilityEntry { type = kvp.Key, visible = kvp.Value });
 
-            return item;
+            return appearanceData;
         }
 
         #region Category Accessors

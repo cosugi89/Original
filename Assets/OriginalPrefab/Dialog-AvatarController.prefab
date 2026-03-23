@@ -18028,10 +18028,6 @@ MonoBehaviour:
   spriteVisibles:
   - {fileID: 21300000, guid: 53f911168aac0470e9f1c911905c9bd6, type: 3}
   - {fileID: 21300000, guid: 64f80a5af99d9494f894b46ed2ca6f1f, type: 3}
-  buttonPresetPrev: {fileID: 6583551735504931944}
-  buttonPresetNext: {fileID: 3703113800227385990}
-  textPresetNumber: {fileID: 4051258272078425304}
-  equipmentPresetData: {fileID: 11400000, guid: 2364c2ad6ab1d44e0b3e703b0ea0663c, type: 2}
   thumbnailCameraSize: 3
   thumbnailCameraOffset: {x: 0, y: 0, z: -10}
 --- !u!1 &6628413039837995027

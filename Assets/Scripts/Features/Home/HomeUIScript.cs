@@ -35,9 +35,8 @@ namespace Assets.Scripts.Features.Home
             if (player != null)
             {
                 player.Init();
-                // Home に入るたびにプリセットを適用する（将来的には、Home に入る前の状態を保存しておいて、Home に入るときにそれを復元する形にしたい）
-                // TODO: title画面から Home に入るときにプリセットを適用するようにして、Home に入るたびにプリセットを適用するのはやめる
-                AvatarPresetJsonStore.TryApplyCurrentPreset(player.PartsManager);
+                // TODO: Title逕ｻ髱｢縺ｮ繝ｭ繝ｼ繝画ｩ溯�ｽ縺ｨ邨ｱ蜷医☆繧九�
+                AvatarAppearanceJsonStore.TryApplyTo(player.PartsManager);
             }
         }
 
@@ -83,3 +82,4 @@ namespace Assets.Scripts.Features.Home
         }
     }
 }
+

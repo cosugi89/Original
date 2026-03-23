@@ -25,7 +25,7 @@ namespace LayerLab.ArtMakerUnity
                 return;
             }
 
-            var presetItem = partsManager.ToPresetItem();
+            var appearanceData = partsManager.CreateAppearanceData();
 
             var sourceObj = partsManager.gameObject;
             var prefabObj = Object.Instantiate(sourceObj);
@@ -34,7 +34,7 @@ namespace LayerLab.ArtMakerUnity
             CleanupComponents(prefabObj);
 
             var prefabData = prefabObj.AddComponent<CharacterPrefabData>();
-            prefabData.SetData(presetItem);
+            prefabData.SetData(appearanceData);
 
             // Capture thumbnail
             prefabObj.SetActive(false);

@@ -17509,10 +17509,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d48c898833a464b813f557a86df20d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonPresetPrev: {fileID: 6583551735504931944}
-  buttonPresetNext: {fileID: 3703113800227385990}
-  textPresetNumber: {fileID: 4051258272078425304}
-  equipmentPresetData: {fileID: 11400000, guid: 2364c2ad6ab1d44e0b3e703b0ea0663c, type: 2}
   selectFrame: {fileID: 6978477010379378133}
   spriteBgs:
   - {fileID: 21300000, guid: 06839a9e285134212915dda98b0834fa, type: 3}

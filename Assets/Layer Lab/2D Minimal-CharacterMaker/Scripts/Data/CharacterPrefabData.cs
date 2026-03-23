@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace LayerLab.ArtMakerUnity
@@ -9,19 +8,15 @@ namespace LayerLab.ArtMakerUnity
     /// </summary>
     public class CharacterPrefabData : MonoBehaviour
     {
-        [SerializeField] private List<PresetData.PartsEntry> parts = new();
-        [SerializeField] private List<PresetData.ColorEntry> colors = new();
-        [SerializeField] private List<PresetData.VisibilityEntry> visibility = new();
+        [SerializeField] private AvatarAppearanceData appearanceData = new();
 
         /// <summary>
-        /// Sets the character data from a preset item.
+        /// Sets the character data from avatar appearance data.
         /// </summary>
-        /// <param name="item">The preset item containing parts, colors, and visibility data.</param>
-        public void SetData(PresetData.PresetItem item)
+        /// <param name="data">The appearance data containing parts, colors, and visibility data.</param>
+        public void SetData(AvatarAppearanceData data)
         {
-            parts = item.parts;
-            colors = item.colors;
-            visibility = item.visibility;
+            appearanceData = data ?? new AvatarAppearanceData();
         }
 
         private void Start()
@@ -31,15 +26,7 @@ namespace LayerLab.ArtMakerUnity
             if (pm == null) return;
 
             pm.Init();
-
-            var item = new PresetData.PresetItem
-            {
-                isEmpty = false,
-                parts = parts,
-                colors = colors,
-                visibility = visibility
-            };
-            pm.ApplyPresetItem(item);
+            pm.ApplyAppearanceData(appearanceData);
         }
     }
 }
