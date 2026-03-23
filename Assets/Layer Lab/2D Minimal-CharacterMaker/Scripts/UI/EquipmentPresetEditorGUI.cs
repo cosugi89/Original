@@ -1,6 +1,4 @@
 #if UNITY_EDITOR
-using System;
-using UnityEditor;
 using UnityEngine;
 
 namespace LayerLab.ArtMakerUnity
@@ -12,8 +10,6 @@ namespace LayerLab.ArtMakerUnity
     public class EquipmentPresetEditorGUI
     {
         private const int PRESET_SLOT_COUNT = 10;
-        private const string PRESET_ASSET_PATH =
-            "Assets/Layer Lab/2D Art Maker Unity/AMMinimalGame Character/Data/EquipmentPresetData.asset";
 
         private readonly PanelPartsControl _panel;
 
@@ -61,41 +57,8 @@ namespace LayerLab.ArtMakerUnity
             var pm = _panel.CurrentPartsManager;
             if (pm == null) return;
 
-            EnsurePresetDataAsset();
-
-            var item = pm.ToPresetItem();
-            _panel.EquipmentPresetData.SaveItem(slot, item);
-            EditorUtility.SetDirty(_panel.EquipmentPresetData);
-            AssetDatabase.SaveAssets();
-            _panel.CurrentPresetIndex = slot;
-            _panel.UpdatePresetDisplay();
-            Debug.Log($"[EquipmentPreset] Preset saved to slot {slot + 1}");
-        }
-
-        private void EnsurePresetDataAsset()
-        {
-            if (_panel.EquipmentPresetData != null) return;
-
-            var loaded = AssetDatabase.LoadAssetAtPath<PresetData>(PRESET_ASSET_PATH);
-            if (loaded != null)
-            {
-                _panel.EquipmentPresetData = loaded;
-                return;
-            }
-
-            string dir = System.IO.Path.GetDirectoryName(PRESET_ASSET_PATH);
-            if (!AssetDatabase.IsValidFolder(dir))
-            {
-                string parent = System.IO.Path.GetDirectoryName(dir);
-                string folderName = System.IO.Path.GetFileName(dir);
-                AssetDatabase.CreateFolder(parent, folderName);
-            }
-
-            var newAsset = ScriptableObject.CreateInstance<PresetData>();
-            AssetDatabase.CreateAsset(newAsset, PRESET_ASSET_PATH);
-            AssetDatabase.SaveAssets();
-            _panel.EquipmentPresetData = newAsset;
-            Debug.Log($"[EquipmentPreset] PresetData asset created: {PRESET_ASSET_PATH}");
+            _panel.SavePreset(slot);
+            Debug.Log($"[EquipmentPreset] Preset saved to slot {slot + 1} as json");
         }
     }
 }

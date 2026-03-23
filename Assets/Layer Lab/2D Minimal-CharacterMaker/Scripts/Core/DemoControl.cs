@@ -31,6 +31,7 @@ namespace LayerLab.ArtMakerUnity
         private void Start()
         {
             player.Init();
+            AvatarPresetJsonStore.TryApplyCurrentPreset(player.PartsManager);
             if (cameraControl != null) cameraControl.Init(player.transform);
             if (colorPicker != null) colorPicker.Init(player.PartsManager);
             if (colorPresetManager != null) colorPresetManager.Init(player.PartsManager);

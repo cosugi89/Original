@@ -33,7 +33,12 @@ namespace Assets.Scripts.Features.Home
         private void Start()
         {
             if (player != null)
+            {
                 player.Init();
+                // Home に入るたびにプリセットを適用する（将来的には、Home に入る前の状態を保存しておいて、Home に入るときにそれを復元する形にしたい）
+                // TODO: title画面から Home に入るときにプリセットを適用するようにして、Home に入るたびにプリセットを適用するのはやめる
+                AvatarPresetJsonStore.TryApplyCurrentPreset(player.PartsManager);
+            }
         }
 
         public void OnClickAvatarButton()

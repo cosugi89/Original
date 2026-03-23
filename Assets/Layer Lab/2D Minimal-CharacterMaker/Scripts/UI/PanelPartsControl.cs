@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 /* 将来的には Prest の切り替えと保存を実装する予定です。
  * 現状は index[0] のみを使用して、プリセットの保存と読み込みを行っています。 */
@@ -14,9 +11,6 @@ namespace LayerLab.ArtMakerUnity
     /// </summary>
     public class PanelPartsControl : MonoBehaviour
     {
-        private const string PresetAssetPath =
-            "Assets/Layer Lab/2D Minimal-CharacterMaker/PresetData/PresetData.asset";
-
         public static PanelPartsControl Instance;
 
         [SerializeField] private GameObject selectFrame;
@@ -30,6 +24,7 @@ namespace LayerLab.ArtMakerUnity
         [SerializeField] private PresetData equipmentPresetData;
 
         private int _currentPresetIndex;
+        private PresetData _runtimePresetData;
 
         internal int CurrentPresetIndex
         {
@@ -39,6 +34,7 @@ namespace LayerLab.ArtMakerUnity
 
         internal void UpdatePresetDisplay()
         {
+            if (textPresetNumber == null) return;
             textPresetNumber.text = (_currentPresetIndex + 1).ToString("D2");
         }
 
@@ -61,8 +57,8 @@ namespace LayerLab.ArtMakerUnity
 
         internal PresetData EquipmentPresetData
         {
-            get => equipmentPresetData;
-            set => equipmentPresetData = value;
+            get => _runtimePresetData;
+            set => _runtimePresetData = value;
         }
         #endregion
 
@@ -85,8 +81,8 @@ namespace LayerLab.ArtMakerUnity
                 slot.Init(pm, spriteBgs);
             DoSelectSlot(_partsSlots[0]);
 
-            UpdatePresetDisplay();
             LoadCurrentPreset();
+            UpdatePresetDisplay();
             RefreshCurrentSlot();
         }
 
@@ -121,22 +117,26 @@ namespace LayerLab.ArtMakerUnity
 
         private void LoadCurrentPreset()
         {
-            if (equipmentPresetData != null) return;
-
-#if UNITY_EDITOR
-            equipmentPresetData = AssetDatabase.LoadAssetAtPath<PresetData>(PresetAssetPath);
-            if (equipmentPresetData != null) return;
-#endif
-
-            equipmentPresetData = ScriptableObject.CreateInstance<PresetData>();
-            Debug.LogWarning($"[PanelPartsControl] PresetData asset was not found. Using a temporary instance. Path: {PresetAssetPath}");
+            _runtimePresetData = AvatarPresetJsonStore.CreateRuntimePresetData(equipmentPresetData, out _currentPresetIndex);
         }
 
         public void SaveCurrentPreset()
         {
-            if (equipmentPresetData == null || _partsManager == null) return;
+            SavePreset(_currentPresetIndex);
+        }
+
+        internal void SavePreset(int slot)
+        {
+            if (_partsManager == null) return;
+
+            if (_runtimePresetData == null)
+                LoadCurrentPreset();
+
+            _currentPresetIndex = Mathf.Max(0, slot);
             var item = _partsManager.ToPresetItem();
-            equipmentPresetData.SaveItem(_currentPresetIndex, item);
+            _runtimePresetData.SaveItem(_currentPresetIndex, item);
+            AvatarPresetJsonStore.Save(_runtimePresetData, _currentPresetIndex);
+            UpdatePresetDisplay();
         }
 
         private void RepositionSelectFrame(PartsSlot slot)
