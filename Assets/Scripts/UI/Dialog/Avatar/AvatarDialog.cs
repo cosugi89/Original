@@ -18,12 +18,9 @@ namespace Assets.Scripts.UI.Dialog
         [SerializeField] private PartsManager characterPrefab;
 
         [Header("Scripts")]
-        [SerializeField] private AnimationControl animationControl;
         [SerializeField] private PanelPartsControl panelPartsControl;
         [SerializeField] private PanelPartsListControl panelPartsListControl;
-        [SerializeField] private ColorPicker colorPicker;
-        [SerializeField] private ColorPresetManager colorPresetManager;
-        [SerializeField] private ColorFavoriteManager colorFavoriteManager;
+        [SerializeField] private ColorSelectScrollUIScript colorPicker;
 
         private PartsManager dialogPlayer;
         private Player currentPlayer;
@@ -45,11 +42,8 @@ namespace Assets.Scripts.UI.Dialog
             dialogPlayer.CopyFrom(currentPlayer.PartsManager);
 
             colorPicker.Init(dialogPlayer);
-            colorPresetManager.Init(dialogPlayer);
-            colorFavoriteManager.Init();
             panelPartsListControl.Init(dialogPlayer);
             panelPartsControl.Init(dialogPlayer, panelPartsListControl);
-            animationControl.Init(dialogPlayer);
             closeButton.onClick.AddListener(OnClickClose);
             saveButton.onClick.AddListener(OnClickSave);
             panelPartsControl.RefreshSelectionFrame();
@@ -74,27 +68,6 @@ namespace Assets.Scripts.UI.Dialog
                 previewRenderer.ClearPreview();
 
             Close(true);
-        }
-
-        /// <summary>
-        /// 参照なし
-        /// </summary>
-        public void RandomizeCharacter()
-        {
-            dialogPlayer.RandomizeAll();
-
-            if (colorPresetManager != null)
-            {
-                colorPresetManager.SetRandomColor(ColorTargetType.Skin);
-                colorPresetManager.SetRandomColor(ColorTargetType.Hair);
-                colorPresetManager.SetRandomColor(ColorTargetType.Beard);
-            }
-
-            // 現在選択されているカテゴリのパーツリストリフレッシュ
-            if (panelPartsControl != null)
-            {
-                panelPartsControl.RefreshCurrentSlot();
-            }
         }
 
         private async UniTaskVoid RefreshSelectionFramesDeferred()

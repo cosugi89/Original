@@ -22,9 +22,7 @@ namespace Assets.Scripts.Features.Home
         [Header("UI Panels")] [SerializeField] private AnimationControl animationControl;
         [SerializeField] private PanelPartsControl panelPartsControl;
         [SerializeField] private PanelPartsListControl panelPartsListControl;
-        [SerializeField] private ColorPicker colorPicker;
-        [SerializeField] private ColorPresetManager colorPresetManager;
-        [SerializeField] private ColorFavoriteManager colorFavoriteManager;
+        [SerializeField] private ColorSelectScrollUIScript colorPicker;
 
         /// <summary>
         /// The Player instance managed by this demo controller.
@@ -37,28 +35,10 @@ namespace Assets.Scripts.Features.Home
             AvatarAppearanceJsonStore.TryApplyTo(player.PartsManager);
             if (cameraControl != null) cameraControl.Init(player.transform);
             if (colorPicker != null) colorPicker.Init(player.PartsManager);
-            if (colorPresetManager != null) colorPresetManager.Init(player.PartsManager);
-            if (colorFavoriteManager != null) colorFavoriteManager.Init();
             if (panelPartsListControl != null) panelPartsListControl.Init(player.PartsManager);
             if (panelPartsControl != null) panelPartsControl.Init(player.PartsManager, panelPartsListControl);
             if (animationControl != null) animationControl.Init(player.PartsManager);
         }
-
-        /// <summary>
-        /// Randomizes all character parts and colors (Skin, Hair, Eye), then refreshes the UI.
-        /// </summary>
-        public void RandomizeCharacter()
-        {
-            player.PartsManager.RandomizeAll();
-            colorPresetManager.SetRandomColor(ColorTargetType.Skin);
-            colorPresetManager.SetRandomColor(ColorTargetType.Hair);
-            colorPresetManager.SetRandomColor(ColorTargetType.Beard);
-
-            // 현재 선택된 카테고리의 파츠 리스트 리프레시
-            if (panelPartsControl != null)
-                panelPartsControl.RefreshCurrentSlot();
-        }
-
 
         public void OnClickDiscord()
         {

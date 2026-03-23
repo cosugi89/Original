@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 2756ea9296dcd4f168792bd3024b6b1f
+guid: 51f97748c5fad41209fe6d267a135e7a
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 363620
   packageName: 2D Minimal - Character Maker
   packageVersion: 1.0.0
-  assetPath: Assets/Layer Lab/2D Minimal-CharacterMaker/Scripts/UI/ColorPicker/ColorFavoriteManager.cs
+  assetPath: Assets/Layer Lab/2D Minimal-CharacterMaker/Scripts/UI/ColorPicker/ColorSelectScrollUIScript.cs
   uploadId: 872804

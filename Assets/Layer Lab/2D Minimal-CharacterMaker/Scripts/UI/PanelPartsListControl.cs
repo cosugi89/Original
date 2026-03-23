@@ -12,7 +12,7 @@ namespace LayerLab.ArtMakerUnity
     {
         [SerializeField] private PartsListSlot slotTemplate;
         [SerializeField] private Transform contentParent;
-        [SerializeField] private ColorPicker colorPicker;
+        [SerializeField] private ColorSelectScrollUIScript colorPicker;
         [SerializeField] private Image imgSelectFrame;
         [SerializeField] private Button buttonReset;
 
