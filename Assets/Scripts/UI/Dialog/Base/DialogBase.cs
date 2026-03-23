@@ -22,6 +22,11 @@ namespace Assets.Scripts.UI.Dialog
         {
         }
 
+        public void SetBackgroundManager(DialogBackgroundManager backgroundManager)
+        {
+            _backgroundManager = backgroundManager;
+        }
+
         public UniTask<TResult> OpenAsync()
         {
             _tcs = new UniTaskCompletionSource<TResult>();
@@ -31,7 +36,7 @@ namespace Assets.Scripts.UI.Dialog
 
             if (useBackground)
             {
-                _backgroundManager = GetComponentInParent<DialogBackgroundManager>();
+                _backgroundManager ??= GetComponentInParent<DialogBackgroundManager>();
                 if (_backgroundManager != null)
                 {
                     _backgroundManager.Push(this);

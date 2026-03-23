@@ -13,11 +13,18 @@ namespace Assets.Scripts.UI.Dialog
 
         private GameObject _backgroundObject;
         private Image _backgroundImage;
+        private Transform _backgroundLayer;
 
-        private void Awake()
+        public void Configure(Transform backgroundLayer)
         {
-            CreateBackgroundIfNeeded();
-            _backgroundObject.SetActive(false);
+            _backgroundLayer = backgroundLayer;
+
+            if (_backgroundObject == null || _backgroundLayer == null)
+                return;
+
+            _backgroundObject.transform.SetParent(_backgroundLayer, false);
+            StretchToFillParent(_backgroundObject.GetComponent<RectTransform>());
+            _backgroundObject.transform.SetAsLastSibling();
         }
 
         private void CreateBackgroundIfNeeded()
@@ -25,15 +32,18 @@ namespace Assets.Scripts.UI.Dialog
             if (_backgroundObject != null)
                 return;
 
+            var parent = ResolveBackgroundParent();
+            if (parent == null)
+            {
+                Debug.LogWarning("Dialog background parent is not configured.", this);
+                return;
+            }
+
             _backgroundObject = new GameObject("DialogBackground");
-            _backgroundObject.transform.SetParent(dialogRoot, false);
+            _backgroundObject.transform.SetParent(parent, false);
 
             var rectTransform = _backgroundObject.AddComponent<RectTransform>();
-            rectTransform.anchorMin = Vector2.zero;
-            rectTransform.anchorMax = Vector2.one;
-            rectTransform.offsetMin = Vector2.zero;
-            rectTransform.offsetMax = Vector2.zero;
-            rectTransform.localScale = Vector3.one;
+            StretchToFillParent(rectTransform);
 
             _backgroundImage = _backgroundObject.AddComponent<Image>();
             _backgroundImage.color = backgroundColor;
@@ -41,11 +51,15 @@ namespace Assets.Scripts.UI.Dialog
 
             var backgroundView = _backgroundObject.AddComponent<DialogBackgroundView>();
             backgroundView.Initialize(OnClickBackground);
+            _backgroundObject.transform.SetAsLastSibling();
+            _backgroundObject.SetActive(false);
         }
 
         public void Push(IDialogBackgroundHandler dialog)
         {
             CreateBackgroundIfNeeded();
+            if (_backgroundObject == null)
+                return;
 
             if (_dialogs.Contains(dialog))
                 return;
@@ -70,10 +84,8 @@ namespace Assets.Scripts.UI.Dialog
                 return;
             }
 
-            var topDialog = _dialogs[_dialogs.Count - 1];
-
             _backgroundObject.SetActive(true);
-            _backgroundObject.transform.SetSiblingIndex(topDialog.CachedTransform.GetSiblingIndex());
+            _backgroundObject.transform.SetAsLastSibling();
         }
 
         private void OnClickBackground()
@@ -83,6 +95,24 @@ namespace Assets.Scripts.UI.Dialog
 
             var topDialog = _dialogs[_dialogs.Count - 1];
             topDialog.OnBackgroundClickedFromManager();
+        }
+
+        private Transform ResolveBackgroundParent()
+        {
+            return _backgroundLayer != null ? _backgroundLayer : dialogRoot;
+        }
+
+        private static void StretchToFillParent(RectTransform rectTransform)
+        {
+            if (rectTransform == null)
+                return;
+
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+            rectTransform.localScale = Vector3.one;
+            rectTransform.localRotation = Quaternion.identity;
         }
     }
 }
