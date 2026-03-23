@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace LayerLab.ArtMakerUnity
 {
-    public class PartsSlot : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+    public class PartsSlot : MonoBehaviour, IPointerClickHandler, IPointerExitHandler
     {
         [SerializeField] private UICategory uiCategory;
         [SerializeField] private Image imageIcon;
@@ -170,11 +170,6 @@ namespace LayerLab.ArtMakerUnity
         public void OnPointerClick(PointerEventData eventData)
         {
             PanelPartsControl.SelectSlot(this);
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            PanelPartsControl.FocusSlot(this);
         }
 
         public void OnPointerExit(PointerEventData eventData)

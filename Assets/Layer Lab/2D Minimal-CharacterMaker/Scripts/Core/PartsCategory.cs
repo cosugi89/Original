@@ -4,42 +4,89 @@ using UnityEngine;
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// キャラクターのパーツカテゴリを定義するクラス。
+    /// キャラクターのパーツカテゴリを定義する
     /// スプライトレンダラー、サムネイル、表示切替やカラー変更の設定を含む。
     /// </summary>
     [Serializable]
     public class PartsCategory
     {
-        /// <summary>このカテゴリが表すパーツタイプ</summary>
-        public PartsType type;
+        [SerializeField] private PartsType type;
+        [SerializeField] private string displayName;
+        [SerializeField] private UICategory uiCategory;
+        [SerializeField] private PartsExclusiveGroup exclusiveGroup;
+        [SerializeField] private bool defaultVisible = true;
+        [SerializeField] private PartRenderer[] renderers;
+        [SerializeField] private bool canChangeColor;
+        [SerializeField] private ColorTargetType colorTarget;
+        [SerializeField] private bool isCommon;
+        [SerializeField] private Sprite[] thumbnails;
+        
+        public PartsType Type 
+        { 
+            get => type; 
+            set => type = value;
+        }
 
-        /// <summary>UIに表示される人間向けの表示名</summary>
-        public string displayName;
+        public string DisplayName 
+        {
+            get => displayName; 
+            set => displayName = value;
+        }
 
-        /// <summary>SpriteRendererと対応するスプライト配列を持つパートレンダラーの配列</summary>
-        public PartRenderer[] renderers;
+        public UICategory UICategory
+        {
+            get => uiCategory;
+            set => uiCategory = value;
+        }
 
-        /// <summary>このカテゴリが表示/非表示（装備/解除）の切り替え可能かどうか</summary>
-        public bool canToggle = true;
+        public PartsExclusiveGroup ExclusiveGroup
+        {
+            get => exclusiveGroup;
+            set => exclusiveGroup = value;
+        }
 
-        /// <summary>このカテゴリがカラー変更に対応しているかどうか</summary>
-        public bool canChangeColor;
+        public bool DefaultVisible
+        {
+            get => defaultVisible;
+            set => defaultVisible = value;
+        }
 
-        /// <summary>カラー変更時に使用する対象タイプ</summary>
-        public ColorTargetType colorTarget;
+        public PartRenderer[] Renderers 
+        {
+            get => renderers;
+            set => renderers = value; 
+        }
 
-        /// <summary>このカテゴリがすべてのテーマで共通かどうか</summary>
-        public bool isCommon;
+        public bool CanChangeColor 
+        { 
+            get => canChangeColor;
+            set => canChangeColor = value;
+        }
 
-        /// <summary>パーツ一覧UIで使用する専用サムネイルスプライト（任意）</summary>
-        public Sprite[] thumbnails;
+        public ColorTargetType ColorTarget 
+        { 
+            get => colorTarget;
+            set => colorTarget = value;
+        }
+
+        public bool IsCommon 
+        { 
+            get => isCommon; 
+            set => isCommon = value; 
+        }
+
+        public Sprite[] Thumbnails
+        { 
+            get => thumbnails; 
+            set => thumbnails = value; 
+        }
 
         /// <summary>
         /// 最初のレンダラーに登録されているスプライト数を返す。
         /// renderersやspritesがnullまたは空の場合は0を返す。
         /// </summary>
-        public int SpriteCount => renderers != null && renderers.Length > 0 && renderers[0].sprites != null
-            ? renderers[0].sprites.Length
+        public int SpriteCount => renderers != null && renderers.Length > 0 && renderers[0].Sprites != null
+            ? renderers[0].Sprites.Length
             : 0;
 
         /// <summary>
@@ -55,10 +102,19 @@ namespace LayerLab.ArtMakerUnity
     [Serializable]
     public class PartRenderer
     {
-        /// <summary>キャラクターに設定される対象のSpriteRenderer</summary>
-        public SpriteRenderer renderer;
+        [SerializeField] private SpriteRenderer renderer;
+        [SerializeField] private Sprite[] sprites;
 
-        /// <summary>このレンダラーに設定可能なスプライトの配列</summary>
-        public Sprite[] sprites;
+        public SpriteRenderer Renderer
+        {
+            get => renderer;
+            set => renderer = value; 
+        }
+
+        public Sprite[] Sprites
+        {
+            get => sprites;
+            set => sprites = value; 
+        }
     }
 }

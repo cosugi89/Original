@@ -11,6 +11,7 @@ namespace Assets.Scripts.Features.Home
         [Header("Core")]
         [SerializeField] private Player player;
         [SerializeField] private CameraControl cameraControl;
+        [SerializeField] private AvatarPreviewRenderer previewRenderer;
 
         [Header("Canvas")]
         [SerializeField] private Transform dialogRoot;
@@ -27,6 +28,12 @@ namespace Assets.Scripts.Features.Home
         {
             avatarButton.onClick.AddListener(OnClickAvatarButton);
             ItemButton.onClick.AddListener(OnClickItemButton);
+        }
+
+        private void Start()
+        {
+            if (player != null)
+                player.Init();
         }
 
         public void OnClickAvatarButton()
@@ -59,12 +66,13 @@ namespace Assets.Scripts.Features.Home
             }
         }
 
+        // TODO: Extract dialog data into a dedicated data class.
         public async UniTask<bool> OpenDialogAsync(DialogBase<bool> avatarDialog, Transform dialogRoot)
         {
             var dialog = Instantiate(avatarDialog, dialogRoot);
 
             dialog.transform.localScale = Vector3.one;
-            dialog.Setup(player);
+            dialog.Setup(player, previewRenderer);
 
             return await dialog.OpenAsync();
         }

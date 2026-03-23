@@ -1,19 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// Controls the scrollable parts list panel. Displays thumbnails for the currently selected
-    /// <see cref="UICategory"/>, handles slot selection, color synchronization, and reset functionality.
+    /// PanelParts の ScrollView を管理する
     /// </summary>
     public class PanelPartsListControl : MonoBehaviour
     {
         [SerializeField] private PartsListSlot slotTemplate;
         [SerializeField] private Transform contentParent;
-        [SerializeField] private TMP_Text textTitle;
         [SerializeField] private ColorPicker colorPicker;
         [SerializeField] private Image imgSelectFrame;
         [SerializeField] private Button buttonReset;
@@ -24,17 +21,14 @@ namespace LayerLab.ArtMakerUnity
         private PartsType[] _currentSubTypes;
         private PartsManager _partsManager;
 
-        /// <summary>
-        /// Gets the currently active parts type.
-        /// </summary>
+        /// <summary>選択・表示中の PartsType</summary>
         public PartsType? ActiveType => _activeType;
 
-
         /// <summary>
-        /// Initializes the parts list panel with the given <see cref="PartsManager"/>.
-        /// Subscribes to parts and color change events.
+        /// 指定された <see cref="PartsManager"/> を使ってパーツ一覧パネルを初期化します。
+        /// パーツ変更イベントと色変更イベントを購読します。
         /// </summary>
-        /// <param name="pm">The PartsManager that provides parts data.</param>
+        /// <param name="pm">パーツデータを提供する PartsManager。</param>
         public void Init(PartsManager pm)
         {
             _partsManager = pm;
@@ -51,21 +45,14 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Displays the parts list for the specified UI category.
-        /// Routes to skin, group, or single-type display logic accordingly.
+        /// 指定された UI カテゴリのパーツ一覧を表示します。
+        /// カテゴリに応じて、グループ表示または単一タイプ表示の処理へ振り分けます。
         /// </summary>
-        /// <param name="category">The UI category to display.</param>
+        /// <param name="category">表示する UI カテゴリ。</param>
         public void Show(UICategory category)
         {
             _activeCategory = category;
             _currentSubTypes = UICategoryConfig.GetSubTypes(category);
-
-            textTitle.text = category switch
-            {
-                UICategory.HandRight => "HAND RIGHT",
-                UICategory.HandLeft => "HAND LEFT",
-                _ => category.ToString().ToUpper(),
-            };
 
             if (UICategoryConfig.IsGroup(category))
             {
@@ -77,13 +64,23 @@ namespace LayerLab.ArtMakerUnity
                 ShowPartsType(_currentSubTypes[0]);
         }
 
+        public void RefreshSelectionFrame()
+        {
+            Canvas.ForceUpdateCanvases();
+
+            if (contentParent is RectTransform contentRect)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
+
+            UpdateSelectFrame();
+        }
+
         private void ShowGroup(UICategory category)
         {
-            // Hide all existing slots before repopulating
+            // 再構築前に既存スロットをすべて非表示にする
             foreach (var slot in _slots)
                 slot.gameObject.SetActive(false);
 
-            // Create or reuse slots for all sub-types in the group
+            // グループ内のすべてのサブタイプ用にスロットを生成または再利用する
             int slotIdx = 0;
             foreach (var type in _currentSubTypes)
             {
@@ -102,12 +99,12 @@ namespace LayerLab.ArtMakerUnity
                 }
             }
 
-            // Groups don't support per-slot coloring; reset to white
+            // グループではスロットごとの色変更に対応しないため白に戻す
             ChangeColorList(Color.white);
             if (colorPicker != null)
                 colorPicker.gameObject.SetActive(false);
 
-            // Show reset button at the top of the list
+            // リセットボタンを一覧の先頭に表示する
             if (buttonReset != null)
             {
                 buttonReset.gameObject.SetActive(true);
@@ -158,19 +155,20 @@ namespace LayerLab.ArtMakerUnity
 
             if (buttonReset != null)
             {
-                buttonReset.gameObject.SetActive(_partsManager.CanToggle(type));
-                if (_partsManager.CanToggle(type))
-                    buttonReset.transform.SetAsFirstSibling();
+                // MEMO: _partsManager.CanToggle(type) でSetActiveを切り替えていた
+                // TODO: OnClickReset で UnequipParts するのではなく、初期表示か変更前は表示させるようにする
+                buttonReset.gameObject.SetActive(true);
+                buttonReset.transform.SetAsFirstSibling();
             }
 
             UpdateSelectFrame();
         }
 
         /// <summary>
-        /// Handles selection of a parts list slot. For groups, shows only the selected sub-type
-        /// and hides others. For single types, ensures visibility before equipping.
+        /// パーツ一覧スロットの選択を処理します。グループでは選択されたサブタイプのみ表示し、
+        /// その他は非表示にします。単一タイプでは装備前に表示状態を整えます。
         /// </summary>
-        /// <param name="slot">The slot that was clicked.</param>
+        /// <param name="slot">クリックされたスロット。</param>
         public void SelectSlot(PartsListSlot slot)
         {
             PartsType slotType = slot.PartsType;
@@ -183,12 +181,13 @@ namespace LayerLab.ArtMakerUnity
             }
             else
             {
-                if (!_partsManager.IsPartsVisible(_activeType) && _partsManager.CanToggle(_activeType))
-                {
-                    // Visibility toggle removed from manager API; re-apply current index to restore visibility
-                    int idx = _partsManager.GetActiveIndex(_activeType);
-                    _partsManager.EquipParts(_activeType, idx);
-                }
+                // CanToggle を削除するため一旦コメントアウト
+                //if (!_partsManager.IsPartsVisible(_activeType) && _partsManager.CanToggle(_activeType))
+                //{
+                //    // Manager API から表示切り替えが削除されたため、現在のインデックスを再適用して表示を復元する
+                //    int idx = _partsManager.GetActiveIndex(_activeType);
+                //    _partsManager.EquipParts(_activeType, idx);
+                //}
             }
 
             _partsManager.EquipParts(slotType, slot.SlotIndex);
@@ -196,7 +195,8 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Resets (unequips) the currently active parts type or all sub-types in a group.
+        /// 現在アクティブなパーツ種別、またはグループ内のすべてのサブタイプをリセット
+        /// （装備解除）します。
         /// </summary>
         public void OnClickReset()
         {
@@ -224,7 +224,7 @@ namespace LayerLab.ArtMakerUnity
 
             if (UICategoryConfig.IsGroup(_activeCategory))
             {
-                // Find the slot matching the equipped sub-type in the group
+                // グループ内で装備中のサブタイプに対応するスロットを探す
                 // 表示がオフでも装備されているアイテムの選択フレームは維持
                 foreach (var type in _currentSubTypes)
                 {
@@ -248,7 +248,7 @@ namespace LayerLab.ArtMakerUnity
             }
             else
             {
-                // Single type: match by active index
+                // 単一タイプ: アクティブなインデックスに一致するスロットを探す
                 int activeIndex = _partsManager.GetActiveIndex(_activeType);
 
                 if (!_partsManager.IsEquipped(_activeType))

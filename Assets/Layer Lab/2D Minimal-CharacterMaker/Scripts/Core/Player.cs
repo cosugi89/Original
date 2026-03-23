@@ -4,8 +4,10 @@ using UnityEngine;
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// キャラクターパーツの管理、ゲームモードの切り替え、
-    /// およびExperienceモードにおけるクリック移動を管理するシングルトンのプレイヤーコントローラ。
+    /// シングルトンのPlayerController
+    /// - キャラクターパーツのセットアップ
+    /// - GameModeの切り替え
+    /// - Experienceモードにおけるクリック移動
     /// </summary>
     public class Player : MonoBehaviour
     {
@@ -14,25 +16,14 @@ namespace LayerLab.ArtMakerUnity
         private const float MIN_DIRECTION_THRESHOLD = 0.01f;
         private const float ARRIVAL_DISTANCE = 0.1f;
 
-        /// <summary>
-        /// Playerのシングルトンインスタンス。
-        /// </summary>
         public static Player Instance { get; private set; }
 
         [SerializeField] private PartsManager partsManager;
         [SerializeField] private Rigidbody2D rb;
         [SerializeField] private float moveSpeed = 3f;
 
-        /// <summary>
-        /// キャラクターカスタマイズに使用されるPartsManagerコンポーネント。
-        /// </summary>
-        public PartsManager PartsManager => partsManager;
-
-        /// <summary>
-        /// ゲームモードが変更されたときに呼び出されるイベント。
-        /// 引数：変更後のゲームモード。
-        /// </summary>
-        public event Action<GameMode> OnModeChanged;
+        public PartsManager PartsManager => partsManager;   // キャラクターカスタマイズ用
+        public event Action<GameMode> OnModeChanged;        // ゲームモードの変更
 
         private GameMode currentMode = GameMode.Home;
         private Vector2 moveTarget;
@@ -41,6 +32,7 @@ namespace LayerLab.ArtMakerUnity
 
         private void Awake()
         {
+            // 重複して生成された Player クラスを削除してこれを登録
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -50,29 +42,25 @@ namespace LayerLab.ArtMakerUnity
             _mainCamera = Camera.main;
         }
 
-        /// <summary>
-        /// プレイヤーを初期化し、PartsManagerのセットアップとHomeモードへの切り替えを行う。
-        /// </summary>
         public void Init()
         {
+            // PartsManager のセットアップ
             if (partsManager != null)
                 partsManager.Init();
 
             SetMode(GameMode.Home);
         }
 
-        /// <summary>
-        /// 現在のゲームモードを切り替え、移動を停止しアニメーションをリセットする。
-        /// </summary>
-        /// <param name="mode">切り替えるゲームモード。</param>
         public void SetMode(GameMode mode)
         {
             currentMode = mode;
             isMoving = false;
 
+            // 移動を停止する
             if (rb != null)
                 rb.linearVelocity = Vector2.zero;
 
+            // アニメーションをリセット
             if (mode == GameMode.Home && partsManager != null)
                 partsManager.PlayAnimation(ANIM_IDLE);
 
@@ -81,19 +69,21 @@ namespace LayerLab.ArtMakerUnity
 
         private void Update()
         {
-            if (currentMode != GameMode.Experience) return;
-
-            if (Input.GetMouseButtonDown(0))
+            if (currentMode == GameMode.Experience)
             {
-                HandleClick();
-            }
+                if (Input.GetMouseButtonDown(0))
+                {
+                    HandleClick();
+                }
 
-            if (isMoving)
-            {
-                UpdateMovement();
+                if (isMoving)
+                {
+                    UpdateMovement();
+                }
             }
         }
 
+        #region GameMode.Experience
         private void HandleClick()
         {
             Vector2 worldPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -129,5 +119,6 @@ namespace LayerLab.ArtMakerUnity
             if (rb != null)
                 rb.linearVelocity = direction.normalized * moveSpeed;
         }
+        #endregion GameMode.Experience
     }
 }

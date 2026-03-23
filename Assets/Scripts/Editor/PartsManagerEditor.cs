@@ -285,8 +285,8 @@ namespace Assets.Scripts.Editor
             var element = categoriesProp.GetArrayElementAtIndex(index);
             var typeProp = element.FindPropertyRelative("type");
             var displayNameProp = element.FindPropertyRelative("displayName");
+            var uiCategoryProp = element.FindPropertyRelative("uiCategory");
             var renderersProp = element.FindPropertyRelative("renderers");
-            var canToggleProp = element.FindPropertyRelative("canToggle");
             var canChangeColorProp = element.FindPropertyRelative("canChangeColor");
             var colorTargetProp = element.FindPropertyRelative("colorTarget");
 
@@ -325,7 +325,7 @@ namespace Assets.Scripts.Editor
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(typeProp);
                 EditorGUILayout.PropertyField(displayNameProp);
-                EditorGUILayout.PropertyField(canToggleProp);
+                EditorGUILayout.PropertyField(uiCategoryProp);
                 EditorGUILayout.PropertyField(canChangeColorProp);
                 if (canChangeColorProp != null && canChangeColorProp.boolValue)
                     EditorGUILayout.PropertyField(colorTargetProp);
@@ -440,7 +440,9 @@ namespace Assets.Scripts.Editor
 
                 element.FindPropertyRelative("type").enumValueIndex = (int)pType;
                 element.FindPropertyRelative("displayName").stringValue = pType.ToString();
-                element.FindPropertyRelative("canToggle").boolValue = pType != PartsType.Eye && pType != PartsType.Skin;
+                element.FindPropertyRelative("uiCategory").enumValueIndex = (int)GetUICategory(pType);
+                element.FindPropertyRelative("exclusiveGroup").enumValueIndex = (int)GetExclusiveGroup(pType);
+                element.FindPropertyRelative("defaultVisible").boolValue = GetDefaultVisible(pType);
                 element.FindPropertyRelative("isCommon").boolValue = CommonPartsTypes.Contains(pType);
 
                 bool hasColor = pType == PartsType.Hair || pType == PartsType.Beard
@@ -501,6 +503,68 @@ namespace Assets.Scripts.Editor
             serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(pm);
             AutoMapColors();
+        }
+
+        private UICategory GetUICategory(PartsType pType)
+        {
+            return pType switch
+            {
+                PartsType.Hair => UICategory.Hair,
+                PartsType.Eye => UICategory.Eye,
+                PartsType.Beard => UICategory.Beard,
+                PartsType.Skin => UICategory.Skin,
+                PartsType.Helmet => UICategory.Helmet,
+                PartsType.Chest => UICategory.Chest,
+
+                PartsType.Sword => UICategory.HandRight,
+                PartsType.Axe => UICategory.HandRight,
+                PartsType.Bow => UICategory.HandRight,
+                PartsType.Wand => UICategory.HandRight,
+                PartsType.Staff => UICategory.HandRight,
+                PartsType.Spear => UICategory.HandRight,
+                PartsType.Blunt => UICategory.HandRight,
+                PartsType.Crossbow => UICategory.HandRight,
+
+                PartsType.Shield => UICategory.HandLeft,
+                PartsType.SubItem => UICategory.HandLeft,
+
+                // 既存の UICategoryConfig に入っていない補助パーツは、
+                // いったん親に近いカテゴリへ寄せる
+                PartsType.HelmetHair => UICategory.Hair,
+                PartsType.Arrow => UICategory.HandLeft,
+
+                _ => UICategory.Hair
+            };
+        }
+
+        private PartsExclusiveGroup GetExclusiveGroup(PartsType pType)
+        {
+            return pType switch
+            {
+                PartsType.Sword => PartsExclusiveGroup.HandRight,
+                PartsType.Axe => PartsExclusiveGroup.HandRight,
+                PartsType.Bow => PartsExclusiveGroup.HandRight,
+                PartsType.Wand => PartsExclusiveGroup.HandRight,
+                PartsType.Staff => PartsExclusiveGroup.HandRight,
+                PartsType.Spear => PartsExclusiveGroup.HandRight,
+                PartsType.Blunt => PartsExclusiveGroup.HandRight,
+                PartsType.Crossbow => PartsExclusiveGroup.HandRight,
+
+                PartsType.Shield => PartsExclusiveGroup.HandLeft,
+                PartsType.SubItem => PartsExclusiveGroup.HandLeft,
+
+                _ => PartsExclusiveGroup.None
+            };
+        }
+
+        private bool GetDefaultVisible(PartsType pType)
+        {
+            return pType switch
+            {
+                PartsType.Arrow => false,
+                PartsType.HelmetHair => false,
+                _ => true
+            };
         }
 
         private bool MatchRendererName(string objName, string searchName, PartsType pType)

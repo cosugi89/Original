@@ -18,7 +18,7 @@ namespace Assets.Scripts.UI.Dialog
         public bool UseBackground => useBackground;
         public bool CloseOnBackgroundClick => closeOnBackgroundClick;
 
-        public virtual void Setup(Player player = null)
+        public virtual void Setup(Player player = null, AvatarPreviewRenderer previewRenderer = null)
         {
         }
 

@@ -9,7 +9,7 @@ public class ItemDialog : DialogBase<bool>
     [Header("UI")]
     [SerializeField] private Button closeButton;
 
-    public override void Setup(Player player = null)
+    public override void Setup(Player player = null, AvatarPreviewRenderer previewRenderer = null)
     {
         closeButton.onClick.AddListener(OnClickClose);
     }

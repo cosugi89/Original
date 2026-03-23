@@ -6,10 +6,10 @@ using UnityEngine;
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// Manages character parts (sprites) including equipping,
-    /// color application, and preset serialization.
-    /// Visibility toggle from UI has been removed; internal visibility state
-    /// is still used for synchronization between related parts.
+    /// キャラクターのパーツ（スプライト）を管理します。
+    /// 装備、色の適用、プリセットのシリアライズなどを担当します。
+    /// UIからの表示トグルは削除されていますが、
+    /// 内部的な表示状態は関連パーツとの同期のために保持されています。
     /// </summary>
     public class PartsManager : MonoBehaviour
     {
@@ -24,42 +24,48 @@ namespace LayerLab.ArtMakerUnity
         [Header("Themes")]
         [SerializeField] private List<ThemeType> selectedThemes = new();
 
+        #region Properties
+
         /// <summary>
-        /// Current active sprite index for each parts type.
-        /// A value of -1 means the part is unequipped.
+        /// PartsType ごとのアクティブな Sprite を index で管理 (-1 は未装備)
         /// </summary>
         public Dictionary<PartsType, int> ActiveIndices { get; private set; } = new();
 
         /// <summary>
-        /// Visibility state for each parts type. True if the part is visible.
-        /// Kept for internal synchronization but UI toggle removed.
+        /// PartsType ごとの表示状態
         /// </summary>
         public Dictionary<PartsType, bool> Visibility { get; private set; } = new();
 
         /// <summary>
-        /// Current color for each color target type (Skin, Hair, Eye, Beard).
+        /// ColorTargetType に設定された色 (対象: 肌, 髪, 目, ヒゲ)
         /// </summary>
         public Dictionary<ColorTargetType, Color> Colors { get; private set; } = new();
 
         /// <summary>
-        /// Invoked when a parts type is equipped or changed. Parameters: parts type, new index.
+        /// Parts が装備または変更されたときに呼ばれるイベント
         /// </summary>
         public event Action<PartsType, int> OnPartsChanged;
 
         /// <summary>
-        /// Invoked when a color target color changes. Parameters: color target type, new color.
+        /// 色が変更されたときに呼ばれるイベント
         /// </summary>
         public event Action<ColorTargetType, Color> OnColorChanged;
 
+        /// <summary>
+        /// Parts ごとの情報を管理
+        /// </summary>
         private Dictionary<PartsType, PartsCategory> categoryMap;
 
+        #endregion Properties
+
+        #region Initialization
+
         /// <summary>
-        /// Initializes all categories, indices, visibility, colors, and applies default sprites.
-        /// Must be called before any other operation.
+        /// すべてのカテゴリ、インデックス、表示状態、色を初期化し、デフォルトの Sprite を適用する
         /// </summary>
         public void Init()
         {
-            // Initialize lookup dictionaries
+            // Dictionary 初期化
             categoryMap = new Dictionary<PartsType, PartsCategory>();
             ActiveIndices.Clear();
             Visibility.Clear();
@@ -67,71 +73,67 @@ namespace LayerLab.ArtMakerUnity
 
             if (categories == null) return;
 
-            // Register each category and set default index/visibility
+            // 各カテゴリを登録し、デフォルトのインデックスと表示状態を設定
             foreach (var cat in categories)
             {
-                categoryMap[cat.type] = cat;
-                ActiveIndices[cat.type] = 0;
-                Visibility[cat.type] = true;
+                categoryMap[cat.Type] = cat;
+                ActiveIndices[cat.Type] = 0;
+                Visibility[cat.Type] = cat.DefaultVisible;
 
-                // Beard always supports color changes
-                if (cat.type == PartsType.Beard && !cat.canChangeColor)
+
+                // MEMO: 初期設定値を管理できるようになれば不要になる想定
+                if (cat.Type == PartsType.Beard && !cat.CanChangeColor)
                 {
-                    cat.canChangeColor = true;
-                    cat.colorTarget = ColorTargetType.Beard;
+                    cat.CanChangeColor = true;
+                    cat.ColorTarget = ColorTargetType.Beard;
                 }
-                // Eye does not support color changes
-                if (cat.type == PartsType.Eye)
-                    cat.canChangeColor = false;
+
+                // MEMO: 初期設定値を管理できるようになれば不要になる想定
+                if (cat.Type == PartsType.Eye)
+                    cat.CanChangeColor = false;
             }
 
-            // For group categories, only the first sub-type is visible; the rest are hidden
-            foreach (UICategory uiCat in Enum.GetValues(typeof(UICategory)))
+            // 手の装備は 1つの装備中の PartsType を残して全て非表示にする
+            foreach (PartsExclusiveGroup group in Enum.GetValues(typeof(PartsExclusiveGroup)))
             {
-                if (!UICategoryConfig.IsGroup(uiCat)) continue;
-                var subTypes = UICategoryConfig.GetSubTypes(uiCat);
-                for (int i = 1; i < subTypes.Length; i++)
+                if (group == PartsExclusiveGroup.None) continue;
+
+                var members = GetExclusiveGroupMembers(group);
+                for (int i = 0; i < members.Length; i++)
                 {
-                    if (Visibility.ContainsKey(subTypes[i]))
-                        Visibility[subTypes[i]] = false;
+                    Visibility[members[i].Type] = i == 0;
                 }
             }
 
-            // Arrow is hidden by default (only shown when Bow or Crossbow is equipped)
-            if (Visibility.ContainsKey(PartsType.Arrow))
-                Visibility[PartsType.Arrow] = false;
-
-            // HelmetHair is hidden by default (only shown when Helmet is equipped)
-            if (Visibility.ContainsKey(PartsType.HelmetHair))
-                Visibility[PartsType.HelmetHair] = false;
-
-            // Set default colors to white
+            // MEMO: 初期設定値を管理できるようになれば不要になる想定
             Colors[ColorTargetType.Skin] = Color.white;
             Colors[ColorTargetType.Hair] = Color.white;
             Colors[ColorTargetType.Eye] = Color.white;
             Colors[ColorTargetType.Beard] = Color.white;
 
-            // Auto-detect color renderers if not assigned in the Inspector
+            // Inspector で未設定の場合はカラー用レンダラーを自動検出
             AutoMapColorRenderers();
 
-            // Apply initial sprites and visibility state to all categories
+            // すべてのカテゴリに初期スプライトと表示状態を適用
             foreach (var cat in categories)
             {
                 ApplySprites(cat, 0);
 
-                // Enable/disable GameObjects based on visibility state
-                bool visible = Visibility.TryGetValue(cat.type, out var v) && v;
-                if (cat.canToggle)
-                    SetRenderersActive(cat, visible);
+                // 表示状態に応じて GameObject を有効 / 無効化
+                bool visible = Visibility.TryGetValue(cat.Type, out var v) && v;
+                SetRenderersActive(cat, visible);
             }
 
-            // Sync HelmetHair visibility based on initial Helmet and Hair state
+            // Helmet と HelmetHair の初期連動
             SyncHelmetHairVisibility();
+
+            // Bow / Crossbow と Arrow の初期連動
+            SyncArrowVisibility();
         }
 
         /// <summary>
-        /// Auto-detects and assigns color renderers (Skin, Hair, Eye, Beard) from child objects
-        /// if they are not already assigned in the Inspector.
+        /// 子オブジェクトから Skin、Hair、Eye、Beard 用の SpriteRenderer を自動検出して割り当てます。
+        /// Inspector で未設定の場合のみ実行されます。
         /// </summary>
         private void AutoMapColorRenderers()
         {
@@ -153,8 +155,204 @@ namespace LayerLab.ArtMakerUnity
                 beardRenderers = FindRenderersByName(allRenderers, "Beard");
         }
 
+        #endregion Initialization
+
+        #region Parts Utilities
+
+        /// <summary>指定した PartsType で利用可能な Sprite 数を返す</summary>
+        public int GetPartsCount(PartsType type)
+        {
+            var cat = GetCategory(type);
+            if (cat == null) return 0;
+            return cat.SpriteCount > 0 ? cat.SpriteCount : cat.ThumbnailCount;
+        }
+
         /// <summary>
-        /// Finds SpriteRenderers whose GameObject names match any of the given names.
+        /// 指定した PartsType の Active な Sprite Index を返す
+        /// なければ0 (未装備状態ではない)
+        /// </summary>
+        public int GetActiveIndex(PartsType type)
+        {
+            return ActiveIndices.TryGetValue(type, out var index) ? index : 0;
+        }
+
+        /// <summary>
+        /// 指定した PartsType Index に対応する Thumbnail Sprite を返す
+        /// なければ最初の Renderers のスプライトを返す
+        /// </summary>
+        public Sprite GetThumbnail(PartsType type, int index)
+        {
+            var cat = GetCategory(type);
+            if (cat == null) return null;
+
+            if (cat.Thumbnails != null && cat.Thumbnails.Length > 0)
+            {
+                if (index < 0 || index >= cat.Thumbnails.Length) return null;
+                return cat.Thumbnails[index];
+            }
+
+            if (cat.Renderers == null || cat.Renderers.Length == 0) return null;
+            var sprites = cat.Renderers[0].Sprites;
+            if (sprites == null || index < 0 || index >= sprites.Length) return null;
+            return sprites[index];
+        }
+
+        /// <summary>指定した PartsType が現在表示されているかどうか</summary>
+        public bool IsPartsVisible(PartsType type)
+        {
+            return Visibility.TryGetValue(type, out var visible) && visible;
+        }
+
+        /// <summary>指定した PartsType が現在装備されているかどうか</summary>
+        public bool IsEquipped(PartsType type)
+        {
+            return ActiveIndices.TryGetValue(type, out var index) && index >= 0;
+        }
+
+        /// <summary>
+        /// 指定した PartsType に特定の Sprite Index を装備させる
+        /// OnPartsChanged を発火させる
+        /// </summary>
+        public void EquipParts(PartsType type, int index)
+        {
+            var cat = GetCategory(type);
+            if (cat == null) return;
+
+            int count = GetPartsCount(type);
+            if (count == 0) return;
+
+            index = Mathf.Clamp(index, 0, count - 1);
+            ActiveIndices[type] = index;
+            ApplySprites(cat, index);
+
+            // 以前に未装備だった場合は表示状態を復元する
+            if (Visibility.TryGetValue(type, out var vis) && !vis)
+            {
+                Visibility[type] = true;
+                SetRenderersActive(cat, true);
+            }
+
+            OnPartsChanged?.Invoke(type, index);
+
+            // 右手武器が装備されたら Arrow の表示状態を同期する
+            if (IsHandRightWeapon(type))
+                SyncArrowVisibility();
+
+            // Hair が変更されたら HelmetHair も同期する
+            if (type == PartsType.Hair)
+            {
+                var helmetHairCat = GetCategory(PartsType.HelmetHair);
+                if (helmetHairCat != null && index < helmetHairCat.SpriteCount)
+                {
+                    ActiveIndices[PartsType.HelmetHair] = index;
+                    ApplySprites(helmetHairCat, index);
+                }
+            }
+
+            // Helmet が装備されたら HelmetHair の表示状態を同期する
+            if (type == PartsType.Helmet)
+                SyncHelmetHairVisibility();
+        }
+
+        /// <summary>指定した PartsType を未装備状態にする</summary>
+        public void UnequipParts(PartsType type)
+        {
+            var cat = GetCategory(type);
+            if (cat == null) return;
+
+            ActiveIndices[type] = -1;
+            Visibility[type] = false;
+            SetRenderersActive(cat, false);
+
+            OnPartsChanged?.Invoke(type, -1);
+
+            // Bow または Crossbow を外したときは Arrow を同期する
+            if (type == PartsType.Bow || type == PartsType.Crossbow)
+                SyncArrowVisibility();
+
+            // Helmet を外したときは HelmetHair を同期する
+            if (type == PartsType.Helmet)
+                SyncHelmetHairVisibility();
+        }
+
+        /// <summary>UICategory 内で表示する PartsType を設定し、他を非表示にさせる</summary>
+        public void SetGroupActiveType(UICategory category, PartsType visibleType)
+        {
+            var group = ToExclusiveGroup(category);
+            if (group == PartsExclusiveGroup.None) return;
+
+            var members = GetExclusiveGroupMembers(group);
+            if (members.Length == 0) return;
+
+            foreach (var cat in members)
+            {
+                bool isVisible = cat.Type == visibleType;
+                Visibility[cat.Type] = isVisible;
+                SetRenderersActive(cat, isVisible);
+            }
+
+            // 選ばれたパーツが未装備状態なら 0 を入れて最低限表示可能にする
+            if (ActiveIndices.TryGetValue(visibleType, out int index) && index < 0)
+            {
+                EquipParts(visibleType, 0);
+            }
+
+            SyncArrowVisibility();
+        }
+
+        /// <summary>
+        /// 指定した PartsType の次の Sprite を装備する
+        /// 末尾まで行くと先頭に戻る
+        // TODO: 削除予定の機能
+        /// </summary>
+        public void NextParts(PartsType type)
+        {
+            int count = GetPartsCount(type);
+            if (count == 0) return;
+
+            int current = GetActiveIndex(type);
+            int next = (current + 1) % count;
+            EquipParts(type, next);
+        }
+
+        /// <summary>
+        /// 指定した PartsType の前の Sprite を装備する
+        /// 先頭より前に行くと末尾に戻る
+        // TODO: 削除予定の機能
+        /// </summary>
+        public void PrevParts(PartsType type)
+        {
+            int count = GetPartsCount(type);
+            if (count == 0) return;
+
+            int current = GetActiveIndex(type);
+            int prev = (current - 1 + count) % count;
+            EquipParts(type, prev);
+        }
+
+        /// <summary>指定したカラー対象の現在の色を返す</summary>
+        public Color GetColor(ColorTargetType target)
+        {
+            return Colors.TryGetValue(target, out var color) ? color : Color.white;
+        }
+
+        /// <summary>
+        /// 指定したカラー対象の色を設定し、対応する Renderer に適用する
+        /// OnColorChangedを発火させる
+        /// </summary>
+        public void SetColor(ColorTargetType target, Color color)
+        {
+            Colors[target] = color;
+            ApplyColor(target, color);
+            OnColorChanged?.Invoke(target, color);
+        }
+
+        #endregion Parts Utilities
+
+        #region Parts Helper
+
+        /// <summary>
+        /// 指定した名前のいずれかに一致する GameObject を持つ SpriteRenderer を検索します。
         /// </summary>
         private SpriteRenderer[] FindRenderersByName(SpriteRenderer[] allRenderers, params string[] names)
         {
@@ -173,231 +371,14 @@ namespace LayerLab.ArtMakerUnity
             return result.ToArray();
         }
 
-        /// <summary>
-        /// Returns the PartsCategory for the given type, or null if not found.
-        /// </summary>
+        /// <summary>PartsType に対応する PartsCategory を返す</summary>
         private PartsCategory GetCategory(PartsType type)
         {
             if (categoryMap == null || !categoryMap.TryGetValue(type, out var cat)) return null;
             return cat;
         }
 
-        /// <summary>
-        /// Returns the total number of available sprites for the given parts type.
-        /// </summary>
-        /// <param name="type">The parts type to query.</param>
-        /// <returns>The sprite count, or 0 if the type is not found.</returns>
-        public int GetPartsCount(PartsType type)
-        {
-            var cat = GetCategory(type);
-            if (cat == null) return 0;
-            return cat.SpriteCount > 0 ? cat.SpriteCount : cat.ThumbnailCount;
-        }
-
-        /// <summary>
-        /// Returns the current active sprite index for the given parts type.
-        /// </summary>
-        /// <param name="type">The parts type to query.</param>
-        /// <returns>The active index, or 0 if not found.</returns>
-        public int GetActiveIndex(PartsType type)
-        {
-            return ActiveIndices.TryGetValue(type, out var index) ? index : 0;
-        }
-
-        /// <summary>
-        /// Returns the thumbnail sprite for the given parts type at the specified index.
-        /// Falls back to the first renderer's sprite if no dedicated thumbnails exist.
-        /// </summary>
-        /// <param name="type">The parts type to query.</param>
-        /// <param name="index">The sprite index.</param>
-        /// <returns>The thumbnail sprite, or null if out of range.</returns>
-        public Sprite GetThumbnail(PartsType type, int index)
-        {
-            var cat = GetCategory(type);
-            if (cat == null) return null;
-
-            if (cat.thumbnails != null && cat.thumbnails.Length > 0)
-            {
-                if (index < 0 || index >= cat.thumbnails.Length) return null;
-                return cat.thumbnails[index];
-            }
-
-            if (cat.renderers == null || cat.renderers.Length == 0) return null;
-            var sprites = cat.renderers[0].sprites;
-            if (sprites == null || index < 0 || index >= sprites.Length) return null;
-            return sprites[index];
-        }
-
-        /// <summary>
-        /// Checks whether the given parts type is currently visible.
-        /// </summary>
-        /// <param name="type">The parts type to check.</param>
-        /// <returns>True if visible, false otherwise.</returns>
-        public bool IsPartsVisible(PartsType type)
-        {
-            return Visibility.TryGetValue(type, out var visible) && visible;
-        }
-
-        /// <summary>
-        /// Checks whether the given parts type has an equipped sprite (index >= 0).
-        /// </summary>
-        /// <param name="type">The parts type to check.</param>
-        /// <returns>True if equipped, false otherwise.</returns>
-        public bool IsEquipped(PartsType type)
-        {
-            return ActiveIndices.TryGetValue(type, out var index) && index >= 0;
-        }
-
-        /// <summary>
-        /// Equips a specific sprite index for the given parts type.
-        /// Clamps the index to valid range and fires <see cref="OnPartsChanged"/>.
-        /// </summary>
-        /// <param name="type">The parts type to equip.</param>
-        /// <param name="index">The sprite index to apply.</param>
-        public void EquipParts(PartsType type, int index)
-        {
-            var cat = GetCategory(type);
-            if (cat == null) return;
-
-            int count = GetPartsCount(type);
-            if (count == 0) return;
-
-            index = Mathf.Clamp(index, 0, count - 1);
-            ActiveIndices[type] = index;
-            ApplySprites(cat, index);
-
-            // Restore visibility if previously unequipped
-            if (cat.canToggle && Visibility.TryGetValue(type, out var vis) && !vis)
-            {
-                Visibility[type] = true;
-                SetRenderersActive(cat, true);
-            }
-
-            OnPartsChanged?.Invoke(type, index);
-
-            // Sync Arrow visibility when any HandRight weapon is equipped
-            if (IsHandRightWeapon(type))
-                SyncArrowVisibility();
-
-            // Sync HelmetHair when Hair style changes
-            if (type == PartsType.Hair)
-            {
-                var helmetHairCat = GetCategory(PartsType.HelmetHair);
-                if (helmetHairCat != null && index < helmetHairCat.SpriteCount)
-                {
-                    ActiveIndices[PartsType.HelmetHair] = index;
-                    ApplySprites(helmetHairCat, index);
-                }
-            }
-
-            // Sync HelmetHair visibility when Helmet is equipped
-            if (type == PartsType.Helmet)
-                SyncHelmetHairVisibility();
-        }
-
-        /// <summary>
-        /// Unequips the given parts type by hiding it and setting index to -1.
-        /// Only works if the category supports toggling.
-        /// </summary>
-        /// <param name="type">The parts type to unequip.</param>
-        public void UnequipParts(PartsType type)
-        {
-            var cat = GetCategory(type);
-            if (cat == null || !cat.canToggle) return;
-
-            ActiveIndices[type] = -1;
-            Visibility[type] = false;
-            SetRenderersActive(cat, false);
-
-            OnPartsChanged?.Invoke(type, -1);
-
-            // Sync Arrow when Bow or Crossbow is unequipped
-            if (type == PartsType.Bow || type == PartsType.Crossbow)
-                SyncArrowVisibility();
-
-            // Sync HelmetHair when Helmet is unequipped
-            if (type == PartsType.Helmet)
-                SyncHelmetHairVisibility();
-        }
-
-        /// <summary>
-        /// Sets the active visible subtype for a grouped UI category.
-        /// Hides other subtypes in the same group and shows the chosen one.
-        /// </summary>
-        /// <param name="category">The UI category representing a group.</param>
-        /// <param name="visibleType">The subtype to make visible.</param>
-        public void SetGroupActiveType(UICategory category, PartsType visibleType)
-        {
-            var subTypes = UICategoryConfig.GetSubTypes(category);
-            foreach (var type in subTypes)
-            {
-                var cat = GetCategory(type);
-                if (cat == null) continue;
-
-                bool show = type == visibleType;
-                Visibility[type] = show;
-                SetRenderersActive(cat, show);
-            }
-
-            // Sync dependent visibilities
-            SyncArrowVisibility();
-            SyncHelmetHairVisibility();
-        }
-
-        /// <summary>
-        /// Equips the next sprite for the given parts type, wrapping around to the start.
-        /// </summary>
-        /// <param name="type">The parts type to cycle.</param>
-        public void NextParts(PartsType type)
-        {
-            int count = GetPartsCount(type);
-            if (count == 0) return;
-
-            int current = GetActiveIndex(type);
-            int next = (current + 1) % count;
-            EquipParts(type, next);
-        }
-
-        /// <summary>
-        /// Equips the previous sprite for the given parts type, wrapping around to the end.
-        /// </summary>
-        /// <param name="type">The parts type to cycle.</param>
-        public void PrevParts(PartsType type)
-        {
-            int count = GetPartsCount(type);
-            if (count == 0) return;
-
-            int current = GetActiveIndex(type);
-            int prev = (current - 1 + count) % count;
-            EquipParts(type, prev);
-        }
-
-        /// <summary>
-        /// Returns the current color for the specified color target.
-        /// </summary>
-        /// <param name="target">The color target to query.</param>
-        /// <returns>The current color, or white if not found.</returns>
-        public Color GetColor(ColorTargetType target)
-        {
-            return Colors.TryGetValue(target, out var color) ? color : Color.white;
-        }
-
-        /// <summary>
-        /// Sets the color for the specified target and applies it to the corresponding renderers.
-        /// Fires <see cref="OnColorChanged"/>.
-        /// </summary>
-        /// <param name="target">The color target to update.</param>
-        /// <param name="color">The new color to apply.</param>
-        public void SetColor(ColorTargetType target, Color color)
-        {
-            Colors[target] = color;
-            ApplyColor(target, color);
-            OnColorChanged?.Invoke(target, color);
-        }
-
-        /// <summary>
-        /// Applies the given color to all SpriteRenderers associated with the color target.
-        /// </summary>
+        /// <summary>指定した色を、対応するカラー対象のすべての SpriteRenderer に適用する</summary>
         private void ApplyColor(ColorTargetType target, Color color)
         {
             SpriteRenderer[] renderers = target switch
@@ -418,9 +399,7 @@ namespace LayerLab.ArtMakerUnity
             }
         }
 
-        /// <summary>
-        /// Returns true if the given type is a right-hand weapon (Sword, Axe, Bow, etc.).
-        /// </summary>
+        /// <summary>指定した PartsType が右手武器（Sword、Axe、Bow など）かどうかを返す</summary>
         private static bool IsHandRightWeapon(PartsType type)
         {
             return type == PartsType.Sword || type == PartsType.Axe ||
@@ -430,26 +409,26 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Shows or hides Arrow and Bolt based on Bow/Crossbow visibility.
-        /// Arrow is shown only when Bow is visible, Bolt only when Crossbow is visible.
+        /// Bow / Crossbow の表示状態に応じて Arrow / Bolt の表示を切り替えます。
+        /// Arrow は Bow 表示時のみ、Bolt は Crossbow 表示時のみ表示されます。
         /// </summary>
         private void SyncArrowVisibility()
         {
             var arrowCat = GetCategory(PartsType.Arrow);
-            if (arrowCat == null || arrowCat.renderers == null) return;
+            if (arrowCat == null || arrowCat.Renderers == null) return;
 
             bool bowVisible = Visibility.TryGetValue(PartsType.Bow, out var bv) && bv;
             bool crossbowVisible = Visibility.TryGetValue(PartsType.Crossbow, out var cv) && cv;
 
-            foreach (var pr in arrowCat.renderers)
+            foreach (var pr in arrowCat.Renderers)
             {
-                if (pr.renderer == null) continue;
-                string name = pr.renderer.gameObject.name;
+                if (pr.Renderer == null) continue;
+                string name = pr.Renderer.gameObject.name;
 
                 if (name == "Bolt")
-                    pr.renderer.gameObject.SetActive(crossbowVisible);
+                    pr.Renderer.gameObject.SetActive(crossbowVisible);
                 else
-                    pr.renderer.gameObject.SetActive(bowVisible);
+                    pr.Renderer.gameObject.SetActive(bowVisible);
             }
 
             bool showAny = bowVisible || crossbowVisible;
@@ -457,10 +436,11 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Shows or hides HelmetHair and Hair based on Helmet visibility and Hair toggle state.
-        /// When Helmet is visible and Hair is wanted, Hair is hidden and HelmetHair is shown.
-        /// When Helmet is not visible, Hair is shown and HelmetHair is hidden.
-        /// When Hair is toggled off, both Hair and HelmetHair are hidden.
+        /// Helmet の表示状態と Hair の表示希望状態に応じて、
+        /// HelmetHair と Hair の表示を切り替えます。
+        /// Helmet が表示中で Hair を表示したい場合は Hair を隠し HelmetHair を表示します。
+        /// Helmet が非表示なら Hair を表示し HelmetHair を隠します。
+        /// Hair 自体が非表示なら両方とも隠します。
         /// </summary>
         private void SyncHelmetHairVisibility()
         {
@@ -475,21 +455,21 @@ namespace LayerLab.ArtMakerUnity
 
             if (hairWanted && helmetVisible)
             {
-                // Helmet ON + Hair wanted → hide Hair, show HelmetHair
+                // Helmet が ON かつ Hair を表示したい場合 → Hair を隠し HelmetHair を表示
                 SetRenderersActive(hairCat, false);
                 SetRenderersActive(helmetHairCat, true);
                 Visibility[PartsType.HelmetHair] = true;
             }
             else if (hairWanted && !helmetVisible)
             {
-                // Helmet OFF + Hair wanted → show Hair, hide HelmetHair
+                // Helmet が OFF かつ Hair を表示したい場合 → Hair を表示し HelmetHair を隠す
                 SetRenderersActive(hairCat, true);
                 SetRenderersActive(helmetHairCat, false);
                 Visibility[PartsType.HelmetHair] = false;
             }
             else
             {
-                // Hair not wanted → hide both
+                // Hair を表示したくない場合 → 両方とも隠す
                 SetRenderersActive(hairCat, false);
                 SetRenderersActive(helmetHairCat, false);
                 Visibility[PartsType.HelmetHair] = false;
@@ -497,47 +477,47 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Activates or deactivates all renderer GameObjects in the given category.
+        /// 指定したカテゴリに含まれるすべてのレンダラーの GameObject を有効 / 無効化します。
         /// </summary>
         private void SetRenderersActive(PartsCategory cat, bool active)
         {
-            if (cat?.renderers == null) return;
-            foreach (var pr in cat.renderers)
+            if (cat?.Renderers == null) return;
+            foreach (var pr in cat.Renderers)
             {
-                if (pr.renderer != null)
-                    pr.renderer.gameObject.SetActive(active);
+                if (pr.Renderer != null)
+                    pr.Renderer.gameObject.SetActive(active);
             }
         }
 
         /// <summary>
-        /// Assigns the sprite at the given index to all renderers in the category.
+        /// 指定したインデックスのスプライトを、カテゴリ内のすべてのレンダラーへ割り当てます。
         /// </summary>
         private void ApplySprites(PartsCategory cat, int index)
         {
-            if (cat.renderers == null) return;
+            if (cat.Renderers == null) return;
 
-            foreach (var pr in cat.renderers)
+            foreach (var pr in cat.Renderers)
             {
-                if (pr.renderer == null || pr.sprites == null) continue;
-                if (index < 0 || index >= pr.sprites.Length) continue;
-                pr.renderer.sprite = pr.sprites[index];
+                if (pr.Renderer == null || pr.Sprites == null) continue;
+                if (index < 0 || index >= pr.Sprites.Length) continue;
+                pr.Renderer.sprite = pr.Sprites[index];
             }
         }
 
-        /// <summary>
-        /// Plays the specified animation clip on the character's Animator.
-        /// </summary>
-        /// <param name="animName">The name of the animation clip to play.</param>
+        #endregion Parts Helper
+
+        #region Animation Utilities
+
+        /// <summary>指定した Animation を再生させる</summary>
+        // TODO: string でなく enum で管理するようにしたい
         public void PlayAnimation(string animName)
         {
             if (animator != null)
                 animator.Play(animName);
         }
 
-        /// <summary>
-        /// Returns the name of the currently playing animation clip.
-        /// </summary>
-        /// <returns>The clip name, or an empty string if unavailable.</returns>
+        /// <summary>現在再生中の Animation Clip 名を返す</summary>
+        // TODO: string でなく enum で管理するようにしたい
         public string GetCurrentAnimation()
         {
             if (animator == null) return string.Empty;
@@ -550,10 +530,8 @@ namespace LayerLab.ArtMakerUnity
             return string.Empty;
         }
 
-        /// <summary>
-        /// Returns an array of all animation clip names available in the Animator controller.
-        /// </summary>
-        /// <returns>An array of clip names, or an empty array if no animator is assigned.</returns>
+        /// <summary>Animator Controller 内で利用可能なすべての Animation Clip 名を返す</summary>
+        // TODO: string でなく enum で管理するようにしたい
         public string[] GetAnimationNames()
         {
             if (animator == null || animator.runtimeAnimatorController == null)
@@ -564,79 +542,94 @@ namespace LayerLab.ArtMakerUnity
                 .ToArray();
         }
 
+        #endregion Animation Utilities
+
         /// <summary>
-        /// Randomizes all parts by equipping a random sprite index for each category.
+        /// すべてのパーツをランダムに装備します。
         /// </summary>
         public void RandomizeAll()
         {
             if (categories == null) return;
 
-            // 그룹 카테고리에서 랜덤으로 하나의 서브타입 선택
-            var groupPicks = new Dictionary<UICategory, PartsType>();
-            foreach (UICategory uiCat in Enum.GetValues(typeof(UICategory)))
+            // 排他的グループごとにランダムで 1 つの PartsType を選ぶ
+            var groupPicks = new Dictionary<PartsExclusiveGroup, PartsType>();
+
+            foreach (PartsExclusiveGroup group in Enum.GetValues(typeof(PartsExclusiveGroup)))
             {
-                if (!UICategoryConfig.IsGroup(uiCat)) continue;
-                var subTypes = UICategoryConfig.GetSubTypes(uiCat);
-                // 스프라이트가 있는 서브타입만 후보로
+                if (group == PartsExclusiveGroup.None) continue;
+
+                var members = GetExclusiveGroupMembers(group);
+
+                // スプライトを持つカテゴリのみ候補にする
                 var candidates = new List<PartsType>();
-                foreach (var st in subTypes)
+                foreach (var cat in members)
                 {
-                    if (GetPartsCount(st) > 0) candidates.Add(st);
+                    if (GetPartsCount(cat.Type) > 0)
+                        candidates.Add(cat.Type);
                 }
+
                 if (candidates.Count > 0)
-                    groupPicks[uiCat] = candidates[UnityEngine.Random.Range(0, candidates.Count)];
+                    groupPicks[group] = candidates[UnityEngine.Random.Range(0, candidates.Count)];
             }
 
             foreach (var cat in categories)
             {
-                // Skip HelmetHair and Arrow — they sync automatically
-                if (cat.type == PartsType.HelmetHair || cat.type == PartsType.Arrow) continue;
+                // HelmetHair と Arrow は自動同期されるためスキップ
+                if (cat.Type == PartsType.HelmetHair || cat.Type == PartsType.Arrow)
+                    continue;
 
-                int count = GetPartsCount(cat.type);
-                if (count == 0) continue;
+                int count = GetPartsCount(cat.Type);
+                if (count == 0)
+                    continue;
 
-                // Beard and Helmet have 50% chance to be unequipped
-                if (cat.type == PartsType.Beard || cat.type == PartsType.Helmet)
+                // Beard と Helmet は 50% の確率で未装備にする
+                if (cat.Type == PartsType.Beard || cat.Type == PartsType.Helmet)
                 {
                     if (UnityEngine.Random.value < 0.5f)
                     {
-                        UnequipParts(cat.type);
+                        UnequipParts(cat.Type);
                         continue;
                     }
 
-                    // previous UnequipParts might have set Visibility false, so restore
-                    if (Visibility.TryGetValue(cat.type, out var v) && !v)
+                    // 以前の UnequipParts で非表示になっている可能性があるため復元する
+                    if (Visibility.TryGetValue(cat.Type, out var visible) && !visible)
                     {
-                        Visibility[cat.type] = true;
+                        Visibility[cat.Type] = true;
                         SetRenderersActive(cat, true);
                     }
                 }
 
-                // 그룹 서브타입: 선택된 것만 visible, 나머지 숨김
-                if (IsHandRightWeapon(cat.type))
+                // 排他的グループ所属なら、選ばれたものだけ表示
+                if (cat.ExclusiveGroup != PartsExclusiveGroup.None)
                 {
-                    bool picked = groupPicks.TryGetValue(UICategory.HandRight, out var hr) && hr == cat.type;
-                    Visibility[cat.type] = picked;
+                    bool picked = groupPicks.TryGetValue(cat.ExclusiveGroup, out var pickedType)
+                        && pickedType == cat.Type;
+
+                    Visibility[cat.Type] = picked;
                     SetRenderersActive(cat, picked);
-                    if (picked) EquipParts(cat.type, UnityEngine.Random.Range(0, count));
-                    continue;
-                }
-                if (cat.type == PartsType.Shield || cat.type == PartsType.SubItem)
-                {
-                    bool picked = groupPicks.TryGetValue(UICategory.HandLeft, out var hl) && hl == cat.type;
-                    Visibility[cat.type] = picked;
-                    SetRenderersActive(cat, picked);
-                    if (picked) EquipParts(cat.type, UnityEngine.Random.Range(0, count));
+
+                    if (picked)
+                        EquipParts(cat.Type, UnityEngine.Random.Range(0, count));
+
                     continue;
                 }
 
-                EquipParts(cat.type, UnityEngine.Random.Range(0, count));
+                // 通常カテゴリはそのままランダム装備
+                EquipParts(cat.Type, UnityEngine.Random.Range(0, count));
             }
 
-            // Randomize colors (Skin, Hair, Beard)
+            // 連動パーツの表示を同期
+            SyncHelmetHairVisibility();
+            SyncArrowVisibility();
+
+            // 色もランダム化する（Skin、Hair、Beard）
             RandomizeColors();
         }
 
+        /// <summary>
+        /// カラー対象の色をランダム化します。
+        /// Eye は対象外です。
+        /// </summary>
         private void RandomizeColors()
         {
             foreach (ColorTargetType target in Enum.GetValues(typeof(ColorTargetType)))
@@ -651,32 +644,42 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Copies all parts indices, visibility, and colors from another PartsManager.
+        /// 別の PartsManager から、すべてのパーツインデックス、表示状態、色をコピーします。
         /// </summary>
-        /// <param name="other">The source PartsManager to copy from.</param>
+        /// <param name="other">コピー元の PartsManager。</param>
         public void CopyFrom(PartsManager other)
         {
             if (other == null) return;
 
             foreach (var kvp in other.ActiveIndices)
-                EquipParts(kvp.Key, kvp.Value);
+            {
+                if (kvp.Value < 0)
+                    UnequipParts(kvp.Key);
+                else
+                    EquipParts(kvp.Key, kvp.Value);
+            }
 
             foreach (var kvp in other.Visibility)
             {
                 var cat = GetCategory(kvp.Key);
                 if (cat == null) continue;
+
                 Visibility[kvp.Key] = kvp.Value;
                 SetRenderersActive(cat, kvp.Value);
             }
 
             foreach (var kvp in other.Colors)
                 SetColor(kvp.Key, kvp.Value);
+
+            SyncArrowVisibility();
+            SyncHelmetHairVisibility();
         }
 
         /// <summary>
-        /// Applies a saved preset item to this character, restoring parts, colors, and visibility.
+        /// 保存済みのプリセットをこのキャラクターに適用し、
+        /// パーツ、色、表示状態を復元します。
         /// </summary>
-        /// <param name="item">The preset item to apply.</param>
+        /// <param name="item">適用するプリセットデータ。</param>
         public void ApplyPresetItem(PresetData.PresetItem item)
         {
             if (item == null || item.isEmpty) return;
@@ -694,24 +697,25 @@ namespace LayerLab.ArtMakerUnity
 
             foreach (var entry in item.visibility)
             {
-                // Arrow, HelmetHair are auto-synced and not set directly from preset
+                // Arrow と HelmetHair は自動同期されるため、プリセットから直接設定しない
                 if (entry.type == PartsType.Arrow || entry.type == PartsType.HelmetHair)
                     continue;
+
                 var cat = GetCategory(entry.type);
                 if (cat == null) continue;
                 Visibility[entry.type] = entry.visible;
                 SetRenderersActive(cat, entry.visible);
             }
 
-            // Re-run sync after applying preset
+            // プリセット適用後に同期を再実行
             SyncArrowVisibility();
             SyncHelmetHairVisibility();
         }
 
         /// <summary>
-        /// Serializes the current character state into a preset item for saving.
+        /// 現在のキャラクター状態をプリセットデータとしてシリアライズします。
         /// </summary>
-        /// <returns>A new <see cref="PresetData.PresetItem"/> containing the current state.</returns>
+        /// <returns>現在の状態を格納した新しい <see cref="PresetData.PresetItem"/>。</returns>
         public PresetData.PresetItem ToPresetItem()
         {
             var item = new PresetData.PresetItem { isEmpty = false };
@@ -731,59 +735,89 @@ namespace LayerLab.ArtMakerUnity
         #region Category Accessors
 
         /// <summary>
-        /// Returns all registered parts types from the categories array.
+        /// categories 配列に登録されているすべてのパーツタイプを返します。
         /// </summary>
-        /// <returns>An array of <see cref="PartsType"/> values.</returns>
+        /// <returns><see cref="PartsType"/> の配列。</returns>
         public PartsType[] GetAllPartsTypes()
         {
             if (categories == null) return Array.Empty<PartsType>();
-            return categories.Select(c => c.type).ToArray();
+            return categories.Select(c => c.Type).ToArray();
         }
 
         /// <summary>
-        /// Checks whether the given parts type supports color changes.
+        /// 指定したパーツタイプがカラー変更に対応しているかを返します。
         /// </summary>
-        /// <param name="type">The parts type to check.</param>
-        /// <returns>True if color change is supported.</returns>
+        /// <param name="type">確認対象のパーツタイプ。</param>
+        /// <returns>カラー変更可能なら true。</returns>
         public bool CanChangeColor(PartsType type)
         {
             var cat = GetCategory(type);
-            return cat != null && cat.canChangeColor;
+            return cat != null && cat.CanChangeColor;
         }
 
         /// <summary>
-        /// Returns the color target type associated with the given parts type.
+        /// 指定したパーツタイプに対応するカラー対象タイプを返します。
         /// </summary>
-        /// <param name="type">The parts type to query.</param>
-        /// <returns>The <see cref="ColorTargetType"/>, defaulting to Skin.</returns>
+        /// <param name="type">取得対象のパーツタイプ。</param>
+        /// <returns>対応する <see cref="ColorTargetType"/>。見つからない場合は Skin。</returns>
         public ColorTargetType GetColorTarget(PartsType type)
         {
             var cat = GetCategory(type);
-            return cat?.colorTarget ?? ColorTargetType.Skin;
+            return cat?.ColorTarget ?? ColorTargetType.Skin;
         }
 
         /// <summary>
-        /// Checks whether the given parts type can be toggled on/off.
+        /// 指定したパーツタイプの表示名を返します。
         /// </summary>
-        /// <param name="type">The parts type to check.</param>
-        /// <returns>True if toggling is supported.</returns>
-        public bool CanToggle(PartsType type)
-        {
-            var cat = GetCategory(type);
-            return cat != null && cat.canToggle;
-        }
-
-        /// <summary>
-        /// Returns the display name for the given parts type.
-        /// </summary>
-        /// <param name="type">The parts type to query.</param>
-        /// <returns>The display name, or the enum name if not set.</returns>
+        /// <param name="type">取得対象のパーツタイプ。</param>
+        /// <returns>表示名。未設定の場合は enum 名。</returns>
         public string GetDisplayName(PartsType type)
         {
             var cat = GetCategory(type);
-            return cat?.displayName ?? type.ToString();
+            return cat?.DisplayName ?? type.ToString();
         }
 
         #endregion
+
+        private PartsType[] GetPartsTypesByCategory(UICategory category)
+        {
+            if (categories == null) return Array.Empty<PartsType>();
+
+            return categories
+                .Where(c => c.UICategory == category)
+                .Select(c => c.Type)
+                .ToArray();
+        }
+
+        private bool IsGroupCategory(UICategory category)
+        {
+            return GetPartsTypesByCategory(category).Length > 1;
+        }
+
+        private PartsCategory[] GetExclusiveGroupMembers(PartsExclusiveGroup group)
+        {
+            if (categories == null || group == PartsExclusiveGroup.None)
+                return Array.Empty<PartsCategory>();
+
+            return categories
+                .Where(c => c.ExclusiveGroup == group)
+                .ToArray();
+        }
+
+        private PartsExclusiveGroup ToExclusiveGroup(UICategory category)
+        {
+            return category switch
+            {
+                UICategory.HandRight => PartsExclusiveGroup.HandRight,
+                UICategory.HandLeft => PartsExclusiveGroup.HandLeft,
+                _ => PartsExclusiveGroup.None
+            };
+        }
+
+        private bool IsExclusivePartsType(PartsType type)
+        {
+            var cat = GetCategory(type);
+            return cat != null && cat.ExclusiveGroup != PartsExclusiveGroup.None;
+        }
     }
 }

@@ -44,6 +44,13 @@ namespace LayerLab.ArtMakerUnity
         HandLeft,
     }
 
+    public enum PartsExclusiveGroup
+    {
+        None,
+        HandRight,
+        HandLeft
+    }
+
     /// <summary>
     /// キャラクターカラーの変更対象タイプ（肌、髪、目、ヒゲ）
     /// </summary>
