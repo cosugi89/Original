@@ -1,8 +1,11 @@
 #if UNITY_EDITOR
+using Assets.Scripts.Core;
+using Assets.Scripts.Data;
+using LayerLab.ArtMakerUnity;
 using UnityEditor;
 using UnityEngine;
 
-namespace LayerLab.ArtMakerUnity
+namespace Assets.Scripts.Editor
 {
     /// <summary>
     /// Editor-only utility for saving the current character as a prefab with thumbnail.

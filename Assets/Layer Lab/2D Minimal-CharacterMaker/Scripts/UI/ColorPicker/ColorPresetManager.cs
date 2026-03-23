@@ -1,3 +1,4 @@
+using Assets.Scripts.Core;
 using UnityEngine;
 
 namespace LayerLab.ArtMakerUnity
@@ -87,3 +88,4 @@ namespace LayerLab.ArtMakerUnity
         }
     }
 }
+

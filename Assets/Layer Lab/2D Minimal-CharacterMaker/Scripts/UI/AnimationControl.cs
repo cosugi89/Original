@@ -1,3 +1,4 @@
+using Assets.Scripts.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -90,3 +91,4 @@ namespace LayerLab.ArtMakerUnity
         }
     }
 }
+

@@ -1,6 +1,9 @@
+using Assets.Scripts.Core;
+using Assets.Scripts.Systems.Save;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
-namespace LayerLab.ArtMakerUnity
+namespace Assets.Scripts.UI.Dialog
 {
     /// <summary>
     /// Character parts panel controller.

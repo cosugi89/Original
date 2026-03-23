@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using Assets.Scripts.Core;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -25,6 +26,7 @@ namespace LayerLab.ArtMakerUnity
         [SerializeField] private Image previewColor;
         [SerializeField] private TMP_InputField hexInput;
         [SerializeField] private Button buttonCopy;
+        [SerializeField] private GameObject check;
 
         /// <summary>
         /// Event fired whenever the selected color changes.
@@ -365,3 +367,4 @@ namespace LayerLab.ArtMakerUnity
         }
     }
 }
+

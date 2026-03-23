@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Scripts.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -323,3 +324,4 @@ namespace LayerLab.ArtMakerUnity
         }
     }
 }
+

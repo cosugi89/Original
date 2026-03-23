@@ -17466,7 +17466,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3b16bf3e00f4c4383ba0403d23da01ae, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Home.DemoControl
   player: {fileID: 1482810455}
   cameraControl: {fileID: 156782159}
   animationControl: {fileID: 1698423152}
@@ -20204,7 +20204,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 972757600}
-        m_TargetAssemblyTypeName: LayerLab.ArtMakerUnity.PartsManager, LayerLab.ArtMakerUnity
+        m_TargetAssemblyTypeName: Assets.Scripts.Core.PartsManager, Assembly-CSharp
         m_MethodName: RandomizeAll
         m_Mode: 1
         m_Arguments:
@@ -20932,7 +20932,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07d48c898833a464b813f557a86df20d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.PanelPartsControl
   focusFrame: {fileID: 6085624591584818277}
   selectFrame: {fileID: 8861661432093685476}
   groupArrow: {fileID: 8290772573257750595}
@@ -25118,7 +25118,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1878492168}
-        m_TargetAssemblyTypeName: LayerLab.ArtMakerUnity.DemoControl, LayerLab.ArtMakerUnity
+        m_TargetAssemblyTypeName: Assets.Scripts.Features.Home.DemoControl, Assembly-CSharp
         m_MethodName: OnClickAssetstore
         m_Mode: 1
         m_Arguments:
@@ -25250,7 +25250,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1878492168}
-        m_TargetAssemblyTypeName: LayerLab.ArtMakerUnity.DemoControl, LayerLab.ArtMakerUnity
+        m_TargetAssemblyTypeName: Assets.Scripts.Features.Home.DemoControl, Assembly-CSharp
         m_MethodName: OnClickDiscord
         m_Mode: 1
         m_Arguments:
@@ -25382,7 +25382,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1878492168}
-        m_TargetAssemblyTypeName: LayerLab.ArtMakerUnity.DemoControl, LayerLab.ArtMakerUnity
+        m_TargetAssemblyTypeName: Assets.Scripts.Features.Home.DemoControl, Assembly-CSharp
         m_MethodName: OnClickYoutube
         m_Mode: 1
         m_Arguments:
@@ -25514,7 +25514,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1878492168}
-        m_TargetAssemblyTypeName: LayerLab.ArtMakerUnity.DemoControl, LayerLab.ArtMakerUnity
+        m_TargetAssemblyTypeName: Assets.Scripts.Features.Home.DemoControl, Assembly-CSharp
         m_MethodName: OnClickFacebook
         m_Mode: 1
         m_Arguments:

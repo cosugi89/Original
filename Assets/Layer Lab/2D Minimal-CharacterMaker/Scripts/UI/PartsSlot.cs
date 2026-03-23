@@ -1,3 +1,5 @@
+using Assets.Scripts.Core;
+using Assets.Scripts.UI.Dialog;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;

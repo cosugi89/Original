@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using Assets.Scripts.Core;
 
 namespace Assets.Scripts.UI.Dialog
 {

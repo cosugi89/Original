@@ -970,7 +970,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1673b50027627de47aa25e548d576ea2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: LayerLab.ArtMakerUnity::LayerLab.ArtMakerUnity.DemoControl
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Home.HomeUIScript
   player: {fileID: 1154482993}
   cameraControl: {fileID: 1566999127}
   previewRenderer: {fileID: 1733284221}

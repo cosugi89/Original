@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.Data.DTO;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
-namespace LayerLab.ArtMakerUnity
+namespace Assets.Scripts.Core
 {
     /// <summary>
     /// キャラクターのパーツ（スプライト）を管理します。

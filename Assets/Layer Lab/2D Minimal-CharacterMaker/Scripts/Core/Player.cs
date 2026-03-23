@@ -1,13 +1,14 @@
 using System;
+using Assets.Scripts.Core;
 using UnityEngine;
 
 namespace LayerLab.ArtMakerUnity
 {
     /// <summary>
-    /// ƒVƒ“ƒOƒ‹ƒgƒ“‚ÌPlayerController
-    /// - ƒLƒƒƒ‰ƒNƒ^[ƒp[ƒc‚ÌƒZƒbƒgƒAƒbƒv
-    /// - GameMode‚ÌØ‚è‘Ö‚¦
-    /// - Experienceƒ‚[ƒh‚É‚¨‚¯‚éƒNƒŠƒbƒNˆÚ“®
+    /// ï¿½Vï¿½ï¿½ï¿½Oï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½PlayerController
+    /// - ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½^ï¿½[ï¿½pï¿½[ï¿½cï¿½ÌƒZï¿½bï¿½gï¿½Aï¿½bï¿½v
+    /// - GameModeï¿½ÌØ‚ï¿½Ö‚ï¿½
+    /// - Experienceï¿½ï¿½ï¿½[ï¿½hï¿½É‚ï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½ï¿½ï¿½bï¿½Nï¿½Ú“ï¿½
     /// </summary>
     public class Player : MonoBehaviour
     {
@@ -22,8 +23,8 @@ namespace LayerLab.ArtMakerUnity
         [SerializeField] private Rigidbody2D rb;
         [SerializeField] private float moveSpeed = 3f;
 
-        public PartsManager PartsManager => partsManager;   // ƒLƒƒƒ‰ƒNƒ^[ƒJƒXƒ^ƒ}ƒCƒY—p
-        public event Action<GameMode> OnModeChanged;        // ƒQ[ƒ€ƒ‚[ƒh‚Ì•ÏX
+        public PartsManager PartsManager => partsManager;   // ï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½^ï¿½[ï¿½Jï¿½Xï¿½^ï¿½}ï¿½Cï¿½Yï¿½p
+        public event Action<GameMode> OnModeChanged;        // ï¿½Qï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½hï¿½Ì•ÏX
 
         private GameMode currentMode = GameMode.Home;
         private Vector2 moveTarget;
@@ -32,7 +33,7 @@ namespace LayerLab.ArtMakerUnity
 
         private void Awake()
         {
-            // d•¡‚µ‚Ä¶¬‚³‚ê‚½ Player ƒNƒ‰ƒX‚ğíœ‚µ‚Ä‚±‚ê‚ğ“o˜^
+            // ï¿½dï¿½ï¿½ï¿½ï¿½ï¿½Äï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê‚½ Player ï¿½Nï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½íœï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½oï¿½^
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
@@ -44,7 +45,7 @@ namespace LayerLab.ArtMakerUnity
 
         public void Init()
         {
-            // PartsManager ‚ÌƒZƒbƒgƒAƒbƒv
+            // PartsManager ï¿½ÌƒZï¿½bï¿½gï¿½Aï¿½bï¿½v
             if (partsManager != null)
                 partsManager.Init();
 
@@ -56,11 +57,11 @@ namespace LayerLab.ArtMakerUnity
             currentMode = mode;
             isMoving = false;
 
-            // ˆÚ“®‚ğ’â~‚·‚é
+            // ï¿½Ú“ï¿½ï¿½ï¿½ï¿½~ï¿½ï¿½ï¿½ï¿½
             if (rb != null)
                 rb.linearVelocity = Vector2.zero;
 
-            // ƒAƒjƒ[ƒVƒ‡ƒ“‚ğƒŠƒZƒbƒg
+            // ï¿½Aï¿½jï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Zï¿½bï¿½g
             if (mode == GameMode.Home && partsManager != null)
                 partsManager.PlayAnimation(ANIM_IDLE);
 

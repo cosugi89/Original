@@ -1,6 +1,8 @@
+using Assets.Scripts.Core;
+using Assets.Scripts.Data.DTO;
 using UnityEngine;
 
-namespace LayerLab.ArtMakerUnity
+namespace Assets.Scripts.Data
 {
     /// <summary>
     /// Stores character customization data (parts, colors, visibility) on a prefab.

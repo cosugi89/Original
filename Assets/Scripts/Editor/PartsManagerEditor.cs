@@ -1,10 +1,11 @@
-using LayerLab.ArtMakerUnity;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Assets.Scripts.Core;
 using UnityEditor;
 using UnityEngine;
+using LayerLab.ArtMakerUnity;
 
 namespace Assets.Scripts.Editor
 {
@@ -528,8 +529,8 @@ namespace Assets.Scripts.Editor
                 PartsType.Shield => UICategory.HandLeft,
                 PartsType.SubItem => UICategory.HandLeft,
 
-                // Šù‘¶‚Ì UICategoryConfig ‚É“ü‚Á‚Ä‚¢‚È‚¢•â•ƒp[ƒc‚ÍA
-                // ‚¢‚Á‚½‚ñe‚É‹ß‚¢ƒJƒeƒSƒŠ‚ÖŠñ‚¹‚é
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UICategoryConfig ï¿½É“ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½È‚ï¿½ï¿½â•ï¿½pï¿½[ï¿½cï¿½ÍA
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½eï¿½É‹ß‚ï¿½ï¿½Jï¿½eï¿½Sï¿½ï¿½ï¿½ÖŠñ‚¹‚ï¿½
                 PartsType.HelmetHair => UICategory.Hair,
                 PartsType.Arrow => UICategory.HandLeft,
 
@@ -906,3 +907,4 @@ namespace Assets.Scripts.Editor
         }
     }
 }
+

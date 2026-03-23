@@ -9688,7 +9688,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 46b96e2d12bfa3b41bd8c5790dbfd86c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AvatarDialog
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.AvatarDialog
   useBackground: 1
   closeOnBackgroundClick: 1
   closeButton: {fileID: 8691993337091670163}
@@ -19005,7 +19005,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: LayerLab.ArtMakerUnity.PartsManager, LayerLab.ArtMakerUnity
+        m_TargetAssemblyTypeName: Assets.Scripts.Core.PartsManager, Assembly-CSharp
         m_MethodName: RandomizeAll
         m_Mode: 1
         m_Arguments:

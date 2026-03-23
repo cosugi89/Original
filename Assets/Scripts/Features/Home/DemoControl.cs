@@ -1,6 +1,9 @@
+using Assets.Scripts.Systems.Save;
+using Assets.Scripts.UI.Dialog;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
-namespace LayerLab.ArtMakerUnity
+namespace Assets.Scripts.Features.Home
 {
     /// <summary>
     /// Main demo controller that initializes and orchestrates all UI panels,

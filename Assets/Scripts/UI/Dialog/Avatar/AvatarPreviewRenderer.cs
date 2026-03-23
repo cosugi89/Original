@@ -1,5 +1,6 @@
 ﻿using LayerLab.ArtMakerUnity;
 using UnityEngine;
+using Assets.Scripts.Core;
 
 namespace Assets.Scripts.UI.Dialog
 {
