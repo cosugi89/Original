@@ -62,9 +62,10 @@ namespace Assets.Scripts.Features.Home
 
         private async UniTaskVoid OpenAvatarDialogAsync()
         {
-            bool result = await OpenDialogAsync(avatarDialog);
+            var request = new AvatarDialogRequest(player);
+            AvatarDialogResult result = await OpenDialogAsync<AvatarDialog, AvatarDialogRequest, AvatarDialogResult>(avatarDialog, request);
 
-            if (result)
+            if (result.IsSaved)
             {
                 Debug.Log("OK");
             }
@@ -72,22 +73,24 @@ namespace Assets.Scripts.Features.Home
 
         private async UniTaskVoid OpenItemDialogAsync()
         {
-            bool result = await OpenDialogAsync(itemDialog);
+            var request = new ItemDialogRequest();
+            ItemDialogResult result = await OpenDialogAsync<ItemDialog, ItemDialogRequest, ItemDialogResult>(itemDialog, request);
 
-            if (result)
+            if (result.IsConfirmed)
             {
                 Debug.Log("OK");
             }
         }
 
-        // TODO: Extract dialog data into a dedicated data class.
-        public async UniTask<bool> OpenDialogAsync(DialogBase<bool> dialogPrefab)
+        public async UniTask<TResult> OpenDialogAsync<TDialog, TRequest, TResult>(TDialog dialogPrefab, TRequest request)
+            where TDialog : DialogBase<TResult>, IDialogRequestHandler<TRequest>
         {
             ConfigureModalHierarchy();
             _dialogBackgroundManager?.Configure(backdropLayer);
 
             var dialogParent = dialogLayer != null ? dialogLayer : (modalRoot != null ? modalRoot : transform);
             var dialog = Instantiate(dialogPrefab, dialogParent);
+            var dialogContext = new DialogContext(previewRenderer);
 
             if (dialog.transform is RectTransform rectTransform)
             {
@@ -104,7 +107,7 @@ namespace Assets.Scripts.Features.Home
 
             dialog.transform.SetAsLastSibling();
             dialog.SetBackgroundManager(_dialogBackgroundManager);
-            dialog.Setup(player, previewRenderer);
+            dialog.Setup(request, dialogContext);
 
             return await dialog.OpenAsync();
         }

@@ -6,7 +6,30 @@ using Assets.Scripts.Core;
 
 namespace Assets.Scripts.UI.Dialog
 {
-    public class AvatarDialog : DialogBase<bool>
+    public readonly struct AvatarDialogRequest
+    {
+        public AvatarDialogRequest(Player player)
+        {
+            Player = player;
+        }
+
+        public Player Player { get; }
+    }
+
+    public readonly struct AvatarDialogResult
+    {
+        private AvatarDialogResult(bool isSaved)
+        {
+            IsSaved = isSaved;
+        }
+
+        public bool IsSaved { get; }
+
+        public static AvatarDialogResult Saved => new(true);
+        public static AvatarDialogResult Cancelled => new(false);
+    }
+
+    public class AvatarDialog : DialogBase<AvatarDialogResult>, IDialogRequestHandler<AvatarDialogRequest>
     {
         [Header("UI")]
         [SerializeField] private RawImage previewImage;
@@ -26,12 +49,10 @@ namespace Assets.Scripts.UI.Dialog
         private Player currentPlayer;
         private AvatarPreviewRenderer previewRenderer;
 
-        public override void Setup(Player player, AvatarPreviewRenderer previewRenderer)
+        public void Setup(AvatarDialogRequest request, DialogContext context)
         {
-            base.Setup();
-
-            this.currentPlayer = player;
-            this.previewRenderer = previewRenderer;
+            currentPlayer = request.Player;
+            previewRenderer = context.AvatarPreviewRenderer;
 
             // PreviewCamera からの出力を反映
             previewImage.texture = previewTexture;
@@ -56,7 +77,7 @@ namespace Assets.Scripts.UI.Dialog
             if (previewRenderer != null)
                 previewRenderer.ClearPreview();
 
-            Close(false);
+            Close(AvatarDialogResult.Cancelled);
         }
 
         private void OnClickSave()
@@ -67,7 +88,7 @@ namespace Assets.Scripts.UI.Dialog
             if (previewRenderer != null)
                 previewRenderer.ClearPreview();
 
-            Close(true);
+            Close(AvatarDialogResult.Saved);
         }
 
         private async UniTaskVoid RefreshSelectionFramesDeferred()

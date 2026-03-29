@@ -1,9 +1,23 @@
 ﻿using Cysharp.Threading.Tasks;
-using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
 namespace Assets.Scripts.UI.Dialog
-{ 
+{
+    public sealed class DialogContext
+    {
+        public DialogContext(AvatarPreviewRenderer avatarPreviewRenderer)
+        {
+            AvatarPreviewRenderer = avatarPreviewRenderer;
+        }
+
+        public AvatarPreviewRenderer AvatarPreviewRenderer { get; }
+    }
+
+    public interface IDialogRequestHandler<in TRequest>
+    {
+        void Setup(TRequest request, DialogContext context);
+    }
+
     public abstract class DialogBase<TResult> : MonoBehaviour, IDialogBackgroundHandler
     {
         [Header("Background")]
@@ -17,10 +31,6 @@ namespace Assets.Scripts.UI.Dialog
         public Transform CachedTransform => transform;
         public bool UseBackground => useBackground;
         public bool CloseOnBackgroundClick => closeOnBackgroundClick;
-
-        public virtual void Setup(Player player = null, AvatarPreviewRenderer previewRenderer = null)
-        {
-        }
 
         public void SetBackgroundManager(DialogBackgroundManager backgroundManager)
         {
