@@ -8,19 +8,19 @@ using UnityEngine;
 namespace Assets.Scripts.Systems.Save
 {
     /// <summary>
-    /// Persists the player's current avatar appearance to JSON.
+    /// Legacy avatar-only JSON persistence.
+    /// New code should use the main game save pipeline instead.
     /// </summary>
+    [Obsolete("Legacy avatar-only persistence. Use the main game save pipeline for new code.")]
     public static class AvatarAppearanceJsonStore
     {
-        private const string SaveFileName = "avatar-appearance-data.json";
-
         [Serializable]
         private class SaveData
         {
             public AvatarAppearanceData appearance = new();
         }
 
-        public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+        public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileNames.LegacyAvatarAppearanceFileName);
 
         public static void Save(AvatarAppearanceData appearanceData)
         {
