@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save.Models;
 using LegacyAvatarAppearanceData = Assets.Scripts.Data.DTO.AvatarAppearanceData;
 using LayerLab.ArtMakerUnity;
@@ -166,7 +167,7 @@ namespace Assets.Scripts.Systems.Save
 
         private static string BuildLegacyEquipmentId(PartsType partType, int index)
         {
-            return $"{partType}:{index}";
+            return EquipmentIdUtility.Build(partType, index);
         }
     }
 }
