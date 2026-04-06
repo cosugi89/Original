@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Assets.Scripts.Core;
+using Assets.Scripts.UI.Dialog;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -37,6 +38,7 @@ namespace LayerLab.ArtMakerUnity
         private readonly List<UnityAction> _presetButtonHandlers = new();
 
         private PartsManager _partsManager;
+        private AvatarEditorPresenter _presenter;
         private ColorTargetType _currentTarget;
         private bool _hasCurrentTarget;
 
@@ -57,9 +59,10 @@ namespace LayerLab.ArtMakerUnity
         /// Initializes the color picker with the given PartsManager.
         /// </summary>
         /// <param name="pm">The PartsManager used to apply color changes to character parts.</param>
-        public void Init(PartsManager pm)
+        public void Init(PartsManager pm, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
+            _presenter = presenter;
             ResolveCheck();
             RefreshPresetButtons();
             SyncSelectionToCurrentTarget();
@@ -121,10 +124,22 @@ namespace LayerLab.ArtMakerUnity
 
         private void OnPresetButtonClicked(Button button, Color color)
         {
-            if (_partsManager == null || !_hasCurrentTarget)
+            if (!_hasCurrentTarget)
                 return;
 
-            _partsManager.SetColor(_currentTarget, color);
+            if (_presenter != null)
+            {
+                _presenter.SetColor(_currentTarget, color);
+            }
+            else if (_partsManager != null)
+            {
+                _partsManager.SetColor(_currentTarget, color);
+            }
+            else
+            {
+                return;
+            }
+
             SelectPresetButton(button);
         }
 
@@ -214,13 +229,30 @@ namespace LayerLab.ArtMakerUnity
 
         private void SyncSelectionToCurrentTarget()
         {
-            if (_partsManager == null || !_hasCurrentTarget || _presetButtons.Count == 0 || presetColors == null)
+            if (!_hasCurrentTarget || _presetButtons.Count == 0 || presetColors == null)
             {
                 ClearPresetSelection();
                 return;
             }
 
-            int presetIndex = FindMatchingPresetIndex(_partsManager.GetColor(_currentTarget));
+            int presetIndex = -1;
+            if (_presenter != null)
+            {
+                var options = _presenter.GetColorOptions(_currentTarget, presetColors);
+                for (int i = 0; i < options.Count; i++)
+                {
+                    if (options[i].IsSelected)
+                    {
+                        presetIndex = i;
+                        break;
+                    }
+                }
+            }
+            else if (_partsManager != null)
+            {
+                presetIndex = FindMatchingPresetIndex(_partsManager.GetColor(_currentTarget));
+            }
+
             if (presetIndex < 0 || presetIndex >= _presetButtons.Count)
             {
                 ClearPresetSelection();

@@ -16,6 +16,7 @@ namespace LayerLab.ArtMakerUnity
         public UICategory UICategory => uiCategory;
 
         private PartsManager _partsManager;
+        private AvatarEditorPresenter _presenter;
         private Sprite[] _bgSprites;
         private bool _hasItem;
 
@@ -26,9 +27,10 @@ namespace LayerLab.ArtMakerUnity
             imageItem ??= transform.Find("Item")?.GetComponent<Image>();
         }
 
-        public void Init(PartsManager pm, Sprite[] bgSprites)
+        public void Init(PartsManager pm, Sprite[] bgSprites, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
+            _presenter = presenter;
             _bgSprites = bgSprites;
 
             if (_partsManager == null) return;
@@ -54,6 +56,12 @@ namespace LayerLab.ArtMakerUnity
 
         private void OnColorChanged(ColorTargetType target, Color color)
         {
+            if (_presenter != null)
+            {
+                RefreshDisplay();
+                return;
+            }
+
             if (uiCategory == UICategory.Skin && target == ColorTargetType.Skin)
             {
                 ApplyItemColor(color);
@@ -80,6 +88,12 @@ namespace LayerLab.ArtMakerUnity
 
         private void RefreshDisplay()
         {
+            if (_presenter != null)
+            {
+                RefreshDisplayFromPresenter();
+                return;
+            }
+
             if (_partsManager == null) return;
 
             var subTypes = UICategoryConfig.GetSubTypes(uiCategory);
@@ -142,6 +156,40 @@ namespace LayerLab.ArtMakerUnity
 
             if (imageIcon != null) imageIcon.gameObject.SetActive(!hasItem);
             if (imageItem != null) imageItem.gameObject.SetActive(hasItem);
+
+            UpdateBg();
+            UpdateItemAlpha();
+        }
+
+        private void RefreshDisplayFromPresenter()
+        {
+            var section = _presenter?.GetSection(uiCategory);
+            var selectedIcon = section?.SelectedIcon;
+            _hasItem = section != null && section.HasSelection;
+
+            if (imageItem != null)
+            {
+                imageItem.sprite = selectedIcon;
+                if (imageItem.sprite != null)
+                    imageItem.SetNativeSize();
+            }
+
+            if (section != null &&
+                section.SupportsColor &&
+                ColorUtility.TryParseHtmlString(section.CurrentColorHtml, out var parsedColor))
+            {
+                ApplyItemColor(parsedColor);
+            }
+            else
+            {
+                ApplyItemColor(Color.white);
+            }
+
+            bool hasDisplaySprite = imageItem != null && imageItem.sprite != null;
+            if (imageIcon != null)
+                imageIcon.gameObject.SetActive(!_hasItem || !hasDisplaySprite);
+            if (imageItem != null)
+                imageItem.gameObject.SetActive(_hasItem && hasDisplaySprite);
 
             UpdateBg();
             UpdateItemAlpha();

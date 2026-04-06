@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Assets.Scripts.Core;
+using Assets.Scripts.UI.Dialog;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,9 @@ namespace LayerLab.ArtMakerUnity
         private UICategory _activeCategory;
         private PartsType[] _currentSubTypes;
         private PartsManager _partsManager;
+        private AvatarEditorPresenter _presenter;
+        private AvatarPartSectionViewData _activeSection;
+        private readonly List<AvatarPartOptionViewData> _currentOptions = new();
 
         /// <summary>選択・表示中の PartsType</summary>
         public PartsType? ActiveType => _activeType;
@@ -30,9 +34,10 @@ namespace LayerLab.ArtMakerUnity
         /// パーツ変更イベントと色変更イベントを購読します。
         /// </summary>
         /// <param name="pm">パーツデータを提供する PartsManager。</param>
-        public void Init(PartsManager pm)
+        public void Init(PartsManager pm, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
+            _presenter = presenter;
             if (slotTemplate != null)
                 slotTemplate.gameObject.SetActive(false);
             if (buttonReset != null)
@@ -54,6 +59,12 @@ namespace LayerLab.ArtMakerUnity
         {
             _activeCategory = category;
             _currentSubTypes = UICategoryConfig.GetSubTypes(category);
+
+            if (_presenter != null)
+            {
+                ShowPresenterSection(category);
+                return;
+            }
 
             if (UICategoryConfig.IsGroup(category))
             {
@@ -172,6 +183,16 @@ namespace LayerLab.ArtMakerUnity
         /// <param name="slot">クリックされたスロット。</param>
         public void SelectSlot(PartsListSlot slot)
         {
+            if (_presenter != null)
+            {
+                if (!string.IsNullOrWhiteSpace(slot.EquipmentId) && _presenter.TrySelectEquipment(slot.EquipmentId))
+                {
+                    ShowPresenterSection(_activeCategory);
+                }
+
+                return;
+            }
+
             PartsType slotType = slot.PartsType;
 
             if (UICategoryConfig.IsGroup(_activeCategory))
@@ -201,6 +222,13 @@ namespace LayerLab.ArtMakerUnity
         /// </summary>
         public void OnClickReset()
         {
+            if (_presenter != null)
+            {
+                _presenter.ResetCategory(_activeCategory);
+                ShowPresenterSection(_activeCategory);
+                return;
+            }
+
             if (UICategoryConfig.IsGroup(_activeCategory))
             {
                 foreach (var type in _currentSubTypes)
@@ -222,6 +250,22 @@ namespace LayerLab.ArtMakerUnity
         private void UpdateSelectFrame()
         {
             if (imgSelectFrame == null) return;
+
+            if (_presenter != null)
+            {
+                int selectedIndex = _currentOptions.FindIndex(option => option.IsSelected);
+                if (selectedIndex >= 0 &&
+                    selectedIndex < _slots.Count &&
+                    _slots[selectedIndex].gameObject.activeSelf)
+                {
+                    imgSelectFrame.gameObject.SetActive(true);
+                    MoveFrameTo(_slots[selectedIndex].transform as RectTransform);
+                    return;
+                }
+
+                imgSelectFrame.gameObject.SetActive(false);
+                return;
+            }
 
             if (UICategoryConfig.IsGroup(_activeCategory))
             {
@@ -289,6 +333,13 @@ namespace LayerLab.ArtMakerUnity
 
         private void OnPartsChanged(PartsType type, int index)
         {
+            if (_presenter != null)
+            {
+                if (IsRelevantToActiveCategory(type))
+                    ShowPresenterSection(_activeCategory);
+                return;
+            }
+
             if (UICategoryConfig.IsGroup(_activeCategory))
             {
                 foreach (var st in _currentSubTypes)
@@ -304,11 +355,90 @@ namespace LayerLab.ArtMakerUnity
 
         private void OnColorChanged(ColorTargetType target, Color color)
         {
+            if (_presenter != null)
+            {
+                if (_activeSection != null &&
+                    _activeSection.SupportsColor &&
+                    _activeSection.ColorTarget == target)
+                {
+                    ShowPresenterSection(_activeCategory);
+                }
+
+                return;
+            }
+
             if (_partsManager.CanChangeColor(_activeType) &&
                 _partsManager.GetColorTarget(_activeType) == target)
             {
                 ChangeColorList(color);
             }
+        }
+
+        private void ShowPresenterSection(UICategory category)
+        {
+            if (_presenter == null)
+                return;
+
+            _activeSection = _presenter.GetSection(category);
+            _currentOptions.Clear();
+            if (_activeSection?.Options != null)
+                _currentOptions.AddRange(_activeSection.Options);
+
+            HideAllSlots();
+
+            while (_slots.Count < _currentOptions.Count)
+            {
+                var newSlot = Instantiate(slotTemplate, contentParent);
+                _slots.Add(newSlot);
+            }
+
+            for (int i = 0; i < _currentOptions.Count; i++)
+            {
+                var option = _currentOptions[i];
+                _slots[i].SetSlot(this, option.Icon, i, option.PartType, option.EquipmentId);
+                _slots[i].gameObject.SetActive(true);
+            }
+
+            var tintColor = Color.white;
+            if (_activeSection != null &&
+                _activeSection.SupportsColor &&
+                ColorUtility.TryParseHtmlString(_activeSection.CurrentColorHtml, out var parsedColor))
+            {
+                tintColor = parsedColor;
+            }
+
+            ChangeColorList(tintColor);
+
+            if (colorPicker != null)
+            {
+                colorPicker.gameObject.SetActive(_activeSection != null && _activeSection.SupportsColor);
+                if (_activeSection != null && _activeSection.SupportsColor)
+                {
+                    colorPicker.SetTarget(_activeSection.ColorTarget);
+                }
+            }
+
+            if (buttonReset != null)
+            {
+                buttonReset.gameObject.SetActive(true);
+                buttonReset.transform.SetAsFirstSibling();
+            }
+
+            UpdateSelectFrame();
+        }
+
+        private bool IsRelevantToActiveCategory(PartsType type)
+        {
+            if (_currentSubTypes == null)
+                return false;
+
+            foreach (var currentSubType in _currentSubTypes)
+            {
+                if (currentSubType == type)
+                    return true;
+            }
+
+            return false;
         }
 
         private void OnDestroy()
