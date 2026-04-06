@@ -23,8 +23,13 @@ namespace Assets.Scripts.Systems.Save
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
         {
+            EnsureInitialized();
+        }
+
+        public static GameSaveService EnsureInitialized()
+        {
             if (Instance != null)
-                return;
+                return Instance;
 
             Instance = new GameSaveService(
                 GameSession.Instance,
@@ -33,6 +38,7 @@ namespace Assets.Scripts.Systems.Save
                 new LegacyAvatarSaveMigration());
 
             Instance.ReloadSession();
+            return Instance;
         }
 
         public GameSaveService(

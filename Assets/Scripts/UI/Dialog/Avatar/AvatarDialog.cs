@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using Assets.Scripts.Core;
+using Assets.Scripts.Systems.GameData;
+using Assets.Scripts.Systems.Save;
 
 namespace Assets.Scripts.UI.Dialog
 {
@@ -48,6 +50,7 @@ namespace Assets.Scripts.UI.Dialog
         private PartsManager dialogPlayer;
         private Player currentPlayer;
         private AvatarPreviewRenderer previewRenderer;
+        private AvatarEditorPresenter avatarEditorPresenter;
 
         public void Setup(AvatarDialogRequest request, DialogContext context)
         {
@@ -60,11 +63,12 @@ namespace Assets.Scripts.UI.Dialog
             // Player の生成・反映
             dialogPlayer = previewRenderer.SpawnPreview(characterPrefab);
             dialogPlayer.Init();
-            dialogPlayer.CopyFrom(currentPlayer.PartsManager);
+            avatarEditorPresenter = AvatarEditorPresenter.CreateDefault(currentPlayer?.PartsManager);
+            avatarEditorPresenter.BindPreview(dialogPlayer);
 
-            colorPicker.Init(dialogPlayer);
-            panelPartsListControl.Init(dialogPlayer);
-            panelPartsControl.Init(dialogPlayer, panelPartsListControl);
+            colorPicker.Init(dialogPlayer, avatarEditorPresenter);
+            panelPartsListControl.Init(dialogPlayer, avatarEditorPresenter);
+            panelPartsControl.Init(dialogPlayer, panelPartsListControl, avatarEditorPresenter);
             closeButton.onClick.AddListener(OnClickClose);
             saveButton.onClick.AddListener(OnClickSave);
             panelPartsControl.RefreshSelectionFrame();
@@ -82,9 +86,9 @@ namespace Assets.Scripts.UI.Dialog
 
         private void OnClickSave()
         {
-            currentPlayer.PartsManager.Init();
-            currentPlayer.PartsManager.CopyFrom(dialogPlayer);
-            panelPartsControl.SaveCurrentAppearance();
+            avatarEditorPresenter?.Commit();
+            AvatarRenderService.EnsureInitialized().ApplyTo(currentPlayer.PartsManager);
+            GameSaveService.EnsureInitialized().SaveSession();
             if (previewRenderer != null)
                 previewRenderer.ClearPreview();
 

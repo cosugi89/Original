@@ -205,6 +205,25 @@ namespace Assets.Scripts.Core
             return Visibility.TryGetValue(type, out var visible) && visible;
         }
 
+        /// <summary>
+        /// 指定した PartsType の表示状態を変更し、連動パーツも必要に応じて同期します。
+        /// </summary>
+        public void SetPartsVisible(PartsType type, bool isVisible)
+        {
+            var cat = GetCategory(type);
+            if (cat == null)
+                return;
+
+            Visibility[type] = isVisible;
+            SetRenderersActive(cat, isVisible);
+
+            if (IsHandRightWeapon(type))
+                SyncArrowVisibility();
+
+            if (type == PartsType.Hair || type == PartsType.Helmet)
+                SyncHelmetHairVisibility();
+        }
+
         /// <summary>指定した PartsType が現在装備されているかどうか</summary>
         public bool IsEquipped(PartsType type)
         {

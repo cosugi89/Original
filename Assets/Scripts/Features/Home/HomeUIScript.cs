@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using Assets.Scripts.Systems.GameData;
 using LayerLab.ArtMakerUnity;
 using Assets.Scripts.UI.Dialog;
-using Assets.Scripts.Systems.Save;
 
 namespace Assets.Scripts.Features.Home
 {
@@ -45,8 +45,9 @@ namespace Assets.Scripts.Features.Home
             if (player != null)
             {
                 player.Init();
-                // TODO: Title画面のロード機能と統合する。
-                AvatarAppearanceJsonStore.TryApplyTo(player.PartsManager);
+                var avatarRenderService = AvatarRenderService.EnsureInitialized();
+                avatarRenderService.SyncSessionFromRendererIfNeeded(player.PartsManager, saveAfterSync: true);
+                avatarRenderService.ApplyTo(player.PartsManager);
             }
         }
 

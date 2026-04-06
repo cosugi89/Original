@@ -1,4 +1,5 @@
 using Assets.Scripts.Core;
+using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
 using LayerLab.ArtMakerUnity;
 using UnityEngine;
@@ -30,14 +31,14 @@ namespace Assets.Scripts.UI.Dialog
         /// PartsManager と連動する PanelPartsList を使って、PanelParts を初期化する
         /// 子要素の PartsSlot をセットアップし、最初のスロットを選択する
         /// </summary>
-        public void Init(PartsManager pm, PanelPartsListControl panelPartsList)
+        public void Init(PartsManager pm, PanelPartsListControl panelPartsList, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
             _panelPartsList = panelPartsList;
 
             _partsSlots = GetComponentsInChildren<PartsSlot>();
             foreach (var slot in _partsSlots)
-                slot.Init(pm, spriteBgs);
+                slot.Init(pm, spriteBgs, presenter);
             DoSelectSlot(_partsSlots[0]);
 
             RefreshCurrentSlot();
@@ -64,9 +65,11 @@ namespace Assets.Scripts.UI.Dialog
 
         public void SaveCurrentAppearance()
         {
-            if (_partsManager == null) return;
-            var appearanceData = _partsManager.CreateAppearanceData();
-            AvatarAppearanceJsonStore.Save(appearanceData);
+            if (_partsManager == null)
+                return;
+
+            AvatarRenderService.EnsureInitialized().CaptureFrom(_partsManager);
+            GameSaveService.EnsureInitialized().SaveSession();
         }
 
         private void DoSelectSlot(PartsSlot slot)
