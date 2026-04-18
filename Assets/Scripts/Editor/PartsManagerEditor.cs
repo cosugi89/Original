@@ -5,7 +5,6 @@ using System.Linq;
 using Assets.Scripts.Core;
 using UnityEditor;
 using UnityEngine;
-using LayerLab.ArtMakerUnity;
 
 namespace Assets.Scripts.Editor
 {

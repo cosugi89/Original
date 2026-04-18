@@ -1,4 +1,4 @@
-﻿using Ricimi;
+﻿using Assets.Scripts.UI.Components.Button;
 using UnityEditor;
 
 [CustomEditor(typeof(CleanButton))]

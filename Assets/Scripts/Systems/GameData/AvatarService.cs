@@ -5,7 +5,7 @@ using System.Linq;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core;
 using UnityEngine;
 
 namespace Assets.Scripts.Systems.GameData
@@ -24,7 +24,7 @@ namespace Assets.Scripts.Systems.GameData
         public InventoryService InventoryService { get; }
 
         [Description("装備IDと装備枠の対応を解決する装備マスタ。")]
-        public EquipmentCatalog EquipmentCatalog { get; private set; }
+        public EquipmentDatabase EquipmentCatalog { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
@@ -46,7 +46,7 @@ namespace Assets.Scripts.Systems.GameData
             return Instance;
         }
 
-        public AvatarService(GameSaveService saveService, InventoryService inventoryService, EquipmentCatalog equipmentCatalog)
+        public AvatarService(GameSaveService saveService, InventoryService inventoryService, EquipmentDatabase equipmentCatalog)
         {
             SaveService = saveService;
             Session = saveService.Session;
@@ -54,7 +54,7 @@ namespace Assets.Scripts.Systems.GameData
             EquipmentCatalog = equipmentCatalog;
         }
 
-        public void RefreshCatalog(EquipmentCatalog equipmentCatalog)
+        public void RefreshCatalog(EquipmentDatabase equipmentCatalog)
         {
             EquipmentCatalog = equipmentCatalog;
         }
@@ -176,7 +176,7 @@ namespace Assets.Scripts.Systems.GameData
             return !string.IsNullOrWhiteSpace(equipmentId);
         }
 
-        public IReadOnlyList<EquipmentDefinition> GetSelectableEquipments(PartsType partType, bool ownedOnly = true)
+        public IReadOnlyList<EquipmentData> GetSelectableEquipments(PartsType partType, bool ownedOnly = true)
         {
             return InventoryService.GetDefinitionsByPartType(partType, ownedOnly);
         }

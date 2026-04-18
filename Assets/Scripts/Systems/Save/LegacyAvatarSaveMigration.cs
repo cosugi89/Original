@@ -3,7 +3,7 @@ using System.IO;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save.Models;
 using LegacyAvatarAppearanceData = Assets.Scripts.Data.DTO.AvatarAppearanceData;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core;
 using UnityEngine;
 
 namespace Assets.Scripts.Systems.Save

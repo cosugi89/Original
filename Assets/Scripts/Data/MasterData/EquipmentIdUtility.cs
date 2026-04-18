@@ -1,5 +1,5 @@
 using System;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core;
 
 namespace Assets.Scripts.Data.MasterData
 {

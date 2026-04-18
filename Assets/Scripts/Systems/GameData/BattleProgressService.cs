@@ -19,7 +19,7 @@ namespace Assets.Scripts.Systems.GameData
         public GameSaveService SaveService { get; }
 
         [Description("ステージIDと表示情報を解決するステージマスタ。")]
-        public BattleStageCatalog BattleStageCatalog { get; private set; }
+        public StageDatabase StageDatabase { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
@@ -34,21 +34,21 @@ namespace Assets.Scripts.Systems.GameData
 
             Instance = new BattleProgressService(
                 GameSaveService.EnsureInitialized(),
-                MasterDataResourceLoader.LoadBattleStageCatalog());
+                MasterDataResourceLoader.LoadStageDatabase());
             Instance.Initialize();
             return Instance;
         }
 
-        public BattleProgressService(GameSaveService saveService, BattleStageCatalog battleStageCatalog)
+        public BattleProgressService(GameSaveService saveService, StageDatabase stageDatabase)
         {
             SaveService = saveService;
             Session = saveService.Session;
-            BattleStageCatalog = battleStageCatalog;
+            StageDatabase = stageDatabase;
         }
 
-        public void RefreshCatalog(BattleStageCatalog battleStageCatalog)
+        public void RefreshDatabase(StageDatabase stageDatabase)
         {
-            BattleStageCatalog = battleStageCatalog;
+            StageDatabase = stageDatabase;
             Initialize();
         }
 
@@ -60,23 +60,32 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
+        public StageProgressData GetOrCreateStageProgress(int stageId)
+        {
+            return GetOrCreateStageProgress(ToStageIdKey(stageId));
+        }
+
         public StageProgressData GetOrCreateStageProgress(string stageId)
         {
+            var stageIdKey = stageId ?? string.Empty;
             var battleProgress = EnsureBattleProgress();
-            var progress = battleProgress.Stages.FirstOrDefault(stage => stage != null && stage.StageId == (stageId ?? string.Empty));
+            var progress = battleProgress.Stages.FirstOrDefault(stage => stage != null && stage.StageId == stageIdKey);
             if (progress != null)
                 return progress;
 
             progress = new StageProgressData
             {
-                StageId = stageId ?? string.Empty,
-                IsUnlocked = BattleStageCatalog != null &&
-                             BattleStageCatalog.TryGetById(stageId, out var definition) &&
-                             definition.IsInitiallyUnlocked
+                StageId = stageIdKey,
+                IsUnlocked = IsInitiallyUnlockedStage(stageIdKey)
             };
             battleProgress.Stages.Add(progress);
             SaveService.MarkDirty();
             return progress;
+        }
+
+        public bool IsUnlocked(int stageId)
+        {
+            return IsUnlocked(ToStageIdKey(stageId));
         }
 
         public bool IsUnlocked(string stageId)
@@ -84,9 +93,19 @@ namespace Assets.Scripts.Systems.GameData
             return GetOrCreateStageProgress(stageId).IsUnlocked;
         }
 
+        public bool IsCleared(int stageId)
+        {
+            return IsCleared(ToStageIdKey(stageId));
+        }
+
         public bool IsCleared(string stageId)
         {
             return GetOrCreateStageProgress(stageId).IsCleared;
+        }
+
+        public void UnlockStage(int stageId)
+        {
+            UnlockStage(ToStageIdKey(stageId));
         }
 
         public void UnlockStage(string stageId)
@@ -99,14 +118,25 @@ namespace Assets.Scripts.Systems.GameData
             SaveService.MarkDirty();
         }
 
+        public void SetLastSelectedStage(int stageId)
+        {
+            SetLastSelectedStage(ToStageIdKey(stageId));
+        }
+
         public void SetLastSelectedStage(string stageId)
         {
+            var stageIdKey = stageId ?? string.Empty;
             var battleProgress = EnsureBattleProgress();
-            if (battleProgress.LastSelectedStageId == (stageId ?? string.Empty))
+            if (battleProgress.LastSelectedStageId == stageIdKey)
                 return;
 
-            battleProgress.LastSelectedStageId = stageId ?? string.Empty;
+            battleProgress.LastSelectedStageId = stageIdKey;
             SaveService.MarkDirty();
+        }
+
+        public void RecordStageClear(int stageId, int score = 0, string rank = "", float clearTimeSeconds = 0f)
+        {
+            RecordStageClear(ToStageIdKey(stageId), score, rank, clearTimeSeconds);
         }
 
         public void RecordStageClear(string stageId, int score = 0, string rank = "", float clearTimeSeconds = 0f)
@@ -132,12 +162,12 @@ namespace Assets.Scripts.Systems.GameData
             SaveService.MarkDirty();
         }
 
-        public IReadOnlyList<BattleStageDefinition> GetOrderedStageDefinitions()
+        public IReadOnlyList<StageData> GetOrderedStages()
         {
-            if (BattleStageCatalog == null)
-                return new List<BattleStageDefinition>();
+            if (StageDatabase == null)
+                return new List<StageData>();
 
-            return BattleStageCatalog.GetAllOrdered();
+            return StageDatabase.GetAllOrdered();
         }
 
         private void Initialize()
@@ -155,21 +185,22 @@ namespace Assets.Scripts.Systems.GameData
 
         private void EnsureInitialUnlockedStages()
         {
-            if (BattleStageCatalog == null)
+            if (StageDatabase == null)
                 return;
 
             var hasChanges = false;
-            foreach (var definition in BattleStageCatalog.GetInitiallyUnlocked())
+            foreach (var definition in StageDatabase.GetInitiallyUnlocked())
             {
-                if (definition == null || string.IsNullOrWhiteSpace(definition.StageId))
+                if (definition == null || definition.StageId <= 0)
                     continue;
 
-                var progress = EnsureBattleProgress().Stages.FirstOrDefault(stage => stage != null && stage.StageId == definition.StageId);
+                var definitionStageId = ToStageIdKey(definition.StageId);
+                var progress = EnsureBattleProgress().Stages.FirstOrDefault(stage => stage != null && stage.StageId == definitionStageId);
                 if (progress == null)
                 {
                     EnsureBattleProgress().Stages.Add(new StageProgressData
                     {
-                        StageId = definition.StageId,
+                        StageId = definitionStageId,
                         IsUnlocked = true
                     });
                     hasChanges = true;
@@ -209,6 +240,23 @@ namespace Assets.Scripts.Systems.GameData
                 "D" => 1,
                 _ => 0
             };
+        }
+
+        private bool IsInitiallyUnlockedStage(string stageId)
+        {
+            if (StageDatabase == null)
+            {
+                return false;
+            }
+
+            return StageDatabase
+                .GetInitiallyUnlocked()
+                .Any(definition => definition != null && ToStageIdKey(definition.StageId) == (stageId ?? string.Empty));
+        }
+
+        private static string ToStageIdKey(int stageId)
+        {
+            return Mathf.Max(0, stageId).ToString();
         }
     }
 }

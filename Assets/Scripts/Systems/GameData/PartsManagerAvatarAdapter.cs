@@ -4,14 +4,13 @@ using System.Linq;
 using Assets.Scripts.Core;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save.Models;
-using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
 namespace Assets.Scripts.Systems.GameData
 {
     public static class PartsManagerAvatarAdapter
     {
-        public static AvatarAppearanceData CaptureAppearance(PartsManager partsManager, EquipmentCatalog equipmentCatalog)
+        public static AvatarAppearanceData CaptureAppearance(PartsManager partsManager, EquipmentDatabase equipmentCatalog)
         {
             var appearance = new AvatarAppearanceData();
             if (partsManager == null)
@@ -59,7 +58,7 @@ namespace Assets.Scripts.Systems.GameData
             return appearance;
         }
 
-        public static void ApplyAppearance(PartsManager partsManager, AvatarAppearanceData appearance, EquipmentCatalog equipmentCatalog)
+        public static void ApplyAppearance(PartsManager partsManager, AvatarAppearanceData appearance, EquipmentDatabase equipmentCatalog)
         {
             if (partsManager == null || appearance == null)
                 return;
@@ -89,7 +88,7 @@ namespace Assets.Scripts.Systems.GameData
             }
         }
 
-        private static void ApplyPartState(PartsManager partsManager, AvatarPartStateData state, EquipmentCatalog equipmentCatalog)
+        private static void ApplyPartState(PartsManager partsManager, AvatarPartStateData state, EquipmentDatabase equipmentCatalog)
         {
             if (state == null)
                 return;
@@ -107,7 +106,7 @@ namespace Assets.Scripts.Systems.GameData
 
         private static bool TryResolvePartsIndex(
             AvatarPartStateData state,
-            EquipmentCatalog equipmentCatalog,
+            EquipmentDatabase equipmentCatalog,
             out int partsIndex)
         {
             partsIndex = -1;

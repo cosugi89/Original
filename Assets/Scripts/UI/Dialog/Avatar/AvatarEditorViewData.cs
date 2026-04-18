@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core;
 using UnityEngine;
 
 namespace Assets.Scripts.UI.Dialog

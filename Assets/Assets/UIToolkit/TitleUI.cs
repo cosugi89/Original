@@ -11,51 +11,70 @@ public class TitleUI : MonoBehaviour
 
     private VisualElement modalLayer;
 
-    // keep reference to the last dialog close handler so we can unsubscribe if needed
     private Button lastCloseButton;
     private Action lastCloseHandler;
 
-    void Start()
+    private void Start()
     {
-        var root = GetComponent<UIDocument>().rootVisualElement;
+        var document = GetComponent<UIDocument>();
+        if (document == null)
+        {
+            Debug.LogWarning("[TitleUI] UIDocument was not found.");
+            return;
+        }
 
+        var root = document.rootVisualElement;
         modalLayer = root.Q<VisualElement>("modalLayer");
 
         startButton = root.Q<Button>("startButton");
         menuButton = root.Q<Button>("menuButton");
 
-        startButton.clicked += OnStartClicked;
-        menuButton.clicked += OnMenuClicked;
+        if (startButton != null)
+        {
+            startButton.clicked += OnStartClicked;
+        }
+
+        if (menuButton != null)
+        {
+            menuButton.clicked += OnMenuClicked;
+        }
     }
 
     private void OnStartClicked()
     {
-        Debug.Log("はじめるボタンが押された");
+        Debug.Log("[TitleUI] Start button clicked.");
     }
 
     private void OnMenuClicked()
     {
-        Debug.Log("メニューボタンが押された");
+        Debug.Log("[TitleUI] Menu button clicked.");
 
-        // prevent opening multiple dialogs on top of each other
-        if (modalLayer.childCount > 0)  
+        if (modalLayer == null || dialogUxml == null)
+        {
             return;
+        }
+
+        if (modalLayer.childCount > 0)
+        {
+            return;
+        }
 
         modalLayer.style.display = DisplayStyle.Flex;
 
-        var dialog = dialogUxml.Instantiate();      
-
+        var dialog = dialogUxml.Instantiate();
         modalLayer.Add(dialog);
 
         var closeButton = dialog.Q<Button>("closeButton");
+        if (closeButton == null)
+        {
+            return;
+        }
 
         Action closeHandler = null;
         closeHandler = () =>
         {
-            // remove this handler
             closeButton.clicked -= closeHandler;
 
-            // clear stored references
             if (lastCloseButton == closeButton)
             {
                 lastCloseButton = null;
@@ -63,28 +82,38 @@ public class TitleUI : MonoBehaviour
             }
 
             dialog.RemoveFromHierarchy();
-
             modalLayer.style.display = DisplayStyle.None;
         };
 
-        // store so we can unsubscribe in OnDestroy if needed
         lastCloseButton = closeButton;
         lastCloseHandler = closeHandler;
-
         closeButton.clicked += closeHandler;
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
-        startButton.clicked -= OnStartClicked;
-        menuButton.clicked -= OnMenuClicked;
+        if (startButton != null)
+        {
+            startButton.clicked -= OnStartClicked;
+        }
 
-        // unsubscribe any remaining close handler
-        lastCloseButton.clicked -= lastCloseHandler; // rullになる
+        if (menuButton != null)
+        {
+            menuButton.clicked -= OnMenuClicked;
+        }
+
+        if (lastCloseButton != null && lastCloseHandler != null)
+        {
+            lastCloseButton.clicked -= lastCloseHandler;
+        }
+
         lastCloseButton = null;
         lastCloseHandler = null;
 
-        modalLayer.Clear();
-        modalLayer.style.display = DisplayStyle.None;
+        if (modalLayer != null)
+        {
+            modalLayer.Clear();
+            modalLayer.style.display = DisplayStyle.None;
+        }
     }
 }
