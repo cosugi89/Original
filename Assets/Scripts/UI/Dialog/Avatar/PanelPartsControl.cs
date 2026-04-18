@@ -1,7 +1,7 @@
 using Assets.Scripts.Core;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
-using Assets.Scripts.UI.Dialog.Avatar;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
 namespace Assets.Scripts.UI.Dialog

@@ -5,6 +5,7 @@ using Assets.Scripts.Core;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save.Models;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
 namespace Assets.Scripts.UI.Dialog
@@ -237,7 +238,7 @@ namespace Assets.Scripts.UI.Dialog
                     options.Add(new AvatarPartOptionViewData
                     {
                         EquipmentId = definition.EquipmentId,
-                        DisplayName = string.IsNullOrWhiteSpace(definition.Name) ? definition.EquipmentId : definition.Name,
+                        DisplayName = string.IsNullOrWhiteSpace(definition.DisplayName) ? definition.EquipmentId : definition.DisplayName,
                         Category = category,
                         PartType = definition.PartType,
                         Icon = definition.Icon,

@@ -5,14 +5,14 @@ namespace Assets.Scripts.Data.MasterData
     public static class MasterDataResourceLoader
     {
         public const string EquipmentCatalogPath = "MasterData/EquipmentCatalog";
-        public const string StageDatabasePath = "MasterData/StageDatabase";
+        public const string BattleStageCatalogPath = "MasterData/BattleStageCatalog";
 
         private static bool _loggedMissingEquipmentCatalog;
-        private static bool _loggedMissingStageDatabase;
+        private static bool _loggedMissingBattleStageCatalog;
 
-        public static EquipmentDatabase LoadEquipmentCatalog()
+        public static EquipmentCatalog LoadEquipmentCatalog()
         {
-            var catalog = Resources.Load<EquipmentDatabase>(EquipmentCatalogPath);
+            var catalog = Resources.Load<EquipmentCatalog>(EquipmentCatalogPath);
             if (catalog == null && !_loggedMissingEquipmentCatalog)
             {
                 Debug.LogWarning($"[MasterDataResourceLoader] EquipmentCatalog was not found at Resources/{EquipmentCatalogPath}.");
@@ -22,16 +22,16 @@ namespace Assets.Scripts.Data.MasterData
             return catalog;
         }
 
-        public static StageDatabase LoadStageDatabase()
+        public static BattleStageCatalog LoadBattleStageCatalog()
         {
-            var database = Resources.Load<StageDatabase>(StageDatabasePath);
-            if (database == null && !_loggedMissingStageDatabase)
+            var catalog = Resources.Load<BattleStageCatalog>(BattleStageCatalogPath);
+            if (catalog == null && !_loggedMissingBattleStageCatalog)
             {
-                Debug.LogWarning($"[MasterDataResourceLoader] StageDatabase was not found at Resources/{StageDatabasePath}.");
-                _loggedMissingStageDatabase = true;
+                Debug.LogWarning($"[MasterDataResourceLoader] BattleStageCatalog was not found at Resources/{BattleStageCatalogPath}.");
+                _loggedMissingBattleStageCatalog = true;
             }
 
-            return database;
+            return catalog;
         }
     }
 }

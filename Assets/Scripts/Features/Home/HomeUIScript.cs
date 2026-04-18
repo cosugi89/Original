@@ -2,8 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using Assets.Scripts.Systems.GameData;
-using Assets.Scripts.Core;
-using Assets.Scripts.Systems.Camera;
+using LayerLab.ArtMakerUnity;
 using Assets.Scripts.UI.Dialog;
 
 namespace Assets.Scripts.Features.Home
@@ -15,7 +14,7 @@ namespace Assets.Scripts.Features.Home
         [Header("Core")]
         [SerializeField] private Player player;
         [SerializeField] private CameraControl cameraControl;
-        [SerializeField] private PreviewStage previewRenderer;
+        [SerializeField] private AvatarPreviewRenderer previewRenderer;
 
         [Header("Canvas")]
         [SerializeField] private Transform modalRoot;

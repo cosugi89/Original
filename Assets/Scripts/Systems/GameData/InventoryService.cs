@@ -4,7 +4,7 @@ using System.Linq;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
-using Assets.Scripts.Core;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
 namespace Assets.Scripts.Systems.GameData
@@ -20,7 +20,7 @@ namespace Assets.Scripts.Systems.GameData
         public GameSaveService SaveService { get; }
 
         [Description("装備IDと見た目情報を紐付ける装備マスタ。")]
-        public EquipmentDatabase EquipmentCatalog { get; private set; }
+        public EquipmentCatalog EquipmentCatalog { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
@@ -40,14 +40,14 @@ namespace Assets.Scripts.Systems.GameData
             return Instance;
         }
 
-        public InventoryService(GameSaveService saveService, EquipmentDatabase equipmentCatalog)
+        public InventoryService(GameSaveService saveService, EquipmentCatalog equipmentCatalog)
         {
             SaveService = saveService;
             Session = saveService.Session;
             EquipmentCatalog = equipmentCatalog;
         }
 
-        public void RefreshCatalog(EquipmentDatabase equipmentCatalog)
+        public void RefreshCatalog(EquipmentCatalog equipmentCatalog)
         {
             EquipmentCatalog = equipmentCatalog;
             Initialize();
@@ -60,10 +60,10 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
-        public IReadOnlyList<EquipmentData> GetOwnedDefinitions()
+        public IReadOnlyList<EquipmentDefinition> GetOwnedDefinitions()
         {
             if (EquipmentCatalog == null)
-                return new List<EquipmentData>();
+                return new List<EquipmentDefinition>();
 
             return GetAllEntries()
                 .Where(entry => entry.IsUnlocked && !string.IsNullOrWhiteSpace(entry.EquipmentId))
@@ -72,10 +72,10 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
-        public IReadOnlyList<EquipmentData> GetDefinitionsByPartType(PartsType partType, bool ownedOnly = false)
+        public IReadOnlyList<EquipmentDefinition> GetDefinitionsByPartType(PartsType partType, bool ownedOnly = false)
         {
             if (EquipmentCatalog == null)
-                return new List<EquipmentData>();
+                return new List<EquipmentDefinition>();
 
             var definitions = EquipmentCatalog.GetByPartType(partType);
             if (!ownedOnly)
@@ -103,7 +103,7 @@ namespace Assets.Scripts.Systems.GameData
             return entry != null;
         }
 
-        public bool TryGetDefinition(string equipmentId, out EquipmentData definition)
+        public bool TryGetDefinition(string equipmentId, out EquipmentDefinition definition)
         {
             definition = null;
             return EquipmentCatalog != null && EquipmentCatalog.TryGetById(equipmentId, out definition);

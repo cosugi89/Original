@@ -5,12 +5,12 @@ namespace Assets.Scripts.UI.Dialog
 {
     public sealed class DialogContext
     {
-        public DialogContext(PreviewStage avatarPreviewRenderer)
+        public DialogContext(AvatarPreviewRenderer avatarPreviewRenderer)
         {
             AvatarPreviewRenderer = avatarPreviewRenderer;
         }
 
-        public PreviewStage AvatarPreviewRenderer { get; }
+        public AvatarPreviewRenderer AvatarPreviewRenderer { get; }
     }
 
     public interface IDialogRequestHandler<in TRequest>

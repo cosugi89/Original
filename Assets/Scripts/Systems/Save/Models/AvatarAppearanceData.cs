@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
-using Assets.Scripts.Core;
+using LayerLab.ArtMakerUnity;
 
 namespace Assets.Scripts.Systems.Save.Models
 {

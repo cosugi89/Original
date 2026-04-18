@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Assets.Scripts.Core;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
 namespace Assets.Scripts.Data.DTO

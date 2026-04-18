@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using Assets.Scripts.Core;
 using Assets.Scripts.Data;
+using LayerLab.ArtMakerUnity;
 using UnityEditor;
 using UnityEngine;
 
