@@ -48,8 +48,9 @@ namespace Assets.Scripts.UI.Dialog
         [SerializeField] private ColorSelectScrollUIScript colorPicker;
 
         private PartsManager dialogPlayer;
+        private PreviewHandle dialogPreviewHandle;
         private Player currentPlayer;
-        private AvatarPreviewRenderer previewRenderer;
+        private PreviewStage previewRenderer;
         private AvatarEditorPresenter avatarEditorPresenter;
 
         public void Setup(AvatarDialogRequest request, DialogContext context)
@@ -61,7 +62,8 @@ namespace Assets.Scripts.UI.Dialog
             previewImage.texture = previewTexture;
 
             // Player の生成・反映
-            dialogPlayer = previewRenderer.SpawnPreview(characterPrefab);
+            dialogPreviewHandle = previewRenderer.Spawn(characterPrefab);
+            dialogPlayer = dialogPreviewHandle?.Get<PartsManager>();
             dialogPlayer.Init();
             avatarEditorPresenter = AvatarEditorPresenter.CreateDefault(currentPlayer?.PartsManager);
             avatarEditorPresenter.BindPreview(dialogPlayer);
@@ -78,8 +80,7 @@ namespace Assets.Scripts.UI.Dialog
 
         protected override void OnClickClose()
         {
-            if (previewRenderer != null)
-                previewRenderer.ClearPreview();
+            DespawnDialogPreview();
 
             Close(AvatarDialogResult.Cancelled);
         }
@@ -89,10 +90,19 @@ namespace Assets.Scripts.UI.Dialog
             avatarEditorPresenter?.Commit();
             AvatarRenderService.EnsureInitialized().ApplyTo(currentPlayer.PartsManager);
             GameSaveService.EnsureInitialized().SaveSession();
-            if (previewRenderer != null)
-                previewRenderer.ClearPreview();
+            DespawnDialogPreview();
 
             Close(AvatarDialogResult.Saved);
+        }
+
+        private void DespawnDialogPreview()
+        {
+            if (previewRenderer != null && dialogPreviewHandle != null)
+            {
+                previewRenderer.Despawn(dialogPreviewHandle);
+            }
+            dialogPreviewHandle = null;
+            dialogPlayer = null;
         }
 
         private async UniTaskVoid RefreshSelectionFramesDeferred()

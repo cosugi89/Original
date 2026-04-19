@@ -2563,8 +2563,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u653B\u6483 \uFF01"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 86b8d716130fe294486793a5b309628e, type: 2}
-  m_sharedMaterial: {fileID: -1255176161416219308, guid: 86b8d716130fe294486793a5b309628e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b1f95a3f4dea31640838974877a17ce4, type: 2}
+  m_sharedMaterial: {fileID: -8634169487207331721, guid: b1f95a3f4dea31640838974877a17ce4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2891,22 +2891,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 669130045}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53f0294724474e5382cbe5797e52ef7f, type: 3}
+  m_Script: {fileID: 11500000, guid: e639a3b4d9f007d4888cff0f08121ea5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.Simulation.BattleFlowController
-  stageDatabaseOverride: {fileID: 11400000, guid: 8569f816dcb3a2344ba4c7c2386f732f, type: 2}
-  debugStageId: 1
-  loopTurnScripts: 1
-  avatarPreviewRenderer: {fileID: 1169603834}
+  initialPlayerHp: 450
+  normalAttackDamage: 100
+  doubleAttackFollowUpDamage: 125
+  jumpAttackDamage: 150
+  skillSlots: []
   backgroundImage: {fileID: 368996705}
   previewImage: {fileID: 251073754}
-  waveNumber: {fileID: 0}
-  turnNumber: {fileID: 2070814806}
-  menuButton1: {fileID: 0}
+  turnNumberText: {fileID: 0}
+  waveNumberText: {fileID: 0}
   skillButton1: {fileID: 2379602458748992964}
   skillButton2: {fileID: 965825347}
   skillButton3: {fileID: 567499007}
-  skillButton4: {fileID: 567499007}
+  skillButton4: {fileID: 1277917587}
   pathExecuteButton: {fileID: 964943225}
   normalSkillButtonColor: {r: 1, g: 1, b: 1, a: 1}
   selectedSkillButtonColor: {r: 1, g: 0.85, b: 0.35, a: 1}
@@ -5969,17 +5969,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 04e14c4bd51a07848a25b678f556c7e8, type: 3}
---- !u!114 &1169603834 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2125401692275476412, guid: 04e14c4bd51a07848a25b678f556c7e8, type: 3}
-  m_PrefabInstance: {fileID: 1169603833}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 802b78879c2413943af9ff9da93158ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.AvatarPreviewRenderer
 --- !u!1 &1180290885
 GameObject:
   m_ObjectHideFlags: 0
@@ -6989,8 +6978,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u653B\u6483 \uFF01"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 86b8d716130fe294486793a5b309628e, type: 2}
-  m_sharedMaterial: {fileID: -1255176161416219308, guid: 86b8d716130fe294486793a5b309628e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b1f95a3f4dea31640838974877a17ce4, type: 2}
+  m_sharedMaterial: {fileID: -8634169487207331721, guid: b1f95a3f4dea31640838974877a17ce4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

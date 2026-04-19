@@ -14,7 +14,7 @@ namespace Assets.Scripts.Features.Home
         [Header("Core")]
         [SerializeField] private Player player;
         [SerializeField] private CameraControl cameraControl;
-        [SerializeField] private AvatarPreviewRenderer previewRenderer;
+        [SerializeField] private PreviewStage previewRenderer;
 
         [Header("Canvas")]
         [SerializeField] private Transform modalRoot;

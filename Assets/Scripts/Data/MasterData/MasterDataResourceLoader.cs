@@ -6,9 +6,11 @@ namespace Assets.Scripts.Data.MasterData
     {
         public const string EquipmentCatalogPath = "MasterData/EquipmentCatalog";
         public const string BattleStageCatalogPath = "MasterData/BattleStageCatalog";
+        public const string StageDatabasePath = "MasterData/StageDatabase";
 
         private static bool _loggedMissingEquipmentCatalog;
         private static bool _loggedMissingBattleStageCatalog;
+        private static bool _loggedMissingStageDatabase;
 
         public static EquipmentCatalog LoadEquipmentCatalog()
         {
@@ -32,6 +34,18 @@ namespace Assets.Scripts.Data.MasterData
             }
 
             return catalog;
+        }
+
+        public static StageDatabase LoadStageDatabase()
+        {
+            var database = Resources.Load<StageDatabase>(StageDatabasePath);
+            if (database == null && !_loggedMissingStageDatabase)
+            {
+                Debug.LogWarning($"[MasterDataResourceLoader] StageDatabase was not found at Resources/{StageDatabasePath}.");
+                _loggedMissingStageDatabase = true;
+            }
+
+            return database;
         }
     }
 }
