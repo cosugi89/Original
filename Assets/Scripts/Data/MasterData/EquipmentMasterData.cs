@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Equipment Definition", fileName = "EquipmentDefinition")]
-    public class EquipmentDefinition : ScriptableObject
+    [CreateAssetMenu(menuName = "Original/Master Data/Equipment Master Data", fileName = "EquipmentMasterData")]
+    public class EquipmentMasterData : ScriptableObject
     {
         [field: SerializeField]
         [Description("装備を一意に識別するID。保存データから参照されるキー。")]

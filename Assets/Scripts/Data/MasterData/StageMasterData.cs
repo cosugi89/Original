@@ -6,10 +6,10 @@ namespace Assets.Scripts.Data.MasterData
 {
     /// <summary>
     /// バトルデモで使用する1ステージぶんのマスタデータ。
-    /// StageDatabase に並べて保持する想定で、ScriptableObject ではなく Serializable クラスとして扱う。
+    /// StageMasterDatabase に並べて保持する想定で、ScriptableObject ではなく Serializable クラスとして扱う。
     /// </summary>
     [Serializable]
-    public class StageData
+    public class StageMasterData
     {
         [SerializeField]
         [Tooltip("ステージを一意に識別する数値ID。遷移状態などからのキーに使用する。")]
@@ -34,7 +34,7 @@ namespace Assets.Scripts.Data.MasterData
 
         [SerializeField]
         [Tooltip("このステージに登場する敵一覧。")]
-        private List<EnemyData> enemies = new();
+        private List<EnemyMasterData> enemies = new();
 
         /// <summary>ステージID。</summary>
         public int StageId => stageId;
@@ -52,13 +52,13 @@ namespace Assets.Scripts.Data.MasterData
         public Sprite PreviewImage => previewImage;
 
         /// <summary>敵一覧。</summary>
-        public List<EnemyData> Enemies => enemies;
+        public List<EnemyMasterData> Enemies => enemies;
 
         /// <summary>
         /// ステージ上に登場する敵1体ぶんのマスタデータ。
         /// </summary>
         [Serializable]
-        public class EnemyData
+        public class EnemyMasterData
         {
             [SerializeField]
             [Tooltip("敵の表示名。")]

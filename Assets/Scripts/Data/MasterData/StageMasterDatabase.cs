@@ -3,20 +3,20 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Stage Database", fileName = "StageDatabase")]
-    public class StageDatabase : ScriptableObject
+    [CreateAssetMenu(menuName = "Original/Master Data/Stage Master Database", fileName = "StageMasterDatabase")]
+    public class StageMasterDatabase : ScriptableObject
     {
         [SerializeField]
         [Tooltip("ステージマスタの一覧。先頭から順に解決される。")]
-        private List<StageData> stages = new();
+        private List<StageMasterData> stages = new();
 
         /// <summary>読み取り専用のステージ一覧。</summary>
-        public IReadOnlyList<StageData> Stages => stages;
+        public IReadOnlyList<StageMasterData> Stages => stages;
 
         /// <summary>
-        /// 指定した StageId に一致する StageData を検索する。
+        /// 指定した StageId に一致する StageMasterData を検索する。
         /// </summary>
-        public bool TryGetById(int stageId, out StageData stageData)
+        public bool TryGetById(int stageId, out StageMasterData stageData)
         {
             if (stages != null)
             {

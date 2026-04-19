@@ -6,14 +6,14 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Stage Catalog", fileName = "BattleStageCatalog")]
-    public class BattleStageCatalog : ScriptableObject
+    [CreateAssetMenu(menuName = "Original/Master Data/Battle Stage Master Catalog", fileName = "BattleStageMasterCatalog")]
+    public class BattleStageMasterCatalog : ScriptableObject
     {
         [field: SerializeField]
         [Description("ステージマスタ一覧。ID検索や選択画面の一覧生成に使う。")]
-        public List<BattleStageDefinition> Stages { get; private set; } = new();
+        public List<BattleStageMasterData> Stages { get; private set; } = new();
 
-        private Dictionary<string, BattleStageDefinition> _byId;
+        private Dictionary<string, BattleStageMasterData> _byId;
 
         private void OnEnable()
         {
@@ -25,13 +25,13 @@ namespace Assets.Scripts.Data.MasterData
             RebuildLookups();
         }
 
-        public bool TryGetById(string stageId, out BattleStageDefinition definition)
+        public bool TryGetById(string stageId, out BattleStageMasterData definition)
         {
             EnsureLookups();
             return _byId.TryGetValue(stageId ?? string.Empty, out definition);
         }
 
-        public IReadOnlyList<BattleStageDefinition> GetAllOrdered()
+        public IReadOnlyList<BattleStageMasterData> GetAllOrdered()
         {
             EnsureLookups();
             return Stages
@@ -41,7 +41,7 @@ namespace Assets.Scripts.Data.MasterData
                 .ToArray();
         }
 
-        public IReadOnlyList<BattleStageDefinition> GetInitiallyUnlocked()
+        public IReadOnlyList<BattleStageMasterData> GetInitiallyUnlocked()
         {
             EnsureLookups();
             return Stages
@@ -61,7 +61,7 @@ namespace Assets.Scripts.Data.MasterData
 
         private void RebuildLookups()
         {
-            _byId = new Dictionary<string, BattleStageDefinition>();
+            _byId = new Dictionary<string, BattleStageMasterData>();
             foreach (var definition in Stages)
             {
                 if (definition == null || string.IsNullOrWhiteSpace(definition.StageId))

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using Assets.Scripts.Data.MasterData;
+using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using LayerLab.ArtMakerUnity;
@@ -20,11 +20,8 @@ namespace Assets.Scripts.Systems.GameData
         [Description("保存のdirty管理と永続化を担当する保存サービス。")]
         public GameSaveService SaveService { get; }
 
-        [Description("装備の所持判定と装備履歴更新を担当するインベントリサービス。")]
+        [Description("装備の所持判定・定義検索・装備履歴更新を担当するインベントリサービス。")]
         public InventoryService InventoryService { get; }
-
-        [Description("装備IDと装備枠の対応を解決する装備マスタ。")]
-        public EquipmentCatalog EquipmentCatalog { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
@@ -37,26 +34,18 @@ namespace Assets.Scripts.Systems.GameData
             if (Instance != null)
                 return Instance;
 
-            var inventoryService = InventoryService.EnsureInitialized();
             Instance = new AvatarService(
                 GameSaveService.EnsureInitialized(),
-                inventoryService,
-                inventoryService.EquipmentCatalog);
+                InventoryService.EnsureInitialized());
             Instance.Initialize();
             return Instance;
         }
 
-        public AvatarService(GameSaveService saveService, InventoryService inventoryService, EquipmentCatalog equipmentCatalog)
+        public AvatarService(GameSaveService saveService, InventoryService inventoryService)
         {
             SaveService = saveService;
             Session = saveService.Session;
             InventoryService = inventoryService;
-            EquipmentCatalog = equipmentCatalog;
-        }
-
-        public void RefreshCatalog(EquipmentCatalog equipmentCatalog)
-        {
-            EquipmentCatalog = equipmentCatalog;
         }
 
         public AvatarAppearanceData GetCurrentAppearance()
@@ -111,8 +100,7 @@ namespace Assets.Scripts.Systems.GameData
         public bool TryEquip(string equipmentId, bool isVisible = true)
         {
             if (string.IsNullOrWhiteSpace(equipmentId) ||
-                EquipmentCatalog == null ||
-                !EquipmentCatalog.TryGetById(equipmentId, out var definition) ||
+                !InventoryService.TryGetDefinition(equipmentId, out var definition) ||
                 !InventoryService.HasEquipment(equipmentId))
             {
                 return false;
@@ -124,8 +112,7 @@ namespace Assets.Scripts.Systems.GameData
         public bool TryEquip(PartsType partType, string equipmentId, bool isVisible = true)
         {
             if (string.IsNullOrWhiteSpace(equipmentId) ||
-                EquipmentCatalog == null ||
-                !EquipmentCatalog.TryGetById(equipmentId, out var definition) ||
+                !InventoryService.TryGetDefinition(equipmentId, out var definition) ||
                 definition.PartType != partType ||
                 !InventoryService.HasEquipment(equipmentId))
             {
@@ -176,7 +163,7 @@ namespace Assets.Scripts.Systems.GameData
             return !string.IsNullOrWhiteSpace(equipmentId);
         }
 
-        public IReadOnlyList<EquipmentDefinition> GetSelectableEquipments(PartsType partType, bool ownedOnly = true)
+        public IReadOnlyList<EquipmentData> GetSelectableEquipments(PartsType partType, bool ownedOnly = true)
         {
             return InventoryService.GetDefinitionsByPartType(partType, ownedOnly);
         }

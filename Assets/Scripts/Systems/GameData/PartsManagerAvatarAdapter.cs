@@ -11,7 +11,7 @@ namespace Assets.Scripts.Systems.GameData
 {
     public static class PartsManagerAvatarAdapter
     {
-        public static AvatarAppearanceData CaptureAppearance(PartsManager partsManager, EquipmentCatalog equipmentCatalog)
+        public static AvatarAppearanceData CaptureAppearance(PartsManager partsManager, InventoryService inventoryService)
         {
             var appearance = new AvatarAppearanceData();
             if (partsManager == null)
@@ -26,12 +26,12 @@ namespace Assets.Scripts.Systems.GameData
                 if (partsManager.IsEquipped(partType))
                 {
                     var activeIndex = partsManager.GetActiveIndex(partType);
-                    if (equipmentCatalog != null &&
-                        equipmentCatalog.TryGetByPartsIndex(partType, activeIndex, out var definition) &&
-                        definition != null &&
-                        !string.IsNullOrWhiteSpace(definition.EquipmentId))
+                    if (inventoryService != null &&
+                        inventoryService.TryGetByPartsIndex(partType, activeIndex, out var data) &&
+                        data != null &&
+                        !string.IsNullOrWhiteSpace(data.EquipmentId))
                     {
-                        equipmentId = definition.EquipmentId;
+                        equipmentId = data.EquipmentId;
                     }
                     else
                     {
@@ -59,7 +59,7 @@ namespace Assets.Scripts.Systems.GameData
             return appearance;
         }
 
-        public static void ApplyAppearance(PartsManager partsManager, AvatarAppearanceData appearance, EquipmentCatalog equipmentCatalog)
+        public static void ApplyAppearance(PartsManager partsManager, AvatarAppearanceData appearance, InventoryService inventoryService)
         {
             if (partsManager == null || appearance == null)
                 return;
@@ -74,7 +74,7 @@ namespace Assets.Scripts.Systems.GameData
                 if (IsDerivedPart(partType) || !partStates.TryGetValue(partType, out var state))
                     continue;
 
-                ApplyPartState(partsManager, state, equipmentCatalog);
+                ApplyPartState(partsManager, state, inventoryService);
             }
 
             foreach (var colorState in appearance.Colors ?? Enumerable.Empty<AvatarColorData>())
@@ -89,12 +89,12 @@ namespace Assets.Scripts.Systems.GameData
             }
         }
 
-        private static void ApplyPartState(PartsManager partsManager, AvatarPartStateData state, EquipmentCatalog equipmentCatalog)
+        private static void ApplyPartState(PartsManager partsManager, AvatarPartStateData state, InventoryService inventoryService)
         {
             if (state == null)
                 return;
 
-            if (!TryResolvePartsIndex(state, equipmentCatalog, out var partsIndex))
+            if (!TryResolvePartsIndex(state, inventoryService, out var partsIndex))
             {
                 partsManager.UnequipParts(state.PartType);
                 partsManager.SetPartsVisible(state.PartType, false);
@@ -107,20 +107,20 @@ namespace Assets.Scripts.Systems.GameData
 
         private static bool TryResolvePartsIndex(
             AvatarPartStateData state,
-            EquipmentCatalog equipmentCatalog,
+            InventoryService inventoryService,
             out int partsIndex)
         {
             partsIndex = -1;
             if (state == null || string.IsNullOrWhiteSpace(state.EquipmentId))
                 return false;
 
-            if (equipmentCatalog != null &&
-                equipmentCatalog.TryGetById(state.EquipmentId, out var definition) &&
-                definition != null &&
-                definition.PartType == state.PartType &&
-                definition.PartsIndex >= 0)
+            if (inventoryService != null &&
+                inventoryService.TryGetDefinition(state.EquipmentId, out var data) &&
+                data != null &&
+                data.PartType == state.PartType &&
+                data.PartsIndex >= 0)
             {
-                partsIndex = definition.PartsIndex;
+                partsIndex = data.PartsIndex;
                 return true;
             }
 

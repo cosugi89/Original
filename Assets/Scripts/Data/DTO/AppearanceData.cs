@@ -9,7 +9,7 @@ namespace Assets.Scripts.Data.DTO
     /// Serializable avatar appearance data.
     /// </summary>
     [Serializable]
-    public class AvatarAppearanceData
+    public class AppearanceData
     {
         public List<PartsEntry> parts = new();
         public List<ColorEntry> colors = new();

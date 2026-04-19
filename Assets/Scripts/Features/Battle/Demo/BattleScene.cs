@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.GameData;
 using UnityEngine;
@@ -77,7 +78,32 @@ namespace Assets.Scripts.Features.Battle.Demo
         {
             EnsureDefaults(); // デフォルト値の補完
 
-            ApplyStageSetup();
+            var stageId = BattleSceneTransitionState.ConsumeSelectedStageId();
+
+            if (!MasterDataResourceLoader.TryLoadStageData(stageId, out StageData stageData))
+            {
+                return;
+            }
+
+            if (stageData.Enemies != null && stageData.Enemies.Count > 0)
+            {
+                var firstEnemy = stageData.Enemies[0];
+                if (!string.IsNullOrWhiteSpace(firstEnemy.Name))
+                {
+                    _enemyName = firstEnemy.Name;
+                }
+                _initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
+            }
+
+            backgroundImage.sprite = stageData.BackgroundImage;
+            backgroundImage.enabled = stageData.BackgroundImage != null;
+            previewImage.sprite = stageData.PreviewImage;
+            previewImage.enabled = stageData.PreviewImage != null;
+
+            initialPlayerHp = Mathf.Max(1, initialPlayerHp);
+            normalAttackDamage = Mathf.Max(1, normalAttackDamage);
+            doubleAttackFollowUpDamage = Mathf.Max(1, doubleAttackFollowUpDamage);
+            jumpAttackDamage = Mathf.Max(1, jumpAttackDamage);
 
             _playerHp = initialPlayerHp;
             _enemyHp = _initialEnemyHp;
@@ -196,37 +222,6 @@ namespace Assets.Scripts.Features.Battle.Demo
             {
                 _turnScripts = CreateDefaultTurnScripts();
             }
-        }
-
-        private void ApplyStageSetup()
-        {
-            var stageId = BattleSceneTransitionState.ConsumeSelectedStageId();
-            var database = MasterDataResourceLoader.LoadStageDatabase();
-
-            if (!database.TryGetById(stageId, out var stageData))
-            {
-                return;
-            }
-
-            if (stageData.Enemies != null && stageData.Enemies.Count > 0)
-            {
-                var firstEnemy = stageData.Enemies[0];
-                if (!string.IsNullOrWhiteSpace(firstEnemy.Name))
-                {
-                    _enemyName = firstEnemy.Name;
-                }
-                _initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
-            }
-
-            initialPlayerHp = Mathf.Max(1, initialPlayerHp);
-            normalAttackDamage = Mathf.Max(1, normalAttackDamage);
-            doubleAttackFollowUpDamage = Mathf.Max(1, doubleAttackFollowUpDamage);
-            jumpAttackDamage = Mathf.Max(1, jumpAttackDamage);
-
-            backgroundImage.sprite = stageData.BackgroundImage;
-            backgroundImage.enabled = stageData.BackgroundImage != null;
-            previewImage.sprite = stageData.PreviewImage;
-            previewImage.enabled = stageData.PreviewImage != null;
         }
 
         private void RefreshSkillButtonVisuals()

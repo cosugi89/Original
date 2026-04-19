@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Core;
-using Assets.Scripts.Data.MasterData;
+using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save.Models;
 using LayerLab.ArtMakerUnity;
@@ -50,7 +50,7 @@ namespace Assets.Scripts.UI.Dialog
             var avatarRenderService = AvatarRenderService.EnsureInitialized();
 
             AvatarAppearanceData initialAppearance = sourcePartsManager != null
-                ? PartsManagerAvatarAdapter.CaptureAppearance(sourcePartsManager, inventoryService.EquipmentCatalog)
+                ? PartsManagerAvatarAdapter.CaptureAppearance(sourcePartsManager, inventoryService)
                 : avatarService.GetCurrentAppearance();
 
             return new AvatarEditorPresenter(avatarService, inventoryService, avatarRenderService, initialAppearance);
@@ -208,7 +208,7 @@ namespace Assets.Scripts.UI.Dialog
                 return;
 
             EnsurePartsManagerInitialized(partsManager);
-            PartsManagerAvatarAdapter.ApplyAppearance(partsManager, _draftAppearance, _inventoryService.EquipmentCatalog);
+            PartsManagerAvatarAdapter.ApplyAppearance(partsManager, _draftAppearance, _inventoryService);
         }
 
         private IReadOnlyList<AvatarPartOptionViewData> BuildOptions(
@@ -217,8 +217,6 @@ namespace Assets.Scripts.UI.Dialog
             bool includeLocked)
         {
             var options = new List<AvatarPartOptionViewData>();
-            if (_inventoryService.EquipmentCatalog == null)
-                return options;
 
             for (int groupIndex = 0; groupIndex < partTypes.Count; groupIndex++)
             {

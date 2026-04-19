@@ -71,7 +71,7 @@ namespace Assets.Scripts.Systems.GameData
             PartsManagerAvatarAdapter.ApplyAppearance(
                 partsManager,
                 AvatarService.GetCurrentAppearance(),
-                InventoryService.EquipmentCatalog);
+                InventoryService);
         }
 
         public AvatarAppearanceData CaptureFrom(PartsManager partsManager, bool saveAfterCapture = false)
@@ -81,7 +81,7 @@ namespace Assets.Scripts.Systems.GameData
 
             EnsurePartsManagerInitialized(partsManager);
 
-            var appearance = PartsManagerAvatarAdapter.CaptureAppearance(partsManager, InventoryService.EquipmentCatalog);
+            var appearance = PartsManagerAvatarAdapter.CaptureAppearance(partsManager, InventoryService);
             AvatarService.SetCurrentAppearance(appearance);
             SyncOwnedEquipments(appearance);
 

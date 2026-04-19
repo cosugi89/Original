@@ -10,15 +10,15 @@ namespace Assets.Scripts.Data
     /// </summary>
     public class CharacterPrefabData : MonoBehaviour
     {
-        [SerializeField] private AvatarAppearanceData appearanceData = new();
+        [SerializeField] private AppearanceData appearanceData = new();
 
         /// <summary>
         /// Sets the character data from avatar appearance data.
         /// </summary>
         /// <param name="data">The appearance data containing parts, colors, and visibility data.</param>
-        public void SetData(AvatarAppearanceData data)
+        public void SetData(AppearanceData data)
         {
-            appearanceData = data ?? new AvatarAppearanceData();
+            appearanceData = data ?? new AppearanceData();
         }
 
         private void Start()

@@ -17,12 +17,12 @@ namespace Assets.Scripts.Systems.Save
         [Serializable]
         private class SaveData
         {
-            public AvatarAppearanceData appearance = new();
+            public AppearanceData appearance = new();
         }
 
         public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileNames.LegacyAvatarAppearanceFileName);
 
-        public static void Save(AvatarAppearanceData appearanceData)
+        public static void Save(AppearanceData appearanceData)
         {
             if (appearanceData == null) return;
 
@@ -44,7 +44,7 @@ namespace Assets.Scripts.Systems.Save
             }
         }
 
-        public static bool TryLoad(out AvatarAppearanceData appearanceData)
+        public static bool TryLoad(out AppearanceData appearanceData)
         {
             appearanceData = null;
 
@@ -89,7 +89,7 @@ namespace Assets.Scripts.Systems.Save
             }
         }
 
-        private static bool IsEmpty(AvatarAppearanceData appearanceData)
+        private static bool IsEmpty(AppearanceData appearanceData)
         {
             return appearanceData == null ||
                    ((appearanceData.parts == null || appearanceData.parts.Count == 0) &&
@@ -97,12 +97,12 @@ namespace Assets.Scripts.Systems.Save
                     (appearanceData.visibility == null || appearanceData.visibility.Count == 0));
         }
 
-        private static AvatarAppearanceData CloneAppearanceData(AvatarAppearanceData appearanceData)
+        private static AppearanceData CloneAppearanceData(AppearanceData appearanceData)
         {
             if (appearanceData == null)
-                return new AvatarAppearanceData();
+                return new AppearanceData();
 
-            return new AvatarAppearanceData
+            return new AppearanceData
             {
                 parts = CloneParts(appearanceData.parts),
                 colors = CloneColors(appearanceData.colors),
@@ -110,16 +110,16 @@ namespace Assets.Scripts.Systems.Save
             };
         }
 
-        private static List<AvatarAppearanceData.PartsEntry> CloneParts(List<AvatarAppearanceData.PartsEntry> parts)
+        private static List<AppearanceData.PartsEntry> CloneParts(List<AppearanceData.PartsEntry> parts)
         {
-            var cloned = new List<AvatarAppearanceData.PartsEntry>();
+            var cloned = new List<AppearanceData.PartsEntry>();
             if (parts == null)
                 return cloned;
 
             foreach (var entry in parts)
             {
                 if (entry == null) continue;
-                cloned.Add(new AvatarAppearanceData.PartsEntry
+                cloned.Add(new AppearanceData.PartsEntry
                 {
                     type = entry.type,
                     index = entry.index
@@ -129,16 +129,16 @@ namespace Assets.Scripts.Systems.Save
             return cloned;
         }
 
-        private static List<AvatarAppearanceData.ColorEntry> CloneColors(List<AvatarAppearanceData.ColorEntry> colors)
+        private static List<AppearanceData.ColorEntry> CloneColors(List<AppearanceData.ColorEntry> colors)
         {
-            var cloned = new List<AvatarAppearanceData.ColorEntry>();
+            var cloned = new List<AppearanceData.ColorEntry>();
             if (colors == null)
                 return cloned;
 
             foreach (var entry in colors)
             {
                 if (entry == null) continue;
-                cloned.Add(new AvatarAppearanceData.ColorEntry
+                cloned.Add(new AppearanceData.ColorEntry
                 {
                     target = entry.target,
                     color = entry.color
@@ -148,16 +148,16 @@ namespace Assets.Scripts.Systems.Save
             return cloned;
         }
 
-        private static List<AvatarAppearanceData.VisibilityEntry> CloneVisibility(List<AvatarAppearanceData.VisibilityEntry> visibility)
+        private static List<AppearanceData.VisibilityEntry> CloneVisibility(List<AppearanceData.VisibilityEntry> visibility)
         {
-            var cloned = new List<AvatarAppearanceData.VisibilityEntry>();
+            var cloned = new List<AppearanceData.VisibilityEntry>();
             if (visibility == null)
                 return cloned;
 
             foreach (var entry in visibility)
             {
                 if (entry == null) continue;
-                cloned.Add(new AvatarAppearanceData.VisibilityEntry
+                cloned.Add(new AppearanceData.VisibilityEntry
                 {
                     type = entry.type,
                     visible = entry.visible

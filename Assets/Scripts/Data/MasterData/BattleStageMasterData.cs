@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Stage Definition", fileName = "BattleStageDefinition")]
-    public class BattleStageDefinition : ScriptableObject
+    [CreateAssetMenu(menuName = "Original/Master Data/Battle Stage Master Data", fileName = "BattleStageMasterData")]
+    public class BattleStageMasterData : ScriptableObject
     {
         [field: SerializeField]
         [Description("ステージを一意に識別するID。保存データから参照されるキー。")]

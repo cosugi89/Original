@@ -7,16 +7,16 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Equipment Catalog", fileName = "EquipmentCatalog")]
-    public class EquipmentCatalog : ScriptableObject
+    [CreateAssetMenu(menuName = "Original/Master Data/Equipment Master Catalog", fileName = "EquipmentMasterCatalog")]
+    public class EquipmentMasterCatalog : ScriptableObject
     {
         [field: SerializeField]
         [Description("装備マスタ一覧。ID検索や装備枠ごとの一覧取得に使う。")]
-        public List<EquipmentDefinition> Equipments { get; private set; } = new();
+        public List<EquipmentMasterData> Equipments { get; private set; } = new();
 
-        private Dictionary<string, EquipmentDefinition> _byId;
-        private Dictionary<string, EquipmentDefinition> _byPartIndexKey;
-        private Dictionary<PartsType, List<EquipmentDefinition>> _byPartType;
+        private Dictionary<string, EquipmentMasterData> _byId;
+        private Dictionary<string, EquipmentMasterData> _byPartIndexKey;
+        private Dictionary<PartsType, List<EquipmentMasterData>> _byPartType;
 
         private void OnEnable()
         {
@@ -28,27 +28,27 @@ namespace Assets.Scripts.Data.MasterData
             RebuildLookups();
         }
 
-        public bool TryGetById(string equipmentId, out EquipmentDefinition definition)
+        public bool TryGetById(string equipmentId, out EquipmentMasterData definition)
         {
             EnsureLookups();
             return _byId.TryGetValue(equipmentId ?? string.Empty, out definition);
         }
 
-        public bool TryGetByPartsIndex(PartsType partType, int partsIndex, out EquipmentDefinition definition)
+        public bool TryGetByPartsIndex(PartsType partType, int partsIndex, out EquipmentMasterData definition)
         {
             EnsureLookups();
             return _byPartIndexKey.TryGetValue(EquipmentIdUtility.Build(partType, partsIndex), out definition);
         }
 
-        public IReadOnlyList<EquipmentDefinition> GetByPartType(PartsType partType)
+        public IReadOnlyList<EquipmentMasterData> GetByPartType(PartsType partType)
         {
             EnsureLookups();
             return _byPartType.TryGetValue(partType, out var definitions)
                 ? definitions
-                : Array.Empty<EquipmentDefinition>();
+                : Array.Empty<EquipmentMasterData>();
         }
 
-        public IReadOnlyList<EquipmentDefinition> GetDefaultOwned()
+        public IReadOnlyList<EquipmentMasterData> GetDefaultOwned()
         {
             EnsureLookups();
             return Equipments
@@ -68,9 +68,9 @@ namespace Assets.Scripts.Data.MasterData
 
         private void RebuildLookups()
         {
-            _byId = new Dictionary<string, EquipmentDefinition>();
-            _byPartIndexKey = new Dictionary<string, EquipmentDefinition>();
-            _byPartType = new Dictionary<PartsType, List<EquipmentDefinition>>();
+            _byId = new Dictionary<string, EquipmentMasterData>();
+            _byPartIndexKey = new Dictionary<string, EquipmentMasterData>();
+            _byPartType = new Dictionary<PartsType, List<EquipmentMasterData>>();
 
             foreach (var definition in Equipments)
             {
@@ -90,7 +90,7 @@ namespace Assets.Scripts.Data.MasterData
 
                 if (!_byPartType.TryGetValue(definition.PartType, out var list))
                 {
-                    list = new List<EquipmentDefinition>();
+                    list = new List<EquipmentMasterData>();
                     _byPartType[definition.PartType] = list;
                 }
 

@@ -701,7 +701,7 @@ namespace Assets.Scripts.Core
         /// パーツ、色、表示状態を復元します。
         /// </summary>
         /// <param name="appearanceData">適用するアバター状態データ。</param>
-        public void ApplyAppearanceData(AvatarAppearanceData appearanceData)
+        public void ApplyAppearanceData(AppearanceData appearanceData)
         {
             if (appearanceData == null) return;
 
@@ -736,19 +736,19 @@ namespace Assets.Scripts.Core
         /// <summary>
         /// 現在のキャラクター状態をアバター状態データとしてシリアライズします。
         /// </summary>
-        /// <returns>現在の状態を格納した新しい <see cref="AvatarAppearanceData"/>。</returns>
-        public AvatarAppearanceData CreateAppearanceData()
+        /// <returns>現在の状態を格納した新しい <see cref="AppearanceData"/>。</returns>
+        public AppearanceData CreateAppearanceData()
         {
-            var appearanceData = new AvatarAppearanceData();
+            var appearanceData = new AppearanceData();
 
             foreach (var kvp in ActiveIndices)
-                appearanceData.parts.Add(new AvatarAppearanceData.PartsEntry { type = kvp.Key, index = kvp.Value });
+                appearanceData.parts.Add(new AppearanceData.PartsEntry { type = kvp.Key, index = kvp.Value });
 
             foreach (var kvp in Colors)
-                appearanceData.colors.Add(new AvatarAppearanceData.ColorEntry { target = kvp.Key, color = kvp.Value });
+                appearanceData.colors.Add(new AppearanceData.ColorEntry { target = kvp.Key, color = kvp.Value });
 
             foreach (var kvp in Visibility)
-                appearanceData.visibility.Add(new AvatarAppearanceData.VisibilityEntry { type = kvp.Key, visible = kvp.Value });
+                appearanceData.visibility.Add(new AppearanceData.VisibilityEntry { type = kvp.Key, visible = kvp.Value });
 
             return appearanceData;
         }

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
@@ -19,8 +21,10 @@ namespace Assets.Scripts.Systems.GameData
         [Description("保存のdirty管理と永続化を担当する保存サービス。")]
         public GameSaveService SaveService { get; }
 
-        [Description("装備IDと見た目情報を紐付ける装備マスタ。")]
-        public EquipmentCatalog EquipmentCatalog { get; private set; }
+        private IReadOnlyList<EquipmentData> _allEquipmentData;
+        private Dictionary<string, EquipmentData> _byId;
+        private Dictionary<string, EquipmentData> _byPartIndexKey;
+        private Dictionary<PartsType, List<EquipmentData>> _byPartType;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
@@ -35,21 +39,21 @@ namespace Assets.Scripts.Systems.GameData
 
             Instance = new InventoryService(
                 GameSaveService.EnsureInitialized(),
-                MasterDataResourceLoader.LoadEquipmentCatalog());
-            Instance.Initialize();
+                MasterDataResourceLoader.LoadEquipmentData());
             return Instance;
         }
 
-        public InventoryService(GameSaveService saveService, EquipmentCatalog equipmentCatalog)
+        public InventoryService(GameSaveService saveService, IReadOnlyList<EquipmentData> equipmentData)
         {
             SaveService = saveService;
             Session = saveService.Session;
-            EquipmentCatalog = equipmentCatalog;
+            RefreshDefinitions(equipmentData);
         }
 
-        public void RefreshCatalog(EquipmentCatalog equipmentCatalog)
+        public void RefreshDefinitions(IReadOnlyList<EquipmentData> equipmentData)
         {
-            EquipmentCatalog = equipmentCatalog;
+            _allEquipmentData = equipmentData ?? Array.Empty<EquipmentData>();
+            RebuildLookups();
             Initialize();
         }
 
@@ -60,24 +64,20 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
-        public IReadOnlyList<EquipmentDefinition> GetOwnedDefinitions()
+        public IReadOnlyList<EquipmentData> GetOwnedDefinitions()
         {
-            if (EquipmentCatalog == null)
-                return new List<EquipmentDefinition>();
-
             return GetAllEntries()
                 .Where(entry => entry.IsUnlocked && !string.IsNullOrWhiteSpace(entry.EquipmentId))
-                .Select(entry => EquipmentCatalog.TryGetById(entry.EquipmentId, out var definition) ? definition : null)
-                .Where(definition => definition != null)
+                .Select(entry => _byId.TryGetValue(entry.EquipmentId, out var data) ? data : null)
+                .Where(data => data != null)
                 .ToArray();
         }
 
-        public IReadOnlyList<EquipmentDefinition> GetDefinitionsByPartType(PartsType partType, bool ownedOnly = false)
+        public IReadOnlyList<EquipmentData> GetDefinitionsByPartType(PartsType partType, bool ownedOnly = false)
         {
-            if (EquipmentCatalog == null)
-                return new List<EquipmentDefinition>();
+            if (!_byPartType.TryGetValue(partType, out var definitions))
+                return Array.Empty<EquipmentData>();
 
-            var definitions = EquipmentCatalog.GetByPartType(partType);
             if (!ownedOnly)
                 return definitions;
 
@@ -87,8 +87,18 @@ namespace Assets.Scripts.Systems.GameData
                     .Select(entry => entry.EquipmentId));
 
             return definitions
-                .Where(definition => definition != null && ownedIds.Contains(definition.EquipmentId))
+                .Where(data => data != null && ownedIds.Contains(data.EquipmentId))
                 .ToArray();
+        }
+
+        public bool TryGetDefinition(string equipmentId, out EquipmentData definition)
+        {
+            return _byId.TryGetValue(equipmentId ?? string.Empty, out definition);
+        }
+
+        public bool TryGetByPartsIndex(PartsType partType, int partsIndex, out EquipmentData definition)
+        {
+            return _byPartIndexKey.TryGetValue(EquipmentIdUtility.Build(partType, partsIndex), out definition);
         }
 
         public bool HasEquipment(string equipmentId)
@@ -101,12 +111,6 @@ namespace Assets.Scripts.Systems.GameData
             entry = EnsureInventory().Equipments
                 .FirstOrDefault(candidate => candidate != null && candidate.EquipmentId == (equipmentId ?? string.Empty));
             return entry != null;
-        }
-
-        public bool TryGetDefinition(string equipmentId, out EquipmentDefinition definition)
-        {
-            definition = null;
-            return EquipmentCatalog != null && EquipmentCatalog.TryGetById(equipmentId, out definition);
         }
 
         public InventoryEntryData GrantEquipment(string equipmentId, int quantity = 1, bool isUnlocked = true)
@@ -130,7 +134,7 @@ namespace Assets.Scripts.Systems.GameData
             entry.Quantity = Mathf.Max(0, entry.Quantity + quantity);
             entry.IsUnlocked = entry.IsUnlocked || isUnlocked || entry.Quantity > 0;
             if (string.IsNullOrWhiteSpace(entry.ObtainedAtUtc))
-                entry.ObtainedAtUtc = System.DateTime.UtcNow.ToString("O");
+                entry.ObtainedAtUtc = DateTime.UtcNow.ToString("O");
 
             SaveService.MarkDirty();
             return entry;
@@ -154,7 +158,7 @@ namespace Assets.Scripts.Systems.GameData
             if (!TryGetEntry(equipmentId, out var entry))
                 return;
 
-            entry.LastEquippedAtUtc = System.DateTime.UtcNow.ToString("O");
+            entry.LastEquippedAtUtc = DateTime.UtcNow.ToString("O");
             SaveService.MarkDirty();
         }
 
@@ -171,18 +175,49 @@ namespace Assets.Scripts.Systems.GameData
             return Session.SaveData.Inventory;
         }
 
-        private void SyncDefaultOwnedEquipments()
+        private void RebuildLookups()
         {
-            if (EquipmentCatalog == null)
-                return;
+            _byId = new Dictionary<string, EquipmentData>();
+            _byPartIndexKey = new Dictionary<string, EquipmentData>();
+            _byPartType = new Dictionary<PartsType, List<EquipmentData>>();
 
-            var hasChanges = false;
-            foreach (var definition in EquipmentCatalog.GetDefaultOwned())
+            foreach (var data in _allEquipmentData)
             {
-                if (definition == null || string.IsNullOrWhiteSpace(definition.EquipmentId))
+                if (data == null)
                     continue;
 
-                if (TryGetEntry(definition.EquipmentId, out var existing))
+                if (!string.IsNullOrWhiteSpace(data.EquipmentId) && !_byId.TryAdd(data.EquipmentId, data))
+                {
+                    Debug.LogWarning($"[InventoryService] Duplicate equipmentId: {data.EquipmentId}");
+                }
+
+                var legacyKey = EquipmentIdUtility.Build(data.PartType, data.PartsIndex);
+                if (data.PartsIndex >= 0)
+                    _byPartIndexKey.TryAdd(legacyKey, data);
+
+                if (!_byPartType.TryGetValue(data.PartType, out var list))
+                {
+                    list = new List<EquipmentData>();
+                    _byPartType[data.PartType] = list;
+                }
+                list.Add(data);
+            }
+
+            foreach (var pair in _byPartType)
+            {
+                pair.Value.Sort((l, r) => l.PartsIndex.CompareTo(r.PartsIndex));
+            }
+        }
+
+        private void SyncDefaultOwnedEquipments()
+        {
+            var hasChanges = false;
+            foreach (var data in _allEquipmentData)
+            {
+                if (data == null || !data.IsDefaultOwned || string.IsNullOrWhiteSpace(data.EquipmentId))
+                    continue;
+
+                if (TryGetEntry(data.EquipmentId, out var existing))
                 {
                     if (!existing.IsUnlocked || existing.Quantity <= 0)
                     {
@@ -190,15 +225,14 @@ namespace Assets.Scripts.Systems.GameData
                         existing.Quantity = Mathf.Max(1, existing.Quantity);
                         hasChanges = true;
                     }
-
                     continue;
                 }
 
                 EnsureInventory().Equipments.Add(new InventoryEntryData
                 {
-                    EquipmentId = definition.EquipmentId,
+                    EquipmentId = data.EquipmentId,
                     Quantity = 1,
-                    IsUnlocked = true
+                    IsUnlocked = true,
                 });
                 hasChanges = true;
             }
