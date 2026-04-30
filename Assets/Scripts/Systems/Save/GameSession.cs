@@ -17,8 +17,8 @@ namespace Assets.Scripts.Systems.Save
         [Description("保存対象データに未保存の変更があるかどうか。")]
         public bool IsDirty { get; private set; }
 
-        [Description("現在実行中または遷移先として扱っているステージID。実行時専用で保存しなくてもよい。")]
-        public string CurrentStageId { get; private set; } = "";
+        [Description("現在実行中または遷移先として扱っているステージID。負数は未設定扱い。")]
+        public int CurrentStageId { get; private set; } = -1;
 
         public static GameSession Instance => EnsureInstance();
 
@@ -64,9 +64,9 @@ namespace Assets.Scripts.Systems.Save
             IsDirty = false;
         }
 
-        public void SetCurrentStageId(string stageId)
+        public void SetCurrentStageId(int stageId)
         {
-            CurrentStageId = stageId ?? string.Empty;
+            CurrentStageId = stageId;
         }
 
         private static GameSession EnsureInstance()

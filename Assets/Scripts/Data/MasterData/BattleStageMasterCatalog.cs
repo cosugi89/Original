@@ -13,7 +13,7 @@ namespace Assets.Scripts.Data.MasterData
         [Description("ステージマスタ一覧。ID検索や選択画面の一覧生成に使う。")]
         public List<BattleStageMasterData> Stages { get; private set; } = new();
 
-        private Dictionary<string, BattleStageMasterData> _byId;
+        private Dictionary<int, BattleStageMasterData> _byId;
 
         private void OnEnable()
         {
@@ -25,10 +25,10 @@ namespace Assets.Scripts.Data.MasterData
             RebuildLookups();
         }
 
-        public bool TryGetById(string stageId, out BattleStageMasterData definition)
+        public bool TryGetById(int stageId, out BattleStageMasterData definition)
         {
             EnsureLookups();
-            return _byId.TryGetValue(stageId ?? string.Empty, out definition);
+            return _byId.TryGetValue(stageId, out definition);
         }
 
         public IReadOnlyList<BattleStageMasterData> GetAllOrdered()
@@ -61,10 +61,10 @@ namespace Assets.Scripts.Data.MasterData
 
         private void RebuildLookups()
         {
-            _byId = new Dictionary<string, BattleStageMasterData>();
+            _byId = new Dictionary<int, BattleStageMasterData>();
             foreach (var definition in Stages)
             {
-                if (definition == null || string.IsNullOrWhiteSpace(definition.StageId))
+                if (definition == null)
                     continue;
 
                 if (!_byId.TryAdd(definition.StageId, definition))

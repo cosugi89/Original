@@ -15,6 +15,7 @@ namespace Assets.Scripts.Data.MasterData
         private static bool _loggedMissingEquipmentMasterCatalog;
         private static bool _loggedMissingBattleStageMasterCatalog;
         private static bool _loggedMissingStageMasterDatabase;
+        private static bool _loggedBattleStageFallbackToStageMasterDatabase;
 
         // ── public ──────────────────────────
 
@@ -47,21 +48,23 @@ namespace Assets.Scripts.Data.MasterData
         public static IReadOnlyList<BattleStageData> LoadBattleStageData()
         {
             var catalog = LoadBattleStageMasterCatalog();
-            if (catalog == null)
-                return Array.Empty<BattleStageData>();
+            if (catalog != null)
+            {
+                return catalog.Stages
+                    .Where(m => m != null)
+                    .Select(m => new BattleStageData
+                    {
+                        StageId = m.StageId,
+                        DisplayName = m.DisplayName,
+                        DescriptionText = m.DescriptionText,
+                        SortOrder = m.SortOrder,
+                        IsInitiallyUnlocked = m.IsInitiallyUnlocked,
+                        PreviewImage = m.PreviewImage,
+                    })
+                    .ToArray();
+            }
 
-            return catalog.Stages
-                .Where(m => m != null)
-                .Select(m => new BattleStageData
-                {
-                    StageId = m.StageId,
-                    DisplayName = m.DisplayName,
-                    DescriptionText = m.DescriptionText,
-                    SortOrder = m.SortOrder,
-                    IsInitiallyUnlocked = m.IsInitiallyUnlocked,
-                    PreviewImage = m.PreviewImage,
-                })
-                .ToArray();
+            return LoadBattleStageDataFromStageMasterDatabase();
         }
 
         /// <summary>
@@ -125,6 +128,34 @@ namespace Assets.Scripts.Data.MasterData
                 _loggedMissingStageMasterDatabase = true;
             }
             return database;
+        }
+
+        private static IReadOnlyList<BattleStageData> LoadBattleStageDataFromStageMasterDatabase()
+        {
+            var database = LoadStageMasterDatabase();
+            if (database == null)
+                return Array.Empty<BattleStageData>();
+
+            if (!_loggedBattleStageFallbackToStageMasterDatabase)
+            {
+                Debug.LogWarning("[MasterDataResourceLoader] BattleStageMasterCatalog was not found. Falling back to StageMasterDatabase for stage definitions.");
+                _loggedBattleStageFallbackToStageMasterDatabase = true;
+            }
+
+            return database.Stages
+                .Where(m => m != null)
+                .OrderBy(m => m.StageId)
+                .ThenBy(m => m.StageId)
+                .Select((m, index) => new BattleStageData
+                {
+                    StageId = m.StageId,
+                    DisplayName = m.StageName,
+                    DescriptionText = m.Description,
+                    SortOrder = m.StageId,
+                    IsInitiallyUnlocked = index == 0,
+                    PreviewImage = m.PreviewImage,
+                })
+                .ToArray();
         }
     }
 }

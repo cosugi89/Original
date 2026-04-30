@@ -12,7 +12,7 @@ namespace Assets.Scripts.Data.MasterData
     public class StageMasterData
     {
         [SerializeField]
-        [Tooltip("ステージを一意に識別する数値ID。遷移状態などからのキーに使用する。")]
+        [Tooltip("ステージを一意に識別する数値ID。保存・遷移・読込のキーに使う。")]
         private int stageId;
 
         [SerializeField]
@@ -36,7 +36,7 @@ namespace Assets.Scripts.Data.MasterData
         [Tooltip("このステージに登場する敵一覧。")]
         private List<EnemyMasterData> enemies = new();
 
-        /// <summary>ステージID。</summary>
+        /// <summary>保存・遷移で使うステージID。</summary>
         public int StageId => stageId;
 
         /// <summary>ステージ名。</summary>

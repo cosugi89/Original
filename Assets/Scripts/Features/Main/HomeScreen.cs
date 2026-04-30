@@ -19,7 +19,7 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private int debugBattleStageId = 0;
 
         private bool _isInitialized;
-        private int _battleStageId;
+        private int _battleStageId = -1;
 
         public void Init()
         {
@@ -47,14 +47,19 @@ namespace Assets.Scripts.Features.Main
                 _battleStageId = GetNextStageId();
             }
 
+            if (_battleStageId < 0)
+            {
+                Debug.LogWarning("[HomeScreen] 遷移先の StageId を解決できなかったため、BattleScene へ遷移できません。");
+                return;
+            }
+
             BattleSceneTransitionState.SelectedStageId = _battleStageId;
             SceneManager.LoadScene(SceneNames.Battle);
         }
 
         private int GetNextStageId()
         {
-            // TODO: GetNextStageIdの実装
-            return 0;
+            return BattleProgressService.EnsureInitialized().GetRecommendedStageId();
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Assets.Scripts.Data.DTO
     /// </summary>
     public class BattleStageData
     {
-        public string StageId { get; init; } = "";
+        public int StageId { get; init; }
         public string DisplayName { get; init; } = "";
         public string DescriptionText { get; init; } = "";
         public int SortOrder { get; init; }

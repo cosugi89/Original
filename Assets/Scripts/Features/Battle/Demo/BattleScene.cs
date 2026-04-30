@@ -61,20 +61,14 @@ namespace Assets.Scripts.Features.Battle.Demo
         private bool _battleEnded;
         private bool _isPathInputLocked;
         private bool _nextTurnHazardBoosted;
-        private int _resolvedStageIdForSession;
-
-        private struct PathResolutionSummary
-        {
-            public bool PathConfirmed;
-            public bool TookHit;
-        }
+        private int _resolvedStageIdForSession = -1;
 
         private void Awake()
         {
-            skillButton1.onClick.AddListener(() => SelectSkillSlot(0));
-            skillButton2.onClick.AddListener(() => SelectSkillSlot(1));
-            skillButton3.onClick.AddListener(() => SelectSkillSlot(2));
-            skillButton4.onClick.AddListener(() => SelectSkillSlot(3));
+            skillButton1.onClick.AddListener(OnClickSkillButton1);
+            skillButton2.onClick.AddListener(OnClickSkillButton2);
+            skillButton3.onClick.AddListener(OnClickSkillButton3);
+            skillButton4.onClick.AddListener(OnClickSkillButton4);
 
             pathExecuteButton.onClick.AddListener(ExecuteTurn);
         }
@@ -84,65 +78,37 @@ namespace Assets.Scripts.Features.Battle.Demo
             Initialize();
         }
 
+        private void OnDestroy()
+        {
+            if (skillButton1 != null) skillButton1.onClick.RemoveListener(OnClickSkillButton1);
+            if (skillButton2 != null) skillButton2.onClick.RemoveListener(OnClickSkillButton2);
+            if (skillButton3 != null) skillButton3.onClick.RemoveListener(OnClickSkillButton3);
+            if (skillButton4 != null) skillButton4.onClick.RemoveListener(OnClickSkillButton4);
+            if (pathExecuteButton != null) pathExecuteButton.onClick.RemoveListener(ExecuteTurn);
+        }
+
         public void Initialize()
         {
-            EnsureDefaults(); // デフォルト値の補完
-
-            var stageId = BattleSceneTransitionState.ConsumeSelectedStageId();
-
-            if (!MasterDataResourceLoader.TryLoadStageData(stageId, out StageData stageData))
+            if (_isInitialized)
             {
                 return;
             }
 
-            if (stageData.Enemies != null && stageData.Enemies.Count > 0)
+            EnsureDefaults(); // デフォルト値の補完
+
+            if (!TryResolveStageData(out var stageData))
             {
-                var firstEnemy = stageData.Enemies[0];
-                if (!string.IsNullOrWhiteSpace(firstEnemy.Name))
-                {
-                    _enemyName = firstEnemy.Name;
-                }
-                _initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
+                return;
             }
 
-            //background.sprite = stageData.BackgroundImage;
-            previewImage.sprite = stageData.PreviewImage;
-
-            initialPlayerHp = Mathf.Max(1, initialPlayerHp);
-            normalAttackDamage = Mathf.Max(1, normalAttackDamage);
-            doubleAttackFollowUpDamage = Mathf.Max(1, doubleAttackFollowUpDamage);
-            jumpAttackDamage = Mathf.Max(1, jumpAttackDamage);
-
-            _playerHp = initialPlayerHp;
-            _enemyHp = _initialEnemyHp;
-            _turnNumber = 0;
-            _turnScriptIndex = 0;
-            _selectedSkillSlotIndex = -1;
-            _battleEnded = false;
-            _isPathInputLocked = false;
-            _nextTurnHazardBoosted = false;
-            _isInitialized = true;
-
-            foreach (var slot in skillSlots)
-            {
-                slot.ResetRuntime();
-            }
-
+            ApplyStageProgress(stageData);
+            ApplyStagePresentation(stageData);
+            ResetRuntimeState(stageData);
+            RefreshHud();
             RefreshSkillButtonVisuals();
             Debug.Log($"[Battle] 初期化完了 Enemy={_enemyName} HP={_initialEnemyHp}");
 
-            // キャラクター生成
-            var playerObject = Instantiate(playerPrefab, playerRoot);
-            var enemyObject = Instantiate(playerPrefab, enemyRoot);
-            _playerInstance = playerObject.GetComponent<PartsManager>();
-            _enemyInstance = enemyObject.GetComponent<PartsManager>();
-            _playerInstance.Init();
-            _enemyInstance.Init();
-
-            // ApplyAvatarAppearance
-            var avatarRender = AvatarRenderService.EnsureInitialized();
-            avatarRender.SyncSessionFromRendererIfNeeded(_playerInstance, saveAfterSync: true);
-            avatarRender.ApplyTo(_playerInstance);
+            SpawnPreviewCharacters();
         }
 
         public void ExecuteTurn()
@@ -159,26 +125,30 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
 
             var turnScript = GetNextTurnScript();
-            var hazardBoosted = _nextTurnHazardBoosted;
-            _nextTurnHazardBoosted = false;
+            var hazardBoosted = ConsumeHazardBoostFlag();
             _turnNumber++;
-
-            foreach (var slot in skillSlots)
-            {
-                slot.GainTurnCharge();
-            }
+            GainTurnChargeToAllSkills();
 
             _isPathInputLocked = true;
-            var result = ResolvePath(turnScript, hazardBoosted);
+            var result = BattleDemoPathResolver.Resolve(
+                turnScript,
+                hazardBoosted,
+                GetSelectedSkill(),
+                new BattleDemoPathResolver.Settings
+                {
+                    CurrentEnemyHp = _enemyHp,
+                    CurrentPlayerHp = _playerHp,
+                    NormalAttackDamage = normalAttackDamage,
+                    DoubleAttackFollowUpDamage = doubleAttackFollowUpDamage,
+                    JumpAttackDamage = jumpAttackDamage,
+                });
             _isPathInputLocked = false;
 
+            ApplyResolutionResult(result, turnScript);
             ConsumeSelectedSkillIfNeeded(result);
 
-            if (turnScript.EnemyAction == BattleDemoEnemyActionType.Dance)
-            {
-                _nextTurnHazardBoosted = true;
-            }
-
+            ApplyPostTurnEnemyState(turnScript);
+            RefreshHud();
             Debug.Log($"[Battle] Turn {_turnNumber} 終了 PlayerHP={_playerHp} EnemyHP={_enemyHp}");
 
             if (_battleEnded)
@@ -232,13 +202,24 @@ namespace Assets.Scripts.Features.Battle.Demo
             RefreshSkillButtonVisuals();
         }
 
+        private void OnClickSkillButton1() => SelectSkillSlot(0);
+
+        private void OnClickSkillButton2() => SelectSkillSlot(1);
+
+        private void OnClickSkillButton3() => SelectSkillSlot(2);
+
+        private void OnClickSkillButton4() => SelectSkillSlot(3);
+
         private void EnsureDefaults()
         {
-            skillSlots = CreateDefaultSkillSlots();
+            if (skillSlots == null || skillSlots.Count == 0)
+            {
+                skillSlots = BattleDemoContentFactory.CreateDefaultSkillSlots();
+            }
 
             if (_turnScripts == null || _turnScripts.Count == 0)
             {
-                _turnScripts = CreateDefaultTurnScripts();
+                _turnScripts = BattleDemoContentFactory.CreateDefaultTurnScripts();
             }
         }
 
@@ -269,7 +250,7 @@ namespace Assets.Scripts.Features.Battle.Demo
         {
             if (_turnScripts.Count == 0)
             {
-                _turnScripts = CreateDefaultTurnScripts();
+                _turnScripts = BattleDemoContentFactory.CreateDefaultTurnScripts();
             }
 
             var index = Mathf.Clamp(_turnScriptIndex, 0, _turnScripts.Count - 1);
@@ -280,135 +261,171 @@ namespace Assets.Scripts.Features.Battle.Demo
             return turnScript;
         }
 
-        private PathResolutionSummary ResolvePath(BattleDemoTurnScript turnScript, bool hazardBoosted)
+        private bool TryResolveStageData(out StageData stageData)
         {
-            var result = new PathResolutionSummary
+            stageData = null;
+            var stageId = ResolveStageIdForSession();
+            if (stageId < 0)
             {
-                PathConfirmed = turnScript.HasGoalInPath(),
-                TookHit = false,
-            };
-
-            var jumpCanEvade = false;
-            var jumpAttackPrimed = false;
-            var rollCanEvade = false;
-            var hazardGroupResolved = false;
-            var basicAttackCount = 0;
-            var selectedSkill = GetSelectedSkill();
-
-            for (var i = 0; i < turnScript.Path.Count; i++)
-            {
-                var step = turnScript.Path[i];
-
-                switch (step)
-                {
-                    case BattleDemoNodeType.Start:
-                    case BattleDemoNodeType.Empty:
-                        break;
-
-                    case BattleDemoNodeType.Jump:
-                        jumpCanEvade = true;
-                        jumpAttackPrimed = true;
-                        rollCanEvade = false;
-                        break;
-
-                    case BattleDemoNodeType.Roll:
-                        jumpCanEvade = false;
-                        jumpAttackPrimed = false;
-                        rollCanEvade = true;
-                        break;
-
-                    case BattleDemoNodeType.Dance:
-                        jumpCanEvade = false;
-                        jumpAttackPrimed = false;
-                        rollCanEvade = false;
-                        break;
-
-                    case BattleDemoNodeType.Attack:
-                    {
-                        int damage;
-                        string label;
-
-                        if (selectedSkill != null)
-                        {
-                            damage = selectedSkill.Damage;
-                            label = selectedSkill.DisplayName;
-                        }
-                        else if (jumpAttackPrimed)
-                        {
-                            basicAttackCount++;
-                            damage = jumpAttackDamage;
-                            label = "Jump Attack";
-                        }
-                        else
-                        {
-                            basicAttackCount++;
-                            damage = basicAttackCount >= 2 ? doubleAttackFollowUpDamage : normalAttackDamage;
-                            label = basicAttackCount >= 2 ? "Double Attack" : "Attack";
-                        }
-
-                        _enemyHp = Mathf.Max(0, _enemyHp - damage);
-                        Debug.Log($"[Battle] {label} Damage={damage}");
-
-                        jumpCanEvade = false;
-                        jumpAttackPrimed = false;
-                        rollCanEvade = false;
-
-                        if (_enemyHp <= 0)
-                        {
-                            _battleEnded = true;
-                            return result;
-                        }
-                        break;
-                    }
-
-                    case BattleDemoNodeType.HazardNormal:
-                    case BattleDemoNodeType.HazardSkill:
-                    {
-                        if (hazardGroupResolved)
-                        {
-                            break;
-                        }
-
-                        if (step == BattleDemoNodeType.HazardNormal && jumpCanEvade)
-                        {
-                            jumpCanEvade = false;
-                            hazardGroupResolved = true;
-                            break;
-                        }
-
-                        if (rollCanEvade)
-                        {
-                            rollCanEvade = false;
-                            jumpAttackPrimed = false;
-                            hazardGroupResolved = true;
-                            break;
-                        }
-
-                        hazardGroupResolved = true;
-                        result.TookHit = true;
-
-                        var hazardDamage = hazardBoosted
-                            ? Mathf.RoundToInt(turnScript.HazardDamage * 1.5f)
-                            : turnScript.HazardDamage;
-                        _playerHp = Mathf.Max(0, _playerHp - hazardDamage);
-                        Debug.Log($"[Battle] 被弾 Damage={hazardDamage}");
-
-                        if (_playerHp <= 0)
-                        {
-                            _battleEnded = true;
-                        }
-                        return result;
-                    }
-
-                    case BattleDemoNodeType.Goal:
-                        return result;
-                }
+                Debug.LogWarning("[Battle] StageId を解決できなかったため、バトル初期化を中断しました。");
+                return false;
             }
 
-            return result;
+            if (!MasterDataResourceLoader.TryLoadStageData(stageId, out stageData))
+            {
+                Debug.LogWarning($"[Battle] stageId={stageId} のステージデータ読込に失敗しました。");
+                return false;
+            }
+
+            return true;
         }
 
-        private void ConsumeSelectedSkillIfNeeded(PathResolutionSummary result)
+        private void ApplyStageProgress(StageData stageData)
+        {
+            _resolvedStageIdForSession = stageData.StageId;
+
+            var battleProgress = BattleProgressService.EnsureInitialized();
+            battleProgress.SetLastSelectedStage(stageData.StageId);
+            battleProgress.Session.SetCurrentStageId(stageData.StageId);
+        }
+
+        private void ApplyStagePresentation(StageData stageData)
+        {
+            if (background != null)
+            {
+                background.sprite = stageData.BackgroundImage;
+            }
+
+            if (previewImage != null)
+            {
+                previewImage.sprite = stageData.PreviewImage;
+            }
+        }
+
+        private void ResetRuntimeState(StageData stageData)
+        {
+            initialPlayerHp = Mathf.Max(1, initialPlayerHp);
+            normalAttackDamage = Mathf.Max(1, normalAttackDamage);
+            doubleAttackFollowUpDamage = Mathf.Max(1, doubleAttackFollowUpDamage);
+            jumpAttackDamage = Mathf.Max(1, jumpAttackDamage);
+
+            _enemyName = string.Empty;
+            _initialEnemyHp = 1;
+            if (stageData.Enemies != null && stageData.Enemies.Count > 0)
+            {
+                var firstEnemy = stageData.Enemies[0];
+                if (!string.IsNullOrWhiteSpace(firstEnemy.Name))
+                {
+                    _enemyName = firstEnemy.Name;
+                }
+
+                _initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
+            }
+
+            _playerHp = initialPlayerHp;
+            _enemyHp = _initialEnemyHp;
+            _turnNumber = 0;
+            _waveNumber = 1;
+            _turnScriptIndex = 0;
+            _selectedSkillSlotIndex = -1;
+            _battleEnded = false;
+            _isPathInputLocked = false;
+            _nextTurnHazardBoosted = false;
+            _isInitialized = true;
+
+            foreach (var slot in skillSlots)
+            {
+                slot.ResetRuntime();
+            }
+        }
+
+        private void SpawnPreviewCharacters()
+        {
+            if (playerPrefab == null || playerRoot == null || enemyRoot == null)
+            {
+                return;
+            }
+
+            var playerObject = Instantiate(playerPrefab, playerRoot);
+            var enemyObject = Instantiate(playerPrefab, enemyRoot);
+            _playerInstance = playerObject.GetComponent<PartsManager>();
+            _enemyInstance = enemyObject.GetComponent<PartsManager>();
+            _playerInstance.Init();
+            _enemyInstance.Init();
+
+            var avatarRender = AvatarRenderService.EnsureInitialized();
+            avatarRender.SyncSessionFromRendererIfNeeded(_playerInstance, saveAfterSync: true);
+            avatarRender.ApplyTo(_playerInstance);
+        }
+
+        private void GainTurnChargeToAllSkills()
+        {
+            foreach (var slot in skillSlots)
+            {
+                slot.GainTurnCharge();
+            }
+        }
+
+        private bool ConsumeHazardBoostFlag()
+        {
+            var hazardBoosted = _nextTurnHazardBoosted;
+            _nextTurnHazardBoosted = false;
+            return hazardBoosted;
+        }
+
+        private void ApplyResolutionResult(BattleDemoPathResolver.Result result, BattleDemoTurnScript turnScript)
+        {
+            if (result.EnemyDamageTaken > 0)
+            {
+                _enemyHp = Mathf.Max(0, _enemyHp - result.EnemyDamageTaken);
+                Debug.Log($"[Battle] {turnScript.Label} EnemyDamage={result.EnemyDamageTaken}");
+            }
+
+            if (result.PlayerDamageTaken > 0)
+            {
+                _playerHp = Mathf.Max(0, _playerHp - result.PlayerDamageTaken);
+                Debug.Log($"[Battle] {turnScript.Label} PlayerDamage={result.PlayerDamageTaken}");
+            }
+
+            if (result.EnemyDefeated)
+            {
+                HandleBattleClear();
+                return;
+            }
+
+            if (result.PlayerDefeated || _playerHp <= 0)
+            {
+                _battleEnded = true;
+            }
+        }
+
+        private void ApplyPostTurnEnemyState(BattleDemoTurnScript turnScript)
+        {
+            if (_battleEnded)
+            {
+                return;
+            }
+
+            if (turnScript.EnemyAction == BattleDemoEnemyActionType.Dance)
+            {
+                _nextTurnHazardBoosted = true;
+            }
+        }
+
+        private void RefreshHud()
+        {
+            if (turnNumberText != null)
+            {
+                turnNumberText.text = _turnNumber.ToString();
+            }
+
+            if (waveNumberText != null)
+            {
+                waveNumberText.text = _waveNumber.ToString();
+            }
+        }
+
+        private void ConsumeSelectedSkillIfNeeded(BattleDemoPathResolver.Result result)
         {
             if (_selectedSkillSlotIndex < 0 || _selectedSkillSlotIndex >= skillSlots.Count)
             {
@@ -425,6 +442,42 @@ namespace Assets.Scripts.Features.Battle.Demo
             RefreshSkillButtonVisuals();
         }
 
+        private int ResolveStageIdForSession()
+        {
+            var transitionStageId = BattleSceneTransitionState.ConsumeSelectedStageId();
+            if (transitionStageId >= 0)
+            {
+                return transitionStageId;
+            }
+
+            var battleProgress = BattleProgressService.EnsureInitialized();
+            if (battleProgress.Session.CurrentStageId >= 0)
+            {
+                return battleProgress.Session.CurrentStageId;
+            }
+
+            return battleProgress.GetRecommendedStageId();
+        }
+
+        private void HandleBattleClear()
+        {
+            _battleEnded = true;
+
+            if (_resolvedStageIdForSession < 0)
+            {
+                return;
+            }
+
+            var battleProgress = BattleProgressService.EnsureInitialized();
+            battleProgress.RecordStageClear(_resolvedStageIdForSession);
+
+            var nextStageId = battleProgress.GetNextStageId(_resolvedStageIdForSession);
+            if (nextStageId >= 0)
+            {
+                battleProgress.UnlockStage(nextStageId);
+            }
+        }
+
         private BattleDemoSkillSlot GetSelectedSkill()
         {
             if (_selectedSkillSlotIndex < 0 || _selectedSkillSlotIndex >= skillSlots.Count)
@@ -432,168 +485,6 @@ namespace Assets.Scripts.Features.Battle.Demo
                 return null;
             }
             return skillSlots[_selectedSkillSlotIndex];
-        }
-
-        private static List<BattleDemoSkillSlot> CreateDefaultSkillSlots()
-        {
-            return new List<BattleDemoSkillSlot>
-            {
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Wide Blast",
-                    Description = "広い範囲に危険を置く純粋攻撃寄り Skill。",
-                    IsUnlocked = true,
-                    IsConfigured = true,
-                    RequiredCharge = 3,
-                    StartingCharge = 3,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 140,
-                },
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Pierce Volley",
-                    Description = "単体高火力寄りの Skill。",
-                    IsUnlocked = true,
-                    IsConfigured = true,
-                    RequiredCharge = 5,
-                    StartingCharge = 2,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 220,
-                },
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Locked Slot",
-                    Description = "ゲーム進行で解放される想定のロック枠。",
-                    IsUnlocked = false,
-                    IsConfigured = false,
-                    RequiredCharge = 4,
-                    StartingCharge = 0,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 0,
-                },
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Empty Slot",
-                    Description = "武器側に Skill が未設定の枠。",
-                    IsUnlocked = true,
-                    IsConfigured = false,
-                    RequiredCharge = 4,
-                    StartingCharge = 0,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 0,
-                },
-            };
-        }
-
-        private static List<BattleDemoTurnScript> CreateDefaultTurnScripts()
-        {
-            return new List<BattleDemoTurnScript>
-            {
-                new BattleDemoTurnScript
-                {
-                    Label = "Opening Attack",
-                    EnemyAction = BattleDemoEnemyActionType.NormalAttack,
-                    BoardSummary = "通常危険が1グループだけ見えている基本盤面。",
-                    ConfirmText = "いける",
-                    Notes = "最小構成のターン。Attack から Goal までの基本解決を確認する。",
-                    HazardDamage = 80,
-                    Path = new List<BattleDemoNodeType>
-                    {
-                        BattleDemoNodeType.Start,
-                        BattleDemoNodeType.Attack,
-                        BattleDemoNodeType.Goal,
-                    },
-                },
-                new BattleDemoTurnScript
-                {
-                    Label = "Jump Evade",
-                    EnemyAction = BattleDemoEnemyActionType.NormalAttack,
-                    BoardSummary = "通常危険の先に Goal が置かれた盤面。",
-                    ConfirmText = "跳ぶ！",
-                    Notes = "Jump で通常危険を回避し、そのまま Jump Attack まで繋ぐ。",
-                    HazardDamage = 80,
-                    Path = new List<BattleDemoNodeType>
-                    {
-                        BattleDemoNodeType.Start,
-                        BattleDemoNodeType.Jump,
-                        BattleDemoNodeType.Empty,
-                        BattleDemoNodeType.HazardNormal,
-                        BattleDemoNodeType.Attack,
-                        BattleDemoNodeType.Goal,
-                    },
-                },
-                new BattleDemoTurnScript
-                {
-                    Label = "Skill Showcase",
-                    EnemyAction = BattleDemoEnemyActionType.Skill,
-                    BoardSummary = "敵 Skill による広めの危険配置。Attack を複数取りやすい配置。",
-                    ConfirmText = "決める",
-                    Notes = "事前に Skill を選択していれば、すべての Attack が Skill に変換される。",
-                    HazardDamage = 90,
-                    Path = new List<BattleDemoNodeType>
-                    {
-                        BattleDemoNodeType.Start,
-                        BattleDemoNodeType.Attack,
-                        BattleDemoNodeType.Empty,
-                        BattleDemoNodeType.Attack,
-                        BattleDemoNodeType.Goal,
-                    },
-                },
-                new BattleDemoTurnScript
-                {
-                    Label = "Enemy Dance Turn",
-                    EnemyAction = BattleDemoEnemyActionType.Dance,
-                    BoardSummary = "このターンは敵が Dance を使い、次ターン危険強化を予約する。",
-                    ConfirmText = "続ける！",
-                    Notes = "Attack を踏まなくても Goal へ到達できるターン。Skill を事前選択していた場合の消費確認にも使える。",
-                    HazardDamage = 70,
-                    Path = new List<BattleDemoNodeType>
-                    {
-                        BattleDemoNodeType.Start,
-                        BattleDemoNodeType.Dance,
-                        BattleDemoNodeType.Goal,
-                    },
-                },
-                new BattleDemoTurnScript
-                {
-                    Label = "Roll Against Skill Hazard",
-                    EnemyAction = BattleDemoEnemyActionType.Skill,
-                    BoardSummary = "前ターンの Dance により危険強化がかかった Skill 危険盤面。",
-                    ConfirmText = "危ない",
-                    Notes = "Roll で Skill 危険を回避し、その後 Attack を通して Goal へ向かう。",
-                    HazardDamage = 100,
-                    Path = new List<BattleDemoNodeType>
-                    {
-                        BattleDemoNodeType.Start,
-                        BattleDemoNodeType.Roll,
-                        BattleDemoNodeType.Empty,
-                        BattleDemoNodeType.HazardSkill,
-                        BattleDemoNodeType.Attack,
-                        BattleDemoNodeType.Goal,
-                    },
-                },
-                new BattleDemoTurnScript
-                {
-                    Label = "Hit Stops Remaining Stack",
-                    EnemyAction = BattleDemoEnemyActionType.NormalAttack,
-                    BoardSummary = "通常危険を踏むと以降の解決が切れる確認用ターン。",
-                    ConfirmText = "危ない",
-                    Notes = "Attack の後に被弾すると、後続の Attack と Goal 効果が不発になる流れを確認する。",
-                    HazardDamage = 85,
-                    Path = new List<BattleDemoNodeType>
-                    {
-                        BattleDemoNodeType.Start,
-                        BattleDemoNodeType.Attack,
-                        BattleDemoNodeType.HazardNormal,
-                        BattleDemoNodeType.Attack,
-                        BattleDemoNodeType.Goal,
-                    },
-                },
-            };
         }
     }
 }

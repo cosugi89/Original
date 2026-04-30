@@ -21,7 +21,7 @@ namespace Assets.Scripts.Systems.GameData
         public GameSaveService SaveService { get; }
 
         private IReadOnlyList<BattleStageData> _allStageData;
-        private Dictionary<string, BattleStageData> _byId;
+        private Dictionary<int, BattleStageData> _byId;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Bootstrap()
@@ -62,34 +62,34 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
-        public StageProgressData GetOrCreateStageProgress(string stageId)
+        public StageProgressData GetOrCreateStageProgress(int stageId)
         {
             var battleProgress = EnsureBattleProgress();
-            var progress = battleProgress.Stages.FirstOrDefault(stage => stage != null && stage.StageId == (stageId ?? string.Empty));
+            var progress = battleProgress.Stages.FirstOrDefault(stage => stage != null && stage.StageId == stageId);
             if (progress != null)
                 return progress;
 
             progress = new StageProgressData
             {
-                StageId = stageId ?? string.Empty,
-                IsUnlocked = _byId.TryGetValue(stageId ?? string.Empty, out var data) && data.IsInitiallyUnlocked
+                StageId = stageId,
+                IsUnlocked = _byId.TryGetValue(stageId, out var data) && data.IsInitiallyUnlocked
             };
             battleProgress.Stages.Add(progress);
             SaveService.MarkDirty();
             return progress;
         }
 
-        public bool IsUnlocked(string stageId)
+        public bool IsUnlocked(int stageId)
         {
             return GetOrCreateStageProgress(stageId).IsUnlocked;
         }
 
-        public bool IsCleared(string stageId)
+        public bool IsCleared(int stageId)
         {
             return GetOrCreateStageProgress(stageId).IsCleared;
         }
 
-        public void UnlockStage(string stageId)
+        public void UnlockStage(int stageId)
         {
             var progress = GetOrCreateStageProgress(stageId);
             if (progress.IsUnlocked)
@@ -99,17 +99,17 @@ namespace Assets.Scripts.Systems.GameData
             SaveService.MarkDirty();
         }
 
-        public void SetLastSelectedStage(string stageId)
+        public void SetLastSelectedStage(int stageId)
         {
             var battleProgress = EnsureBattleProgress();
-            if (battleProgress.LastSelectedStageId == (stageId ?? string.Empty))
+            if (battleProgress.LastSelectedStageId == stageId)
                 return;
 
-            battleProgress.LastSelectedStageId = stageId ?? string.Empty;
+            battleProgress.LastSelectedStageId = stageId;
             SaveService.MarkDirty();
         }
 
-        public void RecordStageClear(string stageId, int score = 0, string rank = "", float clearTimeSeconds = 0f)
+        public void RecordStageClear(int stageId, int score = 0, string rank = "", float clearTimeSeconds = 0f)
         {
             var progress = GetOrCreateStageProgress(stageId);
             progress.IsUnlocked = true;
@@ -141,9 +141,56 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
+        public int GetRecommendedStageId()
+        {
+            var orderedDefinitions = GetOrderedStageDefinitions();
+            if (orderedDefinitions.Count == 0)
+                return -1;
+
+            var lastSelectedStageId = EnsureBattleProgress().LastSelectedStageId;
+            if (lastSelectedStageId >= 0 &&
+                _byId.ContainsKey(lastSelectedStageId) &&
+                IsUnlocked(lastSelectedStageId))
+            {
+                return lastSelectedStageId;
+            }
+
+            var firstUnlockedUncleared = orderedDefinitions
+                .FirstOrDefault(definition => IsUnlocked(definition.StageId) && !IsCleared(definition.StageId));
+            if (firstUnlockedUncleared != null)
+                return firstUnlockedUncleared.StageId;
+
+            var firstUnlocked = orderedDefinitions.FirstOrDefault(definition => IsUnlocked(definition.StageId));
+            if (firstUnlocked != null)
+                return firstUnlocked.StageId;
+
+            return orderedDefinitions[0].StageId;
+        }
+
+        public int GetNextStageId(int stageId)
+        {
+            if (stageId < 0)
+                return -1;
+
+            var orderedDefinitions = GetOrderedStageDefinitions();
+            for (var i = 0; i < orderedDefinitions.Count; i++)
+            {
+                var definition = orderedDefinitions[i];
+                if (definition == null || definition.StageId != stageId)
+                    continue;
+
+                return i + 1 < orderedDefinitions.Count
+                    ? orderedDefinitions[i + 1].StageId
+                    : -1;
+            }
+
+            return -1;
+        }
+
         private void Initialize()
         {
             EnsureBattleProgress();
+            PruneInvalidStageProgress();
             EnsureInitialUnlockedStages();
         }
 
@@ -156,10 +203,10 @@ namespace Assets.Scripts.Systems.GameData
 
         private void RebuildLookups()
         {
-            _byId = new Dictionary<string, BattleStageData>();
+            _byId = new Dictionary<int, BattleStageData>();
             foreach (var data in _allStageData)
             {
-                if (data == null || string.IsNullOrWhiteSpace(data.StageId))
+                if (data == null)
                     continue;
 
                 if (!_byId.TryAdd(data.StageId, data))
@@ -174,7 +221,7 @@ namespace Assets.Scripts.Systems.GameData
             var hasChanges = false;
             foreach (var data in _allStageData)
             {
-                if (data == null || !data.IsInitiallyUnlocked || string.IsNullOrWhiteSpace(data.StageId))
+                if (data == null || !data.IsInitiallyUnlocked)
                     continue;
 
                 var progress = EnsureBattleProgress().Stages.FirstOrDefault(stage => stage != null && stage.StageId == data.StageId);
@@ -198,6 +245,19 @@ namespace Assets.Scripts.Systems.GameData
 
             if (hasChanges)
                 SaveService.MarkDirty();
+        }
+
+        private void PruneInvalidStageProgress()
+        {
+            var stages = EnsureBattleProgress().Stages;
+            if (stages == null)
+                return;
+
+            var removedCount = stages.RemoveAll(stage => stage == null || stage.StageId < 0);
+            if (removedCount > 0)
+            {
+                SaveService.MarkDirty();
+            }
         }
 
         private static bool IsBetterRank(string candidateRank, string currentRank)

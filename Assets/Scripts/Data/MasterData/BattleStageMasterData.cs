@@ -8,7 +8,7 @@ namespace Assets.Scripts.Data.MasterData
     {
         [field: SerializeField]
         [Description("ステージを一意に識別するID。保存データから参照されるキー。")]
-        public string StageId { get; private set; } = "";
+        public int StageId { get; private set; }
 
         [field: SerializeField]
         [Description("画面表示用のステージ名。")]
