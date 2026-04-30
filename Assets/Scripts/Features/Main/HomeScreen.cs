@@ -11,7 +11,7 @@ namespace Assets.Scripts.Features.Main
     /// 現状は BattleScene への遷移ボタンのみを所管する。
     /// 将来的にショップ / メニュー等が増えた場合もこのクラスにボタンを追加していく想定。
     /// </summary>
-    public class HomeScreen : MonoBehaviour
+    public class HomeScreen : Screen
     {
         [Header("Battle")]
         [SerializeField] private Button battleButton;
@@ -21,7 +21,7 @@ namespace Assets.Scripts.Features.Main
         private bool _isInitialized;
         private int _battleStageId;
 
-        public void Initialize()
+        public void Init()
         {
             if (_isInitialized)
                 return;

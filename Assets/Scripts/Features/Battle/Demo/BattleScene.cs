@@ -1,7 +1,9 @@
-using System.Collections.Generic;
+using Assets.Scripts.Core;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.GameData;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,11 +23,16 @@ namespace Assets.Scripts.Features.Battle.Demo
         [SerializeField] private int jumpAttackDamage = 150;
         [SerializeField] private List<BattleDemoSkillSlot> skillSlots = new();
 
+        [Header("Preview")]
+        [SerializeField] private GameObject playerPrefab;
+        [SerializeField] private Transform playerRoot;
+        [SerializeField] private Transform enemyRoot;
+
         [Header("UI")]
-        [SerializeField] public Image backgroundImage;
+        [SerializeField] public SpriteRenderer background;
         [SerializeField] public Image previewImage;
-        [SerializeField] public Text turnNumberText;
-        [SerializeField] public Text waveNumberText;
+        [SerializeField] public TMP_Text turnNumberText;
+        [SerializeField] public TMP_Text waveNumberText;
 
         [Header("Input")]
         [SerializeField] private Button skillButton1;
@@ -39,6 +46,8 @@ namespace Assets.Scripts.Features.Battle.Demo
         [SerializeField] private Color selectedSkillButtonColor = new(1f, 0.85f, 0.35f, 1f);
         
         private List<BattleDemoTurnScript> _turnScripts;
+        private PartsManager _playerInstance;
+        private PartsManager _enemyInstance;
 
         private string _enemyName;
         private int _playerHp;
@@ -66,6 +75,7 @@ namespace Assets.Scripts.Features.Battle.Demo
             skillButton2.onClick.AddListener(() => SelectSkillSlot(1));
             skillButton3.onClick.AddListener(() => SelectSkillSlot(2));
             skillButton4.onClick.AddListener(() => SelectSkillSlot(3));
+
             pathExecuteButton.onClick.AddListener(ExecuteTurn);
         }
 
@@ -95,10 +105,8 @@ namespace Assets.Scripts.Features.Battle.Demo
                 _initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
             }
 
-            backgroundImage.sprite = stageData.BackgroundImage;
-            backgroundImage.enabled = stageData.BackgroundImage != null;
+            //background.sprite = stageData.BackgroundImage;
             previewImage.sprite = stageData.PreviewImage;
-            previewImage.enabled = stageData.PreviewImage != null;
 
             initialPlayerHp = Mathf.Max(1, initialPlayerHp);
             normalAttackDamage = Mathf.Max(1, normalAttackDamage);
@@ -122,6 +130,19 @@ namespace Assets.Scripts.Features.Battle.Demo
 
             RefreshSkillButtonVisuals();
             Debug.Log($"[Battle] 初期化完了 Enemy={_enemyName} HP={_initialEnemyHp}");
+
+            // キャラクター生成
+            var playerObject = Instantiate(playerPrefab, playerRoot);
+            var enemyObject = Instantiate(playerPrefab, enemyRoot);
+            _playerInstance = playerObject.GetComponent<PartsManager>();
+            _enemyInstance = enemyObject.GetComponent<PartsManager>();
+            _playerInstance.Init();
+            _enemyInstance.Init();
+
+            // ApplyAvatarAppearance
+            var avatarRender = AvatarRenderService.EnsureInitialized();
+            avatarRender.SyncSessionFromRendererIfNeeded(_playerInstance, saveAfterSync: true);
+            avatarRender.ApplyTo(_playerInstance);
         }
 
         public void ExecuteTurn()
@@ -213,10 +234,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void EnsureDefaults()
         {
-            if (skillSlots == null || skillSlots.Count == 0)
-            {
-                skillSlots = CreateDefaultSkillSlots();
-            }
+            skillSlots = CreateDefaultSkillSlots();
 
             if (_turnScripts == null || _turnScripts.Count == 0)
             {

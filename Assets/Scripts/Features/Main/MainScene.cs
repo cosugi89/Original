@@ -1,5 +1,4 @@
 using UnityEngine;
-using Assets.Scripts.UI.Dialog;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Features.Main;
@@ -18,15 +17,15 @@ using Assets.Scripts.Core;
 /// </summary>
 public class MainScene : MonoBehaviour
 {
-    [Header("Preview")]
-    [SerializeField] private PreviewStage previewStage;
-    [SerializeField] private PartsManager playerPrefab;
+    [Header("Player")]
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private Transform playerRoot;
 
     [Header("Screens")]
     [SerializeField] private HomeScreen homeScreen;
 
-    private PreviewHandle _playerHandle;
     private PartsManager _playerInstance;
+
 
     private void Awake()
     {
@@ -35,27 +34,17 @@ public class MainScene : MonoBehaviour
 
     private void Start()
     {
-        SpawnPlayerPreview();
-        ApplyAvatarAppearance();
+        var playerObject = Instantiate(playerPrefab, playerRoot);
+        _playerInstance = playerObject.GetComponent<PartsManager>();
+        _playerInstance.Init();
 
-        if (homeScreen != null)
-        {
-            homeScreen.Initialize();
-        }
-        else
-        {
-            Debug.LogWarning("MainScene: HomeScreen is not assigned.", this);
-        }
+        homeScreen.Init();
     }
 
-    private void OnDestroy()
+    public void ChangeScreen(Assets.Scripts.Features.Main.Screen screen)
     {
-        if (previewStage != null && _playerHandle != null)
-        {
-            previewStage.Despawn(_playerHandle);
-        }
-        _playerHandle = null;
-        _playerInstance = null;
+        // MainTabsの変更ロジックで呼ぶ
+        // ScreenごとにPlayerのTransformを変える
     }
 
     /// <summary>
@@ -68,33 +57,5 @@ public class MainScene : MonoBehaviour
         AvatarService.EnsureInitialized();
         InventoryService.EnsureInitialized();
         AvatarRenderService.EnsureInitialized();
-    }
-
-    private void SpawnPlayerPreview()
-    {
-        if (previewStage == null)
-        {
-            Debug.LogWarning("MainScene: PreviewStage is not assigned.", this);
-            return;
-        }
-        if (playerPrefab == null)
-        {
-            Debug.LogWarning("MainScene: playerPrefab is not assigned.", this);
-            return;
-        }
-
-        _playerHandle = previewStage.Spawn(playerPrefab);
-        _playerInstance = _playerHandle?.Get<PartsManager>();
-        _playerInstance?.Init();
-    }
-
-    private void ApplyAvatarAppearance()
-    {
-        if (_playerInstance == null)
-            return;
-
-        var avatarRender = AvatarRenderService.EnsureInitialized();
-        avatarRender.SyncSessionFromRendererIfNeeded(_playerInstance, saveAfterSync: true);
-        avatarRender.ApplyTo(_playerInstance);
     }
 }
