@@ -196,9 +196,9 @@ namespace Assets.Scripts.Systems.GameData
 
         private BattleProgressData EnsureBattleProgress()
         {
-            Session.SaveData.BattleProgress ??= new BattleProgressData();
-            Session.SaveData.BattleProgress.Stages ??= new List<StageProgressData>();
-            return Session.SaveData.BattleProgress;
+            Session.UserData.BattleProgress ??= new BattleProgressData();
+            Session.UserData.BattleProgress.Stages ??= new List<StageProgressData>();
+            return Session.UserData.BattleProgress;
         }
 
         private void RebuildLookups()

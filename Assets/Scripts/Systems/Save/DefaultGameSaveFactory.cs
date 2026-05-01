@@ -5,19 +5,29 @@ namespace Assets.Scripts.Systems.Save
 {
     public class DefaultGameSaveFactory
     {
-        public GameSaveData Create()
+        public UserData Create()
         {
             var now = CreateTimestamp();
 
-            return new GameSaveData
+            return new UserData
             {
-                CreatedAtUtc = now,
-                UpdatedAtUtc = now,
-                Player = new PlayerData
+                Meta = new UserMetaData
                 {
-                    PlayerId = Guid.NewGuid().ToString("N"),
-                    LastPlayedAtUtc = now
-                }
+                    CreatedAtUtc = now,
+                    UpdatedAtUtc = now
+                },
+                Profile = new UserProfileData
+                {
+                    Identity = new UserIdentityData
+                    {
+                        PlayerId = Guid.NewGuid().ToString("N"),
+                    },
+                    Activity = new UserActivityData
+                    {
+                        LastPlayedAtUtc = now
+                    },
+                    BattleProfile = new UserBattleProfileData()
+                },
             };
         }
 

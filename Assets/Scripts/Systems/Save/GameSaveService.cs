@@ -55,22 +55,22 @@ namespace Assets.Scripts.Systems.Save
 
         public void ReloadSession()
         {
-            var saveData = LoadOrCreateDefault();
-            Session.Initialize(saveData);
+            var userData = LoadOrCreateDefault();
+            Session.Initialize(userData);
         }
 
-        public GameSaveData LoadOrCreateDefault()
+        public UserData LoadOrCreateDefault()
         {
-            GameSaveData saveData;
+            UserData userData;
             var shouldPersistImmediately = false;
             if (Repository.Exists())
             {
-                saveData = Repository.Load();
+                userData = Repository.Load();
             }
             else
             {
-                saveData = DefaultFactory.Create();
-                if (LegacyMigration.TryApply(saveData))
+                userData = DefaultFactory.Create();
+                if (LegacyMigration.TryApply(userData))
                 {
                     shouldPersistImmediately = true;
                 }
@@ -80,27 +80,27 @@ namespace Assets.Scripts.Systems.Save
                 }
             }
 
-            Normalize(saveData);
-            saveData.Player.LastPlayedAtUtc = DefaultFactory.CreateTimestamp();
+            Normalize(userData);
+            userData.Profile.Activity.LastPlayedAtUtc = DefaultFactory.CreateTimestamp();
 
             if (shouldPersistImmediately)
-                Repository.Save(saveData);
+                Repository.Save(userData);
 
-            return saveData;
+            return userData;
         }
 
         public void SaveSession()
         {
-            Save(Session.SaveData);
+            Save(Session.UserData);
             Session.ClearDirty();
         }
 
-        public void Save(GameSaveData saveData)
+        public void Save(UserData userData)
         {
-            Normalize(saveData);
-            saveData.UpdatedAtUtc = DefaultFactory.CreateTimestamp();
-            saveData.Player.LastPlayedAtUtc = saveData.UpdatedAtUtc;
-            Repository.Save(saveData);
+            Normalize(userData);
+            userData.Meta.UpdatedAtUtc = DefaultFactory.CreateTimestamp();
+            userData.Profile.Activity.LastPlayedAtUtc = userData.Meta.UpdatedAtUtc;
+            Repository.Save(userData);
         }
 
         public void MarkDirty()
@@ -108,29 +108,40 @@ namespace Assets.Scripts.Systems.Save
             Session.MarkDirty();
         }
 
-        private static void Normalize(GameSaveData saveData)
+        private static void Normalize(UserData userData)
         {
-            if (saveData == null)
+            if (userData == null)
                 return;
 
-            saveData.Player ??= new PlayerData();
-            saveData.Inventory ??= new InventoryData();
-            saveData.BattleProgress ??= new BattleProgressData();
+            userData.Meta ??= new UserMetaData();
+            userData.Profile ??= new UserProfileData();
+            userData.Profile.Identity ??= new UserIdentityData();
+            userData.Profile.Activity ??= new UserActivityData();
+            userData.Profile.Economy ??= new UserEconomyData();
+            userData.Profile.Progression ??= new UserProgressionData();
+            userData.Profile.Avatar ??= new AvatarAppearanceData();
+            userData.Profile.BattleProfile ??= new UserBattleProfileData();
+            userData.Inventory ??= new InventoryData();
+            userData.BattleProgress ??= new BattleProgressData();
 
-            saveData.Player.AvatarAppearance ??= new AvatarAppearanceData();
-            saveData.Player.AvatarAppearance.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
-            saveData.Player.AvatarAppearance.Colors ??= new System.Collections.Generic.List<AvatarColorData>();
-            saveData.Inventory.Equipments ??= new System.Collections.Generic.List<InventoryEntryData>();
-            saveData.BattleProgress.Stages ??= new System.Collections.Generic.List<StageProgressData>();
+            userData.Profile.Avatar.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
+            userData.Profile.Avatar.Colors ??= new System.Collections.Generic.List<AvatarColorData>();
+            userData.Inventory.Equipments ??= new System.Collections.Generic.List<InventoryEntryData>();
+            userData.BattleProgress.Stages ??= new System.Collections.Generic.List<StageProgressData>();
 
-            if (string.IsNullOrWhiteSpace(saveData.CreatedAtUtc))
-                saveData.CreatedAtUtc = System.DateTime.UtcNow.ToString("O");
+            if (string.IsNullOrWhiteSpace(userData.Meta.CreatedAtUtc))
+                userData.Meta.CreatedAtUtc = System.DateTime.UtcNow.ToString("O");
 
-            if (string.IsNullOrWhiteSpace(saveData.UpdatedAtUtc))
-                saveData.UpdatedAtUtc = saveData.CreatedAtUtc;
+            if (string.IsNullOrWhiteSpace(userData.Meta.UpdatedAtUtc))
+                userData.Meta.UpdatedAtUtc = userData.Meta.CreatedAtUtc;
 
-            if (string.IsNullOrWhiteSpace(saveData.Player.PlayerId))
-                saveData.Player.PlayerId = System.Guid.NewGuid().ToString("N");
+            if (string.IsNullOrWhiteSpace(userData.Profile.Identity.PlayerId))
+                userData.Profile.Identity.PlayerId = System.Guid.NewGuid().ToString("N");
+
+            userData.Profile.BattleProfile.MaxHp = Mathf.Max(1, userData.Profile.BattleProfile.MaxHp);
+            userData.Profile.BattleProfile.NormalAttackDamage = Mathf.Max(1, userData.Profile.BattleProfile.NormalAttackDamage);
+            userData.Profile.BattleProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, userData.Profile.BattleProfile.DoubleAttackFollowUpDamage);
+            userData.Profile.BattleProfile.JumpAttackDamage = Mathf.Max(1, userData.Profile.BattleProfile.JumpAttackDamage);
         }
     }
 }

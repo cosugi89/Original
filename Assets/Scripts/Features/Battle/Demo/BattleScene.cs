@@ -1,8 +1,17 @@
 using Assets.Scripts.Core;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Data.MasterData;
+using Assets.Scripts.Features.Battle.Core;
+using Assets.Scripts.Features.Battle.Logic;
+using Assets.Scripts.Features.Battle.Presentation;
+using Assets.Scripts.Features.Battle.Runtime;
 using Assets.Scripts.Systems.GameData;
+using Assets.Scripts.Systems.Save;
+using Assets.Scripts.Systems.Save.Models;
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,16 +20,12 @@ namespace Assets.Scripts.Features.Battle.Demo
 {
     /// <summary>
     /// Path-Activation System v2 のバトル進行を制御するコントローラ。
-    /// スキル選択とパス実行ボタンを受け付け、プリセット経路を解決して
+    /// スキル選択とパス入力を受け付け、確定パスを解決して
     /// HP・スキル状態・敵行動フラグを更新する。
     /// </summary>
     public class BattleScene : MonoBehaviour
     {
-        [Header("Player Params (TODO: 将来的にユーザーデータから取得)")]
-        [SerializeField] private int initialPlayerHp = 450;
-        [SerializeField] private int normalAttackDamage = 100;
-        [SerializeField] private int doubleAttackFollowUpDamage = 125;
-        [SerializeField] private int jumpAttackDamage = 150;
+        [Header("Player Skills")]
         [SerializeField] private List<BattleDemoSkillSlot> skillSlots = new();
 
         [Header("Preview")]
@@ -33,13 +38,21 @@ namespace Assets.Scripts.Features.Battle.Demo
         [SerializeField] public Image previewImage;
         [SerializeField] public TMP_Text turnNumberText;
         [SerializeField] public TMP_Text waveNumberText;
+        [SerializeField] public TMP_Text playerHPText;
 
         [Header("Input")]
         [SerializeField] private Button skillButton1;
         [SerializeField] private Button skillButton2;
         [SerializeField] private Button skillButton3;
         [SerializeField] private Button skillButton4;
-        [SerializeField] private Button pathExecuteButton;
+
+        [Header("Presentation")]
+        [SerializeField] private Transform panelsRoot;
+        [SerializeField] private BattleBoardController boardController;
+        [SerializeField] private BattleTraceInputHandler traceInputHandler;
+        [SerializeField] private BattleTraceLineView traceLineView;
+        [SerializeField] private BattleHudController hudController;
+        [SerializeField] private bool preferInteractiveTraceInput;
 
         [Header("Skill Button Visuals")]
         [SerializeField] private Color normalSkillButtonColor = new(1f, 1f, 1f, 1f);
@@ -48,19 +61,14 @@ namespace Assets.Scripts.Features.Battle.Demo
         private List<BattleDemoTurnScript> _turnScripts;
         private PartsManager _playerInstance;
         private PartsManager _enemyInstance;
+        private readonly BattleSessionState _session = new();
+        private BattleDemoTurnScript _preparedTurnScript;
+        private BattleBoardState _preparedBoard;
+        private UserBattleProfileData _activeBattleProfile;
+        private bool _presentationBootstrapped;
+        private CancellationTokenSource _awaitNodePathCts;
 
-        private string _enemyName;
-        private int _playerHp;
-        private int _enemyHp;
-        private int _initialEnemyHp;
-        private int _turnNumber;
-        private int _waveNumber;
-        private int _turnScriptIndex;
-        private int _selectedSkillSlotIndex = -1;
         private bool _isInitialized;
-        private bool _battleEnded;
-        private bool _isPathInputLocked;
-        private bool _nextTurnHazardBoosted;
         private int _resolvedStageIdForSession = -1;
 
         private void Awake()
@@ -69,8 +77,6 @@ namespace Assets.Scripts.Features.Battle.Demo
             skillButton2.onClick.AddListener(OnClickSkillButton2);
             skillButton3.onClick.AddListener(OnClickSkillButton3);
             skillButton4.onClick.AddListener(OnClickSkillButton4);
-
-            pathExecuteButton.onClick.AddListener(ExecuteTurn);
         }
 
         private void Start()
@@ -84,7 +90,7 @@ namespace Assets.Scripts.Features.Battle.Demo
             if (skillButton2 != null) skillButton2.onClick.RemoveListener(OnClickSkillButton2);
             if (skillButton3 != null) skillButton3.onClick.RemoveListener(OnClickSkillButton3);
             if (skillButton4 != null) skillButton4.onClick.RemoveListener(OnClickSkillButton4);
-            if (pathExecuteButton != null) pathExecuteButton.onClick.RemoveListener(ExecuteTurn);
+            CancelAwaitNodePathInput();
         }
 
         public void Initialize()
@@ -95,6 +101,7 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
 
             EnsureDefaults(); // デフォルト値の補完
+            ResolvePlayerBattleProfile();
 
             if (!TryResolveStageData(out var stageData))
             {
@@ -104,9 +111,11 @@ namespace Assets.Scripts.Features.Battle.Demo
             ApplyStageProgress(stageData);
             ApplyStagePresentation(stageData);
             ResetRuntimeState(stageData);
+            BootstrapPresentationIfNeeded();
+            PrepareUpcomingTurnPresentation();
             RefreshHud();
             RefreshSkillButtonVisuals();
-            Debug.Log($"[Battle] 初期化完了 Enemy={_enemyName} HP={_initialEnemyHp}");
+            Debug.Log($"[Battle] 初期化完了 Enemy={_session.EnemyName} HP={_session.InitialEnemyHp}");
 
             SpawnPreviewCharacters();
         }
@@ -118,40 +127,53 @@ namespace Assets.Scripts.Features.Battle.Demo
                 Initialize();
             }
 
-            if (_battleEnded)
+            if (_session.BattleEnded)
             {
                 Debug.LogWarning($"[Battle] バトル終了済み");
                 return;
             }
 
-            var turnScript = GetNextTurnScript();
-            var hazardBoosted = ConsumeHazardBoostFlag();
-            _turnNumber++;
-            GainTurnChargeToAllSkills();
+            var turnScript = PeekCurrentTurnScript();
+            BattleTurnResolutionReport result;
 
-            _isPathInputLocked = true;
-            var result = BattleDemoPathResolver.Resolve(
-                turnScript,
-                hazardBoosted,
-                GetSelectedSkill(),
-                new BattleDemoPathResolver.Settings
+            if (preferInteractiveTraceInput && traceInputHandler != null)
+            {
+                if (!TryResolveInteractiveTurn(turnScript, out result))
                 {
-                    CurrentEnemyHp = _enemyHp,
-                    CurrentPlayerHp = _playerHp,
-                    NormalAttackDamage = normalAttackDamage,
-                    DoubleAttackFollowUpDamage = doubleAttackFollowUpDamage,
-                    JumpAttackDamage = jumpAttackDamage,
-                });
-            _isPathInputLocked = false;
+                    return;
+                }
+            }
+            else
+            {
+                var hazardBoosted = _session.ConsumeHazardBoostFlag();
+                _session.AdvanceTurn();
+                GainTurnChargeToAllSkills();
+
+                _session.IsPathInputLocked = true;
+                result = BattleDemoRuntimeAdapter.ResolveWithRuntime(
+                    turnScript,
+                    hazardBoosted,
+                    GetSelectedSkill(),
+                    _session.EnemyHp,
+                    _session.PlayerHp,
+                    _activeBattleProfile.NormalAttackDamage,
+                    _activeBattleProfile.DoubleAttackFollowUpDamage,
+                    _activeBattleProfile.JumpAttackDamage);
+                _session.IsPathInputLocked = false;
+            }
+
+            ConsumeCurrentTurnScript();
 
             ApplyResolutionResult(result, turnScript);
             ConsumeSelectedSkillIfNeeded(result);
 
             ApplyPostTurnEnemyState(turnScript);
+            PrepareUpcomingTurnPresentation();
             RefreshHud();
-            Debug.Log($"[Battle] Turn {_turnNumber} 終了 PlayerHP={_playerHp} EnemyHP={_enemyHp}");
+            LogResolutionReport(turnScript, result);
+            Debug.Log($"[Battle] Turn {_session.TurnNumber} 終了 PlayerHP={_session.PlayerHp} EnemyHP={_session.EnemyHp}");
 
-            if (_battleEnded)
+            if (_session.BattleEnded)
             {
                 Debug.Log($"[Battle] バトル終了");
             }
@@ -162,13 +184,14 @@ namespace Assets.Scripts.Features.Battle.Demo
         /// </summary>
         public void ClearSelectedSkill()
         {
-            if (_isPathInputLocked || _selectedSkillSlotIndex < 0)
+            if (_session.IsPathInputLocked || _session.SelectedSkillSlotIndex < 0)
             {
                 return;
             }
 
-            _selectedSkillSlotIndex = -1;
+            _session.SelectedSkillSlotIndex = -1;
             RefreshSkillButtonVisuals();
+            UpdateInteractiveTurnPreview();
         }
 
         /// <summary>
@@ -181,7 +204,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 Initialize();
             }
 
-            if (_battleEnded || _isPathInputLocked)
+            if (_session.BattleEnded || _session.IsPathInputLocked)
             {
                 return;
             }
@@ -198,8 +221,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 return;
             }
 
-            _selectedSkillSlotIndex = _selectedSkillSlotIndex == slotIndex ? -1 : slotIndex;
+            _session.SelectedSkillSlotIndex = _session.SelectedSkillSlotIndex == slotIndex ? -1 : slotIndex;
             RefreshSkillButtonVisuals();
+            UpdateInteractiveTurnPreview();
         }
 
         private void OnClickSkillButton1() => SelectSkillSlot(0);
@@ -223,6 +247,22 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
+        private void ResolvePlayerBattleProfile()
+        {
+            var saveService = GameSaveService.EnsureInitialized();
+            var userData = saveService.Session.UserData ?? new UserData();
+            userData.Profile ??= new UserProfileData();
+            userData.Profile.BattleProfile ??= new UserBattleProfileData();
+
+            _activeBattleProfile = userData.Profile.BattleProfile;
+            _activeBattleProfile.MaxHp = Mathf.Max(1, _activeBattleProfile.MaxHp);
+            _activeBattleProfile.NormalAttackDamage = Mathf.Max(1, _activeBattleProfile.NormalAttackDamage);
+            _activeBattleProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, _activeBattleProfile.DoubleAttackFollowUpDamage);
+            _activeBattleProfile.JumpAttackDamage = Mathf.Max(1, _activeBattleProfile.JumpAttackDamage);
+
+            Debug.Log($"[Battle] UserData BattleProfile HP={_activeBattleProfile.MaxHp} Attack={_activeBattleProfile.NormalAttackDamage}/{_activeBattleProfile.DoubleAttackFollowUpDamage}/{_activeBattleProfile.JumpAttackDamage}");
+        }
+
         private void RefreshSkillButtonVisuals()
         {
             var buttons = new[] { skillButton1, skillButton2, skillButton3, skillButton4 };
@@ -230,7 +270,7 @@ namespace Assets.Scripts.Features.Battle.Demo
             for (var i = 0; i < buttons.Length; i++)
             {
                 var button = buttons[i];
-                var targetColor = i == _selectedSkillSlotIndex ? selectedSkillButtonColor : normalSkillButtonColor;
+                var targetColor = i == _session.SelectedSkillSlotIndex ? selectedSkillButtonColor : normalSkillButtonColor;
 
                 var colors = button.colors;
                 colors.normalColor = targetColor;
@@ -248,17 +288,20 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private BattleDemoTurnScript GetNextTurnScript()
         {
+            var turnScript = PeekCurrentTurnScript();
+            ConsumeCurrentTurnScript();
+            return turnScript;
+        }
+
+        private BattleDemoTurnScript PeekCurrentTurnScript()
+        {
             if (_turnScripts.Count == 0)
             {
                 _turnScripts = BattleDemoContentFactory.CreateDefaultTurnScripts();
             }
 
-            var index = Mathf.Clamp(_turnScriptIndex, 0, _turnScripts.Count - 1);
-            var turnScript = _turnScripts[index];
-
-            _turnScriptIndex = Mathf.Min(_turnScriptIndex + 1, _turnScripts.Count - 1);
-
-            return turnScript;
+            var index = Mathf.Clamp(_session.TurnScriptIndex, 0, _turnScripts.Count - 1);
+            return _turnScripts[index];
         }
 
         private bool TryResolveStageData(out StageData stageData)
@@ -304,33 +347,22 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void ResetRuntimeState(StageData stageData)
         {
-            initialPlayerHp = Mathf.Max(1, initialPlayerHp);
-            normalAttackDamage = Mathf.Max(1, normalAttackDamage);
-            doubleAttackFollowUpDamage = Mathf.Max(1, doubleAttackFollowUpDamage);
-            jumpAttackDamage = Mathf.Max(1, jumpAttackDamage);
+            ResolvePlayerBattleProfile();
 
-            _enemyName = string.Empty;
-            _initialEnemyHp = 1;
+            var enemyName = string.Empty;
+            var initialEnemyHp = 1;
             if (stageData.Enemies != null && stageData.Enemies.Count > 0)
             {
                 var firstEnemy = stageData.Enemies[0];
                 if (!string.IsNullOrWhiteSpace(firstEnemy.Name))
                 {
-                    _enemyName = firstEnemy.Name;
+                    enemyName = firstEnemy.Name;
                 }
 
-                _initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
+                initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
             }
 
-            _playerHp = initialPlayerHp;
-            _enemyHp = _initialEnemyHp;
-            _turnNumber = 0;
-            _waveNumber = 1;
-            _turnScriptIndex = 0;
-            _selectedSkillSlotIndex = -1;
-            _battleEnded = false;
-            _isPathInputLocked = false;
-            _nextTurnHazardBoosted = false;
+            _session.ResetForBattle(enemyName, _activeBattleProfile.MaxHp, initialEnemyHp);
             _isInitialized = true;
 
             foreach (var slot in skillSlots)
@@ -366,24 +398,17 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
-        private bool ConsumeHazardBoostFlag()
-        {
-            var hazardBoosted = _nextTurnHazardBoosted;
-            _nextTurnHazardBoosted = false;
-            return hazardBoosted;
-        }
-
-        private void ApplyResolutionResult(BattleDemoPathResolver.Result result, BattleDemoTurnScript turnScript)
+        private void ApplyResolutionResult(BattleTurnResolutionReport result, BattleDemoTurnScript turnScript)
         {
             if (result.EnemyDamageTaken > 0)
             {
-                _enemyHp = Mathf.Max(0, _enemyHp - result.EnemyDamageTaken);
+                _session.ApplyEnemyDamage(result.EnemyDamageTaken);
                 Debug.Log($"[Battle] {turnScript.Label} EnemyDamage={result.EnemyDamageTaken}");
             }
 
             if (result.PlayerDamageTaken > 0)
             {
-                _playerHp = Mathf.Max(0, _playerHp - result.PlayerDamageTaken);
+                _session.ApplyPlayerDamage(result.PlayerDamageTaken);
                 Debug.Log($"[Battle] {turnScript.Label} PlayerDamage={result.PlayerDamageTaken}");
             }
 
@@ -393,53 +418,470 @@ namespace Assets.Scripts.Features.Battle.Demo
                 return;
             }
 
-            if (result.PlayerDefeated || _playerHp <= 0)
+            if (result.PlayerDefeated || _session.PlayerHp <= 0)
             {
-                _battleEnded = true;
+                _session.BattleEnded = true;
             }
         }
 
         private void ApplyPostTurnEnemyState(BattleDemoTurnScript turnScript)
         {
-            if (_battleEnded)
+            if (_session.BattleEnded)
             {
                 return;
             }
 
             if (turnScript.EnemyAction == BattleDemoEnemyActionType.Dance)
             {
-                _nextTurnHazardBoosted = true;
+                _session.ReserveNextTurnHazardBoost();
             }
         }
 
         private void RefreshHud()
         {
+            if (hudController != null)
+            {
+                hudController.ApplySession(_session);
+            }
+
             if (turnNumberText != null)
             {
-                turnNumberText.text = _turnNumber.ToString();
+                turnNumberText.text = $"Turn {_session.TurnNumber}";
             }
 
             if (waveNumberText != null)
             {
-                waveNumberText.text = _waveNumber.ToString();
+                waveNumberText.text = $"Wave {_session.WaveNumber}";
             }
         }
 
-        private void ConsumeSelectedSkillIfNeeded(BattleDemoPathResolver.Result result)
+        private void PrepareUpcomingTurnPresentation()
         {
-            if (_selectedSkillSlotIndex < 0 || _selectedSkillSlotIndex >= skillSlots.Count)
+            if (_session.BattleEnded)
+            {
+                Debug.Log("[Battle] バトル終了のため盤面入力をクリアします。");
+                CancelAwaitNodePathInput();
+                traceInputHandler?.ResetState(clearConfirmedPath: true);
+                boardController?.ClearTraceVisual();
+                traceLineView?.Clear();
+                hudController?.SetConfirmText(BuildTurnPrompt(_preparedTurnScript));
+                return;
+            }
+
+            var turnScript = PeekCurrentTurnScript();
+            _preparedTurnScript = turnScript;
+            hudController?.SetConfirmText(BuildTurnPrompt(turnScript));
+
+            var layout = BattleDemoRuntimeAdapter.CreateBoardLayout(turnScript);
+            _preparedBoard = layout.Board;
+            Debug.Log($"[Battle] 次ターン準備 Turn={_session.TurnNumber} Label={turnScript?.Label} Board={_preparedBoard?.Width}x{_preparedBoard?.Height} Start={_preparedBoard?.StartPosition} Goals={FormatPath(_preparedBoard?.GetGoalPositions())}");
+
+            if (boardController != null)
+            {
+                boardController.RenderBoard(_preparedBoard);
+            }
+
+            if (traceInputHandler != null && boardController != null && _preparedBoard != null)
+            {
+                traceInputHandler.Bind(
+                    boardController,
+                    new BattlePathTracer(_preparedBoard),
+                    traceLineView);
+            }
+            else
+            {
+                traceLineView?.Clear();
+            }
+
+            BeginAwaitNodePathInput(turnScript);
+        }
+
+        private bool TryResolveInteractiveTurn(BattleDemoTurnScript turnScript, out BattleTurnResolutionReport result)
+        {
+            result = null;
+            if (!preferInteractiveTraceInput ||
+                traceInputHandler == null ||
+                _preparedBoard == null ||
+                !ReferenceEquals(turnScript, _preparedTurnScript) ||
+                !traceInputHandler.HasConfirmedPath)
+            {
+                hudController?.SetConfirmText(BuildTurnPrompt(turnScript));
+                Debug.LogWarning($"[Battle] ExecuteTurn を保留 Interactive={preferInteractiveTraceInput} TraceHandler={(traceInputHandler != null)} BoardReady={(_preparedBoard != null)} TurnMatched={ReferenceEquals(turnScript, _preparedTurnScript)} HasConfirmedPath={traceInputHandler != null && traceInputHandler.HasConfirmedPath}");
+                return false;
+            }
+
+            var hazardBoosted = _session.ConsumeHazardBoostFlag();
+            _session.AdvanceTurn();
+            GainTurnChargeToAllSkills();
+            _session.IsPathInputLocked = true;
+
+            var context = BattleDemoRuntimeAdapter.CreateTurnContext(
+                turnScript,
+                hazardBoosted,
+                GetSelectedSkill(),
+                _session.EnemyHp,
+                _session.PlayerHp,
+                _activeBattleProfile.NormalAttackDamage,
+                _activeBattleProfile.DoubleAttackFollowUpDamage,
+                _activeBattleProfile.JumpAttackDamage);
+
+            var path = _preparedBoard.BuildNodePath(traceInputHandler.ConfirmedPath);
+            Debug.Log($"[Battle] Interactive path を解決します Path={FormatPath(traceInputHandler.ConfirmedPath)} Nodes={FormatNodePath(path)}");
+            result = BattleTurnResolver.Resolve(path, context);
+            result.AddLog($"Interactive path length: {traceInputHandler.ConfirmedPath.Count}");
+            _session.IsPathInputLocked = false;
+            return true;
+        }
+
+        private void BootstrapPresentationIfNeeded()
+        {
+            if (_presentationBootstrapped)
             {
                 return;
             }
 
-            if (!result.PathConfirmed)
+            if (panelsRoot == null)
+            {
+                Debug.LogWarning("[Battle] panelsRoot が未設定のため、盤面入力を初期化できません。");
+            }
+            else
+            {
+                if (boardController == null)
+                {
+                    boardController = panelsRoot.GetComponent<BattleBoardController>();
+                    if (boardController == null)
+                    {
+                        boardController = panelsRoot.gameObject.AddComponent<BattleBoardController>();
+                    }
+                }
+
+                boardController.ConfigureExistingChildren(
+                    panelsRoot as RectTransform,
+                    panelsRoot.GetComponent<GridLayoutGroup>());
+                preferInteractiveTraceInput = true;
+                Debug.Log($"[Battle] panelsRoot を接続しました ChildCount={panelsRoot.childCount} Interactive={preferInteractiveTraceInput}");
+            }
+
+            if (traceInputHandler == null)
+            {
+                traceInputHandler = GetComponent<BattleTraceInputHandler>();
+                if (traceInputHandler == null)
+                {
+                    traceInputHandler = gameObject.AddComponent<BattleTraceInputHandler>();
+                }
+            }
+
+            if (hudController == null)
+            {
+                hudController = GetComponent<BattleHudController>();
+                if (hudController == null)
+                {
+                    hudController = gameObject.AddComponent<BattleHudController>();
+                }
+            }
+
+            hudController?.ConfigureLegacyReferences(turnNumberText, waveNumberText, playerHp: playerHPText);
+
+            if (traceInputHandler != null)
+            {
+                traceInputHandler.TraceUpdated -= OnTraceUpdated;
+                traceInputHandler.TraceRejected -= OnTraceRejected;
+                traceInputHandler.PathConfirmed -= OnPathConfirmed;
+                traceInputHandler.TraceUpdated += OnTraceUpdated;
+                traceInputHandler.TraceRejected += OnTraceRejected;
+                traceInputHandler.PathConfirmed += OnPathConfirmed;
+            }
+
+            _presentationBootstrapped = true;
+            Debug.Log($"[Battle] Presentation bootstrap 完了 BoardController={(boardController != null)} TraceInputHandler={(traceInputHandler != null)} HudController={(hudController != null)} Interactive={preferInteractiveTraceInput}");
+        }
+
+        private void ConsumeCurrentTurnScript()
+        {
+            _session.TurnScriptIndex = Mathf.Min(_session.TurnScriptIndex + 1, _turnScripts.Count - 1);
+        }
+
+        private void OnTraceUpdated(BattlePathTraceResult result)
+        {
+            if (_preparedTurnScript == null)
             {
                 return;
             }
 
-            skillSlots[_selectedSkillSlotIndex].Consume();
-            _selectedSkillSlotIndex = -1;
+            if (hudController == null)
+            {
+                return;
+            }
+
+            if (result.Status == BattlePathTraceStatus.Confirmed)
+            {
+                return;
+            }
+
+            if (result.CanConfirm)
+            {
+                UpdateInteractiveTurnPreview();
+                return;
+            }
+
+            if (result.Status == BattlePathTraceStatus.ReleasedWithoutGoal)
+            {
+                hudController.SetConfirmText("Goal まで届いていません");
+                return;
+            }
+
+            if (result.Status == BattlePathTraceStatus.Started ||
+                result.Status == BattlePathTraceStatus.Appended ||
+                result.Status == BattlePathTraceStatus.Backtracked)
+            {
+                hudController.SetConfirmText("Goal までつなげると行動確定");
+                return;
+            }
+
+            hudController.SetConfirmText(BuildTurnPrompt(_preparedTurnScript));
+        }
+
+        private void OnTraceRejected(BattlePathTraceResult result)
+        {
+            if (hudController == null)
+            {
+                return;
+            }
+
+            hudController.SetConfirmText(result.ValidationError switch
+            {
+                BattlePathValidationError.NotAdjacent => "隣接マスのみです",
+                BattlePathValidationError.Revisit => "同じマスは再訪できません",
+                BattlePathValidationError.CrossedSegment => "線は交差できません",
+                BattlePathValidationError.ExtendedAfterGoal => "Goal 到達後は延長できません",
+                BattlePathValidationError.InvalidStart => "開始マスから引いてください",
+                _ => "そのルートは使えません",
+            });
+        }
+
+        private void OnPathConfirmed(IReadOnlyList<Assets.Scripts.Features.Battle.Core.BattleGridPosition> _)
+        {
+            if (_preparedTurnScript == null)
+            {
+                return;
+            }
+
+            UpdateInteractiveTurnPreview();
+        }
+
+        private void ConsumeSelectedSkillIfNeeded(BattleTurnResolutionReport result)
+        {
+            if (_session.SelectedSkillSlotIndex < 0 || _session.SelectedSkillSlotIndex >= skillSlots.Count)
+            {
+                return;
+            }
+
+            if (!result.SelectedSkillConsumed)
+            {
+                return;
+            }
+
+            skillSlots[_session.SelectedSkillSlotIndex].Consume();
+            _session.SelectedSkillSlotIndex = -1;
             RefreshSkillButtonVisuals();
+        }
+
+        private void BeginAwaitNodePathInput(BattleDemoTurnScript turnScript)
+        {
+            CancelAwaitNodePathInput();
+
+            if (!preferInteractiveTraceInput ||
+                traceInputHandler == null ||
+                _preparedBoard == null ||
+                _session.BattleEnded)
+            {
+                return;
+            }
+
+            _awaitNodePathCts = new CancellationTokenSource();
+            AwaitNodePathInputAsync(turnScript, _awaitNodePathCts.Token).Forget();
+            Debug.Log($"[Battle] UniTask で path 入力待機を開始します Turn={_session.TurnNumber} Label={turnScript?.Label}");
+        }
+
+        private void CancelAwaitNodePathInput()
+        {
+            if (_awaitNodePathCts == null)
+            {
+                return;
+            }
+
+            _awaitNodePathCts.Cancel();
+            _awaitNodePathCts.Dispose();
+            _awaitNodePathCts = null;
+        }
+
+        private async UniTaskVoid AwaitNodePathInputAsync(BattleDemoTurnScript turnScript, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var confirmedPath = await traceInputHandler.WaitForConfirmedPathAsync(cancellationToken);
+                Debug.Log($"[Battle] UniTask 待機完了 Path={FormatPath(confirmedPath)}");
+                await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested ||
+                    _session.BattleEnded ||
+                    _session.IsPathInputLocked ||
+                    traceInputHandler == null ||
+                    !traceInputHandler.HasConfirmedPath ||
+                    !ReferenceEquals(turnScript, _preparedTurnScript))
+                {
+                    return;
+                }
+
+                Debug.Log("[Battle] UniTask 待機の完了によりターンを実行します。");
+                ExecuteTurn();
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.Log("[Battle] UniTask path 入力待機をキャンセルしました。");
+            }
+        }
+
+        private void UpdateInteractiveTurnPreview()
+        {
+            if (!preferInteractiveTraceInput || hudController == null || _preparedTurnScript == null)
+            {
+                return;
+            }
+
+            if (traceInputHandler == null || _preparedBoard == null)
+            {
+                hudController.SetConfirmText(BuildTurnPrompt(_preparedTurnScript));
+                return;
+            }
+
+            var pathPositions = traceInputHandler.CurrentTracePath;
+            if (pathPositions == null || pathPositions.Count == 0)
+            {
+                hudController.SetConfirmText(BuildTurnPrompt(_preparedTurnScript));
+                return;
+            }
+
+            if (!traceInputHandler.CanConfirmCurrentTrace && !traceInputHandler.HasConfirmedPath)
+            {
+                hudController.SetConfirmText("Goal までつなげると行動確定");
+                return;
+            }
+
+            if (!TryBuildInteractiveTurnPreview(pathPositions, out var preview, out var path))
+            {
+                hudController.SetConfirmText("このルートはまだ解決できません");
+                return;
+            }
+
+            hudController.SetConfirmText(BuildTurnPreviewMessage(preview));
+            Debug.Log($"[Battle] PlayerTurn preview Path={FormatPath(pathPositions)} Nodes={FormatNodePath(path)} Summary={BuildTurnPreviewMessage(preview)}");
+        }
+
+        private bool TryBuildInteractiveTurnPreview(
+            IReadOnlyList<BattleGridPosition> positions,
+            out BattleTurnResolutionReport preview,
+            out List<BattleNodeType> path)
+        {
+            preview = null;
+            path = null;
+
+            if (_preparedBoard == null || positions == null || positions.Count == 0)
+            {
+                return false;
+            }
+
+            path = _preparedBoard.BuildNodePath(positions);
+            if (path.Count == 0)
+            {
+                return false;
+            }
+
+            preview = BattleTurnResolver.Resolve(
+                path,
+                CreateCurrentTurnContext(_preparedTurnScript, _session.NextTurnHazardBoosted));
+            return true;
+        }
+
+        private BattleTurnContext CreateCurrentTurnContext(BattleDemoTurnScript turnScript, bool hazardBoosted)
+        {
+            return BattleDemoRuntimeAdapter.CreateTurnContext(
+                turnScript,
+                hazardBoosted,
+                GetSelectedSkill(),
+                _session.EnemyHp,
+                _session.PlayerHp,
+                _activeBattleProfile.NormalAttackDamage,
+                _activeBattleProfile.DoubleAttackFollowUpDamage,
+                _activeBattleProfile.JumpAttackDamage);
+        }
+
+        private string BuildTurnPrompt(BattleDemoTurnScript turnScript)
+        {
+            if (_session.BattleEnded)
+            {
+                return "バトル終了";
+            }
+
+            if (!preferInteractiveTraceInput)
+            {
+                return turnScript != null ? turnScript.ConfirmText : string.Empty;
+            }
+
+            if (turnScript != null && !string.IsNullOrWhiteSpace(turnScript.BoardSummary))
+            {
+                return $"{turnScript.BoardSummary} Start から Goal まで引いてください";
+            }
+
+            return "Start から Goal まで引いてください";
+        }
+
+        private string BuildTurnPreviewMessage(BattleTurnResolutionReport preview)
+        {
+            if (preview == null)
+            {
+                return _preparedTurnScript != null ? _preparedTurnScript.ConfirmText : string.Empty;
+            }
+
+            var parts = new List<string>();
+
+            if (preview.ResolvedSkillCount > 0 && GetSelectedSkill() != null)
+            {
+                parts.Add($"Skill:{GetSelectedSkill().DisplayName}");
+            }
+            else if (preview.ResolvedAttackCount > 0)
+            {
+                parts.Add($"攻撃{preview.ResolvedAttackCount}回");
+            }
+
+            if (preview.EnemyDamageTaken > 0)
+            {
+                parts.Add($"敵-{preview.EnemyDamageTaken}");
+            }
+
+            if (preview.ResolvedHazardCount > 0)
+            {
+                parts.Add(preview.PlayerDamageTaken > 0
+                    ? $"自分-{preview.PlayerDamageTaken}"
+                    : "被弾なし");
+            }
+
+            if (preview.StoppedByHazardHit)
+            {
+                parts.Add("被弾で停止");
+            }
+
+            if (preview.GoalReached)
+            {
+                parts.Add("Goal確定");
+            }
+
+            if (parts.Count == 0)
+            {
+                return _preparedTurnScript != null ? _preparedTurnScript.ConfirmText : "実行可能";
+            }
+
+            return string.Join(" / ", parts);
         }
 
         private int ResolveStageIdForSession()
@@ -461,7 +903,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void HandleBattleClear()
         {
-            _battleEnded = true;
+            _session.BattleEnded = true;
 
             if (_resolvedStageIdForSession < 0)
             {
@@ -480,11 +922,44 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private BattleDemoSkillSlot GetSelectedSkill()
         {
-            if (_selectedSkillSlotIndex < 0 || _selectedSkillSlotIndex >= skillSlots.Count)
+            if (_session.SelectedSkillSlotIndex < 0 || _session.SelectedSkillSlotIndex >= skillSlots.Count)
             {
                 return null;
             }
-            return skillSlots[_selectedSkillSlotIndex];
+            return skillSlots[_session.SelectedSkillSlotIndex];
+        }
+
+        private void LogResolutionReport(BattleDemoTurnScript turnScript, BattleTurnResolutionReport result)
+        {
+            if (result == null || result.LogEntries.Count == 0)
+            {
+                return;
+            }
+
+            for (var i = 0; i < result.LogEntries.Count; i++)
+            {
+                Debug.Log($"[Battle] {turnScript.Label} {result.LogEntries[i]}");
+            }
+        }
+
+        private static string FormatPath(IReadOnlyList<BattleGridPosition> positions)
+        {
+            if (positions == null || positions.Count == 0)
+            {
+                return "(empty)";
+            }
+
+            return string.Join(" -> ", positions);
+        }
+
+        private static string FormatNodePath(IReadOnlyList<BattleNodeType> nodeTypes)
+        {
+            if (nodeTypes == null || nodeTypes.Count == 0)
+            {
+                return "(empty)";
+            }
+
+            return string.Join(" -> ", nodeTypes);
         }
     }
 }

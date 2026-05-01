@@ -15,15 +15,15 @@ namespace Assets.Scripts.Systems.Save
             public LegacyAvatarAppearanceData appearance = new();
         }
 
-        public bool TryApply(GameSaveData saveData)
+        public bool TryApply(UserData userData)
         {
-            if (saveData == null || !TryLoadLegacyAppearance(out var legacyAppearance))
+            if (userData == null || !TryLoadLegacyAppearance(out var legacyAppearance))
                 return false;
 
-            saveData.Player ??= new PlayerData();
-            saveData.Inventory ??= new InventoryData();
-            saveData.Player.AvatarAppearance = ConvertAppearance(legacyAppearance);
-            MergeEquippedItemsIntoInventory(saveData.Inventory, saveData.Player.AvatarAppearance);
+            userData.Profile ??= new UserProfileData();
+            userData.Profile.Avatar = ConvertAppearance(legacyAppearance);
+            userData.Inventory ??= new InventoryData();
+            MergeEquippedItemsIntoInventory(userData.Inventory, userData.Profile.Avatar);
             return true;
         }
 

@@ -8,8 +8,8 @@ namespace Assets.Scripts.Systems.Save
 
         bool Exists();
 
-        GameSaveData Load();
+        UserData Load();
 
-        void Save(GameSaveData saveData);
+        void Save(UserData userData);
     }
 }

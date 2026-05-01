@@ -8,8 +8,11 @@ namespace Assets.Scripts.Systems.Save
     {
         private static GameSession _instance;
 
-        [Description("現在ゲーム全体で共有している保存データ本体。")]
-        public GameSaveData SaveData { get; private set; } = new();
+        [Description("現在ゲーム全体で共有しているユーザーデータ本体。")]
+        public UserData UserData { get; private set; } = new();
+
+        [System.Obsolete("Use UserData instead.")]
+        public UserData SaveData => UserData;
 
         [Description("セッション初期化が完了しているかどうか。起動直後のガードに使う。")]
         public bool IsInitialized { get; private set; }
@@ -40,18 +43,24 @@ namespace Assets.Scripts.Systems.Save
             DontDestroyOnLoad(gameObject);
         }
 
-        public void Initialize(GameSaveData saveData)
+        public void Initialize(UserData userData)
         {
-            SaveData = saveData ?? new GameSaveData();
+            UserData = userData ?? new UserData();
             IsInitialized = true;
             IsDirty = false;
         }
 
-        public void ReplaceSaveData(GameSaveData saveData, bool markDirty = false)
+        public void ReplaceUserData(UserData userData, bool markDirty = false)
         {
-            SaveData = saveData ?? new GameSaveData();
+            UserData = userData ?? new UserData();
             IsInitialized = true;
             IsDirty = markDirty;
+        }
+
+        [System.Obsolete("Use ReplaceUserData instead.")]
+        public void ReplaceSaveData(UserData userData, bool markDirty = false)
+        {
+            ReplaceUserData(userData, markDirty);
         }
 
         public void MarkDirty()

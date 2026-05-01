@@ -55,13 +55,13 @@ namespace Assets.Scripts.Systems.GameData
 
         public void SetCurrentAppearance(AvatarAppearanceData appearance, bool markDirty = true)
         {
-            Session.SaveData.Player ??= new PlayerData();
+            Session.UserData.Profile ??= new UserProfileData();
 
             var normalized = appearance ?? new AvatarAppearanceData();
             normalized.Parts ??= new List<AvatarPartStateData>();
             normalized.Colors ??= new List<AvatarColorData>();
 
-            Session.SaveData.Player.AvatarAppearance = normalized;
+            Session.UserData.Profile.Avatar = normalized;
             EnsureDefaultColor(normalized, ColorTargetType.Skin, markDirty);
             EnsureDefaultColor(normalized, ColorTargetType.Hair, markDirty);
             EnsureDefaultColor(normalized, ColorTargetType.Eye, markDirty);
@@ -215,11 +215,11 @@ namespace Assets.Scripts.Systems.GameData
 
         private AvatarAppearanceData EnsureAppearance()
         {
-            Session.SaveData.Player ??= new PlayerData();
-            Session.SaveData.Player.AvatarAppearance ??= new AvatarAppearanceData();
-            Session.SaveData.Player.AvatarAppearance.Parts ??= new List<AvatarPartStateData>();
-            Session.SaveData.Player.AvatarAppearance.Colors ??= new List<AvatarColorData>();
-            return Session.SaveData.Player.AvatarAppearance;
+            Session.UserData.Profile ??= new UserProfileData();
+            Session.UserData.Profile.Avatar ??= new AvatarAppearanceData();
+            Session.UserData.Profile.Avatar.Parts ??= new List<AvatarPartStateData>();
+            Session.UserData.Profile.Avatar.Colors ??= new List<AvatarColorData>();
+            return Session.UserData.Profile.Avatar;
         }
 
         private void EnsureDefaultColor(AvatarAppearanceData appearance, ColorTargetType target, bool markDirty)

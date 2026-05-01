@@ -170,9 +170,9 @@ namespace Assets.Scripts.Systems.GameData
 
         private InventoryData EnsureInventory()
         {
-            Session.SaveData.Inventory ??= new InventoryData();
-            Session.SaveData.Inventory.Equipments ??= new List<InventoryEntryData>();
-            return Session.SaveData.Inventory;
+            Session.UserData.Inventory ??= new InventoryData();
+            Session.UserData.Inventory.Equipments ??= new List<InventoryEntryData>();
+            return Session.UserData.Inventory;
         }
 
         private void RebuildLookups()

@@ -542,6 +542,13 @@ Skill 選択中の扱い:
 - Roll Against Skill Hazard
 - Hit Stops Remaining Stack
 
+ただし `BattleScene` の現行 scene 上では、`Panels` 配下の既存 UI ノード群を盤面セルとして再利用する方向へ寄せている。
+
+- 盤面見た目は 5 列 x 6 行
+- `Panels` の GridLayoutGroup は縦優先で子要素を並べる
+- 開始マスは中央列の最下段に固定する
+- デモの固定経路も、この開始位置から辿れる座標列へ変換して新コアへ渡す
+
 ### 16.6 現在の危険強化
 
 - 設計書では危険マス数 1.5 倍を想定している
@@ -551,8 +558,9 @@ Skill 選択中の扱い:
 
 - `previewImage` は反映される
 - `background` 反映コードはコメントアウトされている
-- `turnNumberText` と `waveNumberText` は宣言済みだが更新未接続
+- `turnNumberText` と `waveNumberText` は更新される
 - Skill ボタンの選択色更新は実装済み
+- `Panels` が見つかる場合は `BattleBoardController` と `BattleTraceInputHandler` を runtime で自動接続する
 
 ### 16.8 現在未接続のロジック
 
@@ -602,3 +610,132 @@ Skill 選択中の扱い:
 - 特殊敗北演出の具体内容
 - 属性ごとの正式補正値
 - 敵 AI の重みテーブル詳細
+
+## 20. リファクタ後の実装構成案
+
+### 20.1 基本方針
+
+- `BattleScene` はシーン司令塔に縮退し、盤面状態、入力判定、解決ロジック、HUD 更新を直接抱え込まない
+- pure C# の戦闘コアと `MonoBehaviour` の表示層を分離する
+- 現在の `Demo` 実装は破棄せず、回帰確認用フィクスチャとして残す
+- `グリッドパズルゲーム.txt` の責務分離思想は採用するが、`match-3` 前提の概念名は持ち込まない
+
+### 20.2 クラス一覧と配置パス
+
+初回リファクタで追加または改名対象とするクラスは以下とする。
+
+| レイヤー | クラス名 | 配置パス | 役割 |
+| --- | --- | --- | --- |
+| Scene | `BattleScene` | `Assets/Scripts/Features/Battle/Demo/BattleScene.cs` | 当面は既存ファイルを維持し、初期化、ターン開始、結果反映、進捗保存、各コントローラ仲介のみを担当する |
+| Core | `BattleGridPosition` | `Assets/Scripts/Features/Battle/Core/BattleGridPosition.cs` | 盤面座標。`x`,`y` と隣接判定、等価比較を持つ値オブジェクト |
+| Core | `BattleNodeType` | `Assets/Scripts/Features/Battle/Core/BattleNodeType.cs` | `Start`,`Empty`,`Jump`,`Roll`,`Dance`,`Attack`,`HazardNormal`,`HazardSkill`,`Goal` を持つ本番 enum。`BattleDemoNodeType` の置き換え先 |
+| Core | `BattleEnemyActionType` | `Assets/Scripts/Features/Battle/Core/BattleEnemyActionType.cs` | 敵のターン行動種別。`NormalAttack`,`Skill`,`Dance` を持つ本番 enum。`BattleDemoEnemyActionType` の置き換え先 |
+| Core | `BattlePathValidationError` | `Assets/Scripts/Features/Battle/Core/BattlePathValidationError.cs` | `NotAdjacent`,`Revisit`,`CrossedSegment`,`ExtendedAfterGoal`,`OutOfBounds` などの不正理由を表す |
+| Runtime | `BattleCellState` | `Assets/Scripts/Features/Battle/Runtime/BattleCellState.cs` | 1 マスぶんの状態。座標、`BattleNodeType`、危険グループ ID、表示用補助フラグを持つ |
+| Runtime | `BattleBoardState` | `Assets/Scripts/Features/Battle/Runtime/BattleBoardState.cs` | 5x5 盤面全体。サイズ、セル配列、`Start`、`Goal` 一覧、検索 API を持つ |
+| Runtime | `BattlePathDraft` | `Assets/Scripts/Features/Battle/Runtime/BattlePathDraft.cs` | 入力中の仮パス。通過座標列、到達済み `Goal`、確定可能状態、最後の線分集合を持つ |
+| Runtime | `BattleSkillSlotRuntime` | `Assets/Scripts/Features/Battle/Runtime/BattleSkillSlotRuntime.cs` | `BattleDemoSkillSlot` の本番名。Ready、Charge、消費、表示ラベルを持つ |
+| Runtime | `BattleSessionState` | `Assets/Scripts/Features/Battle/Runtime/BattleSessionState.cs` | プレイヤー HP、敵 HP、ターン数、Wave、選択 Skill、次ターン危険強化、特殊敗北カウントなどの戦闘進行状態 |
+| Runtime | `BattleTurnContext` | `Assets/Scripts/Features/Battle/Runtime/BattleTurnContext.cs` | 1 ターン解決に必要な固定値。攻撃力、敵行動種別、危険強化状態、選択 Skill を束ねる |
+| Runtime | `BattleTurnResolutionReport` | `Assets/Scripts/Features/Battle/Runtime/BattleTurnResolutionReport.cs` | 解決結果。確定可否、与ダメ、被ダメ、Goal 成否、Skill 消費、行動ログ、終了フラグを返す |
+| Logic | `BattlePathRuleEvaluator` | `Assets/Scripts/Features/Battle/Logic/BattlePathRuleEvaluator.cs` | 8 方向接続、再訪禁止、線分交差禁止、Goal 後延長禁止を判定する pure C# ルール評価器 |
+| Logic | `BattlePathTracer` | `Assets/Scripts/Features/Battle/Logic/BattlePathTracer.cs` | ドラッグ中の入力を `BattlePathDraft` に反映する。前のマスへの戻り Undo と `Goal` 到達状態維持を担当する |
+| Logic | `BattleTurnResolver` | `Assets/Scripts/Features/Battle/Logic/BattleTurnResolver.cs` | 確定パスを通過順に解決し、攻撃、Skill 変換、回避、被弾、Goal 不発を `BattleTurnResolutionReport` にまとめる |
+| Logic | `BattleBoardGenerator` | `Assets/Scripts/Features/Battle/Logic/BattleBoardGenerator.cs` | ステージ定義と敵行動からターン盤面を生成する。固定テンプレート利用もここに寄せる |
+| Logic | `BattleEnemyIntentPlanner` | `Assets/Scripts/Features/Battle/Logic/BattleEnemyIntentPlanner.cs` | 敵 AI または暫定重みから、そのターンの `NormalAttack` / `Skill` / `Dance` を決める |
+| Presentation | `BattleBoardController` | `Assets/Scripts/Features/Battle/Presentation/BattleBoardController.cs` | `BattleBoardState` をグリッド表示へ反映し、セル View の生成と更新を担当する `MonoBehaviour` |
+| Presentation | `BattleCellView` | `Assets/Scripts/Features/Battle/Presentation/BattleCellView.cs` | 単一セルの見た目とヒット判定を担当する `MonoBehaviour` |
+| Presentation | `BattleTraceLineView` | `Assets/Scripts/Features/Battle/Presentation/BattleTraceLineView.cs` | ドラッグ中の線、確定可能状態、交差不可フィードバックを描画する `MonoBehaviour` |
+| Presentation | `BattleTraceInputHandler` | `Assets/Scripts/Features/Battle/Presentation/BattleTraceInputHandler.cs` | Pointer 入力を `BattlePathTracer` に流し、確定イベントを `BattleScene` へ通知する `MonoBehaviour` |
+| Presentation | `BattleHudController` | `Assets/Scripts/Features/Battle/Presentation/BattleHudController.cs` | HP、ターン、Skill パレット、確定テキスト、危険強化予告を更新する `MonoBehaviour` |
+
+補足:
+
+- `BattleDemoPathResolver` は `BattleTurnResolver` へ移管する
+- `BattleDemoEnemyActionType` は `BattleEnemyActionType` へ改名する
+- `BattleDemoContentFactory` と `BattleDemoTurnScript` は `Assets/Scripts/Features/Battle/Demo/` に残し、回帰確認用データとして扱う
+- 初回リファクタでは scene や prefab の GUID 変更を避けるため、`BattleScene` 自体は現パスに残してよい
+
+### 20.3 依存ルール
+
+- `Presentation` は `Logic` と `Runtime` を参照してよい
+- `Logic` は `Runtime` と `Core` のみを参照し、`UnityEngine` に依存しない
+- `Runtime` は `Core` のみを参照し、`MonoBehaviour` を持たない
+- `Data` 層の `StageData` と `MasterDataResourceLoader` は `BattleScene` または `BattleBoardGenerator` から読み出し、セル View からは直接参照しない
+- `Demo` は `Logic` の回帰入力源としてのみ残し、本番フローの依存先にしない
+
+### 20.4 既存 `BattleScene` からの責務移管
+
+現在の `BattleScene` の責務は、以下のように分割する。
+
+| 現在 `BattleScene` にある責務 | 移管先 |
+| --- | --- |
+| ステージ ID 解決、進捗反映、シーン初期化 | `BattleScene` のまま維持 |
+| ステージ見た目反映 | `BattleHudController` と `BattleBoardController` |
+| Skill ボタン選択と見た目更新 | `BattleHudController` と `BattleSkillSlotRuntime` |
+| `_turnScripts` によるデモ進行 | 当面 `Demo` として残す。本番では `BattleEnemyIntentPlanner` と `BattleBoardGenerator` に置換する |
+| `BattleDemoPathResolver.Resolve(...)` の呼び出し | `BattleTurnResolver.Resolve(...)` |
+| Goal 到達判定と `PathConfirmed` 分岐 | `BattlePathTracer` と `BattleTurnResolver` |
+| 危険強化フラグ管理 | `BattleSessionState` |
+| HP 更新、勝敗更新、次ステージ解放 | `BattleScene` が `BattleTurnResolutionReport` を受けて反映する |
+
+### 20.5 依存関係図
+
+```mermaid
+graph TD
+    Loader["MasterDataResourceLoader"]
+    StageDTO["StageData / BattleStageData"]
+    Progress["BattleProgressService"]
+    Scene["BattleScene"]
+    Planner["BattleEnemyIntentPlanner"]
+    Generator["BattleBoardGenerator"]
+    Session["BattleSessionState"]
+    Board["BattleBoardState"]
+    Skill["BattleSkillSlotRuntime"]
+    Input["BattleTraceInputHandler"]
+    Tracer["BattlePathTracer"]
+    Rules["BattlePathRuleEvaluator"]
+    Draft["BattlePathDraft"]
+    Resolver["BattleTurnResolver"]
+    Report["BattleTurnResolutionReport"]
+    BoardCtrl["BattleBoardController"]
+    Hud["BattleHudController"]
+    Cell["BattleCellView"]
+    Line["BattleTraceLineView"]
+
+    Loader --> StageDTO
+    StageDTO --> Scene
+    Progress --> Scene
+    Scene --> Planner
+    Scene --> Generator
+    Scene --> Session
+    Scene --> Skill
+    Planner --> Generator
+    Generator --> Board
+    Scene --> BoardCtrl
+    Scene --> Hud
+    BoardCtrl --> Board
+    BoardCtrl --> Cell
+    Input --> Tracer
+    Tracer --> Rules
+    Tracer --> Draft
+    Rules --> Board
+    Scene --> Input
+    Scene --> Resolver
+    Resolver --> Board
+    Resolver --> Draft
+    Resolver --> Session
+    Resolver --> Skill
+    Resolver --> Report
+    Report --> Scene
+    Draft --> Line
+    Session --> Hud
+    Skill --> Hud
+```
+
+### 20.6 導入順
+
+- 第 1 段階: `BattleNodeType`、`BattleSkillSlotRuntime`、`BattleTurnResolver` を追加し、既存 `BattleDemo*` 名称から切り離す
+- 第 2 段階: `BattleBoardState`、`BattlePathDraft`、`BattlePathRuleEvaluator`、`BattlePathTracer` を追加して実ドラッグ入力へ置き換える
+- 第 3 段階: `BattleBoardController`、`BattleCellView`、`BattleTraceLineView`、`BattleHudController` を追加して `BattleScene` の UI 責務を外へ出す
+- 第 4 段階: `BattleEnemyIntentPlanner` と `BattleBoardGenerator` を追加し、`BattleDemoTurnScript` 依存を本番フローから外す

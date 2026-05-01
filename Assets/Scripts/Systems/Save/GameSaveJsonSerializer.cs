@@ -3,11 +3,12 @@ using System.Globalization;
 using Assets.Scripts.Systems.Save.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace Assets.Scripts.Systems.Save
 {
     /// <summary>
-    /// Newtonsoft.Jsonを使用した、GameSaveDataのJSONシリアル化および逆シリアル化処理
+    /// Newtonsoft.Jsonを使用した、UserDataのJSONシリアル化および逆シリアル化処理
     /// </summary>
     public static class GameSaveJsonSerializer
     {
@@ -19,22 +20,95 @@ namespace Assets.Scripts.Systems.Save
         };
 
         /// <summary>
-        /// GameSaveData → JSON文字列
+        /// UserData → JSON文字列
         /// </summary>
-        public static string Serialize(GameSaveData saveData)
+        public static string Serialize(UserData userData)
         {
-            return JsonConvert.SerializeObject(saveData ?? new GameSaveData(), Settings);
+            return JsonConvert.SerializeObject(userData ?? new UserData(), Settings);
         }
 
         /// <summary>
-        /// JSON文字列 → GameSaveData
+        /// JSON文字列 → UserData
         /// </summary>
-        public static GameSaveData Deserialize(string json)
+        public static UserData Deserialize(string json)
         {
             if (string.IsNullOrWhiteSpace(json))
-                return new GameSaveData();
+                return new UserData();
 
-            return JsonConvert.DeserializeObject<GameSaveData>(json, Settings) ?? new GameSaveData();
+            var serializer = JsonSerializer.Create(Settings);
+            var token = JToken.Parse(json);
+            if (token is not JObject obj)
+                return token.ToObject<UserData>(serializer) ?? new UserData();
+
+            if (obj.ContainsKey("Meta") || obj.ContainsKey("Profile"))
+                return obj.ToObject<UserData>(serializer) ?? new UserData();
+
+            var legacy = obj.ToObject<LegacyUserDataDocument>(serializer) ?? new LegacyUserDataDocument();
+            return ConvertLegacy(legacy);
+        }
+
+        private static UserData ConvertLegacy(LegacyUserDataDocument legacy)
+        {
+            legacy ??= new LegacyUserDataDocument();
+            legacy.Player ??= new LegacyPlayerDocument();
+
+            return new UserData
+            {
+                Meta = new UserMetaData
+                {
+                    SaveVersion = legacy.SaveVersion,
+                    CreatedAtUtc = legacy.CreatedAtUtc ?? "",
+                    UpdatedAtUtc = legacy.UpdatedAtUtc ?? ""
+                },
+                Profile = new UserProfileData
+                {
+                    Identity = new UserIdentityData
+                    {
+                        PlayerId = legacy.Player.PlayerId ?? "",
+                        PlayerName = legacy.Player.PlayerName ?? ""
+                    },
+                    Activity = new UserActivityData
+                    {
+                        LastPlayedAtUtc = legacy.Player.LastPlayedAtUtc ?? ""
+                    },
+                    Economy = new UserEconomyData
+                    {
+                        Gold = legacy.Player.Gold,
+                        Gem = legacy.Player.Gem
+                    },
+                    Progression = new UserProgressionData
+                    {
+                        Level = legacy.Player.Level,
+                        Experience = legacy.Player.Experience
+                    },
+                    Avatar = legacy.Player.AvatarAppearance ?? new AvatarAppearanceData(),
+                    BattleProfile = new UserBattleProfileData()
+                },
+                Inventory = legacy.Inventory ?? new InventoryData(),
+                BattleProgress = legacy.BattleProgress ?? new BattleProgressData()
+            };
+        }
+
+        private sealed class LegacyUserDataDocument
+        {
+            public int SaveVersion { get; set; } = 1;
+            public string CreatedAtUtc { get; set; } = "";
+            public string UpdatedAtUtc { get; set; } = "";
+            public LegacyPlayerDocument Player { get; set; } = new();
+            public InventoryData Inventory { get; set; } = new();
+            public BattleProgressData BattleProgress { get; set; } = new();
+        }
+
+        private sealed class LegacyPlayerDocument
+        {
+            public string PlayerId { get; set; } = "";
+            public string PlayerName { get; set; } = "";
+            public int Gold { get; set; } = 0;
+            public int Gem { get; set; } = 0;
+            public int Level { get; set; } = 1;
+            public int Experience { get; set; } = 0;
+            public string LastPlayedAtUtc { get; set; } = "";
+            public AvatarAppearanceData AvatarAppearance { get; set; } = new();
         }
     }
 

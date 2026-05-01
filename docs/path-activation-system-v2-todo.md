@@ -23,13 +23,19 @@
 - [x] ターン進行コントローラのデモ版を持つ
 - [x] Attack、Jump、Roll、Dance、Goal、危険の最小解決ルールを持つ
 - [x] Skill パレットのランタイム状態を持つ
+- [x] `BattleNodeType`、`BattleEnemyActionType`、`BattleSkillSlotRuntime`、`BattleTurnResolutionReport` を本番名で追加し、`BattleDemo*` 名称依存を薄くする
+- [x] `BattleBoardState` と `BattlePathDraft` を追加し、盤面状態と入力中状態を `BattleScene` から分離する
+- [x] `BattlePathRuleEvaluator` と `BattlePathTracer` を追加し、8 方向、再訪、交差、Goal 後延長を pure C# で判定する
+- [x] `BattleTurnResolver` を追加し、解決ロジックを `BattleScene` から切り出す
+- [x] `BattleBoardController`、`BattleCellView`、`BattleTraceLineView`、`BattleTraceInputHandler`、`BattleHudController` を追加し、表示層を分離する
+- [ ] `BattleDemoTurnScript` と `BattleDemoContentFactory` を回帰確認用フィクスチャへ限定し、本番ターン進行の依存先から外す
 - [ ] プリセットターンスクリプト再生ではなく、実際の 5x5 盤面とノード配置を使う
-- [ ] ドラッグによるパス入力を実装する
-- [ ] 8 方向接続判定を実装する
-- [ ] 再訪、交差、Goal 後の延長を不正パスとして弾く
-- [ ] Goal 未到達で離した場合の引き直しフローを実装する
+- [x] ドラッグによるパス入力を実装する
+- [x] 8 方向接続判定を実装する
+- [x] 再訪、交差、Goal 後の延長を不正パスとして弾く
+- [x] Goal 未到達で離した場合の引き直しフローを実装する
 - [ ] 不正パス時の引き直しフローを実装する
-- [ ] 同ターン中の引き直しで盤面と Skill 選択が維持されるようにする
+- [x] 同ターン中の引き直しで盤面と Skill 選択が維持されるようにする
 
 ## 3. P1: 解決ルールの不足分
 
@@ -55,7 +61,7 @@
 ## 5. P1: UI 接続
 
 - [x] Skill ボタンの選択ハイライトがある
-- [ ] `turnNumberText` を毎ターン更新する
+- [x] `turnNumberText` を毎ターン更新する
 - [ ] `waveNumberText` を実際の wave 概念に接続するか削除する
 - [ ] `background` にステージ背景を反映する
 - [ ] 敵名、プレイヤー HP、敵 HP を HUD に反映する

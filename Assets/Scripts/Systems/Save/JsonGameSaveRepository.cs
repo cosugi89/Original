@@ -22,10 +22,10 @@ namespace Assets.Scripts.Systems.Save
             return File.Exists(SavePath);
         }
 
-        public GameSaveData Load()
+        public UserData Load()
         {
             if (!Exists())
-                return new GameSaveData();
+                return new UserData();
 
             try
             {
@@ -35,16 +35,16 @@ namespace Assets.Scripts.Systems.Save
             catch (Exception ex)
             {
                 Debug.LogWarning($"[JsonGameSaveRepository] Failed to load save data. Path: {SavePath}\n{ex}");
-                return new GameSaveData();
+                return new UserData();
             }
         }
 
-        public void Save(GameSaveData saveData)
+        public void Save(UserData userData)
         {
             try
             {
                 Directory.CreateDirectory(SaveDirectoryPath);
-                var json = GameSaveJsonSerializer.Serialize(saveData);
+                var json = GameSaveJsonSerializer.Serialize(userData);
                 File.WriteAllText(SavePath, json);
             }
             catch (Exception ex)
