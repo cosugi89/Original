@@ -142,6 +142,26 @@ namespace Assets.Scripts.Systems.Save
             userData.Profile.BattleProfile.NormalAttackDamage = Mathf.Max(1, userData.Profile.BattleProfile.NormalAttackDamage);
             userData.Profile.BattleProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, userData.Profile.BattleProfile.DoubleAttackFollowUpDamage);
             userData.Profile.BattleProfile.JumpAttackDamage = Mathf.Max(1, userData.Profile.BattleProfile.JumpAttackDamage);
+            userData.Profile.BattleProfile.SkillSlots ??= UserBattleProfileData.CreateDefaultSkillSlots();
+
+            if (userData.Profile.BattleProfile.SkillSlots.Count == 0)
+            {
+                userData.Profile.BattleProfile.SkillSlots = UserBattleProfileData.CreateDefaultSkillSlots();
+            }
+
+            for (var i = 0; i < userData.Profile.BattleProfile.SkillSlots.Count; i++)
+            {
+                userData.Profile.BattleProfile.SkillSlots[i] ??= new UserBattleSkillSlotData();
+
+                var slot = userData.Profile.BattleProfile.SkillSlots[i];
+                slot.DisplayName ??= "Skill";
+                slot.Description ??= string.Empty;
+                slot.RequiredCharge = Mathf.Max(1, slot.RequiredCharge);
+                slot.StartingCharge = Mathf.Clamp(slot.StartingCharge, 0, slot.RequiredCharge);
+                slot.TurnChargeGain = Mathf.Max(0, slot.TurnChargeGain);
+                slot.AttackChargeGain = Mathf.Max(0, slot.AttackChargeGain);
+                slot.Damage = Mathf.Max(0, slot.Damage);
+            }
         }
     }
 }

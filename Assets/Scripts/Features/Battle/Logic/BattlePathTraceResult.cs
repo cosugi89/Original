@@ -23,16 +23,4 @@ namespace Assets.Scripts.Features.Battle.Logic
             Status == BattlePathTraceStatus.Backtracked ||
             Status == BattlePathTraceStatus.Confirmed;
     }
-
-    public enum BattlePathTraceStatus
-    {
-        None,
-        Started,
-        Appended,
-        Backtracked,
-        Ignored,
-        Invalid,
-        ReleasedWithoutGoal,
-        Confirmed,
-    }
 }

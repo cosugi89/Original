@@ -15,6 +15,7 @@ namespace Assets.Scripts.Data.DTO
         public Sprite BackgroundImage { get; init; }
         public Sprite PreviewImage { get; init; }
         public IReadOnlyList<EnemyData> Enemies { get; init; }
+        public StageBattleData Battle { get; init; } = new();
 
         /// <summary>
         /// ステージ上に登場する敵1体ぶんのデータ。

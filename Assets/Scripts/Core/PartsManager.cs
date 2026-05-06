@@ -563,6 +563,33 @@ namespace Assets.Scripts.Core
                 .ToArray();
         }
 
+        /// <summary>指定した Animation Clip が Animator Controller に存在するかを返す</summary>
+        public bool HasAnimation(string animName)
+        {
+            return FindAnimationClip(animName) != null;
+        }
+
+        /// <summary>指定した Animation Clip の再生時間を秒で返す。未検出時は 0</summary>
+        public float GetAnimationLength(string animName)
+        {
+            var clip = FindAnimationClip(animName);
+            return clip != null ? clip.length : 0f;
+        }
+
+        private AnimationClip FindAnimationClip(string animName)
+        {
+            if (string.IsNullOrWhiteSpace(animName) ||
+                animator == null ||
+                animator.runtimeAnimatorController == null)
+            {
+                return null;
+            }
+
+            return animator.runtimeAnimatorController.animationClips
+                .FirstOrDefault(clip => clip != null &&
+                                        string.Equals(clip.name, animName, StringComparison.OrdinalIgnoreCase));
+        }
+
         #endregion Animation Utilities
 
         /// <summary>

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Scripts.Features.Battle.Core;
 
 namespace Assets.Scripts.Features.Battle.Runtime
 {
@@ -9,6 +10,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
     public class BattleTurnResolutionReport
     {
         private readonly List<string> _logEntries = new();
+        private readonly List<BattlePlayerAnimationCue> _playerAnimationCues = new();
 
         public bool PathConfirmed { get; set; }
 
@@ -38,9 +40,13 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public int ResolvedDanceCount { get; set; }
 
+        public int ResolvedEnemyActionCount { get; set; }
+
         public int ResolvedNodeCount { get; set; }
 
         public IReadOnlyList<string> LogEntries => _logEntries;
+
+        public IReadOnlyList<BattlePlayerAnimationCue> PlayerAnimationCues => _playerAnimationCues;
 
         public void AddLog(string message)
         {
@@ -50,6 +56,11 @@ namespace Assets.Scripts.Features.Battle.Runtime
             }
 
             _logEntries.Add(message);
+        }
+
+        public void AddPlayerAnimationCue(BattlePlayerAnimationCue cue)
+        {
+            _playerAnimationCues.Add(cue);
         }
     }
 }

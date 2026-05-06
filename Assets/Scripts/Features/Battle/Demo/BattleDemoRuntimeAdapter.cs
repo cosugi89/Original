@@ -113,6 +113,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 DoubleAttackFollowUpDamage = doubleAttackFollowUpDamage,
                 JumpAttackDamage = jumpAttackDamage,
                 HazardDamage = turnScript != null ? turnScript.HazardDamage : 0,
+                EnemyActionDamage = turnScript != null ? turnScript.HazardDamage : 0,
                 HazardBoosted = hazardBoosted,
                 EnemyAction = turnScript != null
                     ? turnScript.EnemyAction.ToRuntime()
@@ -149,7 +150,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 doubleAttackFollowUpDamage,
                 jumpAttackDamage);
 
-            var path = layout.Board.BuildNodePath(tracer.Draft.Positions);
+            var path = layout.Board.BuildCellPath(tracer.Draft.Positions);
             var report = BattleTurnResolver.Resolve(path, context);
             report.AddLog($"Runtime path length: {tracer.Draft.Count}");
             return report;

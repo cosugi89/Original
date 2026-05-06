@@ -11,7 +11,7 @@ namespace Assets.Scripts.Features.Battle.Logic
     /// </summary>
     public static class BattleTurnResolver
     {
-        public static BattleTurnResolutionReport Resolve(IReadOnlyList<BattleNodeType> path, BattleTurnContext context)
+        public static BattleTurnResolutionReport Resolve(IReadOnlyList<BattleCellState> path, BattleTurnContext context)
         {
             if (context == null)
             {
@@ -29,18 +29,19 @@ namespace Assets.Scripts.Features.Battle.Logic
             var normalAttackDamage = Max(1, context.NormalAttackDamage);
             var doubleAttackFollowUpDamage = Max(1, context.DoubleAttackFollowUpDamage);
             var jumpAttackDamage = Max(1, context.JumpAttackDamage);
-            var hazardDamage = Max(0, context.HazardDamage);
+            var enemyActionDamage = Max(0, context.EnemyActionDamage);
             var selectedSkill = context.SelectedSkill;
 
             var jumpCanEvade = false;
             var jumpAttackPrimed = false;
             var rollCanEvade = false;
-            var hazardGroupResolved = false;
+            var resolvedHazardGroups = new HashSet<int>();
             var basicAttackCount = 0;
 
             for (var i = 0; i < path.Count; i++)
             {
-                var nodeType = path[i];
+                var cell = path[i];
+                var nodeType = cell?.NodeType ?? BattleNodeType.Empty;
                 report.ResolvedNodeCount++;
 
                 switch (nodeType)
@@ -53,6 +54,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                         jumpCanEvade = true;
                         jumpAttackPrimed = true;
                         rollCanEvade = false;
+                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Jump);
                         report.AddLog("Jump prepared.");
                         break;
 
@@ -60,6 +62,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                         jumpCanEvade = false;
                         jumpAttackPrimed = false;
                         rollCanEvade = true;
+                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Roll);
                         report.AddLog("Roll prepared.");
                         break;
 
@@ -68,6 +71,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                         jumpAttackPrimed = false;
                         rollCanEvade = false;
                         report.ResolvedDanceCount++;
+                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Dance);
                         report.AddLog("Dance resolved.");
                         break;
 
@@ -100,18 +104,19 @@ namespace Assets.Scripts.Features.Battle.Logic
                     case BattleNodeType.HazardSkill:
                     {
                         report.ResolvedHazardCount++;
+                        var hazardGroupKey = ResolveHazardGroupKey(cell, i);
 
-                        if (hazardGroupResolved)
+                        if (resolvedHazardGroups.Contains(hazardGroupKey))
                         {
-                            report.AddLog("Hazard group already resolved.");
+                            report.AddLog($"Hazard group {hazardGroupKey} already resolved.");
                             break;
                         }
 
                         if (nodeType == BattleNodeType.HazardNormal && jumpCanEvade)
                         {
                             jumpCanEvade = false;
-                            hazardGroupResolved = true;
-                            report.AddLog("Jump evaded a normal hazard.");
+                            resolvedHazardGroups.Add(hazardGroupKey);
+                            report.AddLog($"Jump evaded hazard group {hazardGroupKey}.");
                             break;
                         }
 
@@ -119,18 +124,17 @@ namespace Assets.Scripts.Features.Battle.Logic
                         {
                             rollCanEvade = false;
                             jumpAttackPrimed = false;
-                            hazardGroupResolved = true;
-                            report.AddLog("Roll evaded a hazard.");
+                            resolvedHazardGroups.Add(hazardGroupKey);
+                            report.AddLog($"Roll evaded hazard group {hazardGroupKey}.");
                             break;
                         }
 
-                        hazardGroupResolved = true;
+                        resolvedHazardGroups.Add(hazardGroupKey);
                         report.TookHit = true;
                         report.StoppedByHazardHit = true;
-                        report.PlayerDamageTaken += context.HazardBoosted
-                            ? RoundToInt(hazardDamage * 1.5f)
-                            : hazardDamage;
-                        report.AddLog("Hazard hit the player.");
+                        report.PlayerDamageTaken += ResolveHazardDamage(context, cell?.HazardGroupId ?? -1);
+                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Stun);
+                        report.AddLog($"Hazard group {hazardGroupKey} hit the player.");
 
                         if (report.PlayerDamageTaken >= currentPlayerHp)
                         {
@@ -146,13 +150,35 @@ namespace Assets.Scripts.Features.Battle.Logic
                         report.GoalReached = true;
                         report.PathConfirmed = true;
                         report.AddLog("Goal reached.");
+                        ResolvePendingEnemyActionIfNeeded(report, context.EnemyAction, enemyActionDamage, currentPlayerHp);
                         FinalizeOutcomeFlags(report, selectedSkill);
                         return report;
                 }
             }
 
+            ResolvePendingEnemyActionIfNeeded(report, context.EnemyAction, enemyActionDamage, currentPlayerHp);
             FinalizeOutcomeFlags(report, selectedSkill);
             return report;
+        }
+
+        public static BattleTurnResolutionReport Resolve(IReadOnlyList<BattleNodeType> path, BattleTurnContext context)
+        {
+            if (path == null || path.Count == 0)
+            {
+                return new BattleTurnResolutionReport();
+            }
+
+            var cells = new List<BattleCellState>(path.Count);
+            for (var i = 0; i < path.Count; i++)
+            {
+                cells.Add(new BattleCellState
+                {
+                    NodeType = path[i],
+                    HazardGroupId = -1,
+                });
+            }
+
+            return Resolve(cells, context);
         }
 
         private static int ResolveAttackDamage(
@@ -167,6 +193,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             if (selectedSkill != null)
             {
                 report.ResolvedSkillCount++;
+                report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Skill);
                 report.AddLog($"Skill resolved: {selectedSkill.DisplayName}");
                 return Max(0, selectedSkill.Damage);
             }
@@ -175,6 +202,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             {
                 basicAttackCount++;
                 jumpAttackPrimed = false;
+                report.AddPlayerAnimationCue(BattlePlayerAnimationCue.JumpAttack);
                 report.AddLog("Jump attack resolved.");
                 return jumpAttackDamage;
             }
@@ -182,10 +210,12 @@ namespace Assets.Scripts.Features.Battle.Logic
             basicAttackCount++;
             if (basicAttackCount >= 2)
             {
+                report.AddPlayerAnimationCue(BattlePlayerAnimationCue.DoubleAttack);
                 report.AddLog("Double attack follow-up resolved.");
                 return doubleAttackFollowUpDamage;
             }
 
+            report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Attack);
             report.AddLog("Normal attack resolved.");
             return normalAttackDamage;
         }
@@ -194,6 +224,83 @@ namespace Assets.Scripts.Features.Battle.Logic
         {
             report.GoalEffectTriggered = report.GoalReached && !report.TookHit && !report.PlayerDefeated;
             report.SelectedSkillConsumed = report.PathConfirmed && selectedSkill != null;
+        }
+
+        private static int ResolveHazardGroupKey(BattleCellState cell, int stepIndex)
+        {
+            if (cell != null && cell.HazardGroupId >= 0)
+            {
+                return cell.HazardGroupId;
+            }
+
+            return int.MinValue + stepIndex;
+        }
+
+        private static int ResolveHazardDamage(BattleTurnContext context, int hazardGroupId)
+        {
+            var hazardDamage = context != null ? Max(0, context.HazardDamage) : 0;
+            if (context?.HazardDamageByGroupId != null &&
+                hazardGroupId >= 0 &&
+                context.HazardDamageByGroupId.TryGetValue(hazardGroupId, out var groupDamage))
+            {
+                hazardDamage = Max(0, groupDamage);
+            }
+
+            return context != null && context.HazardBoosted
+                ? RoundToInt(hazardDamage * 1.5f)
+                : hazardDamage;
+        }
+
+        private static void ResolvePendingEnemyActionIfNeeded(
+            BattleTurnResolutionReport report,
+            BattleEnemyActionType enemyAction,
+            int enemyActionDamage,
+            int currentPlayerHp)
+        {
+            if (report == null ||
+                !report.PathConfirmed ||
+                report.EnemyDefeated ||
+                report.PlayerDefeated ||
+                report.ResolvedHazardCount > 0)
+            {
+                return;
+            }
+
+            switch (enemyAction)
+            {
+                case BattleEnemyActionType.Dance:
+                    report.AddLog("Enemy dance reserved the next turn hazard boost.");
+                    return;
+
+                case BattleEnemyActionType.Skill:
+                    if (enemyActionDamage <= 0)
+                    {
+                        return;
+                    }
+
+                    report.ResolvedEnemyActionCount++;
+                    report.PlayerDamageTaken += enemyActionDamage;
+                    report.AddLog("Enemy skill resolved.");
+                    break;
+
+                case BattleEnemyActionType.NormalAttack:
+                default:
+                    if (enemyActionDamage <= 0)
+                    {
+                        return;
+                    }
+
+                    report.ResolvedEnemyActionCount++;
+                    report.PlayerDamageTaken += enemyActionDamage;
+                    report.AddLog("Enemy normal attack resolved.");
+                    break;
+            }
+
+            if (report.PlayerDamageTaken >= currentPlayerHp)
+            {
+                report.PlayerDefeated = true;
+                report.AddLog("Player defeated.");
+            }
         }
 
         private static int Max(int left, int right)

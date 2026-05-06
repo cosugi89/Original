@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace Assets.Scripts.Systems.Save.Models
@@ -99,5 +100,93 @@ namespace Assets.Scripts.Systems.Save.Models
 
         [Description("Jump 後の Attack に適用するダメージ。")]
         public int JumpAttackDamage { get; set; } = 150;
+
+        [Description("BattleScene で使用するスキルスロット定義。ロード時にランタイムスロットへ変換する。")]
+        public List<UserBattleSkillSlotData> SkillSlots { get; set; } = CreateDefaultSkillSlots();
+
+        public static List<UserBattleSkillSlotData> CreateDefaultSkillSlots()
+        {
+            return new List<UserBattleSkillSlotData>
+            {
+                new UserBattleSkillSlotData
+                {
+                    DisplayName = "Wide Blast",
+                    Description = "広い範囲に危険を置く純粋攻撃寄り Skill。",
+                    IsUnlocked = true,
+                    IsConfigured = true,
+                    RequiredCharge = 3,
+                    StartingCharge = 3,
+                    TurnChargeGain = 1,
+                    AttackChargeGain = 1,
+                    Damage = 140,
+                },
+                new UserBattleSkillSlotData
+                {
+                    DisplayName = "Pierce Volley",
+                    Description = "単体高火力寄りの Skill。",
+                    IsUnlocked = true,
+                    IsConfigured = true,
+                    RequiredCharge = 5,
+                    StartingCharge = 2,
+                    TurnChargeGain = 1,
+                    AttackChargeGain = 1,
+                    Damage = 220,
+                },
+                new UserBattleSkillSlotData
+                {
+                    DisplayName = "Locked Slot",
+                    Description = "ゲーム進行で解放される想定のロック枠。",
+                    IsUnlocked = false,
+                    IsConfigured = false,
+                    RequiredCharge = 4,
+                    StartingCharge = 0,
+                    TurnChargeGain = 1,
+                    AttackChargeGain = 1,
+                    Damage = 0,
+                },
+                new UserBattleSkillSlotData
+                {
+                    DisplayName = "Empty Slot",
+                    Description = "武器側に Skill が未設定の枠。",
+                    IsUnlocked = true,
+                    IsConfigured = false,
+                    RequiredCharge = 4,
+                    StartingCharge = 0,
+                    TurnChargeGain = 1,
+                    AttackChargeGain = 1,
+                    Damage = 0,
+                },
+            };
+        }
+    }
+
+    public class UserBattleSkillSlotData
+    {
+        [Description("UI 表示用の名称。")]
+        public string DisplayName { get; set; } = "Skill";
+
+        [Description("スキルの説明文。")]
+        public string Description { get; set; } = string.Empty;
+
+        [Description("プレイヤーがこのスロットを解放済みかどうか。")]
+        public bool IsUnlocked { get; set; } = true;
+
+        [Description("武器側に Skill が設定済みかどうか。")]
+        public bool IsConfigured { get; set; } = true;
+
+        [Description("READY に必要なチャージ量。")]
+        public int RequiredCharge { get; set; } = 3;
+
+        [Description("バトル開始時の初期チャージ量。")]
+        public int StartingCharge { get; set; } = 0;
+
+        [Description("ターン開始時に加算されるチャージ量。")]
+        public int TurnChargeGain { get; set; } = 1;
+
+        [Description("Attack マス解決ごとに加算されるチャージ量。")]
+        public int AttackChargeGain { get; set; } = 1;
+
+        [Description("Skill 発動時に敵へ与えるダメージ。")]
+        public int Damage { get; set; } = 0;
     }
 }

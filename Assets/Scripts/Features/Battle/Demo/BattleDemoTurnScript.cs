@@ -73,66 +73,11 @@ namespace Assets.Scripts.Features.Battle.Demo
     }
 
     /// <summary>
-    /// Battle デモで使う既定の Skill / ターンスクリプトをまとめる。
     /// BattleScene からデータ定義の詳細を追い出し、責務を軽くする。
+    /// TODO: 削除
     /// </summary>
     public static class BattleDemoContentFactory
     {
-        public static List<BattleDemoSkillSlot> CreateDefaultSkillSlots()
-        {
-            return new List<BattleDemoSkillSlot>
-            {
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Wide Blast",
-                    Description = "広い範囲に危険を置く純粋攻撃寄り Skill。",
-                    IsUnlocked = true,
-                    IsConfigured = true,
-                    RequiredCharge = 3,
-                    StartingCharge = 3,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 140,
-                },
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Pierce Volley",
-                    Description = "単体高火力寄りの Skill。",
-                    IsUnlocked = true,
-                    IsConfigured = true,
-                    RequiredCharge = 5,
-                    StartingCharge = 2,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 220,
-                },
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Locked Slot",
-                    Description = "ゲーム進行で解放される想定のロック枠。",
-                    IsUnlocked = false,
-                    IsConfigured = false,
-                    RequiredCharge = 4,
-                    StartingCharge = 0,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 0,
-                },
-                new BattleDemoSkillSlot
-                {
-                    DisplayName = "Empty Slot",
-                    Description = "武器側に Skill が未設定の枠。",
-                    IsUnlocked = true,
-                    IsConfigured = false,
-                    RequiredCharge = 4,
-                    StartingCharge = 0,
-                    TurnChargeGain = 1,
-                    AttackChargeGain = 1,
-                    Damage = 0,
-                },
-            };
-        }
-
         public static List<BattleDemoTurnScript> CreateDefaultTurnScripts()
         {
             return new List<BattleDemoTurnScript>

@@ -109,6 +109,17 @@ namespace Assets.Scripts.Systems.GameData
             SaveService.MarkDirty();
         }
 
+        public void SetCurrentStage(int stageId)
+        {
+            if (stageId < 0)
+            {
+                return;
+            }
+
+            SetLastSelectedStage(stageId);
+            Session.SetCurrentStageId(stageId);
+        }
+
         public void RecordStageClear(int stageId, int score = 0, string rank = "", float clearTimeSeconds = 0f)
         {
             var progress = GetOrCreateStageProgress(stageId);
@@ -165,6 +176,16 @@ namespace Assets.Scripts.Systems.GameData
                 return firstUnlocked.StageId;
 
             return orderedDefinitions[0].StageId;
+        }
+
+        public int GetCurrentOrRecommendedStageId()
+        {
+            if (Session.CurrentStageId >= 0)
+            {
+                return Session.CurrentStageId;
+            }
+
+            return GetRecommendedStageId();
         }
 
         public int GetNextStageId(int stageId)

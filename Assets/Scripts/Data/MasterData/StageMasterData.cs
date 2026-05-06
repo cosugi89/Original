@@ -36,6 +36,10 @@ namespace Assets.Scripts.Data.MasterData
         [Tooltip("このステージに登場する敵一覧。")]
         private List<EnemyMasterData> enemies = new();
 
+        [SerializeField]
+        [Tooltip("このステージで使う戦闘盤面とターン定義。")]
+        private StageBattleMasterData battle = new();
+
         /// <summary>保存・遷移で使うステージID。</summary>
         public int StageId => stageId;
 
@@ -53,6 +57,9 @@ namespace Assets.Scripts.Data.MasterData
 
         /// <summary>敵一覧。</summary>
         public List<EnemyMasterData> Enemies => enemies;
+
+        /// <summary>戦闘盤面とターン定義。</summary>
+        public StageBattleMasterData Battle => battle ??= new StageBattleMasterData();
 
         /// <summary>
         /// ステージ上に登場する敵1体ぶんのマスタデータ。

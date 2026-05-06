@@ -21,3 +21,179 @@ MonoBehaviour:
     enemies:
     - enemyName: June
       hp: 100
+    battle:
+      board:
+        width: 5
+        height: 6
+        startX: 2
+        startY: 5
+      enemy:
+        enemyName: June
+        maxHp: 100
+      turnDefinitions:
+      - label: Opening Attack
+        enemyAction: 0
+        boardSummary: 通常危険が1グループだけ見えている基本盤面。
+        confirmText: いける
+        notes: 最小構成のターン。Attack から Goal までの基本解決を確認する。
+        enemyActionDamage: 80
+        hazardGroups: []
+        cellPlacements:
+        - x: 2
+          y: 5
+          nodeType: 0
+          hazardGroupId: -1
+        - x: 2
+          y: 4
+          nodeType: 5
+          hazardGroupId: -1
+        - x: 2
+          y: 3
+          nodeType: 8
+          hazardGroupId: -1
+      - label: Jump Evade
+        enemyAction: 0
+        boardSummary: 通常危険の先に Goal が置かれた盤面。
+        confirmText: 跳ぶ！
+        notes: Jump で通常危険を回避し、そのまま Jump Attack まで繋ぐ。
+        enemyActionDamage: 0
+        hazardGroups:
+        - groupId: 1
+          damage: 80
+        cellPlacements:
+        - x: 2
+          y: 5
+          nodeType: 0
+          hazardGroupId: -1
+        - x: 2
+          y: 4
+          nodeType: 2
+          hazardGroupId: -1
+        - x: 2
+          y: 3
+          nodeType: 1
+          hazardGroupId: -1
+        - x: 2
+          y: 2
+          nodeType: 6
+          hazardGroupId: 1
+        - x: 2
+          y: 1
+          nodeType: 5
+          hazardGroupId: -1
+        - x: 2
+          y: 0
+          nodeType: 8
+          hazardGroupId: -1
+      - label: Skill Showcase
+        enemyAction: 1
+        boardSummary: 敵 Skill による広めの危険配置。Attack を複数取りやすい配置。
+        confirmText: 決める
+        notes: 事前に Skill を選択していれば、すべての Attack が Skill に変換される。
+        enemyActionDamage: 90
+        hazardGroups: []
+        cellPlacements:
+        - x: 2
+          y: 5
+          nodeType: 0
+          hazardGroupId: -1
+        - x: 2
+          y: 4
+          nodeType: 5
+          hazardGroupId: -1
+        - x: 2
+          y: 3
+          nodeType: 1
+          hazardGroupId: -1
+        - x: 2
+          y: 2
+          nodeType: 5
+          hazardGroupId: -1
+        - x: 2
+          y: 1
+          nodeType: 8
+          hazardGroupId: -1
+      - label: Enemy Dance Turn
+        enemyAction: 2
+        boardSummary: このターンは敵が Dance を使い、次ターン危険強化を予約する。
+        confirmText: 続ける！
+        notes: Attack を踏まなくても Goal へ到達できるターン。Skill を事前選択していた場合の消費確認にも使える。
+        enemyActionDamage: 0
+        hazardGroups: []
+        cellPlacements:
+        - x: 2
+          y: 5
+          nodeType: 0
+          hazardGroupId: -1
+        - x: 2
+          y: 4
+          nodeType: 4
+          hazardGroupId: -1
+        - x: 2
+          y: 3
+          nodeType: 8
+          hazardGroupId: -1
+      - label: Roll Against Skill Hazard
+        enemyAction: 1
+        boardSummary: 前ターンの Dance により危険強化がかかった Skill 危険盤面。
+        confirmText: 危ない
+        notes: Roll で Skill 危険を回避し、その後 Attack を通して Goal へ向かう。
+        enemyActionDamage: 0
+        hazardGroups:
+        - groupId: 1
+          damage: 100
+        cellPlacements:
+        - x: 2
+          y: 5
+          nodeType: 0
+          hazardGroupId: -1
+        - x: 2
+          y: 4
+          nodeType: 3
+          hazardGroupId: -1
+        - x: 2
+          y: 3
+          nodeType: 1
+          hazardGroupId: -1
+        - x: 2
+          y: 2
+          nodeType: 7
+          hazardGroupId: 1
+        - x: 2
+          y: 1
+          nodeType: 5
+          hazardGroupId: -1
+        - x: 2
+          y: 0
+          nodeType: 8
+          hazardGroupId: -1
+      - label: Hit Stops Remaining Stack
+        enemyAction: 0
+        boardSummary: 通常危険を踏むと以降の解決が切れる確認用ターン。
+        confirmText: 危ない
+        notes: Attack の後に被弾すると、後続の Attack と Goal 効果が不発になる流れを確認する。
+        enemyActionDamage: 0
+        hazardGroups:
+        - groupId: 1
+          damage: 85
+        cellPlacements:
+        - x: 2
+          y: 5
+          nodeType: 0
+          hazardGroupId: -1
+        - x: 2
+          y: 4
+          nodeType: 5
+          hazardGroupId: -1
+        - x: 2
+          y: 3
+          nodeType: 6
+          hazardGroupId: 1
+        - x: 2
+          y: 2
+          nodeType: 5
+          hazardGroupId: -1
+        - x: 2
+          y: 1
+          nodeType: 8
+          hazardGroupId: -1

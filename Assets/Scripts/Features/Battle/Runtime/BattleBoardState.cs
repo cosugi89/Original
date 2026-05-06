@@ -112,5 +112,21 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
             return result;
         }
+
+        public List<BattleCellState> BuildCellPath(IReadOnlyList<BattleGridPosition> positions)
+        {
+            var result = new List<BattleCellState>();
+            if (positions == null)
+            {
+                return result;
+            }
+
+            for (var i = 0; i < positions.Count; i++)
+            {
+                result.Add(GetCell(positions[i]));
+            }
+
+            return result;
+        }
     }
 }
