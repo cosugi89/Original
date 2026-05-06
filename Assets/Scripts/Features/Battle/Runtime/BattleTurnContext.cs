@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Assets.Scripts.Features.Battle.Core;
 
 namespace Assets.Scripts.Features.Battle.Runtime
@@ -19,12 +18,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public int JumpAttackDamage { get; set; } = 150;
 
-        public int HazardDamage { get; set; } = 80;
-
         public int EnemyActionDamage { get; set; } = 80;
-
-        public IReadOnlyDictionary<int, int> HazardDamageByGroupId { get; set; } =
-            new Dictionary<int, int>();
 
         public bool HazardBoosted { get; set; }
 
@@ -41,11 +35,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
                 NormalAttackDamage = NormalAttackDamage,
                 DoubleAttackFollowUpDamage = DoubleAttackFollowUpDamage,
                 JumpAttackDamage = JumpAttackDamage,
-                HazardDamage = HazardDamage,
                 EnemyActionDamage = EnemyActionDamage,
-                HazardDamageByGroupId = HazardDamageByGroupId != null
-                    ? new Dictionary<int, int>(HazardDamageByGroupId)
-                    : new Dictionary<int, int>(),
                 HazardBoosted = HazardBoosted,
                 EnemyAction = EnemyAction,
                 SelectedSkill = SelectedSkill,

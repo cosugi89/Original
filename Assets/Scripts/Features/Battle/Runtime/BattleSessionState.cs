@@ -20,8 +20,6 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public int WaveNumber { get; private set; } = 1;
 
-        public int TurnScriptIndex { get; set; }
-
         public int SelectedSkillSlotIndex { get; set; } = -1;
 
         public bool BattleEnded { get; set; }
@@ -39,7 +37,6 @@ namespace Assets.Scripts.Features.Battle.Runtime
             EnemyHp = InitialEnemyHp;
             TurnNumber = 1;
             WaveNumber = 1;
-            TurnScriptIndex = 0;
             SelectedSkillSlotIndex = -1;
             BattleEnded = false;
             IsPathInputLocked = false;

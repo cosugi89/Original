@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 namespace Assets.Scripts.Data.DTO
@@ -9,21 +9,22 @@ namespace Assets.Scripts.Data.DTO
     /// </summary>
     public class StageData
     {
+        [Description("ステージID")]
         public int StageId { get; init; }
-        public string StageName { get; init; } = "";
-        public string Description { get; init; } = "";
-        public Sprite BackgroundImage { get; init; }
-        public Sprite PreviewImage { get; init; }
-        public IReadOnlyList<EnemyData> Enemies { get; init; }
-        public StageBattleData Battle { get; init; } = new();
 
-        /// <summary>
-        /// ステージ上に登場する敵1体ぶんのデータ。
-        /// </summary>
-        public class EnemyData
-        {
-            public string Name { get; init; } = "";
-            public int Hp { get; init; }
-        }
+        [Description("ステージ名")]
+        public string StageName { get; init; } = "";
+
+        [Description("ステージの説明")]
+        public string Description { get; init; } = "";
+
+        [Description("背景画像")]
+        public Sprite BackgroundImage { get; init; }
+
+        [Description("プレビュー画像")]
+        public Sprite PreviewImage { get; init; }
+
+        [Description("このステージで戦う敵")]
+        public StageBattleEnemyData Enemy { get; init; } = new();
     }
 }

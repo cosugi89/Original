@@ -5,11 +5,11 @@ using UnityEngine;
 namespace Assets.Scripts.Data.MasterData
 {
     /// <summary>
-    /// バトルデモで使用する1ステージぶんのマスタデータ。
-    /// StageMasterDatabase に並べて保持する想定で、ScriptableObject ではなく Serializable クラスとして扱う。
+    /// 1ステージぶんのマスタデータ。
+    /// StageMasterDatabase から ID 参照される ScriptableObject として扱う。
     /// </summary>
-    [Serializable]
-    public class StageMasterData
+    [CreateAssetMenu(menuName = "Original/Master Data/Stage", fileName = "StageMasterData")]
+    public class StageMasterData : ScriptableObject
     {
         [SerializeField]
         [Tooltip("ステージを一意に識別する数値ID。保存・遷移・読込のキーに使う。")]
@@ -33,12 +33,12 @@ namespace Assets.Scripts.Data.MasterData
         private Sprite previewImage;
 
         [SerializeField]
-        [Tooltip("このステージに登場する敵一覧。")]
+        [Tooltip("旧構造の敵一覧。敵参照へ移行するまでの互換 fallback。")]
         private List<EnemyMasterData> enemies = new();
 
         [SerializeField]
-        [Tooltip("このステージで使う戦闘盤面とターン定義。")]
-        private StageBattleMasterData battle = new();
+        [Tooltip("このステージが参照する敵アセット一覧。先頭が現在の主対象。")]
+        private List<StageBattleEnemyMasterData> enemyRefs = new();
 
         /// <summary>保存・遷移で使うステージID。</summary>
         public int StageId => stageId;
@@ -55,11 +55,11 @@ namespace Assets.Scripts.Data.MasterData
         /// <summary>プレビュー画像スプライト。</summary>
         public Sprite PreviewImage => previewImage;
 
-        /// <summary>敵一覧。</summary>
-        public List<EnemyMasterData> Enemies => enemies;
+        /// <summary>旧構造の敵一覧。敵参照が空のときだけ fallback に使う。</summary>
+        public List<EnemyMasterData> LegacyEnemies => enemies;
 
-        /// <summary>戦闘盤面とターン定義。</summary>
-        public StageBattleMasterData Battle => battle ??= new StageBattleMasterData();
+        /// <summary>このステージが参照する敵アセット一覧。</summary>
+        public IReadOnlyList<StageBattleEnemyMasterData> EnemyRefs => enemyRefs ??= new List<StageBattleEnemyMasterData>();
 
         /// <summary>
         /// ステージ上に登場する敵1体ぶんのマスタデータ。

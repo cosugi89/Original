@@ -1,6 +1,6 @@
 # Path-Activation System v2 仕様書
 
-- 最終更新: 2026-04-30
+- 最終更新: 2026-05-01
 - 文書状態: 現行の正本
 - 位置づけ: 本書は v1 を前提にしない。今後仕様が衝突した場合は、原則として本書を優先する。
 
@@ -477,6 +477,12 @@ Skill 選択中の扱い:
 - 背景画像
 - プレビュー画像
 - 敵一覧
+- 盤面サイズ
+- 開始マス座標
+- 戦闘用の敵定義
+- ターン定義一覧
+- ターンごとのセル配置
+- ターンごとの危険グループ定義
 
 ### 15.2 ステージ進捗データ
 
@@ -504,7 +510,7 @@ Skill 選択中の扱い:
 
 ## 16. 現状実装スナップショット
 
-この節は 2026-04-30 時点の repo 実装を示す。ここは設計理想ではなく現物基準とする。
+この節は 2026-05-01 時点の repo 実装を示す。ここは設計理想ではなく現物基準とする。
 
 ### 16.1 戦闘入口
 
@@ -516,6 +522,8 @@ Skill 選択中の扱い:
 - `MasterDataResourceLoader.TryLoadStageData(int stageId, out StageData)` で `Resources/MasterData/StageDatabase` から読む
 - `BattleStageMasterCatalog` が見つからない場合は `StageMasterDatabase` から `BattleStageData` をフォールバック生成する
 - 敵一覧の先頭 1 体だけを戦闘用の敵として採用する
+- `StageData.Battle` 配下に `Board`、`Enemy`、`TurnDefinitions` を持てるようになった
+- `BattleScene` は `StageData.Battle.TurnDefinitions` を現在ターンの正本供給源として消費する
 
 ### 16.3 現在のデモ戦闘パラメータ
 
@@ -533,7 +541,7 @@ Skill 選択中の扱い:
 
 ### 16.5 現在のデモ進行
 
-現在は実グリッド入力ではなく、ターンスクリプトを順番に再生するデモである。標準で以下の 6 パターンを持つ。
+現在は実グリッド入力ベースだが、ターン内容そのものは `StageData.Battle.TurnDefinitions` に入った固定定義を順番に再生する段階である。標準で以下の 6 パターンを持つ。
 
 - Opening Attack
 - Jump Evade
@@ -541,6 +549,8 @@ Skill 選択中の扱い:
 - Enemy Dance Turn
 - Roll Against Skill Hazard
 - Hit Stops Remaining Stack
+
+ただし `StageDatabase.asset` 側には、この 6 パターンに対応する固定ターン定義を `battle.turnDefinitions` として持たせ始めている。
 
 ただし `BattleScene` の現行 scene 上では、`Panels` 配下の既存 UI ノード群を盤面セルとして再利用する方向へ寄せている。
 

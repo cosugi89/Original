@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4e19baf74fe4d08a2d9ad935fbd1e02, type: 3}
+  m_Name: PatternDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.StageBattlePatternMasterDatabase
+  patterns:
+  - {fileID: 11400000, guid: 6b1b8b7fe6644473a35f3cb83707ca1f, type: 2}
+  - {fileID: 11400000, guid: 91f97644bb24442a934d8d4b4fe78c93, type: 2}
+  - {fileID: 11400000, guid: c9c7a8d2f191483d87b6bdf5a03c8917, type: 2}
+  - {fileID: 11400000, guid: a7eb6ad477cb4ec0a65f941e743e21c3, type: 2}
+  - {fileID: 11400000, guid: b09930c0a9e94c8596ff806aa427c78f, type: 2}
+  - {fileID: 11400000, guid: e1c1134fc0f94f9d8c00e4f6b89244d3, type: 2}

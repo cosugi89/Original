@@ -71,12 +71,12 @@ namespace Assets.Scripts.Features.Battle.Demo
         [SerializeField] private Color normalSkillButtonColor = new(1f, 1f, 1f, 1f);
         [SerializeField] private Color selectedSkillButtonColor = new(1f, 0.85f, 0.35f, 1f);
         
-        private IReadOnlyList<StageTurnData> _turnDefinitions = Array.Empty<StageTurnData>();
+        private IReadOnlyList<StageBattlePatternData> _patterns = Array.Empty<StageBattlePatternData>();
         private PartsManager _playerInstance;
         private PartsManager _enemyInstance;
         private readonly BattleSessionState _session = new();
-        private StageBattleData _activeBattleData;
-        private StageTurnData _preparedTurnDefinition;
+        private StageBattleEnemyData _activeEnemyData;
+        private StageBattlePatternData _preparedPattern;
         private BattleBoardState _preparedBoard;
         private UserBattleProfileData _activeBattleProfile;
         private bool _presentationBootstrapped;
@@ -85,6 +85,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private bool _isInitialized;
         private bool _isExecutingTurn;
+        private StageBattlePatternData _lastPreparedPattern;
 
         private void Awake()
         {
@@ -155,10 +156,10 @@ namespace Assets.Scripts.Features.Battle.Demo
                 return;
             }
 
-            var turnDefinition = PeekCurrentTurnDefinition();
-            if (turnDefinition == null)
+            var pattern = _preparedPattern;
+            if (pattern == null)
             {
-                Debug.LogWarning("[Battle] 現在ステージに有効な turnDefinition がありません。");
+                Debug.LogWarning("[Battle] 現在ステージに有効な pattern がありません。");
                 return;
             }
             _isExecutingTurn = true;
@@ -172,14 +173,14 @@ namespace Assets.Scripts.Features.Battle.Demo
 
                 if (preferInteractiveTraceInput && traceInputHandler != null)
                 {
-                    if (!TryResolveInteractiveTurn(turnDefinition, out result, out executedCellPath))
+                    if (!TryResolveInteractiveTurn(pattern, out result, out executedCellPath))
                     {
                         return;
                     }
                 }
                 else
                 {
-                    if (!TryResolveFallbackTurn(turnDefinition, out result, out executedCellPath))
+                    if (!TryResolveFallbackTurn(pattern, out result, out executedCellPath))
                     {
                         return;
                     }
@@ -187,15 +188,13 @@ namespace Assets.Scripts.Features.Battle.Demo
 
                 await PlayPlayerActionAnimationsAsync(result, _turnExecutionCts.Token);
 
-                ConsumeCurrentTurnScript();
-
-                ApplyResolutionResult(result, turnDefinition);
+                ApplyResolutionResult(result, pattern);
                 ConsumeSelectedSkillIfNeeded(result);
 
-                ApplyPostTurnEnemyState(turnDefinition);
+                ApplyPostTurnEnemyState(pattern);
                 PrepareUpcomingTurnPresentation();
                 RefreshHud();
-                LogResolutionReport(turnDefinition, result);
+                LogResolutionReport(pattern, result);
                 Debug.Log($"[Battle] Turn {_session.TurnNumber} 終了 PlayerHP={_session.PlayerHp} EnemyHP={_session.EnemyHp}");
 
                 if (_session.BattleEnded)
@@ -315,17 +314,6 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
-        private StageTurnData PeekCurrentTurnDefinition()
-        {
-            if (_turnDefinitions == null || _turnDefinitions.Count == 0)
-            {
-                return null;
-            }
-
-            var index = Mathf.Clamp(_session.TurnScriptIndex, 0, _turnDefinitions.Count - 1);
-            return _turnDefinitions[index];
-        }
-
         private bool TryResolveStageData(out StageData stageData)
         {
             stageData = null;
@@ -368,34 +356,26 @@ namespace Assets.Scripts.Features.Battle.Demo
         private void ResetRuntimeState(StageData stageData)
         {
             ResolvePlayerBattleProfile();
-            _activeBattleData = stageData.Battle ?? new StageBattleData();
-            _turnDefinitions = _activeBattleData.TurnDefinitions ?? Array.Empty<StageTurnData>();
+            _activeEnemyData = stageData.Enemy ?? new StageBattleEnemyData();
+            _patterns = _activeEnemyData.Patterns ?? Array.Empty<StageBattlePatternData>();
 
             var enemyName = string.Empty;
             var initialEnemyHp = 1;
-            if (_activeBattleData.Enemy != null &&
-                !string.IsNullOrWhiteSpace(_activeBattleData.Enemy.Name))
+            if (_activeEnemyData != null &&
+                !string.IsNullOrWhiteSpace(_activeEnemyData.Name))
             {
-                enemyName = _activeBattleData.Enemy.Name;
-                initialEnemyHp = Mathf.Max(1, _activeBattleData.Enemy.MaxHp);
-            }
-            else if (stageData.Enemies != null && stageData.Enemies.Count > 0)
-            {
-                var firstEnemy = stageData.Enemies[0];
-                if (!string.IsNullOrWhiteSpace(firstEnemy.Name))
-                {
-                    enemyName = firstEnemy.Name;
-                }
-
-                initialEnemyHp = Mathf.Max(1, firstEnemy.Hp);
+                enemyName = _activeEnemyData.Name;
+                initialEnemyHp = Mathf.Max(1, _activeEnemyData.MaxHp);
             }
 
             _session.ResetForBattle(enemyName, _activeBattleProfile.MaxHp, initialEnemyHp);
+            _preparedPattern = null;
+            _lastPreparedPattern = null;
             _isInitialized = true;
 
-            if (_turnDefinitions.Count == 0)
+            if (_patterns.Count == 0)
             {
-                Debug.LogWarning($"[Battle] stageId={stageData.StageId} に turnDefinitions がありません。");
+                Debug.LogWarning($"[Battle] stageId={stageData.StageId} に pattern がありません。");
             }
 
             foreach (var slot in skillSlots)
@@ -421,6 +401,11 @@ namespace Assets.Scripts.Features.Battle.Demo
             var avatarRender = AvatarRenderService.EnsureInitialized();
             avatarRender.SyncSessionFromRendererIfNeeded(_playerInstance, saveAfterSync: true);
             avatarRender.ApplyTo(_playerInstance);
+
+            if (_activeEnemyData?.Appearance != null)
+            {
+                _enemyInstance.ApplyAppearanceData(_activeEnemyData.Appearance);
+            }
         }
 
         private void GainTurnChargeToAllSkills()
@@ -431,18 +416,18 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
-        private void ApplyResolutionResult(BattleTurnResolutionReport result, StageTurnData turnDefinition)
+        private void ApplyResolutionResult(BattleTurnResolutionReport result, StageBattlePatternData pattern)
         {
             if (result.EnemyDamageTaken > 0)
             {
                 _session.ApplyEnemyDamage(result.EnemyDamageTaken);
-                Debug.Log($"[Battle] {GetTurnLabel(turnDefinition)} EnemyDamage={result.EnemyDamageTaken}");
+                Debug.Log($"[Battle] {GetPatternLabel(pattern)} EnemyDamage={result.EnemyDamageTaken}");
             }
 
             if (result.PlayerDamageTaken > 0)
             {
                 _session.ApplyPlayerDamage(result.PlayerDamageTaken);
-                Debug.Log($"[Battle] {GetTurnLabel(turnDefinition)} PlayerDamage={result.PlayerDamageTaken}");
+                Debug.Log($"[Battle] {GetPatternLabel(pattern)} PlayerDamage={result.PlayerDamageTaken}");
             }
 
             if (result.EnemyDefeated)
@@ -457,14 +442,14 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
-        private void ApplyPostTurnEnemyState(StageTurnData turnDefinition)
+        private void ApplyPostTurnEnemyState(StageBattlePatternData pattern)
         {
             if (_session.BattleEnded)
             {
                 return;
             }
 
-            if (turnDefinition != null && turnDefinition.EnemyAction == BattleEnemyActionType.Dance)
+            if (pattern != null && pattern.EnemyAction == BattleEnemyActionType.Dance)
             {
                 _session.ReserveNextTurnHazardBoost();
             }
@@ -497,17 +482,68 @@ namespace Assets.Scripts.Features.Battle.Demo
                 traceInputHandler?.ResetState(clearConfirmedPath: true);
                 boardController?.ClearTraceVisual();
                 traceLineView?.Clear();
-                hudController?.SetConfirmText(BuildTurnPrompt(_preparedTurnDefinition));
+                hudController?.SetConfirmText(BuildTurnPrompt(_preparedPattern));
                 return;
             }
 
-            var turnDefinition = PeekCurrentTurnDefinition();
-            _preparedTurnDefinition = turnDefinition;
-            hudController?.SetConfirmText(BuildTurnPrompt(turnDefinition));
+            if (_patterns == null || _patterns.Count == 0)
+            {
+                _preparedPattern = null;
+                _preparedBoard = null;
+                hudController?.SetConfirmText("有効な pattern がありません");
+                boardController?.ClearTraceVisual();
+                traceLineView?.Clear();
+                return;
+            }
 
-            var layout = StageBattleRuntimeAdapter.CreateBoardLayout(_activeBattleData, turnDefinition);
+            var candidateIndices = new List<int>(_patterns.Count);
+            for (var i = 0; i < _patterns.Count; i++)
+            {
+                var candidate = _patterns[i];
+                if (candidate != null)
+                {
+                    candidateIndices.Add(i);
+                }
+            }
+
+            if (candidateIndices.Count == 0)
+            {
+                _preparedPattern = null;
+                _preparedBoard = null;
+                hudController?.SetConfirmText("有効な pattern がありません");
+                boardController?.ClearTraceVisual();
+                traceLineView?.Clear();
+                return;
+            }
+
+            if (candidateIndices.Count > 1 && _lastPreparedPattern != null)
+            {
+                candidateIndices.RemoveAll(index =>
+                {
+                    var candidate = _patterns[index];
+                    return ReferenceEquals(candidate, _lastPreparedPattern);
+                });
+
+                if (candidateIndices.Count == 0)
+                {
+                    for (var i = 0; i < _patterns.Count; i++)
+                    {
+                        if (_patterns[i] != null)
+                        {
+                            candidateIndices.Add(i);
+                        }
+                    }
+                }
+            }
+
+            var selectedIndex = candidateIndices[UnityEngine.Random.Range(0, candidateIndices.Count)];
+            _preparedPattern = _patterns[selectedIndex];
+            _lastPreparedPattern = _preparedPattern;
+            hudController?.SetConfirmText(BuildTurnPrompt(_preparedPattern));
+
+            var layout = StageBattleRuntimeAdapter.CreateBoardLayout(_preparedPattern);
             _preparedBoard = layout.Board;
-            Debug.Log($"[Battle] 次ターン準備 Turn={_session.TurnNumber} Label={GetTurnLabel(turnDefinition)} Board={_preparedBoard?.Width}x{_preparedBoard?.Height} Start={_preparedBoard?.StartPosition} Goals={FormatPath(_preparedBoard?.GetGoalPositions())}");
+            Debug.Log($"[Battle] 次ターン準備 Turn={_session.TurnNumber} Pattern={GetPatternLabel(_preparedPattern)} Action={_preparedPattern.EnemyAction} Board={_preparedBoard?.Width}x{_preparedBoard?.Height} Start={_preparedBoard?.StartPosition} Goals={FormatPath(_preparedBoard?.GetGoalPositions())}");
 
             if (boardController != null)
             {
@@ -526,11 +562,11 @@ namespace Assets.Scripts.Features.Battle.Demo
                 traceLineView?.Clear();
             }
 
-            BeginAwaitNodePathInput(turnDefinition);
+            BeginAwaitNodePathInput(_preparedPattern);
         }
 
         private bool TryResolveInteractiveTurn(
-            StageTurnData turnDefinition,
+            StageBattlePatternData pattern,
             out BattleTurnResolutionReport result,
             out IReadOnlyList<BattleCellState> executedCellPath)
         {
@@ -539,11 +575,11 @@ namespace Assets.Scripts.Features.Battle.Demo
             if (!preferInteractiveTraceInput ||
                 traceInputHandler == null ||
                 _preparedBoard == null ||
-                !ReferenceEquals(turnDefinition, _preparedTurnDefinition) ||
+                !ReferenceEquals(pattern, _preparedPattern) ||
                 !traceInputHandler.HasConfirmedPath)
             {
-                hudController?.SetConfirmText(BuildTurnPrompt(turnDefinition));
-                Debug.LogWarning($"[Battle] ExecuteTurn を保留 Interactive={preferInteractiveTraceInput} TraceHandler={(traceInputHandler != null)} BoardReady={(_preparedBoard != null)} TurnMatched={ReferenceEquals(turnDefinition, _preparedTurnDefinition)} HasConfirmedPath={traceInputHandler != null && traceInputHandler.HasConfirmedPath}");
+                hudController?.SetConfirmText(BuildTurnPrompt(pattern));
+                Debug.LogWarning($"[Battle] ExecuteTurn を保留 Interactive={preferInteractiveTraceInput} TraceHandler={(traceInputHandler != null)} BoardReady={(_preparedBoard != null)} PatternMatched={ReferenceEquals(pattern, _preparedPattern)} HasConfirmedPath={traceInputHandler != null && traceInputHandler.HasConfirmedPath}");
                 return false;
             }
 
@@ -553,7 +589,8 @@ namespace Assets.Scripts.Features.Battle.Demo
             _session.IsPathInputLocked = true;
 
             var context = StageBattleRuntimeAdapter.CreateTurnContext(
-                turnDefinition,
+                pattern,
+                _activeEnemyData != null ? _activeEnemyData.Damage : 0,
                 hazardBoosted,
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
@@ -572,18 +609,18 @@ namespace Assets.Scripts.Features.Battle.Demo
         }
 
         private bool TryResolveFallbackTurn(
-            StageTurnData turnDefinition,
+            StageBattlePatternData pattern,
             out BattleTurnResolutionReport result,
             out IReadOnlyList<BattleCellState> executedCellPath)
         {
             result = null;
             executedCellPath = null;
 
-            var layout = StageBattleRuntimeAdapter.CreateBoardLayout(_activeBattleData, turnDefinition);
+            var layout = StageBattleRuntimeAdapter.CreateBoardLayout(pattern);
             var tracePositions = layout.FallbackTracePositions;
             if (layout.Board == null || tracePositions == null || tracePositions.Count == 0)
             {
-                Debug.LogWarning($"[Battle] Fallback turn path を構築できませんでした Label={GetTurnLabel(turnDefinition)}");
+                Debug.LogWarning($"[Battle] Fallback turn path を構築できませんでした Pattern={GetPatternLabel(pattern)}");
                 return false;
             }
 
@@ -593,7 +630,8 @@ namespace Assets.Scripts.Features.Battle.Demo
             _session.IsPathInputLocked = true;
 
             var context = StageBattleRuntimeAdapter.CreateTurnContext(
-                turnDefinition,
+                pattern,
+                _activeEnemyData != null ? _activeEnemyData.Damage : 0,
                 hazardBoosted,
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
@@ -671,17 +709,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             Debug.Log($"[Battle] Presentation bootstrap 完了 BoardController={(boardController != null)} TraceInputHandler={(traceInputHandler != null)} HudController={(hudController != null)} Interactive={preferInteractiveTraceInput}");
         }
 
-        private void ConsumeCurrentTurnScript()
-        {
-            var lastIndex = _turnDefinitions != null && _turnDefinitions.Count > 0
-                ? _turnDefinitions.Count - 1
-                : 0;
-            _session.TurnScriptIndex = Mathf.Min(_session.TurnScriptIndex + 1, lastIndex);
-        }
-
         private void OnTraceUpdated(BattlePathTraceResult result)
         {
-            if (_preparedTurnDefinition == null)
+            if (_preparedPattern == null)
             {
                 return;
             }
@@ -716,7 +746,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 return;
             }
 
-            hudController.SetConfirmText(BuildTurnPrompt(_preparedTurnDefinition));
+            hudController.SetConfirmText(BuildTurnPrompt(_preparedPattern));
         }
 
         private void OnTraceRejected(BattlePathTraceResult result)
@@ -739,7 +769,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void OnPathConfirmed(IReadOnlyList<Assets.Scripts.Features.Battle.Core.BattleGridPosition> _)
         {
-            if (_preparedTurnDefinition == null)
+            if (_preparedPattern == null)
             {
                 return;
             }
@@ -764,7 +794,7 @@ namespace Assets.Scripts.Features.Battle.Demo
             RefreshSkillButtonVisuals();
         }
 
-        private void BeginAwaitNodePathInput(StageTurnData turnDefinition)
+        private void BeginAwaitNodePathInput(StageBattlePatternData pattern)
         {
             CancelAwaitNodePathInput();
 
@@ -777,8 +807,8 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
 
             _awaitNodePathCts = new CancellationTokenSource();
-            AwaitNodePathInputAsync(turnDefinition, _awaitNodePathCts.Token).Forget();
-            Debug.Log($"[Battle] UniTask で path 入力待機を開始します Turn={_session.TurnNumber} Label={GetTurnLabel(turnDefinition)}");
+            AwaitNodePathInputAsync(pattern, _awaitNodePathCts.Token).Forget();
+            Debug.Log($"[Battle] UniTask で path 入力待機を開始します Turn={_session.TurnNumber} Pattern={GetPatternLabel(pattern)}");
         }
 
         private void CancelAwaitNodePathInput()
@@ -805,7 +835,7 @@ namespace Assets.Scripts.Features.Battle.Demo
             _turnExecutionCts = null;
         }
 
-        private async UniTaskVoid AwaitNodePathInputAsync(StageTurnData turnDefinition, CancellationToken cancellationToken)
+        private async UniTaskVoid AwaitNodePathInputAsync(StageBattlePatternData pattern, CancellationToken cancellationToken)
         {
             try
             {
@@ -818,7 +848,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                     _session.IsPathInputLocked ||
                     traceInputHandler == null ||
                     !traceInputHandler.HasConfirmedPath ||
-                    !ReferenceEquals(turnDefinition, _preparedTurnDefinition))
+                    !ReferenceEquals(pattern, _preparedPattern))
                 {
                     return;
                 }
@@ -834,21 +864,21 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void UpdateInteractiveTurnPreview()
         {
-            if (!preferInteractiveTraceInput || hudController == null || _preparedTurnDefinition == null)
+            if (!preferInteractiveTraceInput || hudController == null || _preparedPattern == null)
             {
                 return;
             }
 
             if (traceInputHandler == null || _preparedBoard == null)
             {
-                hudController.SetConfirmText(BuildTurnPrompt(_preparedTurnDefinition));
+                hudController.SetConfirmText(BuildTurnPrompt(_preparedPattern));
                 return;
             }
 
             var pathPositions = traceInputHandler.CurrentTracePath;
             if (pathPositions == null || pathPositions.Count == 0)
             {
-                hudController.SetConfirmText(BuildTurnPrompt(_preparedTurnDefinition));
+                hudController.SetConfirmText(BuildTurnPrompt(_preparedPattern));
                 return;
             }
 
@@ -889,14 +919,15 @@ namespace Assets.Scripts.Features.Battle.Demo
 
             preview = BattleTurnResolver.Resolve(
                 _preparedBoard.BuildCellPath(positions),
-                CreateCurrentTurnContext(_preparedTurnDefinition, _session.NextTurnHazardBoosted));
+                CreateCurrentTurnContext(_preparedPattern, _session.NextTurnHazardBoosted));
             return true;
         }
 
-        private BattleTurnContext CreateCurrentTurnContext(StageTurnData turnDefinition, bool hazardBoosted)
+        private BattleTurnContext CreateCurrentTurnContext(StageBattlePatternData pattern, bool hazardBoosted)
         {
             return StageBattleRuntimeAdapter.CreateTurnContext(
-                turnDefinition,
+                pattern,
+                _activeEnemyData != null ? _activeEnemyData.Damage : 0,
                 hazardBoosted,
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
@@ -906,7 +937,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 _activeBattleProfile.JumpAttackDamage);
         }
 
-        private string BuildTurnPrompt(StageTurnData turnDefinition)
+        private string BuildTurnPrompt(StageBattlePatternData pattern)
         {
             if (_session.BattleEnded)
             {
@@ -915,12 +946,12 @@ namespace Assets.Scripts.Features.Battle.Demo
 
             if (!preferInteractiveTraceInput)
             {
-                return turnDefinition != null ? turnDefinition.ConfirmText : string.Empty;
+                return pattern != null ? pattern.ConfirmText : string.Empty;
             }
 
-            if (turnDefinition != null && !string.IsNullOrWhiteSpace(turnDefinition.BoardSummary))
+            if (pattern != null && !string.IsNullOrWhiteSpace(pattern.Description))
             {
-                return $"{turnDefinition.BoardSummary} Start から Goal まで引いてください";
+                return $"{pattern.Description} Start から Goal まで引いてください";
             }
 
             return "Start から Goal まで引いてください";
@@ -930,7 +961,7 @@ namespace Assets.Scripts.Features.Battle.Demo
         {
             if (preview == null)
             {
-                return _preparedTurnDefinition != null ? _preparedTurnDefinition.ConfirmText : string.Empty;
+                return _preparedPattern != null ? _preparedPattern.ConfirmText : string.Empty;
             }
 
             var parts = new List<string>();
@@ -972,7 +1003,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
             if (parts.Count == 0)
             {
-                return _preparedTurnDefinition != null ? _preparedTurnDefinition.ConfirmText : "実行可能";
+                return _preparedPattern != null ? _preparedPattern.ConfirmText : "実行可能";
             }
 
             return string.Join(" / ", parts);
@@ -1082,7 +1113,7 @@ namespace Assets.Scripts.Features.Battle.Demo
             return clone;
         }
 
-        private void LogResolutionReport(StageTurnData turnDefinition, BattleTurnResolutionReport result)
+        private void LogResolutionReport(StageBattlePatternData pattern, BattleTurnResolutionReport result)
         {
             if (result == null || result.LogEntries.Count == 0)
             {
@@ -1091,18 +1122,18 @@ namespace Assets.Scripts.Features.Battle.Demo
 
             for (var i = 0; i < result.LogEntries.Count; i++)
             {
-                Debug.Log($"[Battle] {GetTurnLabel(turnDefinition)} {result.LogEntries[i]}");
+                Debug.Log($"[Battle] {GetPatternLabel(pattern)} {result.LogEntries[i]}");
             }
         }
 
-        private static string GetTurnLabel(StageTurnData turnDefinition)
+        private static string GetPatternLabel(StageBattlePatternData pattern)
         {
-            if (turnDefinition == null || string.IsNullOrWhiteSpace(turnDefinition.DebugLabel))
+            if (pattern == null || string.IsNullOrWhiteSpace(pattern.DebugLabel))
             {
-                return "Turn";
+                return "Pattern";
             }
 
-            return turnDefinition.DebugLabel;
+            return pattern.DebugLabel;
         }
 
         private async UniTask PlayPlayerActionAnimationsAsync(

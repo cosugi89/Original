@@ -1,6 +1,6 @@
 # Path-Activation System v2 TODO
 
-- 最終更新: 2026-04-30
+- 最終更新: 2026-05-01
 - 参照元: `docs/path-activation-system-v2-spec.md`
 - 方針: 仕様の理想と現在のコード差分を埋めるための実装 TODO を優先順で並べる
 
@@ -29,6 +29,8 @@
 - [x] `BattleTurnResolver` を追加し、解決ロジックを `BattleScene` から切り出す
 - [x] `BattleBoardController`、`BattleCellView`、`BattleTraceLineView`、`BattleTraceInputHandler`、`BattleHudController` を追加し、表示層を分離する
 - [ ] `BattleDemoTurnScript` と `BattleDemoContentFactory` を回帰確認用フィクスチャへ限定し、本番ターン進行の依存先から外す
+- [x] `StageData` / `StageMasterData` に `Battle` 配下の `Board`、`Enemy`、`TurnDefinitions`、`HazardGroups`、`CellPlacements` を追加する
+- [x] `BattleScene` のターン供給元を `BattleDemoTurnScript` から `StageData.Battle.TurnDefinitions` へ差し替える
 - [ ] プリセットターンスクリプト再生ではなく、実際の 5x5 盤面とノード配置を使う
 - [x] ドラッグによるパス入力を実装する
 - [x] 8 方向接続判定を実装する
@@ -44,8 +46,8 @@
 - [ ] 実際に解決された Attack 回数に応じて `AttackChargeGain` を反映する
 - [ ] Goal 到達後にのみ Skill 消費する現仕様を UI とログに明示する
 - [ ] Goal に到達せず Attack も踏まなかった場合の Skill 不消費を仕様どおり担保する
-- [ ] 危険の「攻撃グループ識別子」を実データとして導入する
-- [ ] 複数危険マスが同一グループでも被弾 1 回だけになる処理をデータ主導にする
+- [x] 危険の「攻撃グループ識別子」を実データとして導入する
+- [x] 複数危険マスが同一グループでも被弾 1 回だけになる処理をデータ主導にする
 - [ ] 被弾後に後続スタック破棄と Goal 不発を明示的に演出へ接続する
 
 ## 4. P1: 敵行動と盤面生成

@@ -7,7 +7,7 @@ using Assets.Scripts.Features.Battle.Runtime;
 namespace Assets.Scripts.Features.Battle.Logic
 {
     /// <summary>
-    /// StageData.Battle の定義を戦闘コアで扱う盤面と解決コンテキストへ変換する。
+    /// StageData.Enemy.Patterns の定義を戦闘コアで扱う盤面と解決コンテキストへ変換する。
     /// BattleScene の本番経路から BattleDemoTurnScript 依存を外すための橋渡し。
     /// </summary>
     public static class StageBattleRuntimeAdapter
@@ -25,11 +25,11 @@ namespace Assets.Scripts.Features.Battle.Logic
             public IReadOnlyList<BattleGridPosition> FallbackTracePositions { get; }
         }
 
-        public static Layout CreateBoardLayout(StageBattleData battleData, StageTurnData turnData)
+        public static Layout CreateBoardLayout(StageBattlePatternData patternData)
         {
-            var width = Math.Max(1, battleData?.Board?.Width ?? 5);
-            var height = Math.Max(1, battleData?.Board?.Height ?? 6);
-            var startPosition = ResolveStartPosition(battleData, width, height);
+            var width = Math.Max(1, patternData?.Board?.Width ?? 5);
+            var height = Math.Max(1, patternData?.Board?.Height ?? 6);
+            var startPosition = ResolveStartPosition(patternData, width, height);
 
             var board = new BattleBoardState(width, height);
             FillEmptyBoard(board);
@@ -41,7 +41,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             });
 
             var explicitPositions = new HashSet<BattleGridPosition> { startPosition };
-            var placements = turnData?.CellPlacements;
+            var placements = patternData?.CellPlacements;
             if (placements != null)
             {
                 for (var i = 0; i < placements.Count; i++)
@@ -68,17 +68,19 @@ namespace Assets.Scripts.Features.Battle.Logic
                     {
                         Position = position,
                         NodeType = nodeType,
-                        HazardGroupId = placement.HazardGroupId,
+                        HazardGroupId = -1,
                     });
                     explicitPositions.Add(position);
                 }
             }
 
+            AssignConnectedHazardGroups(board);
             return new Layout(board, BuildFallbackTracePositions(board, explicitPositions));
         }
 
         public static BattleTurnContext CreateTurnContext(
-            StageTurnData turnData,
+            StageBattlePatternData patternData,
+            int enemyDamage,
             bool hazardBoosted,
             BattleSkillSlotRuntime selectedSkill,
             int currentEnemyHp,
@@ -94,18 +96,15 @@ namespace Assets.Scripts.Features.Battle.Logic
                 NormalAttackDamage = normalAttackDamage,
                 DoubleAttackFollowUpDamage = doubleAttackFollowUpDamage,
                 JumpAttackDamage = jumpAttackDamage,
-                HazardDamage = ResolvePrimaryHazardDamage(turnData),
-                EnemyActionDamage = Math.Max(0, turnData?.EnemyActionDamage ?? 0),
-                HazardDamageByGroupId = BuildHazardDamageLookup(turnData),
+                EnemyActionDamage = ResolveEnemyActionDamage(patternData, enemyDamage),
                 HazardBoosted = hazardBoosted,
-                EnemyAction = turnData?.EnemyAction ?? BattleEnemyActionType.NormalAttack,
+                EnemyAction = patternData?.EnemyAction ?? BattleEnemyActionType.NormalAttack,
                 SelectedSkill = selectedSkill,
             };
         }
 
         public static BattleTurnResolutionReport ResolveWithRuntime(
-            StageBattleData battleData,
-            StageTurnData turnData,
+            StageBattlePatternData patternData,
             bool hazardBoosted,
             BattleSkillSlotRuntime selectedSkill,
             int currentEnemyHp,
@@ -114,7 +113,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             int doubleAttackFollowUpDamage,
             int jumpAttackDamage)
         {
-            var layout = CreateBoardLayout(battleData, turnData);
+            var layout = CreateBoardLayout(patternData);
             var tracer = new BattlePathTracer(layout.Board);
             var traceResult = TraceFallbackPath(tracer, layout.FallbackTracePositions);
             if (traceResult != null)
@@ -123,7 +122,8 @@ namespace Assets.Scripts.Features.Battle.Logic
             }
 
             var context = CreateTurnContext(
-                turnData,
+                patternData,
+                enemyDamage: 80,
                 hazardBoosted,
                 selectedSkill,
                 currentEnemyHp,
@@ -138,9 +138,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return report;
         }
 
-        private static BattleGridPosition ResolveStartPosition(StageBattleData battleData, int width, int height)
+        private static BattleGridPosition ResolveStartPosition(StageBattlePatternData patternData, int width, int height)
         {
-            var start = battleData?.Board?.StartPosition;
+            var start = patternData?.Board?.StartPosition;
             var x = start != null ? Clamp(start.X, 0, width - 1) : width / 2;
             var y = start != null ? Clamp(start.Y, 0, height - 1) : height - 1;
             return new BattleGridPosition(x, y);
@@ -219,6 +219,76 @@ namespace Assets.Scripts.Features.Battle.Logic
             }
         }
 
+        private static void AssignConnectedHazardGroups(BattleBoardState board)
+        {
+            if (board == null)
+            {
+                return;
+            }
+
+            var visited = new HashSet<BattleGridPosition>();
+            var nextGroupId = 0;
+
+            foreach (var cell in board.Cells)
+            {
+                if (cell == null)
+                {
+                    continue;
+                }
+
+                if (!cell.IsHazard)
+                {
+                    cell.HazardGroupId = -1;
+                    continue;
+                }
+
+                if (visited.Contains(cell.Position))
+                {
+                    continue;
+                }
+
+                var queue = new Queue<BattleGridPosition>();
+                queue.Enqueue(cell.Position);
+                visited.Add(cell.Position);
+
+                while (queue.Count > 0)
+                {
+                    var current = queue.Dequeue();
+                    if (!board.TryGetCell(current, out var currentCell) || !currentCell.IsHazard)
+                    {
+                        continue;
+                    }
+
+                    currentCell.HazardGroupId = nextGroupId;
+
+                    var orthogonalNeighbors = new[]
+                    {
+                        new BattleGridPosition(current.X + 1, current.Y),
+                        new BattleGridPosition(current.X - 1, current.Y),
+                        new BattleGridPosition(current.X, current.Y + 1),
+                        new BattleGridPosition(current.X, current.Y - 1),
+                    };
+
+                    for (var i = 0; i < orthogonalNeighbors.Length; i++)
+                    {
+                        var neighbor = orthogonalNeighbors[i];
+                        if (!board.IsInside(neighbor) ||
+                            visited.Contains(neighbor) ||
+                            !board.TryGetCell(neighbor, out var neighborCell) ||
+                            !neighborCell.IsHazard)
+                        {
+                            continue;
+                        }
+
+                        visited.Add(neighbor);
+                        queue.Enqueue(neighbor);
+                    }
+                }
+
+                nextGroupId++;
+            }
+        }
+
         private static IReadOnlyList<BattleGridPosition> ReconstructPath(
             BattleGridPosition start,
             BattleGridPosition goal,
@@ -271,47 +341,15 @@ namespace Assets.Scripts.Features.Battle.Logic
             return report;
         }
 
-        private static int ResolvePrimaryHazardDamage(StageTurnData turnData)
+        private static int ResolveEnemyActionDamage(StageBattlePatternData patternData, int enemyDamage)
         {
-            var hazardGroups = turnData?.HazardGroups;
-            if (hazardGroups == null)
+            if (enemyDamage <= 0)
             {
                 return 0;
             }
 
-            for (var i = 0; i < hazardGroups.Count; i++)
-            {
-                var group = hazardGroups[i];
-                if (group != null)
-                {
-                    return Math.Max(0, group.Damage);
-                }
-            }
-
-            return 0;
-        }
-
-        private static IReadOnlyDictionary<int, int> BuildHazardDamageLookup(StageTurnData turnData)
-        {
-            var result = new Dictionary<int, int>();
-            var hazardGroups = turnData?.HazardGroups;
-            if (hazardGroups == null)
-            {
-                return result;
-            }
-
-            for (var i = 0; i < hazardGroups.Count; i++)
-            {
-                var group = hazardGroups[i];
-                if (group == null)
-                {
-                    continue;
-                }
-
-                result[group.GroupId] = Math.Max(0, group.Damage);
-            }
-
-            return result;
+            var multiplier = patternData != null ? Math.Max(0f, patternData.EnemyActionDamageMultiplier) : 0f;
+            return RoundToInt(enemyDamage * multiplier);
         }
 
         private static int Clamp(int value, int min, int max)
@@ -327,6 +365,11 @@ namespace Assets.Scripts.Features.Battle.Logic
             }
 
             return value;
+        }
+
+        private static int RoundToInt(float value)
+        {
+            return (int)MathF.Round(value, MidpointRounding.AwayFromZero);
         }
     }
 }

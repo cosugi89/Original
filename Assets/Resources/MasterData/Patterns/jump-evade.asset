@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87994763178f4ae9b909adfd0e6beff6, type: 3}
+  m_Name: jump-evade
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.StageBattlePatternMasterData
+  patternId: 1002
+  label: Jump Evade
+  description: "\u901A\u5E38\u5371\u967A\u306E\u5148\u306B Goal \u304C\u7F6E\u304B\u308C\u305F\u76E4\u9762\u3002"
+  enemyAction: 0
+  confirmText: "\u8DF3\u3076\uFF01"
+  damageMultiplier: 100
+  board:
+    width: 5
+    height: 6
+    startX: 2
+    startY: 5
+  cellPlacements:
+  - x: 2
+    y: 0
+    nodeType: 8
+  - x: 2
+    y: 1
+    nodeType: 5
+  - x: 2
+    y: 2
+    nodeType: 6
+  - x: 2
+    y: 4
+    nodeType: 2

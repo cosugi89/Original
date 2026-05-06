@@ -112,7 +112,6 @@ namespace Assets.Scripts.Features.Battle.Demo
                 NormalAttackDamage = normalAttackDamage,
                 DoubleAttackFollowUpDamage = doubleAttackFollowUpDamage,
                 JumpAttackDamage = jumpAttackDamage,
-                HazardDamage = turnScript != null ? turnScript.HazardDamage : 0,
                 EnemyActionDamage = turnScript != null ? turnScript.HazardDamage : 0,
                 HazardBoosted = hazardBoosted,
                 EnemyAction = turnScript != null

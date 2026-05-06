@@ -132,7 +132,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                         resolvedHazardGroups.Add(hazardGroupKey);
                         report.TookHit = true;
                         report.StoppedByHazardHit = true;
-                        report.PlayerDamageTaken += ResolveHazardDamage(context, cell?.HazardGroupId ?? -1);
+                        report.PlayerDamageTaken += ResolveHazardDamage(context);
                         report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Stun);
                         report.AddLog($"Hazard group {hazardGroupKey} hit the player.");
 
@@ -236,15 +236,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return int.MinValue + stepIndex;
         }
 
-        private static int ResolveHazardDamage(BattleTurnContext context, int hazardGroupId)
+        private static int ResolveHazardDamage(BattleTurnContext context)
         {
-            var hazardDamage = context != null ? Max(0, context.HazardDamage) : 0;
-            if (context?.HazardDamageByGroupId != null &&
-                hazardGroupId >= 0 &&
-                context.HazardDamageByGroupId.TryGetValue(hazardGroupId, out var groupDamage))
-            {
-                hazardDamage = Max(0, groupDamage);
-            }
+            var hazardDamage = context != null ? Max(0, context.EnemyActionDamage) : 0;
 
             return context != null && context.HazardBoosted
                 ? RoundToInt(hazardDamage * 1.5f)

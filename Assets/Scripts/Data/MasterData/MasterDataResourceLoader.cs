@@ -74,11 +74,11 @@ namespace Assets.Scripts.Data.MasterData
         public static bool TryLoadStageData(int stageId, out StageData stageData)
         {
             stageData = null;
-            var database = LoadStageMasterDatabase();
-            if (database == null)
+            var stageDatabase = LoadStageMasterDatabase();
+            if (stageDatabase == null)
                 return false;
 
-            if (!database.TryGetById(stageId, out var master))
+            if (!stageDatabase.TryGetById(stageId, out var master))
                 return false;
 
             stageData = new StageData
@@ -88,8 +88,7 @@ namespace Assets.Scripts.Data.MasterData
                 Description = master.Description,
                 BackgroundImage = master.BackgroundImage,
                 PreviewImage = master.PreviewImage,
-                Enemies = BuildEnemyData(master),
-                Battle = BuildBattleData(master),
+                Enemy = BuildBattleEnemyData(master),
             };
             return true;
         }
@@ -157,58 +156,13 @@ namespace Assets.Scripts.Data.MasterData
                 .ToArray();
         }
 
-        private static IReadOnlyList<StageData.EnemyData> BuildEnemyData(StageMasterData master)
+        private static StageBattleBoardData BuildBattleBoardData(StageBattlePatternMasterData patternMaster)
         {
-            var enemyData = (master.Enemies ?? new List<StageMasterData.EnemyMasterData>())
-                .Where(e => e != null)
-                .Select(e => new StageData.EnemyData
-                {
-                    Name = e.Name,
-                    Hp = Mathf.Max(1, e.Hp),
-                })
-                .ToArray();
-
-            if (enemyData.Length > 0)
-            {
-                return enemyData;
-            }
-
-            var battleEnemy = master.Battle?.Enemy;
-            if (battleEnemy == null || string.IsNullOrWhiteSpace(battleEnemy.Name))
-            {
-                return Array.Empty<StageData.EnemyData>();
-            }
-
-            return new[]
-            {
-                new StageData.EnemyData
-                {
-                    Name = battleEnemy.Name,
-                    Hp = Mathf.Max(1, battleEnemy.MaxHp),
-                },
-            };
-        }
-
-        private static StageBattleData BuildBattleData(StageMasterData master)
-        {
-            var board = BuildBattleBoardData(master.Battle?.Board);
-            var legacyEnemies = BuildEnemyData(master);
-            var battleEnemy = BuildBattleEnemyData(master.Battle?.Enemy, legacyEnemies);
-
-            return new StageBattleData
-            {
-                Board = board,
-                Enemy = battleEnemy,
-                TurnDefinitions = BuildTurnDefinitions(master.Battle),
-            };
-        }
-
-        private static StageBattleBoardData BuildBattleBoardData(StageBattleBoardMasterData boardMaster)
-        {
-            var width = boardMaster != null && boardMaster.Width > 0 ? boardMaster.Width : 5;
-            var height = boardMaster != null && boardMaster.Height > 0 ? boardMaster.Height : 6;
-            var startX = boardMaster != null ? Mathf.Clamp(boardMaster.StartX, 0, width - 1) : width / 2;
-            var startY = boardMaster != null ? Mathf.Clamp(boardMaster.StartY, 0, height - 1) : height - 1;
+            var board = patternMaster?.Board;
+            var width = board != null && board.Width > 0 ? board.Width : 5;
+            var height = board != null && board.Height > 0 ? board.Height : 6;
+            var startX = board != null ? Mathf.Clamp(board.StartX, 0, width - 1) : width / 2;
+            var startY = board != null ? Mathf.Clamp(board.StartY, 0, height - 1) : height - 1;
 
             return new StageBattleBoardData
             {
@@ -222,69 +176,76 @@ namespace Assets.Scripts.Data.MasterData
             };
         }
 
-        private static StageBattleEnemyData BuildBattleEnemyData(
-            StageBattleEnemyMasterData battleEnemyMaster,
-            IReadOnlyList<StageData.EnemyData> legacyEnemies)
+        private static StageBattleEnemyData BuildBattleEnemyData(StageMasterData master)
         {
-            var fallbackEnemy = legacyEnemies != null && legacyEnemies.Count > 0 ? legacyEnemies[0] : null;
-            var fallbackName = fallbackEnemy?.Name ?? string.Empty;
-            var fallbackHp = fallbackEnemy != null ? Mathf.Max(1, fallbackEnemy.Hp) : 1;
+            var legacyEnemy = master?.LegacyEnemies != null && master.LegacyEnemies.Count > 0
+                ? master.LegacyEnemies.FirstOrDefault(enemy => enemy != null)
+                : null;
+            var fallbackName = legacyEnemy?.Name ?? string.Empty;
+            var fallbackHp = legacyEnemy != null ? Mathf.Max(1, legacyEnemy.Hp) : 1;
+            var enemyRefs = master?.EnemyRefs;
 
-            if (battleEnemyMaster == null)
+            if (enemyRefs != null)
             {
-                return new StageBattleEnemyData
+                for (var i = 0; i < enemyRefs.Count; i++)
                 {
-                    Name = fallbackName,
-                    MaxHp = fallbackHp,
-                };
+                    var enemyMaster = enemyRefs[i];
+                    if (enemyMaster == null)
+                    {
+                        continue;
+                    }
+
+                    return new StageBattleEnemyData
+                    {
+                        Name = !string.IsNullOrWhiteSpace(enemyMaster.Name) ? enemyMaster.Name : fallbackName,
+                        MaxHp = enemyMaster.MaxHp > 0 ? enemyMaster.MaxHp : fallbackHp,
+                        Damage = Mathf.Max(0, enemyMaster.Damage),
+                        Appearance = CloneAppearanceData(enemyMaster.Appearance),
+                        Patterns = BuildPatterns(enemyMaster),
+                    };
+                }
             }
 
             return new StageBattleEnemyData
             {
-                Name = !string.IsNullOrWhiteSpace(battleEnemyMaster.Name) ? battleEnemyMaster.Name : fallbackName,
-                MaxHp = battleEnemyMaster.MaxHp > 0 ? battleEnemyMaster.MaxHp : fallbackHp,
+                Name = fallbackName,
+                MaxHp = fallbackHp,
+                Damage = 80,
+                Appearance = new AppearanceData(),
+                Patterns = Array.Empty<StageBattlePatternData>(),
             };
         }
 
-        private static IReadOnlyList<StageTurnData> BuildTurnDefinitions(StageBattleMasterData battleMaster)
+        private static IReadOnlyList<StageBattlePatternData> BuildPatterns(StageBattleEnemyMasterData enemyMaster)
         {
-            if (battleMaster == null || battleMaster.TurnDefinitions == null)
+            var patternRefs = enemyMaster?.Patterns;
+            if (patternRefs == null || patternRefs.Count == 0)
             {
-                return Array.Empty<StageTurnData>();
+                return Array.Empty<StageBattlePatternData>();
             }
 
-            return battleMaster.TurnDefinitions
-                .Where(turn => turn != null)
-                .Select(turn => new StageTurnData
-                {
-                    DebugLabel = turn.Label,
-                    EnemyAction = turn.EnemyAction,
-                    BoardSummary = turn.BoardSummary,
-                    ConfirmText = turn.ConfirmText,
-                    Notes = turn.Notes,
-                    EnemyActionDamage = Mathf.Max(0, turn.EnemyActionDamage),
-                    HazardGroups = BuildHazardGroups(turn.HazardGroups),
-                    CellPlacements = BuildCellPlacements(turn.CellPlacements),
-                })
-                .ToArray();
-        }
-
-        private static IReadOnlyList<StageTurnHazardGroupData> BuildHazardGroups(
-            IReadOnlyList<StageTurnHazardGroupMasterData> hazardGroupMasters)
-        {
-            if (hazardGroupMasters == null)
+            var result = new List<StageBattlePatternData>(patternRefs.Count);
+            for (var i = 0; i < patternRefs.Count; i++)
             {
-                return Array.Empty<StageTurnHazardGroupData>();
+                var pattern = patternRefs[i];
+                if (pattern == null)
+                {
+                    continue;
+                }
+
+                result.Add(new StageBattlePatternData
+                {
+                    Board = BuildBattleBoardData(pattern),
+                    DebugLabel = pattern.Label,
+                    EnemyAction = pattern.EnemyAction,
+                    Description = pattern.Description,
+                    ConfirmText = pattern.ConfirmText,
+                    EnemyActionDamageMultiplier = Mathf.Max(0f, pattern.DamageMultiplier),
+                    CellPlacements = BuildCellPlacements(pattern.CellPlacements),
+                });
             }
 
-            return hazardGroupMasters
-                .Where(group => group != null)
-                .Select(group => new StageTurnHazardGroupData
-                {
-                    GroupId = group.GroupId,
-                    Damage = Mathf.Max(0, group.Damage),
-                })
-                .ToArray();
+            return result;
         }
 
         private static IReadOnlyList<StageTurnCellData> BuildCellPlacements(
@@ -305,7 +266,6 @@ namespace Assets.Scripts.Data.MasterData
                         Y = cell.Y,
                     },
                     NodeType = NormalizeNodeType(cell.NodeType),
-                    HazardGroupId = cell.HazardGroupId,
                 })
                 .ToArray();
         }
@@ -315,6 +275,72 @@ namespace Assets.Scripts.Data.MasterData
             return Enum.IsDefined(typeof(BattleNodeType), nodeType)
                 ? nodeType
                 : BattleNodeType.Empty;
+        }
+
+        private static AppearanceData CloneAppearanceData(AppearanceData source)
+        {
+            if (source == null)
+            {
+                return new AppearanceData();
+            }
+
+            var clone = new AppearanceData();
+
+            if (source.parts != null)
+            {
+                for (var i = 0; i < source.parts.Count; i++)
+                {
+                    var entry = source.parts[i];
+                    if (entry == null)
+                    {
+                        continue;
+                    }
+
+                    clone.parts.Add(new AppearanceData.PartsEntry
+                    {
+                        type = entry.type,
+                        index = entry.index,
+                    });
+                }
+            }
+
+            if (source.colors != null)
+            {
+                for (var i = 0; i < source.colors.Count; i++)
+                {
+                    var entry = source.colors[i];
+                    if (entry == null)
+                    {
+                        continue;
+                    }
+
+                    clone.colors.Add(new AppearanceData.ColorEntry
+                    {
+                        target = entry.target,
+                        color = entry.color,
+                    });
+                }
+            }
+
+            if (source.visibility != null)
+            {
+                for (var i = 0; i < source.visibility.Count; i++)
+                {
+                    var entry = source.visibility[i];
+                    if (entry == null)
+                    {
+                        continue;
+                    }
+
+                    clone.visibility.Add(new AppearanceData.VisibilityEntry
+                    {
+                        type = entry.type,
+                        visible = entry.visible,
+                    });
+                }
+            }
+
+            return clone;
         }
     }
 }

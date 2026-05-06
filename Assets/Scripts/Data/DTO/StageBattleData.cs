@@ -5,20 +5,8 @@ using Assets.Scripts.Features.Battle.Core;
 namespace Assets.Scripts.Data.DTO
 {
     /// <summary>
-    /// ステージに紐づくバトル固有データ。
-    /// BattleScene がターン盤面や敵情報を引く本番用 DTO。
-    /// </summary>
-    public class StageBattleData
-    {
-        public StageBattleBoardData Board { get; init; } = new();
-
-        public StageBattleEnemyData Enemy { get; init; } = new();
-
-        public IReadOnlyList<StageTurnData> TurnDefinitions { get; init; } = Array.Empty<StageTurnData>();
-    }
-
-    /// <summary>
-    /// ステージ全体で共有する盤面サイズと開始位置。
+    /// 1 つの盤面パターンが持つ盤面サイズと開始位置。
+    /// 将来、敵行動に応じてサイズや開始位置が変わる余地を残す。
     /// </summary>
     public class StageBattleBoardData
     {
@@ -31,46 +19,41 @@ namespace Assets.Scripts.Data.DTO
 
     /// <summary>
     /// ステージ戦闘で対面する敵の基本情報。
+    /// Appearance は現在の敵装備・見た目定義として扱い、
+    /// Patterns はこの敵が使用可能な固定盤面候補を持つ。
     /// </summary>
     public class StageBattleEnemyData
     {
         public string Name { get; init; } = "";
 
         public int MaxHp { get; init; } = 1;
+
+        public int Damage { get; init; } = 80;
+
+        public AppearanceData Appearance { get; init; } = new();
+
+        public IReadOnlyList<StageBattlePatternData> Patterns { get; init; } = Array.Empty<StageBattlePatternData>();
     }
 
     /// <summary>
-    /// 1 ターンぶんの盤面、敵行動、演出用文言。
-    /// BattleDemoTurnScript を本番データへ置き換える受け皿。
+    /// 敵行動にひもづく固定盤面パターン 1 件ぶん。
+    /// 敵行動ごとに複数用意し、実行時はこの候補群からランダムに選ぶ。
     /// </summary>
-    public class StageTurnData
+    public class StageBattlePatternData
     {
+        public StageBattleBoardData Board { get; init; } = new();
+
         public string DebugLabel { get; init; } = "";
 
         public BattleEnemyActionType EnemyAction { get; init; } = BattleEnemyActionType.NormalAttack;
 
-        public string BoardSummary { get; init; } = "";
+        public string Description { get; init; } = "";
 
         public string ConfirmText { get; init; } = "";
 
-        public string Notes { get; init; } = "";
-
-        public int EnemyActionDamage { get; init; }
-
-        public IReadOnlyList<StageTurnHazardGroupData> HazardGroups { get; init; } = Array.Empty<StageTurnHazardGroupData>();
+        public float EnemyActionDamageMultiplier { get; init; } = 1f;
 
         public IReadOnlyList<StageTurnCellData> CellPlacements { get; init; } = Array.Empty<StageTurnCellData>();
-    }
-
-    /// <summary>
-    /// 盤面上の危険グループ定義。
-    /// 複数マスの危険が同一攻撃に属する場合は同じ GroupId を参照する。
-    /// </summary>
-    public class StageTurnHazardGroupData
-    {
-        public int GroupId { get; init; }
-
-        public int Damage { get; init; }
     }
 
     /// <summary>
@@ -81,8 +64,6 @@ namespace Assets.Scripts.Data.DTO
         public StageGridPositionData Position { get; init; } = new();
 
         public BattleNodeType NodeType { get; init; } = BattleNodeType.Empty;
-
-        public int HazardGroupId { get; init; } = -1;
     }
 
     /// <summary>
