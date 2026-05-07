@@ -22,8 +22,8 @@ namespace Assets.Scripts.Systems.GameData
         public GameSaveService SaveService { get; }
 
         private IReadOnlyList<EquipmentData> _allEquipmentData;
-        private Dictionary<string, EquipmentData> _byId;
-        private Dictionary<string, EquipmentData> _byPartIndexKey;
+        private Dictionary<int, EquipmentData> _byId;
+        private Dictionary<int, EquipmentData> _byPartIndexKey;
         private Dictionary<PartsType, List<EquipmentData>> _byPartType;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -67,7 +67,7 @@ namespace Assets.Scripts.Systems.GameData
         public IReadOnlyList<EquipmentData> GetOwnedDefinitions()
         {
             return GetAllEntries()
-                .Where(entry => entry.IsUnlocked && !string.IsNullOrWhiteSpace(entry.EquipmentId))
+                .Where(entry => entry.IsUnlocked && entry.EquipmentId > 0)
                 .Select(entry => _byId.TryGetValue(entry.EquipmentId, out var data) ? data : null)
                 .Where(data => data != null)
                 .ToArray();
@@ -81,9 +81,9 @@ namespace Assets.Scripts.Systems.GameData
             if (!ownedOnly)
                 return definitions;
 
-            var ownedIds = new HashSet<string>(
+            var ownedIds = new HashSet<int>(
                 GetAllEntries()
-                    .Where(entry => entry.IsUnlocked && !string.IsNullOrWhiteSpace(entry.EquipmentId))
+                    .Where(entry => entry.IsUnlocked && entry.EquipmentId > 0)
                     .Select(entry => entry.EquipmentId));
 
             return definitions
@@ -91,31 +91,31 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
-        public bool TryGetDefinition(string equipmentId, out EquipmentData definition)
+        public bool TryGetDefinition(int equipmentId, out EquipmentData definition)
         {
-            return _byId.TryGetValue(equipmentId ?? string.Empty, out definition);
+            return _byId.TryGetValue(equipmentId, out definition);
         }
 
-        public bool TryGetByPartsIndex(PartsType partType, int partsIndex, out EquipmentData definition)
+        internal bool TryGetByPartsIndex(PartsType partType, int partsIndex, out EquipmentData definition)
         {
             return _byPartIndexKey.TryGetValue(EquipmentIdUtility.Build(partType, partsIndex), out definition);
         }
 
-        public bool HasEquipment(string equipmentId)
+        public bool HasEquipment(int equipmentId)
         {
             return TryGetEntry(equipmentId, out var entry) && entry.IsUnlocked && entry.Quantity > 0;
         }
 
-        public bool TryGetEntry(string equipmentId, out InventoryEntryData entry)
+        public bool TryGetEntry(int equipmentId, out InventoryEntryData entry)
         {
             entry = EnsureInventory().Equipments
-                .FirstOrDefault(candidate => candidate != null && candidate.EquipmentId == (equipmentId ?? string.Empty));
+                .FirstOrDefault(candidate => candidate != null && candidate.EquipmentId == equipmentId);
             return entry != null;
         }
 
-        public InventoryEntryData GrantEquipment(string equipmentId, int quantity = 1, bool isUnlocked = true)
+        public InventoryEntryData GrantEquipment(int equipmentId, int quantity = 1, bool isUnlocked = true)
         {
-            if (string.IsNullOrWhiteSpace(equipmentId))
+            if (equipmentId <= 0)
                 return null;
 
             var inventory = EnsureInventory();
@@ -140,7 +140,7 @@ namespace Assets.Scripts.Systems.GameData
             return entry;
         }
 
-        public bool RemoveEquipment(string equipmentId, int quantity = 1)
+        public bool RemoveEquipment(int equipmentId, int quantity = 1)
         {
             if (!TryGetEntry(equipmentId, out var entry))
                 return false;
@@ -153,7 +153,7 @@ namespace Assets.Scripts.Systems.GameData
             return true;
         }
 
-        public void MarkEquipped(string equipmentId)
+        public void MarkEquipped(int equipmentId)
         {
             if (!TryGetEntry(equipmentId, out var entry))
                 return;
@@ -177,8 +177,8 @@ namespace Assets.Scripts.Systems.GameData
 
         private void RebuildLookups()
         {
-            _byId = new Dictionary<string, EquipmentData>();
-            _byPartIndexKey = new Dictionary<string, EquipmentData>();
+            _byId = new Dictionary<int, EquipmentData>();
+            _byPartIndexKey = new Dictionary<int, EquipmentData>();
             _byPartType = new Dictionary<PartsType, List<EquipmentData>>();
 
             foreach (var data in _allEquipmentData)
@@ -186,7 +186,7 @@ namespace Assets.Scripts.Systems.GameData
                 if (data == null)
                     continue;
 
-                if (!string.IsNullOrWhiteSpace(data.EquipmentId) && !_byId.TryAdd(data.EquipmentId, data))
+                if (data.EquipmentId > 0 && !_byId.TryAdd(data.EquipmentId, data))
                 {
                     Debug.LogWarning($"[InventoryService] Duplicate equipmentId: {data.EquipmentId}");
                 }
@@ -205,7 +205,16 @@ namespace Assets.Scripts.Systems.GameData
 
             foreach (var pair in _byPartType)
             {
-                pair.Value.Sort((l, r) => l.PartsIndex.CompareTo(r.PartsIndex));
+                pair.Value.Sort((l, r) =>
+                {
+                    var compare = l.SortOrder.CompareTo(r.SortOrder);
+                    if (compare != 0)
+                    {
+                        return compare;
+                    }
+
+                    return l.PartsIndex.CompareTo(r.PartsIndex);
+                });
             }
         }
 
@@ -214,7 +223,7 @@ namespace Assets.Scripts.Systems.GameData
             var hasChanges = false;
             foreach (var data in _allEquipmentData)
             {
-                if (data == null || !data.IsDefaultOwned || string.IsNullOrWhiteSpace(data.EquipmentId))
+                if (data == null || !data.IsDefaultOwned || data.EquipmentId <= 0)
                     continue;
 
                 if (TryGetEntry(data.EquipmentId, out var existing))

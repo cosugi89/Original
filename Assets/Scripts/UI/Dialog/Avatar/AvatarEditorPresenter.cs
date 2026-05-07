@@ -88,7 +88,7 @@ namespace Assets.Scripts.UI.Dialog
                 IsGroup = UICategoryConfig.IsGroup(category),
                 HasSelection = selectedOption != null,
                 ActivePartType = activePartType,
-                SelectedEquipmentId = selectedOption?.EquipmentId ?? string.Empty,
+                SelectedEquipmentId = selectedOption?.EquipmentId ?? 0,
                 SelectedDisplayName = selectedOption?.DisplayName ?? string.Empty,
                 SelectedIcon = selectedOption?.Icon,
                 SupportsColor = supportsColor,
@@ -98,9 +98,9 @@ namespace Assets.Scripts.UI.Dialog
             };
         }
 
-        public bool TrySelectEquipment(string equipmentId)
+        public bool TrySelectEquipment(int equipmentId)
         {
-            if (string.IsNullOrWhiteSpace(equipmentId) ||
+            if (equipmentId <= 0 ||
                 !_inventoryService.TryGetDefinition(equipmentId, out var definition) ||
                 definition == null ||
                 !_inventoryService.HasEquipment(equipmentId))
@@ -189,7 +189,7 @@ namespace Assets.Scripts.UI.Dialog
             _avatarService.SetCurrentAppearance(committedAppearance);
 
             foreach (var equipmentId in committedAppearance.Parts
-                         .Where(state => state != null && !string.IsNullOrWhiteSpace(state.EquipmentId))
+                         .Where(state => state != null && state.EquipmentId > 0)
                          .Select(state => state.EquipmentId)
                          .Distinct())
             {
@@ -226,7 +226,7 @@ namespace Assets.Scripts.UI.Dialog
 
                 foreach (var definition in definitions)
                 {
-                    if (definition == null || string.IsNullOrWhiteSpace(definition.EquipmentId))
+                    if (definition == null || definition.EquipmentId <= 0)
                         continue;
 
                     var isOwned = _inventoryService.HasEquipment(definition.EquipmentId);
@@ -236,17 +236,17 @@ namespace Assets.Scripts.UI.Dialog
                     options.Add(new AvatarPartOptionViewData
                     {
                         EquipmentId = definition.EquipmentId,
-                        DisplayName = string.IsNullOrWhiteSpace(definition.DisplayName) ? definition.EquipmentId : definition.DisplayName,
+                        DisplayName = string.IsNullOrWhiteSpace(definition.DisplayName) ? definition.EquipmentId.ToString() : definition.DisplayName,
                         Category = category,
                         PartType = definition.PartType,
                         Icon = definition.Icon,
                         IsOwned = isOwned,
                         IsSelected = partState != null &&
                                      partState.IsVisible &&
-                                     string.Equals(partState.EquipmentId, definition.EquipmentId, StringComparison.Ordinal),
+                                     partState.EquipmentId == definition.EquipmentId,
                         IsVisible = partState?.IsVisible ?? false,
                         CanSelect = isOwned,
-                        SortOrder = (groupIndex * 10000) + Mathf.Max(definition.PartsIndex, 0)
+                        SortOrder = (groupIndex * 10000) + Mathf.Max(definition.SortOrder, 0)
                     });
                 }
             }
@@ -285,7 +285,7 @@ namespace Assets.Scripts.UI.Dialog
             partState = new AvatarPartStateData
             {
                 PartType = partType,
-                EquipmentId = string.Empty,
+                EquipmentId = 0,
                 IsVisible = false
             };
 
@@ -312,7 +312,7 @@ namespace Assets.Scripts.UI.Dialog
         private void ResetPart(PartsType partType)
         {
             var state = GetOrCreatePartState(partType);
-            state.EquipmentId = string.Empty;
+            state.EquipmentId = 0;
             state.IsVisible = false;
         }
 
@@ -327,7 +327,7 @@ namespace Assets.Scripts.UI.Dialog
                 .Select(state => new AvatarPartStateData
                 {
                     PartType = state.PartType,
-                    EquipmentId = state.EquipmentId ?? string.Empty,
+                    EquipmentId = state.EquipmentId,
                     IsVisible = state.IsVisible
                 })
                 .ToList();
@@ -374,7 +374,7 @@ namespace Assets.Scripts.UI.Dialog
                 var partState = GetPartState(partType);
                 if (partState != null &&
                     partState.IsVisible &&
-                    !string.IsNullOrWhiteSpace(partState.EquipmentId))
+                    partState.EquipmentId > 0)
                 {
                     return partType;
                 }

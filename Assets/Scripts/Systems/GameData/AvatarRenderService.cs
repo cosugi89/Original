@@ -104,7 +104,7 @@ namespace Assets.Scripts.Systems.GameData
 
             foreach (var state in appearance.Parts)
             {
-                if (state == null || string.IsNullOrWhiteSpace(state.EquipmentId))
+                if (state == null || state.EquipmentId <= 0)
                     continue;
 
                 if (!InventoryService.HasEquipment(state.EquipmentId))

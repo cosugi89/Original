@@ -70,7 +70,7 @@ namespace Assets.Scripts.Systems.Save
                     partStatesByType[entry.type] = new AvatarPartStateData
                     {
                         PartType = entry.type,
-                        EquipmentId = entry.index >= 0 ? BuildLegacyEquipmentId(entry.type, entry.index) : string.Empty,
+                        EquipmentId = entry.index >= 0 ? BuildLegacyEquipmentId(entry.type, entry.index) : 0,
                         IsVisible = isVisible
                     };
                 }
@@ -84,7 +84,7 @@ namespace Assets.Scripts.Systems.Save
                 partStatesByType[pair.Key] = new AvatarPartStateData
                 {
                     PartType = pair.Key,
-                    EquipmentId = string.Empty,
+                    EquipmentId = 0,
                     IsVisible = pair.Value
                 };
             }
@@ -131,16 +131,16 @@ namespace Assets.Scripts.Systems.Save
             if (inventory == null)
                 return;
 
-            var existingIds = new HashSet<string>();
+            var existingIds = new HashSet<int>();
             foreach (var entry in inventory.Equipments)
             {
-                if (entry != null && !string.IsNullOrWhiteSpace(entry.EquipmentId))
+                if (entry != null && entry.EquipmentId > 0)
                     existingIds.Add(entry.EquipmentId);
             }
 
             foreach (var part in appearance.Parts)
             {
-                if (part == null || string.IsNullOrWhiteSpace(part.EquipmentId) || !existingIds.Add(part.EquipmentId))
+                if (part == null || part.EquipmentId <= 0 || !existingIds.Add(part.EquipmentId))
                     continue;
 
                 inventory.Equipments.Add(new InventoryEntryData
@@ -165,7 +165,7 @@ namespace Assets.Scripts.Systems.Save
             return partType == PartsType.Arrow || partType == PartsType.HelmetHair;
         }
 
-        private static string BuildLegacyEquipmentId(PartsType partType, int index)
+        private static int BuildLegacyEquipmentId(PartsType partType, int index)
         {
             return EquipmentIdUtility.Build(partType, index);
         }

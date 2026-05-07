@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Features.Battle.Core;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
     public static class MasterDataResourceLoader
     {
-        private const string EquipmentMasterCatalogPath = "MasterData/EquipmentCatalog";
-        private const string BattleStageMasterCatalogPath = "MasterData/BattleStageCatalog";
+        private const string EquipmentMasterDatabasePath = "MasterData/EquipmentDatabase";
+        private const string BattleSkillMasterDatabasePath = "MasterData/BattleSkillDatabase";
         private const string StageMasterDatabasePath = "MasterData/StageDatabase";
 
-        private static bool _loggedMissingEquipmentMasterCatalog;
-        private static bool _loggedMissingBattleStageMasterCatalog;
+        private static bool _loggedMissingEquipmentMasterDatabase;
+        private static bool _loggedMissingBattleSkillMasterDatabase;
         private static bool _loggedMissingStageMasterDatabase;
-        private static bool _loggedBattleStageFallbackToStageMasterDatabase;
 
         // ── public ──────────────────────────
 
@@ -25,22 +25,37 @@ namespace Assets.Scripts.Data.MasterData
         /// </summary>
         public static IReadOnlyList<EquipmentData> LoadEquipmentData()
         {
-            var catalog = LoadEquipmentMasterCatalog();
-            if (catalog == null)
+            var database = LoadEquipmentMasterDatabase();
+            if (database == null)
                 return Array.Empty<EquipmentData>();
 
-            return catalog.Equipments
+            return database.Equipments
                 .Where(m => m != null)
                 .Select(m => new EquipmentData
                 {
                     EquipmentId = m.EquipmentId,
                     DisplayName = m.DisplayName,
                     PartType = m.PartType,
+                    ExclusiveGroup = m.ExclusiveGroup,
                     PartsIndex = m.PartsIndex,
                     Icon = m.Icon,
+                    SortOrder = m.SortOrder > 0 ? m.SortOrder : Mathf.Max(m.PartsIndex, 0),
                     IsDefaultOwned = m.IsDefaultOwned,
+                    AssignableSkills = BuildBattleSkillData(m.AssignableSkills),
                 })
                 .ToArray();
+        }
+
+        /// <summary>
+        /// バトルスキルマスタを読み込み、DTO リストに変換して返す。
+        /// </summary>
+        public static IReadOnlyList<BattleSkillData> LoadBattleSkillData()
+        {
+            var database = LoadBattleSkillMasterDatabase();
+            if (database == null)
+                return Array.Empty<BattleSkillData>();
+
+            return BuildBattleSkillData(database.Skills);
         }
 
         /// <summary>
@@ -48,24 +63,24 @@ namespace Assets.Scripts.Data.MasterData
         /// </summary>
         public static IReadOnlyList<BattleStageData> LoadBattleStageData()
         {
-            var catalog = LoadBattleStageMasterCatalog();
-            if (catalog != null)
-            {
-                return catalog.Stages
-                    .Where(m => m != null)
-                    .Select(m => new BattleStageData
-                    {
-                        StageId = m.StageId,
-                        DisplayName = m.DisplayName,
-                        DescriptionText = m.DescriptionText,
-                        SortOrder = m.SortOrder,
-                        IsInitiallyUnlocked = m.IsInitiallyUnlocked,
-                        PreviewImage = m.PreviewImage,
-                    })
-                    .ToArray();
-            }
+            var database = LoadStageMasterDatabase();
+            if (database == null)
+                return Array.Empty<BattleStageData>();
 
-            return LoadBattleStageDataFromStageMasterDatabase();
+            return database.Stages
+                .Where(m => m != null)
+                .OrderBy(m => m.SortOrder)
+                .ThenBy(m => m.StageId)
+                .Select(m => new BattleStageData
+                {
+                    StageId = m.StageId,
+                    DisplayName = m.StageName,
+                    DescriptionText = m.Description,
+                    SortOrder = m.SortOrder,
+                    IsInitiallyUnlocked = m.IsInitiallyUnlocked,
+                    PreviewImage = m.PreviewImage,
+                })
+                .ToArray();
         }
 
         /// <summary>
@@ -95,26 +110,26 @@ namespace Assets.Scripts.Data.MasterData
 
         // ── private ─────────────────
 
-        private static EquipmentMasterCatalog LoadEquipmentMasterCatalog()
+        private static EquipmentMasterDatabase LoadEquipmentMasterDatabase()
         {
-            var catalog = Resources.Load<EquipmentMasterCatalog>(EquipmentMasterCatalogPath);
-            if (catalog == null && !_loggedMissingEquipmentMasterCatalog)
+            var database = Resources.Load<EquipmentMasterDatabase>(EquipmentMasterDatabasePath);
+            if (database == null && !_loggedMissingEquipmentMasterDatabase)
             {
-                Debug.LogWarning($"[MasterDataResourceLoader] EquipmentMasterCatalog was not found at Resources/{EquipmentMasterCatalogPath}.");
-                _loggedMissingEquipmentMasterCatalog = true;
+                Debug.LogWarning($"[MasterDataResourceLoader] EquipmentMasterDatabase was not found at Resources/{EquipmentMasterDatabasePath}.");
+                _loggedMissingEquipmentMasterDatabase = true;
             }
-            return catalog;
+            return database;
         }
 
-        private static BattleStageMasterCatalog LoadBattleStageMasterCatalog()
+        private static BattleSkillMasterDatabase LoadBattleSkillMasterDatabase()
         {
-            var catalog = Resources.Load<BattleStageMasterCatalog>(BattleStageMasterCatalogPath);
-            if (catalog == null && !_loggedMissingBattleStageMasterCatalog)
+            var database = Resources.Load<BattleSkillMasterDatabase>(BattleSkillMasterDatabasePath);
+            if (database == null && !_loggedMissingBattleSkillMasterDatabase)
             {
-                Debug.LogWarning($"[MasterDataResourceLoader] BattleStageMasterCatalog was not found at Resources/{BattleStageMasterCatalogPath}.");
-                _loggedMissingBattleStageMasterCatalog = true;
+                Debug.LogWarning($"[MasterDataResourceLoader] BattleSkillMasterDatabase was not found at Resources/{BattleSkillMasterDatabasePath}.");
+                _loggedMissingBattleSkillMasterDatabase = true;
             }
-            return catalog;
+            return database;
         }
 
         private static StageMasterDatabase LoadStageMasterDatabase()
@@ -126,34 +141,6 @@ namespace Assets.Scripts.Data.MasterData
                 _loggedMissingStageMasterDatabase = true;
             }
             return database;
-        }
-
-        private static IReadOnlyList<BattleStageData> LoadBattleStageDataFromStageMasterDatabase()
-        {
-            var database = LoadStageMasterDatabase();
-            if (database == null)
-                return Array.Empty<BattleStageData>();
-
-            if (!_loggedBattleStageFallbackToStageMasterDatabase)
-            {
-                Debug.LogWarning("[MasterDataResourceLoader] BattleStageMasterCatalog was not found. Falling back to StageMasterDatabase for stage definitions.");
-                _loggedBattleStageFallbackToStageMasterDatabase = true;
-            }
-
-            return database.Stages
-                .Where(m => m != null)
-                .OrderBy(m => m.StageId)
-                .ThenBy(m => m.StageId)
-                .Select((m, index) => new BattleStageData
-                {
-                    StageId = m.StageId,
-                    DisplayName = m.StageName,
-                    DescriptionText = m.Description,
-                    SortOrder = m.StageId,
-                    IsInitiallyUnlocked = index == 0,
-                    PreviewImage = m.PreviewImage,
-                })
-                .ToArray();
         }
 
         private static StageBattleBoardData BuildBattleBoardData(StageBattlePatternMasterData patternMaster)
@@ -176,13 +163,32 @@ namespace Assets.Scripts.Data.MasterData
             };
         }
 
+        private static IReadOnlyList<BattleSkillData> BuildBattleSkillData(IReadOnlyList<BattleSkillMasterData> skillMasters)
+        {
+            if (skillMasters == null || skillMasters.Count == 0)
+            {
+                return Array.Empty<BattleSkillData>();
+            }
+
+            return skillMasters
+                .Where(skill => skill != null)
+                .Select(skill => new BattleSkillData
+                {
+                    SkillId = skill.SkillId,
+                    DisplayName = skill.DisplayName,
+                    Description = skill.Description,
+                    Icon = skill.Icon,
+                    RequiredCharge = Mathf.Max(1, skill.RequiredCharge),
+                    StartingCharge = Mathf.Clamp(skill.StartingCharge, 0, Mathf.Max(1, skill.RequiredCharge)),
+                    TurnChargeGain = Mathf.Max(0, skill.TurnChargeGain),
+                    AttackChargeGain = Mathf.Max(0, skill.AttackChargeGain),
+                    Damage = Mathf.Max(0, skill.Damage),
+                })
+                .ToArray();
+        }
+
         private static StageBattleEnemyData BuildBattleEnemyData(StageMasterData master)
         {
-            var legacyEnemy = master?.LegacyEnemies != null && master.LegacyEnemies.Count > 0
-                ? master.LegacyEnemies.FirstOrDefault(enemy => enemy != null)
-                : null;
-            var fallbackName = legacyEnemy?.Name ?? string.Empty;
-            var fallbackHp = legacyEnemy != null ? Mathf.Max(1, legacyEnemy.Hp) : 1;
             var enemyRefs = master?.EnemyRefs;
 
             if (enemyRefs != null)
@@ -197,10 +203,10 @@ namespace Assets.Scripts.Data.MasterData
 
                     return new StageBattleEnemyData
                     {
-                        Name = !string.IsNullOrWhiteSpace(enemyMaster.Name) ? enemyMaster.Name : fallbackName,
-                        MaxHp = enemyMaster.MaxHp > 0 ? enemyMaster.MaxHp : fallbackHp,
+                        Name = enemyMaster.Name ?? string.Empty,
+                        MaxHp = Mathf.Max(1, enemyMaster.MaxHp),
                         Damage = Mathf.Max(0, enemyMaster.Damage),
-                        Appearance = CloneAppearanceData(enemyMaster.Appearance),
+                        Appearance = BuildResolvedEnemyAppearanceData(enemyMaster),
                         Patterns = BuildPatterns(enemyMaster),
                     };
                 }
@@ -208,12 +214,91 @@ namespace Assets.Scripts.Data.MasterData
 
             return new StageBattleEnemyData
             {
-                Name = fallbackName,
-                MaxHp = fallbackHp,
+                Name = string.Empty,
+                MaxHp = 1,
                 Damage = 80,
                 Appearance = new AppearanceData(),
                 Patterns = Array.Empty<StageBattlePatternData>(),
             };
+        }
+
+        private static AppearanceData BuildResolvedEnemyAppearanceData(StageBattleEnemyMasterData enemyMaster)
+        {
+            if (enemyMaster == null)
+            {
+                return new AppearanceData();
+            }
+
+            var slotMasters = enemyMaster.AppearanceSlots;
+            var colorMasters = enemyMaster.AppearanceColors;
+            var appearanceData = new AppearanceData();
+            var partStates = new Dictionary<PartsType, AppearanceData.PartsEntry>();
+            var visibilityStates = new Dictionary<PartsType, AppearanceData.VisibilityEntry>();
+
+            foreach (PartsType partType in Enum.GetValues(typeof(PartsType)))
+            {
+                if (IsDerivedEnemyAppearancePart(partType) || partType == PartsType.Skin)
+                {
+                    continue;
+                }
+
+                partStates[partType] = new AppearanceData.PartsEntry
+                {
+                    type = partType,
+                    index = -1,
+                };
+                visibilityStates[partType] = new AppearanceData.VisibilityEntry
+                {
+                    type = partType,
+                    visible = false,
+                };
+            }
+
+            if (slotMasters != null)
+            {
+                for (var i = 0; i < slotMasters.Count; i++)
+                {
+                    var slot = slotMasters[i];
+                    if (slot == null || IsDerivedEnemyAppearancePart(slot.PartType) || slot.PartType == PartsType.Skin)
+                    {
+                        continue;
+                    }
+
+                    var resolvedIndex = -1;
+                    var resolvedVisible = false;
+                    var equipment = slot.Equipment;
+                    if (equipment != null && equipment.PartType == slot.PartType && equipment.PartsIndex >= 0)
+                    {
+                        resolvedIndex = equipment.PartsIndex;
+                        resolvedVisible = slot.IsVisible;
+                    }
+
+                    partStates[slot.PartType] = new AppearanceData.PartsEntry
+                    {
+                        type = slot.PartType,
+                        index = resolvedIndex,
+                    };
+                    visibilityStates[slot.PartType] = new AppearanceData.VisibilityEntry
+                    {
+                        type = slot.PartType,
+                        visible = resolvedVisible,
+                    };
+                }
+            }
+
+            foreach (var entry in partStates.Values)
+            {
+                appearanceData.parts.Add(entry);
+            }
+
+            foreach (var entry in visibilityStates.Values)
+            {
+                appearanceData.visibility.Add(entry);
+            }
+
+            ApplyResolvedEnemyColors(appearanceData, colorMasters);
+
+            return appearanceData;
         }
 
         private static IReadOnlyList<StageBattlePatternData> BuildPatterns(StageBattleEnemyMasterData enemyMaster)
@@ -277,70 +362,55 @@ namespace Assets.Scripts.Data.MasterData
                 : BattleNodeType.Empty;
         }
 
-        private static AppearanceData CloneAppearanceData(AppearanceData source)
+        private static bool IsDerivedEnemyAppearancePart(PartsType partType)
         {
-            if (source == null)
+            return partType == PartsType.Arrow || partType == PartsType.HelmetHair;
+        }
+
+        private static void ApplyResolvedEnemyColors(
+            AppearanceData appearanceData,
+            IReadOnlyList<StageBattleEnemyAppearanceColorMasterData> colorMasters)
+        {
+            if (appearanceData == null || colorMasters == null || colorMasters.Count == 0)
             {
-                return new AppearanceData();
+                return;
             }
 
-            var clone = new AppearanceData();
-
-            if (source.parts != null)
+            var colorMap = new Dictionary<ColorTargetType, Color>();
+            if (appearanceData.colors != null)
             {
-                for (var i = 0; i < source.parts.Count; i++)
+                for (var i = 0; i < appearanceData.colors.Count; i++)
                 {
-                    var entry = source.parts[i];
-                    if (entry == null)
+                    var existing = appearanceData.colors[i];
+                    if (existing == null)
                     {
                         continue;
                     }
 
-                    clone.parts.Add(new AppearanceData.PartsEntry
-                    {
-                        type = entry.type,
-                        index = entry.index,
-                    });
+                    colorMap[existing.target] = existing.color;
                 }
             }
 
-            if (source.colors != null)
+            for (var i = 0; i < colorMasters.Count; i++)
             {
-                for (var i = 0; i < source.colors.Count; i++)
+                var colorEntry = colorMasters[i];
+                if (colorEntry == null)
                 {
-                    var entry = source.colors[i];
-                    if (entry == null)
-                    {
-                        continue;
-                    }
-
-                    clone.colors.Add(new AppearanceData.ColorEntry
-                    {
-                        target = entry.target,
-                        color = entry.color,
-                    });
+                    continue;
                 }
+
+                colorMap[colorEntry.Target] = colorEntry.Color;
             }
 
-            if (source.visibility != null)
+            appearanceData.colors.Clear();
+            foreach (var pair in colorMap)
             {
-                for (var i = 0; i < source.visibility.Count; i++)
+                appearanceData.colors.Add(new AppearanceData.ColorEntry
                 {
-                    var entry = source.visibility[i];
-                    if (entry == null)
-                    {
-                        continue;
-                    }
-
-                    clone.visibility.Add(new AppearanceData.VisibilityEntry
-                    {
-                        type = entry.type,
-                        visible = entry.visible,
-                    });
-                }
+                    target = pair.Key,
+                    color = pair.Value,
+                });
             }
-
-            return clone;
         }
     }
 }

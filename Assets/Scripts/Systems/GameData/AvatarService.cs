@@ -89,7 +89,7 @@ namespace Assets.Scripts.Systems.GameData
             partState = new AvatarPartStateData
             {
                 PartType = partType,
-                EquipmentId = string.Empty,
+                EquipmentId = 0,
                 IsVisible = true
             };
             appearance.Parts.Add(partState);
@@ -97,9 +97,9 @@ namespace Assets.Scripts.Systems.GameData
             return partState;
         }
 
-        public bool TryEquip(string equipmentId, bool isVisible = true)
+        public bool TryEquip(int equipmentId, bool isVisible = true)
         {
-            if (string.IsNullOrWhiteSpace(equipmentId) ||
+            if (equipmentId <= 0 ||
                 !InventoryService.TryGetDefinition(equipmentId, out var definition) ||
                 !InventoryService.HasEquipment(equipmentId))
             {
@@ -109,9 +109,9 @@ namespace Assets.Scripts.Systems.GameData
             return TryEquip(definition.PartType, equipmentId, isVisible);
         }
 
-        public bool TryEquip(PartsType partType, string equipmentId, bool isVisible = true)
+        public bool TryEquip(PartsType partType, int equipmentId, bool isVisible = true)
         {
-            if (string.IsNullOrWhiteSpace(equipmentId) ||
+            if (equipmentId <= 0 ||
                 !InventoryService.TryGetDefinition(equipmentId, out var definition) ||
                 definition.PartType != partType ||
                 !InventoryService.HasEquipment(equipmentId))
@@ -133,10 +133,10 @@ namespace Assets.Scripts.Systems.GameData
         public void Unequip(PartsType partType)
         {
             var state = GetOrCreatePartState(partType);
-            if (string.IsNullOrEmpty(state.EquipmentId) && !state.IsVisible)
+            if (state.EquipmentId <= 0 && !state.IsVisible)
                 return;
 
-            state.EquipmentId = string.Empty;
+            state.EquipmentId = 0;
             state.IsVisible = false;
             SaveService.MarkDirty();
         }
@@ -151,16 +151,16 @@ namespace Assets.Scripts.Systems.GameData
             SaveService.MarkDirty();
         }
 
-        public bool IsEquipped(string equipmentId)
+        public bool IsEquipped(int equipmentId)
         {
-            return EnsureAppearance().Parts.Any(part => part != null && part.EquipmentId == equipmentId);
+            return equipmentId > 0 && EnsureAppearance().Parts.Any(part => part != null && part.EquipmentId == equipmentId);
         }
 
-        public bool TryGetEquippedEquipmentId(PartsType partType, out string equipmentId)
+        public bool TryGetEquippedEquipmentId(PartsType partType, out int equipmentId)
         {
             var partState = EnsureAppearance().Parts.FirstOrDefault(candidate => candidate != null && candidate.PartType == partType);
-            equipmentId = partState?.EquipmentId ?? string.Empty;
-            return !string.IsNullOrWhiteSpace(equipmentId);
+            equipmentId = partState?.EquipmentId ?? 0;
+            return equipmentId > 0;
         }
 
         public IReadOnlyList<EquipmentData> GetSelectableEquipments(PartsType partType, bool ownedOnly = true)

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -33,8 +32,12 @@ namespace Assets.Scripts.Data.MasterData
         private Sprite previewImage;
 
         [SerializeField]
-        [Tooltip("旧構造の敵一覧。敵参照へ移行するまでの互換 fallback。")]
-        private List<EnemyMasterData> enemies = new();
+        [Tooltip("ステージ一覧の並び順。小さいほど前に表示する。")]
+        private int sortOrder = 0;
+
+        [SerializeField]
+        [Tooltip("新規セーブ時に最初から解放されているステージかどうか。")]
+        private bool isInitiallyUnlocked = true;
 
         [SerializeField]
         [Tooltip("このステージが参照する敵アセット一覧。先頭が現在の主対象。")]
@@ -55,31 +58,13 @@ namespace Assets.Scripts.Data.MasterData
         /// <summary>プレビュー画像スプライト。</summary>
         public Sprite PreviewImage => previewImage;
 
-        /// <summary>旧構造の敵一覧。敵参照が空のときだけ fallback に使う。</summary>
-        public List<EnemyMasterData> LegacyEnemies => enemies;
+        /// <summary>ステージ一覧の並び順。</summary>
+        public int SortOrder => sortOrder;
+
+        /// <summary>初期解放ステージかどうか。</summary>
+        public bool IsInitiallyUnlocked => isInitiallyUnlocked;
 
         /// <summary>このステージが参照する敵アセット一覧。</summary>
         public IReadOnlyList<StageBattleEnemyMasterData> EnemyRefs => enemyRefs ??= new List<StageBattleEnemyMasterData>();
-
-        /// <summary>
-        /// ステージ上に登場する敵1体ぶんのマスタデータ。
-        /// </summary>
-        [Serializable]
-        public class EnemyMasterData
-        {
-            [SerializeField]
-            [Tooltip("敵の表示名。")]
-            private string enemyName = string.Empty;
-
-            [SerializeField]
-            [Tooltip("敵の最大HP。")]
-            private int hp = 100;
-
-            /// <summary>敵の表示名。</summary>
-            public string Name => enemyName;
-
-            /// <summary>敵の最大HP。</summary>
-            public int Hp => hp;
-        }
     }
 }

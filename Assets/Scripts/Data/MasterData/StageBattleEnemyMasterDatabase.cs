@@ -12,9 +12,9 @@ namespace Assets.Scripts.Data.MasterData
 
         public IReadOnlyList<StageBattleEnemyMasterData> Enemies => enemies;
 
-        public bool TryGetById(string enemyId, out StageBattleEnemyMasterData enemyData)
+        public bool TryGetById(int enemyId, out StageBattleEnemyMasterData enemyData)
         {
-            if (!string.IsNullOrWhiteSpace(enemyId) && enemies != null)
+            if (enemyId > 0 && enemies != null)
             {
                 for (var i = 0; i < enemies.Count; i++)
                 {

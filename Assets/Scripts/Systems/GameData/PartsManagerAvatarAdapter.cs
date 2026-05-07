@@ -22,20 +22,16 @@ namespace Assets.Scripts.Systems.GameData
                 if (IsDerivedPart(partType))
                     continue;
 
-                var equipmentId = string.Empty;
+                var equipmentId = 0;
                 if (partsManager.IsEquipped(partType))
                 {
                     var activeIndex = partsManager.GetActiveIndex(partType);
                     if (inventoryService != null &&
                         inventoryService.TryGetByPartsIndex(partType, activeIndex, out var data) &&
                         data != null &&
-                        !string.IsNullOrWhiteSpace(data.EquipmentId))
+                        data.EquipmentId > 0)
                     {
                         equipmentId = data.EquipmentId;
-                    }
-                    else
-                    {
-                        equipmentId = EquipmentIdUtility.Build(partType, activeIndex);
                     }
                 }
 
@@ -111,7 +107,7 @@ namespace Assets.Scripts.Systems.GameData
             out int partsIndex)
         {
             partsIndex = -1;
-            if (state == null || string.IsNullOrWhiteSpace(state.EquipmentId))
+            if (state == null || state.EquipmentId <= 0)
                 return false;
 
             if (inventoryService != null &&
@@ -121,14 +117,6 @@ namespace Assets.Scripts.Systems.GameData
                 data.PartsIndex >= 0)
             {
                 partsIndex = data.PartsIndex;
-                return true;
-            }
-
-            if (EquipmentIdUtility.TryParse(state.EquipmentId, out var partType, out var parsedIndex) &&
-                partType == state.PartType &&
-                parsedIndex >= 0)
-            {
-                partsIndex = parsedIndex;
                 return true;
             }
 

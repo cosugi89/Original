@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using Assets.Scripts.Systems.Save;
 using LayerLab.ArtMakerUnity;
+using Newtonsoft.Json;
 
 namespace Assets.Scripts.Systems.Save.Models
 {
@@ -18,8 +20,9 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("どの装備枠の状態かを表す。Hair、Sword、Shield など。")]
         public PartsType PartType { get; set; }
 
-        [Description("装備中の装備ID。未装備は空文字で表す。")]
-        public string EquipmentId { get; set; } = "";
+        [JsonConverter(typeof(EquipmentIdJsonConverter))]
+        [Description("装備中の装備ID。未装備は0で表す。")]
+        public int EquipmentId { get; set; } = 0;
 
         [Description("その装備枠を見た目上表示するかどうか。")]
         public bool IsVisible { get; set; } = true;

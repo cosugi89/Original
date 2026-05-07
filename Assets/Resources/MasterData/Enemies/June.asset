@@ -12,10 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6d3c19a5e7649cfa84d1ad32fd28938, type: 3}
   m_Name: June
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.StageBattleEnemyMasterData
-  enemyId: june
+  enemyId: 1001
   enemyName: June
   maxHp: 1000
   damage: 80
+  appearanceSlots:
+  - partType: 0
+    equipment: {fileID: 11400000, guid: 5f2a1e7a4d3041de8a07978cb9a4e401, type: 2}
+    isVisible: 1
+  - partType: 1
+    equipment: {fileID: 11400000, guid: 1c434dd1b4d94a5098ad93e4a3ef28a1, type: 2}
+    isVisible: 1
+  - partType: 4
+    equipment: {fileID: 11400000, guid: 61d9d6ab1f084a8f98d1da633ca58584, type: 2}
+    isVisible: 1
+  - partType: 9
+    equipment: {fileID: 11400000, guid: e3198a90b8bb4aeabdb38d5f7a7ebf69, type: 2}
+    isVisible: 1
+  appearanceColors:
+  - target: 0
+    color: {r: 0.9607843, g: 0.8156863, b: 0.7254902, a: 1}
+  - target: 1
+    color: {r: 0.7764706, g: 0.36078432, b: 0.2509804, a: 1}
+  - target: 2
+    color: {r: 0.28627452, g: 0.6313726, b: 0.5411765, a: 1}
   appearance:
     parts: []
     colors: []

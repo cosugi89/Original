@@ -4,7 +4,7 @@ namespace Assets.Scripts.Data.DTO
 {
     /// <summary>
     /// バトルステージ1件の転送用データ。ロジック層が参照するステージ選択情報。
-    /// マスターデータ（BattleStageMasterData）から生成され、読み取り専用で使用する。
+    /// マスターデータ（StageMasterData）から生成され、読み取り専用で使用する。
     /// </summary>
     public class BattleStageData
     {

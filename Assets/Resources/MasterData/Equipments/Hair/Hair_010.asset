@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52e7d8f0bca45944a8c10ccc44a6a1e5, type: 3}
+  m_Name: Hair_010
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EquipmentMasterData
+  equipmentId: 2010
+  displayName: June Hair 010
+  partType: 1
+  partsIndex: 10
+  icon: {fileID: 0}
+  isDefaultOwned: 0

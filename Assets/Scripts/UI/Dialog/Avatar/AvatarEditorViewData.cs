@@ -7,7 +7,7 @@ namespace Assets.Scripts.UI.Dialog
 {
     public class AvatarPartOptionViewData
     {
-        public string EquipmentId { get; set; } = string.Empty;
+        public int EquipmentId { get; set; } = 0;
         public string DisplayName { get; set; } = string.Empty;
         public UICategory Category { get; set; }
         public PartsType PartType { get; set; }
@@ -26,7 +26,7 @@ namespace Assets.Scripts.UI.Dialog
         public bool IsGroup { get; set; }
         public bool HasSelection { get; set; }
         public PartsType ActivePartType { get; set; }
-        public string SelectedEquipmentId { get; set; } = string.Empty;
+        public int SelectedEquipmentId { get; set; } = 0;
         public string SelectedDisplayName { get; set; } = string.Empty;
         public Sprite SelectedIcon { get; set; }
         public bool SupportsColor { get; set; }

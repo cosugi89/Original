@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -109,6 +110,41 @@ namespace Assets.Scripts.Systems.Save
             public int Experience { get; set; } = 0;
             public string LastPlayedAtUtc { get; set; } = "";
             public AvatarAppearanceData AvatarAppearance { get; set; } = new();
+        }
+    }
+
+    public sealed class EquipmentIdJsonConverter : JsonConverter<int>
+    {
+        public override void WriteJson(JsonWriter writer, int value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value);
+        }
+
+        public override int ReadJson(JsonReader reader, Type objectType, int existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            return reader.TokenType switch
+            {
+                JsonToken.Integer => NormalizeNumericId(Convert.ToInt32(reader.Value, CultureInfo.InvariantCulture)),
+                JsonToken.String => ParseEquipmentId(reader.Value as string),
+                JsonToken.Null => 0,
+                JsonToken.Undefined => 0,
+                _ => 0,
+            };
+        }
+
+        private static int NormalizeNumericId(int equipmentId)
+        {
+            return equipmentId > 0 ? equipmentId : 0;
+        }
+
+        private static int ParseEquipmentId(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return 0;
+
+            return EquipmentIdUtility.TryConvertLegacyStringToId(text.Trim(), out var equipmentId)
+                ? equipmentId
+                : 0;
         }
     }
 

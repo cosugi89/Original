@@ -25,7 +25,7 @@ namespace LayerLab.ArtMakerUnity
         /// <summary>
         /// Gets the equipment identifier this slot represents in presenter-driven mode.
         /// </summary>
-        public string EquipmentId { get; private set; } = string.Empty;
+        public int EquipmentId { get; private set; } = 0;
 
         private PanelPartsListControl _parent;
 
@@ -36,12 +36,12 @@ namespace LayerLab.ArtMakerUnity
         /// <param name="sprite">The thumbnail sprite to display.</param>
         /// <param name="index">The index of this part within its type (used for equipping).</param>
         /// <param name="type">The <see cref="PartsType"/> this slot represents.</param>
-        public void SetSlot(PanelPartsListControl parent, Sprite sprite, int index, PartsType type = default, string equipmentId = "")
+        public void SetSlot(PanelPartsListControl parent, Sprite sprite, int index, PartsType type = default, int equipmentId = 0)
         {
             _parent = parent;
             SlotIndex = index;
             PartsType = type;
-            EquipmentId = equipmentId ?? string.Empty;
+            EquipmentId = equipmentId;
             imageItem.sprite = sprite;
             if (imageItem.sprite != null)
                 imageItem.SetNativeSize();

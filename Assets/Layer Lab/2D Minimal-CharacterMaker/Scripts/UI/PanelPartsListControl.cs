@@ -185,7 +185,7 @@ namespace LayerLab.ArtMakerUnity
         {
             if (_presenter != null)
             {
-                if (!string.IsNullOrWhiteSpace(slot.EquipmentId) && _presenter.TrySelectEquipment(slot.EquipmentId))
+                if (slot.EquipmentId > 0 && _presenter.TrySelectEquipment(slot.EquipmentId))
                 {
                     ShowPresenterSection(_activeCategory);
                 }
