@@ -43,3 +43,8 @@ Ask these in order:
 2. If extracted, will it reduce reading effort more than it increases navigation?
 3. Is the extracted unit reused, or does it represent a genuinely distinct responsibility?
 4. If not, keep it local and avoid adding a file.
+
+## Reference Notes
+
+- Appearance-related current behavior and authoring rules are tracked in `.codex/appearance-current-spec.md`.
+- Master-data naming, ID, and loader direction are tracked in `.codex/masterdata-current-direction.md`.

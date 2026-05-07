@@ -1,6 +1,6 @@
 # Path-Activation System v2 TODO
 
-- 最終更新: 2026-05-01
+- 最終更新: 2026-05-08
 - 参照元: `docs/path-activation-system-v2-spec.md`
 - 方針: 仕様の理想と現在のコード差分を埋めるための実装 TODO を優先順で並べる
 
@@ -14,9 +14,9 @@
 
 - [x] ステージ ID を `int` と `string` の混在から 1 つに統一する
 - [x] `BattleSceneTransitionState`、`StageData`、`BattleStageData`、`BattleProgressService` のキー設計を揃える
-- [ ] `StageDatabase` / `StageMasterDatabase` / `StageMasterData` の命名を repo 全体で統一する
-- [x] `MasterDataResourceLoader` が期待する `BattleStageMasterCatalog` 実アセットを復元するか、未使用なら読み込み経路を整理する
-- [ ] 現在の `StageDatabase.asset` の内容を最新クラス構造と照合し、参照切れや古い型名を解消する
+- [x] `StageDatabase` / `StageMasterDatabase` / `StageMasterData` の命名を repo 全体で統一する
+- [x] `MasterDataResourceLoader` のステージ一覧読込を `StageMasterDatabase` ベースへ統一する
+- [x] 現在の `StageDatabase.asset` の内容を最新クラス構造と照合し、参照切れや古い型名を解消する
 
 ## 2. P1: バトルコアの本実装
 
@@ -82,12 +82,15 @@
 - [x] 勝利時に `RecordStageClear()` を呼ぶ
 - [ ] 初期解放ステージと未解放ステージの選択制御を実装する
 - [ ] 戦闘失敗時の再挑戦導線を実装する
-- [ ] ステージ選択画面を追加し、`BattleStageMasterCatalog` と進捗を接続する
+- [ ] ステージ選択画面を追加し、`StageMasterDatabase` と進捗を接続する
 
 ## 7. P2: マスターデータ拡張
 
 - [ ] 敵を名前と HP だけでなく、行動傾向、危険配置傾向、特殊敗北閾値、演出テキストまで持てるようにする
 - [ ] 武器データに Skill パレット構成を持たせる
+- [ ] `EquipmentMasterData.AssignableSkills` の候補スキル群から、実戦用 4 枠を選ぶロードアウトモデルを追加する
+- [ ] 候補スキル群から実戦用 4 枠を選ぶ画面を追加し、選択結果を `UserData` に保存する
+- [ ] `BattleScene` の固定 `SkillSlots` 初期化を、保存済みロードアウトから構築する形へ差し替える
 - [ ] アイテムデータに Dance 効果を持たせる
 - [ ] 胴装備データに属性耐性を持たせる
 - [ ] 属性定義マスタを追加する
