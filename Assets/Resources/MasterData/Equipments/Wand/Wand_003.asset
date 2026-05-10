@@ -23,3 +23,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5fbe2c00d5584f4f85f17e2f6d9a79cc, type: 2}
   - {fileID: 11400000, guid: e2941109cbf8478b88857dc39211ee43, type: 2}
   - {fileID: 11400000, guid: 55b5566a317f4fc78fce1240c767535c, type: 2}
+  normalAttackAttribute: {fileID: 11400000, guid: 337e2699b39f4548bc58ee1a3ba8f610, type: 2}
+  attributeModifiers: []
+  categoryTags: []

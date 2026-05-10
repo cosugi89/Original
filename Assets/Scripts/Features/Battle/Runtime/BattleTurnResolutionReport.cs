@@ -44,6 +44,14 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public int ResolvedNodeCount { get; set; }
 
+        public string EnemyDamageAttributeSummary { get; set; } = string.Empty;
+
+        public BattleAttributeEffectiveness EnemyDamageEffectiveness { get; set; } = BattleAttributeEffectiveness.None;
+
+        public string PlayerDamageAttributeSummary { get; set; } = string.Empty;
+
+        public BattleAttributeEffectiveness PlayerDamageEffectiveness { get; set; } = BattleAttributeEffectiveness.None;
+
         public IReadOnlyList<string> LogEntries => _logEntries;
 
         public IReadOnlyList<BattlePlayerAnimationCue> PlayerAnimationCues => _playerAnimationCues;

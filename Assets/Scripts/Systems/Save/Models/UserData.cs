@@ -110,6 +110,7 @@ namespace Assets.Scripts.Systems.Save.Models
             {
                 new UserBattleSkillSlotData
                 {
+                    SkillId = 2001,
                     DisplayName = "Wide Blast",
                     Description = "広い範囲に危険を置く純粋攻撃寄り Skill。",
                     IsUnlocked = true,
@@ -122,6 +123,7 @@ namespace Assets.Scripts.Systems.Save.Models
                 },
                 new UserBattleSkillSlotData
                 {
+                    SkillId = 2002,
                     DisplayName = "Pierce Volley",
                     Description = "単体高火力寄りの Skill。",
                     IsUnlocked = true,
@@ -134,6 +136,7 @@ namespace Assets.Scripts.Systems.Save.Models
                 },
                 new UserBattleSkillSlotData
                 {
+                    SkillId = 2003,
                     DisplayName = "Locked Slot",
                     Description = "ゲーム進行で解放される想定のロック枠。",
                     IsUnlocked = false,
@@ -162,6 +165,9 @@ namespace Assets.Scripts.Systems.Save.Models
 
     public class UserBattleSkillSlotData
     {
+        [Description("参照するスキルマスタID。0 なら旧来の生データ枠として扱う。")]
+        public int SkillId { get; set; } = 0;
+
         [Description("UI 表示用の名称。")]
         public string DisplayName { get; set; } = "Skill";
 

@@ -87,7 +87,11 @@ namespace Assets.Scripts.Features.Battle.Logic
             int currentPlayerHp,
             int normalAttackDamage,
             int doubleAttackFollowUpDamage,
-            int jumpAttackDamage)
+            int jumpAttackDamage,
+            AttributeData playerAttackAttribute,
+            AttributeData enemyAttackAttribute,
+            IReadOnlyList<EquipmentAttributeModifierData> enemyDefenseAttributeModifiers,
+            IReadOnlyList<EquipmentAttributeModifierData> playerDefenseAttributeModifiers)
         {
             return new BattleTurnContext
             {
@@ -97,6 +101,10 @@ namespace Assets.Scripts.Features.Battle.Logic
                 DoubleAttackFollowUpDamage = doubleAttackFollowUpDamage,
                 JumpAttackDamage = jumpAttackDamage,
                 EnemyActionDamage = ResolveEnemyActionDamage(patternData, enemyDamage),
+                PlayerAttackAttribute = playerAttackAttribute,
+                EnemyAttackAttribute = enemyAttackAttribute,
+                EnemyDefenseAttributeModifiers = enemyDefenseAttributeModifiers ?? Array.Empty<EquipmentAttributeModifierData>(),
+                PlayerDefenseAttributeModifiers = playerDefenseAttributeModifiers ?? Array.Empty<EquipmentAttributeModifierData>(),
                 HazardBoosted = hazardBoosted,
                 EnemyAction = patternData?.EnemyAction ?? BattleEnemyActionType.NormalAttack,
                 SelectedSkill = selectedSkill,
@@ -111,7 +119,11 @@ namespace Assets.Scripts.Features.Battle.Logic
             int currentPlayerHp,
             int normalAttackDamage,
             int doubleAttackFollowUpDamage,
-            int jumpAttackDamage)
+            int jumpAttackDamage,
+            AttributeData playerAttackAttribute,
+            AttributeData enemyAttackAttribute,
+            IReadOnlyList<EquipmentAttributeModifierData> enemyDefenseAttributeModifiers,
+            IReadOnlyList<EquipmentAttributeModifierData> playerDefenseAttributeModifiers)
         {
             var layout = CreateBoardLayout(patternData);
             var tracer = new BattlePathTracer(layout.Board);
@@ -130,7 +142,11 @@ namespace Assets.Scripts.Features.Battle.Logic
                 currentPlayerHp,
                 normalAttackDamage,
                 doubleAttackFollowUpDamage,
-                jumpAttackDamage);
+                jumpAttackDamage,
+                playerAttackAttribute,
+                enemyAttackAttribute,
+                enemyDefenseAttributeModifiers,
+                playerDefenseAttributeModifiers);
 
             var path = layout.Board.BuildCellPath(tracer.Draft.Positions);
             var report = BattleTurnResolver.Resolve(path, context);

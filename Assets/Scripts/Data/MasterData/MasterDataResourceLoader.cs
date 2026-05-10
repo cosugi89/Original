@@ -12,10 +12,12 @@ namespace Assets.Scripts.Data.MasterData
     {
         private const string EquipmentMasterDatabasePath = "MasterData/EquipmentDatabase";
         private const string BattleSkillMasterDatabasePath = "MasterData/BattleSkillDatabase";
+        private const string AttributeMasterDatabasePath = "MasterData/AttributeDatabase";
         private const string StageMasterDatabasePath = "MasterData/StageDatabase";
 
         private static bool _loggedMissingEquipmentMasterDatabase;
         private static bool _loggedMissingBattleSkillMasterDatabase;
+        private static bool _loggedMissingAttributeMasterDatabase;
         private static bool _loggedMissingStageMasterDatabase;
 
         // ── public ──────────────────────────
@@ -42,6 +44,9 @@ namespace Assets.Scripts.Data.MasterData
                     SortOrder = m.SortOrder > 0 ? m.SortOrder : Mathf.Max(m.PartsIndex, 0),
                     IsDefaultOwned = m.IsDefaultOwned,
                     AssignableSkills = BuildBattleSkillData(m.AssignableSkills),
+                    NormalAttackAttribute = BuildAttributeData(m.NormalAttackAttribute),
+                    AttributeModifiers = BuildEquipmentAttributeModifierData(m.AttributeModifiers),
+                    CategoryTags = BuildCategoryTags(m.CategoryTags),
                 })
                 .ToArray();
         }
@@ -56,6 +61,49 @@ namespace Assets.Scripts.Data.MasterData
                 return Array.Empty<BattleSkillData>();
 
             return BuildBattleSkillData(database.Skills);
+        }
+
+        public static bool TryLoadBattleSkillData(int skillId, out BattleSkillData skillData)
+        {
+            skillData = null;
+            if (skillId <= 0)
+            {
+                return false;
+            }
+
+            var database = LoadBattleSkillMasterDatabase();
+            if (database == null || !database.TryGetById(skillId, out var master) || master == null)
+            {
+                return false;
+            }
+
+            var skills = BuildBattleSkillData(new[] { master });
+            if (skills.Count == 0)
+            {
+                return false;
+            }
+
+            skillData = skills[0];
+            return skillData != null;
+        }
+
+        /// <summary>
+        /// 属性マスタを読み込み、DTO リストに変換して返す。
+        /// </summary>
+        public static IReadOnlyList<AttributeData> LoadAttributeData()
+        {
+            var database = LoadAttributeMasterDatabase();
+            if (database == null)
+            {
+                return Array.Empty<AttributeData>();
+            }
+
+            return database.Attributes
+                .Where(attribute => attribute != null)
+                .OrderBy(attribute => attribute.SortOrder)
+                .ThenBy(attribute => attribute.AttributeId)
+                .Select(BuildAttributeData)
+                .ToArray();
         }
 
         /// <summary>
@@ -132,6 +180,17 @@ namespace Assets.Scripts.Data.MasterData
             return database;
         }
 
+        private static AttributeMasterDatabase LoadAttributeMasterDatabase()
+        {
+            var database = Resources.Load<AttributeMasterDatabase>(AttributeMasterDatabasePath);
+            if (database == null && !_loggedMissingAttributeMasterDatabase)
+            {
+                Debug.LogWarning($"[MasterDataResourceLoader] AttributeMasterDatabase was not found at Resources/{AttributeMasterDatabasePath}.");
+                _loggedMissingAttributeMasterDatabase = true;
+            }
+            return database;
+        }
+
         private static StageMasterDatabase LoadStageMasterDatabase()
         {
             var database = Resources.Load<StageMasterDatabase>(StageMasterDatabasePath);
@@ -183,8 +242,80 @@ namespace Assets.Scripts.Data.MasterData
                     TurnChargeGain = Mathf.Max(0, skill.TurnChargeGain),
                     AttackChargeGain = Mathf.Max(0, skill.AttackChargeGain),
                     Damage = Mathf.Max(0, skill.Damage),
+                    Attribute = BuildAttributeData(skill.Attribute),
+                    EffectType = skill.EffectType,
+                    EffectAnimation = BuildEffectAnimationData(skill.EffectAnimation),
+                    DescriptionSupplement = skill.DescriptionSupplement ?? string.Empty,
                 })
                 .ToArray();
+        }
+
+        private static AttributeData BuildAttributeData(AttributeMasterData attribute)
+        {
+            if (attribute == null)
+            {
+                return null;
+            }
+
+            return new AttributeData
+            {
+                AttributeId = attribute.AttributeId,
+                DisplayName = attribute.DisplayName,
+                Description = attribute.Description,
+                AccentColor = attribute.AccentColor,
+                Icon = attribute.Icon,
+                SortOrder = attribute.SortOrder,
+            };
+        }
+
+        private static IReadOnlyList<EquipmentAttributeModifierData> BuildEquipmentAttributeModifierData(
+            IReadOnlyList<EquipmentAttributeModifierEntry> modifiers)
+        {
+            if (modifiers == null || modifiers.Count == 0)
+            {
+                return Array.Empty<EquipmentAttributeModifierData>();
+            }
+
+            return modifiers
+                .Where(modifier => modifier != null && modifier.Attribute != null)
+                .Select(modifier => new EquipmentAttributeModifierData
+                {
+                    Attribute = BuildAttributeData(modifier.Attribute),
+                    DamagePercent = Mathf.Max(0, modifier.DamagePercent),
+                })
+                .ToArray();
+        }
+
+        private static IReadOnlyList<string> BuildCategoryTags(IReadOnlyList<string> categoryTags)
+        {
+            if (categoryTags == null || categoryTags.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            return categoryTags
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Select(tag => tag.Trim())
+                .ToArray();
+        }
+
+        private static EffectAnimationData BuildEffectAnimationData(EffectAnimationMasterData effectAnimation)
+        {
+            if (effectAnimation == null)
+            {
+                return null;
+            }
+
+            return new EffectAnimationData
+            {
+                EffectAnimationId = effectAnimation.EffectAnimationId,
+                DisplayName = effectAnimation.DisplayName,
+                Description = effectAnimation.Description,
+                CharacterAnimationName = effectAnimation.CharacterAnimationName,
+                VisualEffectKey = effectAnimation.VisualEffectKey,
+                SoundEffectKey = effectAnimation.SoundEffectKey,
+                WaitSeconds = Mathf.Max(0f, effectAnimation.WaitSeconds),
+            };
         }
 
         private static StageBattleEnemyData BuildBattleEnemyData(StageMasterData master)
@@ -206,6 +337,8 @@ namespace Assets.Scripts.Data.MasterData
                         Name = enemyMaster.Name ?? string.Empty,
                         MaxHp = Mathf.Max(1, enemyMaster.MaxHp),
                         Damage = Mathf.Max(0, enemyMaster.Damage),
+                        AttackAttribute = BuildAttributeData(ResolveEnemyRightHandWeaponAttribute(enemyMaster)),
+                        DefenseAttributeModifiers = BuildEquipmentAttributeModifierData(ResolveEnemyChestAttributeModifiers(enemyMaster)),
                         Appearance = BuildResolvedEnemyAppearanceData(enemyMaster),
                         Patterns = BuildPatterns(enemyMaster),
                     };
@@ -217,9 +350,52 @@ namespace Assets.Scripts.Data.MasterData
                 Name = string.Empty,
                 MaxHp = 1,
                 Damage = 80,
+                AttackAttribute = null,
+                DefenseAttributeModifiers = Array.Empty<EquipmentAttributeModifierData>(),
                 Appearance = new AppearanceData(),
                 Patterns = Array.Empty<StageBattlePatternData>(),
             };
+        }
+
+        private static AttributeMasterData ResolveEnemyRightHandWeaponAttribute(StageBattleEnemyMasterData enemyMaster)
+        {
+            var slotMasters = enemyMaster?.AppearanceSlots;
+            if (slotMasters == null)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < slotMasters.Count; i++)
+            {
+                var equipment = slotMasters[i]?.Equipment;
+                if (equipment != null && equipment.IsRightHandEquipment && equipment.NormalAttackAttribute != null)
+                {
+                    return equipment.NormalAttackAttribute;
+                }
+            }
+
+            return null;
+        }
+
+        private static IReadOnlyList<EquipmentAttributeModifierEntry> ResolveEnemyChestAttributeModifiers(
+            StageBattleEnemyMasterData enemyMaster)
+        {
+            var slotMasters = enemyMaster?.AppearanceSlots;
+            if (slotMasters == null)
+            {
+                return Array.Empty<EquipmentAttributeModifierEntry>();
+            }
+
+            for (var i = 0; i < slotMasters.Count; i++)
+            {
+                var equipment = slotMasters[i]?.Equipment;
+                if (equipment != null && equipment.PartType == PartsType.Chest)
+                {
+                    return equipment.AttributeModifiers;
+                }
+            }
+
+            return Array.Empty<EquipmentAttributeModifierEntry>();
         }
 
         private static AppearanceData BuildResolvedEnemyAppearanceData(StageBattleEnemyMasterData enemyMaster)

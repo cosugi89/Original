@@ -17,4 +17,15 @@ MonoBehaviour:
   partType: 4
   partsIndex: 12
   icon: {fileID: 0}
+  sortOrder: 12
   isDefaultOwned: 0
+  assignableSkills: []
+  normalAttackAttribute: {fileID: 0}
+  attributeModifiers:
+  - attribute: {fileID: 11400000, guid: 337e2699b39f4548bc58ee1a3ba8f610, type: 2}
+    damagePercent: 150
+  - attribute: {fileID: 11400000, guid: 4eac55257cca49b18f2e3956db6a0c57, type: 2}
+    damagePercent: 75
+  categoryTags:
+  - mage
+  - robe

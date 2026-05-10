@@ -1,4 +1,6 @@
 using System;
+using Assets.Scripts.Data.DTO;
+using Assets.Scripts.Data.MasterData;
 
 namespace Assets.Scripts.Features.Battle.Runtime
 {
@@ -21,6 +23,10 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public string Description { get; set; } = string.Empty;
 
+        public string DescriptionSupplement { get; set; } = string.Empty;
+
+        public int SkillId { get; set; }
+
         public bool IsUnlocked { get; set; } = true;
 
         public bool IsConfigured { get; set; } = true;
@@ -34,6 +40,12 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public int AttackChargeGain { get; set; } = 1;
 
         public int Damage { get; set; }
+
+        public AttributeData Attribute { get; set; }
+
+        public BattleSkillEffectType EffectType { get; set; } = BattleSkillEffectType.Damage;
+
+        public EffectAnimationData EffectAnimation { get; set; }
 
         private int _currentCharge;
 

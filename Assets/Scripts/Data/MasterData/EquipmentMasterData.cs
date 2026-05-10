@@ -69,6 +69,21 @@ namespace Assets.Scripts.Data.MasterData
         [Description("この装備が提供する候補スキル一覧。最大3件を想定。")]
         private List<BattleSkillMasterData> assignableSkills = new();
 
+        [SerializeField]
+        [Tooltip("右手武器が持つ通常攻撃用の属性です。右手武器以外では未設定でも構いません。")]
+        [Description("通常攻撃に適用する属性。主に右手武器で使う。")]
+        private AttributeMasterData normalAttackAttribute;
+
+        [SerializeField]
+        [Tooltip("装備が持つ属性補正一覧です。100 が等倍、50 が半減、150 が弱点などを表します。")]
+        [Description("属性ごとの被ダメージ補正一覧。")]
+        private List<EquipmentAttributeModifierEntry> attributeModifiers = new();
+
+        [SerializeField]
+        [Tooltip("装備の補助タグ一覧です。UI分類や絞り込み、将来のロジック分岐補助に使います。")]
+        [Description("装備の補助タグ一覧。")]
+        private List<string> categoryTags = new();
+
         public int EquipmentId => equipmentId;
 
         public string DisplayName => displayName;
@@ -90,6 +105,13 @@ namespace Assets.Scripts.Data.MasterData
         public bool IsDefaultOwned => isDefaultOwned;
 
         public IReadOnlyList<BattleSkillMasterData> AssignableSkills => assignableSkills ??= new List<BattleSkillMasterData>();
+
+        public AttributeMasterData NormalAttackAttribute => normalAttackAttribute;
+
+        public IReadOnlyList<EquipmentAttributeModifierEntry> AttributeModifiers =>
+            attributeModifiers ??= new List<EquipmentAttributeModifierEntry>();
+
+        public IReadOnlyList<string> CategoryTags => categoryTags ??= new List<string>();
 
         [Description("partType と partsIndex から導ける既定の装備ID。旧データ移行との対応に使える。")]
         public int FallbackEquipmentId => EquipmentIdUtility.Build(PartType, PartsIndex);
@@ -203,5 +225,19 @@ namespace Assets.Scripts.Data.MasterData
                 _ => PartsExclusiveGroup.None,
             };
         }
+    }
+
+    [System.Serializable]
+    public class EquipmentAttributeModifierEntry
+    {
+        [SerializeField]
+        private AttributeMasterData attribute;
+
+        [SerializeField]
+        [Tooltip("100 が等倍、50 が半減、150 が弱点です。")]
+        private int damagePercent = 100;
+
+        public AttributeMasterData Attribute => attribute;
+        public int DamagePercent => damagePercent;
     }
 }

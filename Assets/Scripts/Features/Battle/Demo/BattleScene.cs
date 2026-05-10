@@ -79,6 +79,8 @@ namespace Assets.Scripts.Features.Battle.Demo
         private StageBattlePatternData _preparedPattern;
         private BattleBoardState _preparedBoard;
         private UserBattleProfileData _activeBattleProfile;
+        private AttributeData _playerAttackAttribute;
+        private IReadOnlyList<EquipmentAttributeModifierData> _playerDefenseAttributeModifiers = Array.Empty<EquipmentAttributeModifierData>();
         private bool _presentationBootstrapped;
         private CancellationTokenSource _awaitNodePathCts;
         private CancellationTokenSource _turnExecutionCts;
@@ -283,7 +285,39 @@ namespace Assets.Scripts.Features.Battle.Demo
             _activeBattleProfile.JumpAttackDamage = Mathf.Max(1, _activeBattleProfile.JumpAttackDamage);
             skillSlots = CreateRuntimeSkillSlots(_activeBattleProfile);
 
-            Debug.Log($"[Battle] UserData BattleProfile HP={_activeBattleProfile.MaxHp} Attack={_activeBattleProfile.NormalAttackDamage}/{_activeBattleProfile.DoubleAttackFollowUpDamage}/{_activeBattleProfile.JumpAttackDamage} SkillSlots={skillSlots.Count}");
+            var avatarService = AvatarService.EnsureInitialized();
+            var inventoryService = InventoryService.EnsureInitialized();
+            _playerAttackAttribute = null;
+            _playerDefenseAttributeModifiers = Array.Empty<EquipmentAttributeModifierData>();
+
+            var equippedParts = avatarService.GetAllPartStates();
+            if (equippedParts != null)
+            {
+                for (var i = 0; i < equippedParts.Count; i++)
+                {
+                    var partState = equippedParts[i];
+                    if (partState == null ||
+                        partState.EquipmentId <= 0 ||
+                        !inventoryService.TryGetDefinition(partState.EquipmentId, out var definition))
+                    {
+                        continue;
+                    }
+
+                    if (_playerAttackAttribute == null && definition.IsRightHandEquipment && definition.NormalAttackAttribute != null)
+                    {
+                        _playerAttackAttribute = definition.NormalAttackAttribute;
+                    }
+
+                    if (partState.PartType == LayerLab.ArtMakerUnity.PartsType.Chest &&
+                        definition.AttributeModifiers != null &&
+                        definition.AttributeModifiers.Count > 0)
+                    {
+                        _playerDefenseAttributeModifiers = definition.AttributeModifiers;
+                    }
+                }
+            }
+
+            Debug.Log($"[Battle] UserData BattleProfile HP={_activeBattleProfile.MaxHp} Attack={_activeBattleProfile.NormalAttackDamage}/{_activeBattleProfile.DoubleAttackFollowUpDamage}/{_activeBattleProfile.JumpAttackDamage} Attr={_playerAttackAttribute?.DisplayName ?? "-"} SkillSlots={skillSlots.Count}");
         }
 
         private void RefreshSkillButtonVisuals()
@@ -597,7 +631,11 @@ namespace Assets.Scripts.Features.Battle.Demo
                 _session.PlayerHp,
                 _activeBattleProfile.NormalAttackDamage,
                 _activeBattleProfile.DoubleAttackFollowUpDamage,
-                _activeBattleProfile.JumpAttackDamage);
+                _activeBattleProfile.JumpAttackDamage,
+                _playerAttackAttribute,
+                _activeEnemyData?.AttackAttribute,
+                _activeEnemyData?.DefenseAttributeModifiers,
+                _playerDefenseAttributeModifiers);
 
             var cellPath = _preparedBoard.BuildCellPath(traceInputHandler.ConfirmedPath);
             var path = _preparedBoard.BuildNodePath(traceInputHandler.ConfirmedPath);
@@ -638,7 +676,11 @@ namespace Assets.Scripts.Features.Battle.Demo
                 _session.PlayerHp,
                 _activeBattleProfile.NormalAttackDamage,
                 _activeBattleProfile.DoubleAttackFollowUpDamage,
-                _activeBattleProfile.JumpAttackDamage);
+                _activeBattleProfile.JumpAttackDamage,
+                _playerAttackAttribute,
+                _activeEnemyData?.AttackAttribute,
+                _activeEnemyData?.DefenseAttributeModifiers,
+                _playerDefenseAttributeModifiers);
 
             executedCellPath = layout.Board.BuildCellPath(tracePositions);
             result = BattleTurnResolver.Resolve(executedCellPath, context);
@@ -668,11 +710,11 @@ namespace Assets.Scripts.Features.Battle.Demo
                     }
                 }
 
-                boardController.ConfigureExistingChildren(
+                boardController.ConfigureGeneratedCells(
                     panelsRoot as RectTransform,
                     panelsRoot.GetComponent<GridLayoutGroup>());
                 preferInteractiveTraceInput = true;
-                Debug.Log($"[Battle] panelsRoot を接続しました ChildCount={panelsRoot.childCount} Interactive={preferInteractiveTraceInput}");
+                Debug.Log($"[Battle] panelsRoot を生成式盤面 root として接続しました ChildCount={panelsRoot.childCount} Interactive={preferInteractiveTraceInput}");
             }
 
             if (traceInputHandler == null)
@@ -934,7 +976,11 @@ namespace Assets.Scripts.Features.Battle.Demo
                 _session.PlayerHp,
                 _activeBattleProfile.NormalAttackDamage,
                 _activeBattleProfile.DoubleAttackFollowUpDamage,
-                _activeBattleProfile.JumpAttackDamage);
+                _activeBattleProfile.JumpAttackDamage,
+                _playerAttackAttribute,
+                _activeEnemyData?.AttackAttribute,
+                _activeEnemyData?.DefenseAttributeModifiers,
+                _playerDefenseAttributeModifiers);
         }
 
         private string BuildTurnPrompt(StageBattlePatternData pattern)
@@ -975,20 +1021,27 @@ namespace Assets.Scripts.Features.Battle.Demo
                 parts.Add($"攻撃{preview.ResolvedAttackCount}回");
             }
 
-            if (preview.EnemyDamageTaken > 0)
+            if (preview.EnemyDamageTaken > 0 || !string.IsNullOrWhiteSpace(preview.EnemyDamageAttributeSummary))
             {
-                parts.Add($"敵-{preview.EnemyDamageTaken}");
+                parts.Add(string.IsNullOrWhiteSpace(preview.EnemyDamageAttributeSummary)
+                    ? $"敵-{preview.EnemyDamageTaken}"
+                    : $"敵-{preview.EnemyDamageTaken} [{preview.EnemyDamageAttributeSummary}]");
             }
 
             if (preview.ResolvedHazardCount > 0)
             {
-                parts.Add(preview.PlayerDamageTaken > 0
-                    ? $"自分-{preview.PlayerDamageTaken}"
+                parts.Add(preview.PlayerDamageTaken > 0 || !string.IsNullOrWhiteSpace(preview.PlayerDamageAttributeSummary)
+                    ? string.IsNullOrWhiteSpace(preview.PlayerDamageAttributeSummary)
+                        ? $"自分-{preview.PlayerDamageTaken}"
+                        : $"自分-{preview.PlayerDamageTaken} [{preview.PlayerDamageAttributeSummary}]"
                     : "被弾なし");
             }
-            else if (preview.ResolvedEnemyActionCount > 0 && preview.PlayerDamageTaken > 0)
+            else if (preview.ResolvedEnemyActionCount > 0 &&
+                     (preview.PlayerDamageTaken > 0 || !string.IsNullOrWhiteSpace(preview.PlayerDamageAttributeSummary)))
             {
-                parts.Add($"敵攻撃-{preview.PlayerDamageTaken}");
+                parts.Add(string.IsNullOrWhiteSpace(preview.PlayerDamageAttributeSummary)
+                    ? $"敵攻撃-{preview.PlayerDamageTaken}"
+                    : $"敵攻撃-{preview.PlayerDamageTaken} [{preview.PlayerDamageAttributeSummary}]");
             }
 
             if (preview.StoppedByHazardHit)
@@ -1076,10 +1129,35 @@ namespace Assets.Scripts.Features.Battle.Demo
         {
             slotData ??= new UserBattleSkillSlotData();
 
+            if (slotData.SkillId > 0 &&
+                MasterDataResourceLoader.TryLoadBattleSkillData(slotData.SkillId, out var skillDefinition) &&
+                skillDefinition != null)
+            {
+                return new BattleSkillSlotRuntime
+                {
+                    SkillId = skillDefinition.SkillId,
+                    DisplayName = skillDefinition.DisplayName,
+                    Description = skillDefinition.Description,
+                    DescriptionSupplement = skillDefinition.DescriptionSupplement ?? string.Empty,
+                    IsUnlocked = slotData.IsUnlocked,
+                    IsConfigured = slotData.IsConfigured,
+                    RequiredCharge = Mathf.Max(1, skillDefinition.RequiredCharge),
+                    StartingCharge = Mathf.Max(0, skillDefinition.StartingCharge),
+                    TurnChargeGain = Mathf.Max(0, skillDefinition.TurnChargeGain),
+                    AttackChargeGain = Mathf.Max(0, skillDefinition.AttackChargeGain),
+                    Damage = Mathf.Max(0, skillDefinition.Damage),
+                    Attribute = skillDefinition.Attribute,
+                    EffectType = skillDefinition.EffectType,
+                    EffectAnimation = skillDefinition.EffectAnimation,
+                };
+            }
+
             return new BattleSkillSlotRuntime
             {
+                SkillId = Mathf.Max(0, slotData.SkillId),
                 DisplayName = slotData.DisplayName ?? "Skill",
                 Description = slotData.Description ?? string.Empty,
+                DescriptionSupplement = string.Empty,
                 IsUnlocked = slotData.IsUnlocked,
                 IsConfigured = slotData.IsConfigured,
                 RequiredCharge = Mathf.Max(1, slotData.RequiredCharge),
@@ -1099,8 +1177,10 @@ namespace Assets.Scripts.Features.Battle.Demo
 
             var clone = new BattleSkillSlotRuntime
             {
+                SkillId = source.SkillId,
                 DisplayName = source.DisplayName,
                 Description = source.Description,
+                DescriptionSupplement = source.DescriptionSupplement,
                 IsUnlocked = source.IsUnlocked,
                 IsConfigured = source.IsConfigured,
                 RequiredCharge = source.RequiredCharge,
@@ -1108,6 +1188,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 TurnChargeGain = source.TurnChargeGain,
                 AttackChargeGain = source.AttackChargeGain,
                 Damage = source.Damage,
+                Attribute = source.Attribute,
+                EffectType = source.EffectType,
+                EffectAnimation = source.EffectAnimation,
             };
             clone.SetCurrentCharge(source.CurrentCharge);
             return clone;

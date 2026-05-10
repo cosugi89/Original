@@ -100,6 +100,19 @@ namespace Assets.Scripts.Features.Battle.Core
     }
 
     /// <summary>
+    /// 属性相性の結果分類。
+    /// ログや簡易UIで弱点/耐性を表現するための共通キーとして使う。
+    /// </summary>
+    public enum BattleAttributeEffectiveness
+    {
+        None,
+        Neutral,
+        Weak,
+        Resist,
+        Immune,
+    }
+
+    /// <summary>
     /// 1 回のトレース入力の状態。
     /// </summary>
     public enum BattlePathTraceStatus

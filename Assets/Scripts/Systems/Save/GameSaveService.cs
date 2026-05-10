@@ -154,6 +154,23 @@ namespace Assets.Scripts.Systems.Save
                 userData.Profile.BattleProfile.SkillSlots[i] ??= new UserBattleSkillSlotData();
 
                 var slot = userData.Profile.BattleProfile.SkillSlots[i];
+                if (slot.SkillId <= 0)
+                {
+                    switch (slot.DisplayName)
+                    {
+                        case "Wide Blast":
+                            slot.SkillId = 2001;
+                            break;
+                        case "Pierce Volley":
+                            slot.SkillId = 2002;
+                            break;
+                        case "Locked Slot":
+                            slot.SkillId = 2003;
+                            break;
+                    }
+                }
+
+                slot.SkillId = Mathf.Max(0, slot.SkillId);
                 slot.DisplayName ??= "Skill";
                 slot.Description ??= string.Empty;
                 slot.RequiredCharge = Mathf.Max(1, slot.RequiredCharge);

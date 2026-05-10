@@ -30,6 +30,11 @@ namespace Assets.Scripts.Data.DTO
 
         public int Damage { get; init; } = 80;
 
+        public AttributeData AttackAttribute { get; init; }
+
+        public IReadOnlyList<EquipmentAttributeModifierData> DefenseAttributeModifiers { get; init; } =
+            Array.Empty<EquipmentAttributeModifierData>();
+
         public AppearanceData Appearance { get; init; } = new();
 
         public IReadOnlyList<StageBattlePatternData> Patterns { get; init; } = Array.Empty<StageBattlePatternData>();

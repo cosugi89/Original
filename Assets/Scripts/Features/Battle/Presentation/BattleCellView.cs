@@ -1,7 +1,7 @@
 using System;
+using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Runtime;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -14,14 +14,14 @@ namespace Assets.Scripts.Features.Battle.Presentation
     public class BattleCellView : MonoBehaviour, IPointerDownHandler, IPointerEnterHandler, IPointerUpHandler
     {
         [SerializeField] private Image backgroundImage;
-        [SerializeField] private TMP_Text labelText;
+        [SerializeField] private Image iconImage;
         [SerializeField] private Color pathColor = new(1f, 0.92f, 0.45f, 1f);
         [SerializeField] private Color currentColor = new(1f, 0.7f, 0.25f, 1f);
         [SerializeField] private Color confirmableColor = new(0.45f, 0.9f, 0.55f, 1f);
 
         private BattleCellState _cell;
+        private BattleNodeVisualDatabase _nodeVisualDatabase;
         private Outline _backgroundOutline;
-        private Outline _labelOutline;
         private Vector3 _initialScale;
         private bool _hasInitialScale;
 
@@ -35,33 +35,32 @@ namespace Assets.Scripts.Features.Battle.Presentation
 
         public RectTransform RectTransform => transform as RectTransform;
 
-        public void Bind(BattleCellState cell)
+        public void Bind(BattleCellState cell, BattleNodeVisualDatabase nodeVisualDatabase = null)
         {
-            AutoBindFromHierarchy();
             EnsureRuntimeVisuals();
             _cell = cell;
+            _nodeVisualDatabase = nodeVisualDatabase;
             SetTraceState(isInPath: false, isCurrent: false, canConfirm: false);
         }
 
-        public void AutoBindFromHierarchy()
+        private void Reset()
         {
             if (backgroundImage == null)
             {
                 backgroundImage = GetComponent<Image>();
-                if (backgroundImage == null)
+            }
+
+            if (iconImage == null)
+            {
+                var images = GetComponentsInChildren<Image>(includeInactive: true);
+                for (var i = 0; i < images.Length; i++)
                 {
-                    backgroundImage = GetComponentInChildren<Image>(includeInactive: true);
+                    if (images[i] != null && images[i] != backgroundImage)
+                    {
+                        iconImage = images[i];
+                        break;
+                    }
                 }
-            }
-
-            if (labelText == null)
-            {
-                labelText = GetComponentInChildren<TMP_Text>(includeInactive: true);
-            }
-
-            if (labelText == null)
-            {
-                labelText = CreateFallbackLabel();
             }
         }
 
@@ -97,11 +96,7 @@ namespace Assets.Scripts.Features.Battle.Presentation
                 backgroundImage.color = backgroundColor;
             }
 
-            if (labelText != null)
-            {
-                labelText.text = style.Label;
-                labelText.color = style.LabelColor;
-            }
+            ApplyIcon(style);
 
             if (_backgroundOutline != null)
             {
@@ -111,11 +106,6 @@ namespace Assets.Scripts.Features.Battle.Presentation
                     : isCurrent
                         ? new Vector2(4f, -4f)
                         : new Vector2(3f, -3f);
-            }
-
-            if (_labelOutline != null)
-            {
-                _labelOutline.effectColor = new Color(0f, 0f, 0f, 0.72f);
             }
 
             if (!_hasInitialScale)
@@ -157,23 +147,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
 
         private void EnsureRuntimeVisuals()
         {
-            if (labelText != null)
+            if (backgroundImage == null)
             {
-                labelText.raycastTarget = false;
-                labelText.enableAutoSizing = true;
-                labelText.fontSizeMin = 18;
-                labelText.fontSizeMax = 34;
-                labelText.alignment = TextAlignmentOptions.Center;
-                labelText.textWrappingMode = TextWrappingModes.Normal;
-
-                if (labelText.rectTransform != null)
-                {
-                    labelText.rectTransform.anchorMin = new Vector2(0.1f, 0.1f);
-                    labelText.rectTransform.anchorMax = new Vector2(0.9f, 0.9f);
-                    labelText.rectTransform.offsetMin = Vector2.zero;
-                    labelText.rectTransform.offsetMax = Vector2.zero;
-                    labelText.rectTransform.localRotation = Quaternion.identity;
-                }
+                Debug.LogWarning($"[BattleCellView] Background Image が未設定です GameObject={name}");
             }
 
             if (backgroundImage != null)
@@ -188,75 +164,86 @@ namespace Assets.Scripts.Features.Battle.Presentation
                 _backgroundOutline.useGraphicAlpha = true;
             }
 
-            if (labelText != null)
+            if (iconImage != null)
             {
-                _labelOutline = labelText.GetComponent<Outline>();
-                if (_labelOutline == null)
-                {
-                    _labelOutline = labelText.gameObject.AddComponent<Outline>();
-                }
-
-                _labelOutline.useGraphicAlpha = true;
-                _labelOutline.effectDistance = new Vector2(1.5f, -1.5f);
+                iconImage.raycastTarget = false;
+                iconImage.preserveAspect = true;
+            }
+            else
+            {
+                Debug.LogWarning($"[BattleCellView] Icon Image が未設定です GameObject={name}");
             }
         }
 
-        private TMP_Text CreateFallbackLabel()
+        private void ApplyIcon(NodeVisualStyle style)
         {
-            var labelObject = new GameObject("BattleNodeLabel", typeof(RectTransform), typeof(TextMeshProUGUI));
-            labelObject.transform.SetParent(transform, false);
+            if (iconImage == null)
+            {
+                return;
+            }
 
-            var rectTransform = labelObject.GetComponent<RectTransform>();
-            rectTransform.anchorMin = new Vector2(0.1f, 0.1f);
-            rectTransform.anchorMax = new Vector2(0.9f, 0.9f);
-            rectTransform.offsetMin = Vector2.zero;
-            rectTransform.offsetMax = Vector2.zero;
-
-            return labelObject.GetComponent<TextMeshProUGUI>();
+            var showIcon = style.Icon != null;
+            iconImage.sprite = style.Icon;
+            iconImage.color = style.IconColor;
+            iconImage.enabled = showIcon;
         }
 
-        private static NodeVisualStyle GetStyle(BattleNodeType nodeType)
+        private NodeVisualStyle GetStyle(BattleNodeType nodeType)
         {
+            var entry = _nodeVisualDatabase != null ? _nodeVisualDatabase.GetEntry(nodeType) : null;
+            if (entry != null)
+            {
+                return new NodeVisualStyle(
+                    entry.Icon,
+                    entry.BaseColor,
+                    entry.AccentColor,
+                    entry.IconColor);
+            }
+
             switch (nodeType)
             {
                 case BattleNodeType.Start:
-                    return new NodeVisualStyle("START\n開始", new Color(0.18f, 0.64f, 0.73f, 0.98f), Color.white, new Color(0.72f, 0.96f, 1f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.18f, 0.64f, 0.73f, 0.98f), new Color(0.72f, 0.96f, 1f, 1f), Color.white);
                 case BattleNodeType.Goal:
-                    return new NodeVisualStyle("GOAL\n到達", new Color(0.14f, 0.72f, 0.38f, 0.98f), Color.white, new Color(0.73f, 1f, 0.82f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.14f, 0.72f, 0.38f, 0.98f), new Color(0.73f, 1f, 0.82f, 1f), Color.white);
                 case BattleNodeType.Attack:
-                    return new NodeVisualStyle("ATTACK\n攻撃", new Color(0.84f, 0.24f, 0.22f, 0.98f), Color.white, new Color(1f, 0.77f, 0.72f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.84f, 0.24f, 0.22f, 0.98f), new Color(1f, 0.77f, 0.72f, 1f), Color.white);
                 case BattleNodeType.Jump:
-                    return new NodeVisualStyle("JUMP\n跳躍", new Color(0.25f, 0.56f, 0.96f, 0.98f), Color.white, new Color(0.77f, 0.88f, 1f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.25f, 0.56f, 0.96f, 0.98f), new Color(0.77f, 0.88f, 1f, 1f), Color.white);
                 case BattleNodeType.Roll:
-                    return new NodeVisualStyle("ROLL\n回避", new Color(0.93f, 0.58f, 0.15f, 0.98f), Color.white, new Color(1f, 0.87f, 0.68f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.93f, 0.58f, 0.15f, 0.98f), new Color(1f, 0.87f, 0.68f, 1f), Color.white);
                 case BattleNodeType.Dance:
-                    return new NodeVisualStyle("DANCE\n舞踏", new Color(0.82f, 0.34f, 0.53f, 0.98f), Color.white, new Color(1f, 0.77f, 0.89f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.82f, 0.34f, 0.53f, 0.98f), new Color(1f, 0.77f, 0.89f, 1f), Color.white);
                 case BattleNodeType.HazardNormal:
-                    return new NodeVisualStyle("DANGER\n危険", new Color(0.25f, 0.26f, 0.3f, 0.98f), new Color(1f, 0.84f, 0.84f, 1f), new Color(1f, 0.36f, 0.36f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.25f, 0.26f, 0.3f, 0.98f), new Color(1f, 0.36f, 0.36f, 1f), Color.white);
                 case BattleNodeType.HazardSkill:
-                    return new NodeVisualStyle("SKILL\n危険", new Color(0.2f, 0.28f, 0.48f, 0.98f), new Color(0.92f, 0.98f, 1f, 1f), new Color(0.47f, 0.88f, 1f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.2f, 0.28f, 0.48f, 0.98f), new Color(0.47f, 0.88f, 1f, 1f), Color.white);
                 default:
-                    return new NodeVisualStyle(string.Empty, new Color(0.88f, 0.84f, 0.8f, 0.92f), new Color(0.33f, 0.29f, 0.26f, 1f), new Color(0.98f, 0.95f, 0.9f, 1f));
+                    return new NodeVisualStyle(null, new Color(0.88f, 0.84f, 0.8f, 0.92f), new Color(0.98f, 0.95f, 0.9f, 1f), Color.white);
             }
         }
 
         private readonly struct NodeVisualStyle
         {
-            public NodeVisualStyle(string label, Color baseColor, Color labelColor, Color accentColor)
+            public NodeVisualStyle(
+                Sprite icon,
+                Color baseColor,
+                Color accentColor,
+                Color iconColor)
             {
-                Label = label;
+                Icon = icon;
                 BaseColor = baseColor;
-                LabelColor = labelColor;
                 AccentColor = accentColor;
+                IconColor = iconColor;
             }
 
-            public string Label { get; }
+            public Sprite Icon { get; }
 
             public Color BaseColor { get; }
 
-            public Color LabelColor { get; }
-
             public Color AccentColor { get; }
+
+            public Color IconColor { get; }
         }
     }
 }

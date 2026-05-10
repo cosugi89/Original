@@ -21,3 +21,7 @@ MonoBehaviour:
   turnChargeGain: 1
   attackChargeGain: 1
   damage: 140
+  attribute: {fileID: 11400000, guid: 337e2699b39f4548bc58ee1a3ba8f610, type: 2}
+  effectType: 0
+  effectAnimation: {fileID: 11400000, guid: 0c5ca4937f0743178a2cfa94a8efbcb7, type: 2}
+  descriptionSupplement: 炎属性の標準攻撃スキル。弱点相手に扱いやすい。

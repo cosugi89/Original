@@ -21,3 +21,7 @@ MonoBehaviour:
   turnChargeGain: 1
   attackChargeGain: 2
   damage: 90
+  attribute: {fileID: 11400000, guid: e4911a3b9c94435a89d1f925c63c6280, type: 2}
+  effectType: 3
+  effectAnimation: {fileID: 11400000, guid: a29d0d8617f14a20bfd5ab197b2b3d78, type: 2}
+  descriptionSupplement: 土属性の支援寄りスキル。現状は軽ダメージの補助枠。

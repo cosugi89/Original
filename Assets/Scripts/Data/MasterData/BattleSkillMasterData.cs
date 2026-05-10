@@ -73,6 +73,27 @@ namespace Assets.Scripts.Data.MasterData
         [Description("スキル発動時のダメージ量。")]
         private int damage = 0;
 
+        [SerializeField]
+        [Tooltip("このスキルが持つ属性です。通常攻撃属性とは別に、スキルごとに個別設定できます。")]
+        [Description("スキルが持つ属性。")]
+        private AttributeMasterData attribute;
+
+        [SerializeField]
+        [Tooltip("このスキルの主効果種別です。解決ロジックや UI 表示の分岐に使います。")]
+        [Description("スキルの主効果種別。")]
+        private BattleSkillEffectType effectType = BattleSkillEffectType.Damage;
+
+        [SerializeField]
+        [Tooltip("このスキルが使用する演出定義です。文字列キーではなく ScriptableObject の生参照で持ちます。")]
+        [Description("このスキルに紐づく演出定義。")]
+        private EffectAnimationMasterData effectAnimation;
+
+        [SerializeField]
+        [TextArea]
+        [Tooltip("説明文の補足です。条件付きの強みや使いどころなど、短い補助テキストを入れます。")]
+        [Description("説明文の補足テキスト。")]
+        private string descriptionSupplement = string.Empty;
+
         public int SkillId => skillId;
         public string DisplayName => displayName;
         public string Description => description;
@@ -82,6 +103,10 @@ namespace Assets.Scripts.Data.MasterData
         public int TurnChargeGain => turnChargeGain;
         public int AttackChargeGain => attackChargeGain;
         public int Damage => damage;
+        public AttributeMasterData Attribute => attribute;
+        public BattleSkillEffectType EffectType => effectType;
+        public EffectAnimationMasterData EffectAnimation => effectAnimation;
+        public string DescriptionSupplement => descriptionSupplement;
 
         public IReadOnlyList<ValidationIssue> GetValidationIssues()
         {
@@ -141,6 +166,14 @@ namespace Assets.Scripts.Data.MasterData
                     "invalid_damage",
                     "Damage は 0 以上にしてください。",
                     ValidationSeverity.Error));
+            }
+
+            if (effectAnimation == null)
+            {
+                issues.Add(new ValidationIssue(
+                    "missing_effect_animation",
+                    "EffectAnimation が未設定です。将来の演出接続先が分からなくなるため、対応する演出 asset を設定してください。",
+                    ValidationSeverity.Warning));
             }
 
             return issues;

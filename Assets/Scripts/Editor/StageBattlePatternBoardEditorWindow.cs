@@ -96,6 +96,7 @@ namespace Assets.Scripts.Editor
 
         private StageBattlePatternMasterData _pattern;
         private PatternDraft _draft;
+        private BattleNodeVisualDatabase _visualDatabase;
         private PaintTool _paintTool = PaintTool.Attack;
         private Vector2 _scrollPosition;
         private float _cellSize = 60f;
@@ -112,6 +113,7 @@ namespace Assets.Scripts.Editor
 
         private void OnEnable()
         {
+            ResolveVisualDatabase();
             TryAssignFromSelection();
         }
 
@@ -258,7 +260,10 @@ namespace Assets.Scripts.Editor
                 var visual = GetToolVisual(tool);
                 var previousColor = GUI.backgroundColor;
                 GUI.backgroundColor = _paintTool == tool ? visual.BackgroundColor * 1.05f : visual.BackgroundColor;
-                if (GUILayout.Toggle(_paintTool == tool, visual.Label, "Button", GUILayout.Height(34f)))
+                var content = visual.Icon != null
+                    ? new GUIContent(visual.Label, visual.Icon.texture)
+                    : new GUIContent(visual.Label);
+                if (GUILayout.Toggle(_paintTool == tool, content, "Button", GUILayout.Height(34f)))
                 {
                     _paintTool = tool;
                 }
@@ -307,20 +312,13 @@ namespace Assets.Scripts.Editor
                         GUIUtility.ExitGUI();
                     }
 
-                    var labelStyle = new GUIStyle(EditorStyles.boldLabel)
-                    {
-                        alignment = TextAnchor.MiddleCenter,
-                        wordWrap = true,
-                        fontSize = 10,
-                        normal = { textColor = visual.TextColor },
-                    };
-                    GUI.Label(rect, visual.Label, labelStyle);
+                    DrawCellContent(rect, visual);
 
                     var coordinateRect = new Rect(rect.x + 4f, rect.y + 2f, rect.width - 8f, 12f);
                     var coordinateStyle = new GUIStyle(EditorStyles.miniLabel)
                     {
                         alignment = TextAnchor.UpperLeft,
-                        normal = { textColor = visual.TextColor * 0.9f },
+                        normal = { textColor = Color.white * 0.9f },
                     };
                     GUI.Label(coordinateRect, $"{x},{y}", coordinateStyle);
                 }
@@ -613,6 +611,67 @@ namespace Assets.Scripts.Editor
             }
         }
 
+        private BattleNodeVisualDatabase ResolveVisualDatabase()
+        {
+            if (_visualDatabase == null)
+            {
+                _visualDatabase = Resources.Load<BattleNodeVisualDatabase>(BattleNodeVisualDatabase.DefaultResourcePath);
+            }
+
+            return _visualDatabase;
+        }
+
+        private void DrawCellContent(Rect rect, CellVisual visual)
+        {
+            var showIcon = visual.Icon != null;
+            var showText = !string.IsNullOrWhiteSpace(visual.Label);
+
+            if (showIcon)
+            {
+                var iconRect = showText
+                    ? new Rect(rect.x + rect.width * 0.28f, rect.y + rect.height * 0.08f, rect.width * 0.44f, rect.height * 0.32f)
+                    : new Rect(rect.x + rect.width * 0.2f, rect.y + rect.height * 0.2f, rect.width * 0.6f, rect.height * 0.6f);
+                DrawSprite(iconRect, visual.Icon, visual.IconColor);
+            }
+
+            if (showText)
+            {
+                var labelRect = showIcon
+                    ? new Rect(rect.x + 4f, rect.y + rect.height * 0.42f, rect.width - 8f, rect.height * 0.5f)
+                    : rect;
+
+                var labelStyle = new GUIStyle(EditorStyles.boldLabel)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true,
+                    fontSize = 10,
+                    normal = { textColor = Color.white },
+                };
+                GUI.Label(labelRect, visual.Label, labelStyle);
+            }
+        }
+
+        private static void DrawSprite(Rect rect, Sprite sprite, Color tint)
+        {
+            if (sprite == null || sprite.texture == null)
+            {
+                return;
+            }
+
+            var texture = sprite.texture;
+            var textureRect = sprite.textureRect;
+            var uv = new Rect(
+                textureRect.x / texture.width,
+                textureRect.y / texture.height,
+                textureRect.width / texture.width,
+                textureRect.height / texture.height);
+
+            var previousColor = GUI.color;
+            GUI.color = tint;
+            GUI.DrawTextureWithTexCoords(rect, texture, uv, true);
+            GUI.color = previousColor;
+        }
+
         private static BattleNodeType ToNodeType(PaintTool paintTool)
         {
             return paintTool switch
@@ -628,60 +687,90 @@ namespace Assets.Scripts.Editor
             };
         }
 
-        private static CellVisual GetToolVisual(PaintTool tool)
+        private CellVisual GetToolVisual(PaintTool tool)
         {
             return tool switch
             {
-                PaintTool.Start => new CellVisual("Start", new Color(0.18f, 0.64f, 0.73f, 0.98f), Color.white, new Color(0.72f, 0.96f, 1f, 1f)),
-                PaintTool.Erase => new CellVisual("消去", new Color(0.8f, 0.8f, 0.8f, 0.96f), new Color(0.18f, 0.18f, 0.18f, 1f), new Color(0.45f, 0.45f, 0.45f, 1f)),
-                PaintTool.Attack => GetNodeVisual(BattleNodeType.Attack, false),
-                PaintTool.Jump => GetNodeVisual(BattleNodeType.Jump, false),
-                PaintTool.Roll => GetNodeVisual(BattleNodeType.Roll, false),
-                PaintTool.Dance => GetNodeVisual(BattleNodeType.Dance, false),
-                PaintTool.HazardNormal => GetNodeVisual(BattleNodeType.HazardNormal, false),
-                PaintTool.HazardSkill => GetNodeVisual(BattleNodeType.HazardSkill, false),
-                PaintTool.Goal => GetNodeVisual(BattleNodeType.Goal, false),
-                _ => GetNodeVisual(BattleNodeType.Empty, false),
+                PaintTool.Start => GetToolVisual("Start", BattleNodeType.Start, true),
+                PaintTool.Erase => new CellVisual("消去", null, new Color(0.8f, 0.8f, 0.8f, 0.96f), new Color(0.45f, 0.45f, 0.45f, 1f), Color.white),
+                PaintTool.Attack => GetToolVisual("Attack", BattleNodeType.Attack, false),
+                PaintTool.Jump => GetToolVisual("Jump", BattleNodeType.Jump, false),
+                PaintTool.Roll => GetToolVisual("Roll", BattleNodeType.Roll, false),
+                PaintTool.Dance => GetToolVisual("Dance", BattleNodeType.Dance, false),
+                PaintTool.HazardNormal => GetToolVisual("Danger", BattleNodeType.HazardNormal, false),
+                PaintTool.HazardSkill => GetToolVisual("Skill", BattleNodeType.HazardSkill, false),
+                PaintTool.Goal => GetToolVisual("Goal", BattleNodeType.Goal, false),
+                _ => GetToolVisual(string.Empty, BattleNodeType.Empty, false),
             };
         }
 
-        private static CellVisual GetNodeVisual(BattleNodeType nodeType, bool isStart)
+        private CellVisual GetToolVisual(string label, BattleNodeType nodeType, bool isStart)
         {
-            if (isStart || nodeType == BattleNodeType.Start)
+            var baseVisual = GetNodeVisual(nodeType, isStart);
+            return new CellVisual(label, baseVisual.Icon, baseVisual.BackgroundColor, baseVisual.OutlineColor, baseVisual.IconColor);
+        }
+
+        private CellVisual GetNodeVisual(BattleNodeType nodeType, bool isStart)
+        {
+            var resolvedNodeType = isStart ? BattleNodeType.Start : nodeType;
+            var visualDatabase = ResolveVisualDatabase();
+            if (visualDatabase != null)
             {
-                return new CellVisual("START\n開始", new Color(0.18f, 0.64f, 0.73f, 0.98f), Color.white, new Color(0.72f, 0.96f, 1f, 1f));
+                var entry = visualDatabase.GetEntry(resolvedNodeType);
+                if (entry != null)
+                {
+                    return new CellVisual(
+                        string.Empty,
+                        entry.Icon,
+                        entry.BaseColor,
+                        entry.AccentColor,
+                        entry.IconColor);
+                }
             }
 
-            return nodeType switch
+            if (resolvedNodeType == BattleNodeType.Start)
             {
-                BattleNodeType.Goal => new CellVisual("GOAL\n到達", new Color(0.14f, 0.72f, 0.38f, 0.98f), Color.white, new Color(0.73f, 1f, 0.82f, 1f)),
-                BattleNodeType.Attack => new CellVisual("ATTACK\n攻撃", new Color(0.84f, 0.24f, 0.22f, 0.98f), Color.white, new Color(1f, 0.77f, 0.72f, 1f)),
-                BattleNodeType.Jump => new CellVisual("JUMP\n跳躍", new Color(0.25f, 0.56f, 0.96f, 0.98f), Color.white, new Color(0.77f, 0.88f, 1f, 1f)),
-                BattleNodeType.Roll => new CellVisual("ROLL\n回避", new Color(0.93f, 0.58f, 0.15f, 0.98f), Color.white, new Color(1f, 0.87f, 0.68f, 1f)),
-                BattleNodeType.Dance => new CellVisual("DANCE\n舞踏", new Color(0.82f, 0.34f, 0.53f, 0.98f), Color.white, new Color(1f, 0.77f, 0.89f, 1f)),
-                BattleNodeType.HazardNormal => new CellVisual("DANGER\n危険", new Color(0.25f, 0.26f, 0.3f, 0.98f), new Color(1f, 0.84f, 0.84f, 1f), new Color(1f, 0.36f, 0.36f, 1f)),
-                BattleNodeType.HazardSkill => new CellVisual("SKILL\n危険", new Color(0.2f, 0.28f, 0.48f, 0.98f), new Color(0.92f, 0.98f, 1f, 1f), new Color(0.47f, 0.88f, 1f, 1f)),
-                _ => new CellVisual(string.Empty, new Color(0.88f, 0.84f, 0.8f, 0.92f), new Color(0.33f, 0.29f, 0.26f, 1f), new Color(0.98f, 0.95f, 0.9f, 1f)),
+                return new CellVisual(string.Empty, null, new Color(0.18f, 0.64f, 0.73f, 0.98f), new Color(0.72f, 0.96f, 1f, 1f), Color.white);
+            }
+
+            return resolvedNodeType switch
+            {
+                BattleNodeType.Goal => new CellVisual(string.Empty, null, new Color(0.14f, 0.72f, 0.38f, 0.98f), new Color(0.73f, 1f, 0.82f, 1f), Color.white),
+                BattleNodeType.Attack => new CellVisual(string.Empty, null, new Color(0.84f, 0.24f, 0.22f, 0.98f), new Color(1f, 0.77f, 0.72f, 1f), Color.white),
+                BattleNodeType.Jump => new CellVisual(string.Empty, null, new Color(0.25f, 0.56f, 0.96f, 0.98f), new Color(0.77f, 0.88f, 1f, 1f), Color.white),
+                BattleNodeType.Roll => new CellVisual(string.Empty, null, new Color(0.93f, 0.58f, 0.15f, 0.98f), new Color(1f, 0.87f, 0.68f, 1f), Color.white),
+                BattleNodeType.Dance => new CellVisual(string.Empty, null, new Color(0.82f, 0.34f, 0.53f, 0.98f), new Color(1f, 0.77f, 0.89f, 1f), Color.white),
+                BattleNodeType.HazardNormal => new CellVisual(string.Empty, null, new Color(0.25f, 0.26f, 0.3f, 0.98f), new Color(1f, 0.36f, 0.36f, 1f), Color.white),
+                BattleNodeType.HazardSkill => new CellVisual(string.Empty, null, new Color(0.2f, 0.28f, 0.48f, 0.98f), new Color(0.47f, 0.88f, 1f, 1f), Color.white),
+                _ => new CellVisual(string.Empty, null, new Color(0.88f, 0.84f, 0.8f, 0.92f), new Color(0.98f, 0.95f, 0.9f, 1f), Color.white),
             };
         }
 
         private readonly struct CellVisual
         {
-            public CellVisual(string label, Color backgroundColor, Color textColor, Color outlineColor)
+            public CellVisual(
+                string label,
+                Sprite icon,
+                Color backgroundColor,
+                Color outlineColor,
+                Color iconColor)
             {
                 Label = label;
+                Icon = icon;
                 BackgroundColor = backgroundColor;
-                TextColor = textColor;
                 OutlineColor = outlineColor;
+                IconColor = iconColor;
             }
 
             public string Label { get; }
 
+            public Sprite Icon { get; }
+
             public Color BackgroundColor { get; }
 
-            public Color TextColor { get; }
-
             public Color OutlineColor { get; }
+
+            public Color IconColor { get; }
         }
     }
 }

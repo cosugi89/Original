@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Runtime;
 using UnityEngine;
@@ -13,15 +14,19 @@ namespace Assets.Scripts.Features.Battle.Presentation
     /// </summary>
     public class BattleBoardController : MonoBehaviour
     {
+        public const string DefaultCellPrefabResourcePath = "Prefabs/Battle/BattleCellView";
+
         [SerializeField] private RectTransform cellRoot;
         [SerializeField] private BattleCellView cellPrefab;
         [SerializeField] private GridLayoutGroup gridLayoutGroup;
-        [SerializeField] private bool reuseExistingChildren = true;
+        [SerializeField] private BattleNodeVisualDatabase nodeVisualDatabase;
 
         private readonly Dictionary<BattleGridPosition, BattleCellView> _cellViews = new();
         private readonly List<BattleCellView> _activeViews = new();
         private readonly List<BattleCellView> _spawnedViews = new();
+        private readonly List<GameObject> _suppressedLegacyChildren = new();
         private BattleBoardState _board;
+        private bool _legacyChildrenSuppressed;
 
         public event Action<BattleGridPosition, PointerEventData> CellPointerDown;
         public event Action<BattleGridPosition, PointerEventData> CellPointerEnter;
@@ -29,12 +34,18 @@ namespace Assets.Scripts.Features.Battle.Presentation
 
         public BattleBoardState Board => _board;
 
-        public void ConfigureExistingChildren(RectTransform root, GridLayoutGroup layoutGroup = null)
+        public BattleNodeVisualDatabase NodeVisualDatabase => nodeVisualDatabase;
+
+        public void ConfigureGeneratedCells(RectTransform root, GridLayoutGroup layoutGroup = null, BattleCellView prefab = null)
         {
             cellRoot = root;
             gridLayoutGroup = layoutGroup;
-            reuseExistingChildren = true;
-            cellPrefab = null;
+            if (prefab != null)
+            {
+                cellPrefab = prefab;
+            }
+
+            SuppressLegacyChildrenIfNeeded();
         }
 
         public void RenderBoard(BattleBoardState board)
@@ -46,6 +57,11 @@ namespace Assets.Scripts.Features.Battle.Presentation
             {
                 Debug.LogWarning("[BattleBoard] RenderBoard が null board で呼ばれました。");
                 return;
+            }
+
+            if (nodeVisualDatabase == null)
+            {
+                nodeVisualDatabase = Resources.Load<BattleNodeVisualDatabase>(BattleNodeVisualDatabase.DefaultResourcePath);
             }
 
             if (cellRoot == null)
@@ -60,40 +76,36 @@ namespace Assets.Scripts.Features.Battle.Presentation
                 gridLayoutGroup.constraintCount = _board.Width;
             }
 
-            if (reuseExistingChildren && cellRoot.childCount >= _board.Width * _board.Height)
+            if (cellPrefab == null)
             {
-                Debug.Log($"[BattleBoard] 既存ノードを再利用して描画します Board={_board.Width}x{_board.Height} ChildCount={cellRoot.childCount}");
-                BindExistingChildren();
-                return;
+                cellPrefab = Resources.Load<BattleCellView>(DefaultCellPrefabResourcePath);
             }
 
             if (cellPrefab == null)
             {
-                Debug.LogWarning($"[BattleBoard] cellPrefab が未設定で、既存ノード数も不足しています Required={_board.Width * _board.Height} Actual={cellRoot.childCount}");
+                Debug.LogWarning($"[BattleBoard] cellPrefab が未設定です Path={DefaultCellPrefabResourcePath}");
                 return;
             }
 
             Debug.Log($"[BattleBoard] prefab 生成で描画します Board={_board.Width}x{_board.Height}");
 
-            for (var y = 0; y < _board.Height; y++)
+            var total = _board.Width * _board.Height;
+            for (var i = 0; i < total; i++)
             {
-                for (var x = 0; x < _board.Width; x++)
+                var position = GetPositionForLayoutIndex(i);
+                if (!_board.TryGetCell(position, out var cell))
                 {
-                    var position = new BattleGridPosition(x, y);
-                    if (!_board.TryGetCell(position, out var cell))
-                    {
-                        continue;
-                    }
-
-                    var view = Instantiate(cellPrefab, cellRoot);
-                    view.Bind(cell);
-                    view.PointerDownReceived += OnCellPointerDown;
-                    view.PointerEnterReceived += OnCellPointerEnter;
-                    view.PointerUpReceived += OnCellPointerUp;
-                    _cellViews[position] = view;
-                    _activeViews.Add(view);
-                    _spawnedViews.Add(view);
+                    continue;
                 }
+
+                var view = Instantiate(cellPrefab, cellRoot);
+                view.Bind(cell, nodeVisualDatabase);
+                view.PointerDownReceived += OnCellPointerDown;
+                view.PointerEnterReceived += OnCellPointerEnter;
+                view.PointerUpReceived += OnCellPointerUp;
+                _cellViews[position] = view;
+                _activeViews.Add(view);
+                _spawnedViews.Add(view);
             }
         }
 
@@ -179,51 +191,65 @@ namespace Assets.Scripts.Features.Battle.Presentation
             ClearBoard();
         }
 
-        private void BindExistingChildren()
+        private void SuppressLegacyChildrenIfNeeded()
         {
-            var total = _board.Width * _board.Height;
-            for (var i = 0; i < total; i++)
+            if (_legacyChildrenSuppressed || cellRoot == null)
             {
-                var child = cellRoot.GetChild(i) as RectTransform;
+                return;
+            }
+
+            for (var i = 0; i < cellRoot.childCount; i++)
+            {
+                var child = cellRoot.GetChild(i);
                 if (child == null)
                 {
                     continue;
                 }
 
-                var position = GetPositionForExistingChildIndex(i);
-                if (!_board.TryGetCell(position, out var cell))
-                {
-                    continue;
-                }
-
-                var view = child.GetComponent<BattleCellView>();
-                if (view == null)
-                {
-                    view = child.gameObject.AddComponent<BattleCellView>();
-                }
-
-                view.AutoBindFromHierarchy();
-                view.Bind(cell);
-                view.PointerDownReceived += OnCellPointerDown;
-                view.PointerEnterReceived += OnCellPointerEnter;
-                view.PointerUpReceived += OnCellPointerUp;
-                _cellViews[position] = view;
-                _activeViews.Add(view);
+                child.gameObject.SetActive(false);
+                _suppressedLegacyChildren.Add(child.gameObject);
             }
 
-            Debug.Log($"[BattleBoard] 既存ノードのバインド完了 ActiveViews={_activeViews.Count}");
+            _legacyChildrenSuppressed = true;
+            Debug.Log($"[BattleBoard] 既存の authoring children を無効化しました Count={_suppressedLegacyChildren.Count}");
         }
 
-        private BattleGridPosition GetPositionForExistingChildIndex(int index)
+        private BattleGridPosition GetPositionForLayoutIndex(int index)
         {
+            var x = 0;
+            var y = 0;
+
             if (gridLayoutGroup != null && gridLayoutGroup.startAxis == GridLayoutGroup.Axis.Vertical)
             {
-                var x = index / _board.Height;
-                var y = index % _board.Height;
+                x = index / _board.Height;
+                y = index % _board.Height;
+            }
+            else
+            {
+                x = index % _board.Width;
+                y = index / _board.Width;
+            }
+
+            if (gridLayoutGroup == null)
+            {
                 return new BattleGridPosition(x, y);
             }
 
-            return new BattleGridPosition(index % _board.Width, index / _board.Width);
+            switch (gridLayoutGroup.startCorner)
+            {
+                case GridLayoutGroup.Corner.UpperRight:
+                    x = (_board.Width - 1) - x;
+                    break;
+                case GridLayoutGroup.Corner.LowerLeft:
+                    y = (_board.Height - 1) - y;
+                    break;
+                case GridLayoutGroup.Corner.LowerRight:
+                    x = (_board.Width - 1) - x;
+                    y = (_board.Height - 1) - y;
+                    break;
+            }
+
+            return new BattleGridPosition(x, y);
         }
 
         private void OnCellPointerDown(BattleCellView view, PointerEventData eventData)
