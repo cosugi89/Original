@@ -66,7 +66,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             }
 
             var current = draft.CurrentPosition.Value;
-            if (!current.IsAdjacent8Way(candidate))
+            if (!current.IsAdjacent4Way(candidate))
             {
                 return BattlePathValidationError.NotAdjacent;
             }

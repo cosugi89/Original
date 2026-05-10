@@ -12,34 +12,73 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87994763178f4ae9b909adfd0e6beff6, type: 3}
   m_Name: roll-against-skill-hazard
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.StageBattlePatternMasterData
-  description: "\u524D\u30BF\u30FC\u30F3\u306E Dance \u306B\u3088\u308A\u5371\u967A\u5F37\u5316\u304C\u304B\u304B\u3063\u305F
-    Skill \u5371\u967A\u76E4\u9762\u3002"
   patternId: 1005
   label: Roll Against Skill Hazard
+  description: "\u524D\u30BF\u30FC\u30F3\u306E Dance \u306B\u3088\u308A\u5371\u967A\u5F37\u5316\u304C\u304B\u304B\u3063\u305F
+    Skill \u5371\u967A\u76E4\u9762\u3002"
   enemyAction: 1
   confirmText: "\u5371\u306A\u3044"
-  enemyActionDamageMultiplier: 150
+  damageMultiplier: 150
   board:
-    width: 5
-    height: 6
-    startX: 2
-    startY: 5
+    width: 7
+    height: 8
+    startX: 3
+    startY: 7
   cellPlacements:
-  - x: 2
-    y: 5
-    nodeType: 0
-  - x: 2
-    y: 4
-    nodeType: 3
-  - x: 2
-    y: 3
-    nodeType: 1
-  - x: 2
-    y: 2
-    nodeType: 7
-  - x: 2
-    y: 1
-    nodeType: 5
+  - x: 1
+    y: 0
+    nodeType: 6
   - x: 2
     y: 0
+    nodeType: 6
+  - x: 3
+    y: 0
     nodeType: 8
+  - x: 4
+    y: 0
+    nodeType: 6
+  - x: 5
+    y: 0
+    nodeType: 6
+  - x: 2
+    y: 1
+    nodeType: 6
+  - x: 3
+    y: 1
+    nodeType: 5
+  - x: 4
+    y: 1
+    nodeType: 6
+  - x: 0
+    y: 2
+    nodeType: 6
+  - x: 3
+    y: 2
+    nodeType: 6
+  - x: 6
+    y: 2
+    nodeType: 6
+  - x: 1
+    y: 3
+    nodeType: 6
+  - x: 5
+    y: 3
+    nodeType: 6
+  - x: 2
+    y: 4
+    nodeType: 6
+  - x: 3
+    y: 4
+    nodeType: 8
+  - x: 4
+    y: 4
+    nodeType: 6
+  - x: 3
+    y: 5
+    nodeType: 5
+  - x: 1
+    y: 6
+    nodeType: 2
+  - x: 5
+    y: 6
+    nodeType: 2

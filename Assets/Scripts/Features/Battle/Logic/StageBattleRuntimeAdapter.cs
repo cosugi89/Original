@@ -7,8 +7,7 @@ using Assets.Scripts.Features.Battle.Runtime;
 namespace Assets.Scripts.Features.Battle.Logic
 {
     /// <summary>
-    /// StageData.Enemy.Patterns の定義を戦闘コアで扱う盤面と解決コンテキストへ変換する。
-    /// BattleScene の本番経路から BattleDemoTurnScript 依存を外すための橋渡し。
+        /// StageData.Enemy.Patterns の定義を戦闘コアで扱う盤面と解決コンテキストへ変換する。
     /// </summary>
     public static class StageBattleRuntimeAdapter
     {
@@ -27,8 +26,8 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         public static Layout CreateBoardLayout(StageBattlePatternData patternData)
         {
-            var width = Math.Max(1, patternData?.Board?.Width ?? 5);
-            var height = Math.Max(1, patternData?.Board?.Height ?? 6);
+            var width = Math.Max(1, patternData?.Board?.Width ?? 7);
+            var height = Math.Max(1, patternData?.Board?.Height ?? 8);
             var startPosition = ResolveStartPosition(patternData, width, height);
 
             var board = new BattleBoardState(width, height);
@@ -221,18 +220,10 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private static IEnumerable<BattleGridPosition> GetNeighbors(BattleGridPosition origin)
         {
-            for (var dy = -1; dy <= 1; dy++)
-            {
-                for (var dx = -1; dx <= 1; dx++)
-                {
-                    if (dx == 0 && dy == 0)
-                    {
-                        continue;
-                    }
-
-                    yield return new BattleGridPosition(origin.X + dx, origin.Y + dy);
-                }
-            }
+            yield return new BattleGridPosition(origin.X + 1, origin.Y);
+            yield return new BattleGridPosition(origin.X - 1, origin.Y);
+            yield return new BattleGridPosition(origin.X, origin.Y + 1);
+            yield return new BattleGridPosition(origin.X, origin.Y - 1);
         }
 
         private static void AssignConnectedHazardGroups(BattleBoardState board)

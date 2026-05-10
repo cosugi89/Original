@@ -17,11 +17,11 @@ namespace Assets.Scripts.Features.Battle.Core
 
         public int Y { get; }
 
-        public bool IsAdjacent8Way(BattleGridPosition other)
+        public bool IsAdjacent4Way(BattleGridPosition other)
         {
             var dx = Math.Abs(X - other.X);
             var dy = Math.Abs(Y - other.Y);
-            return (dx > 0 || dy > 0) && dx <= 1 && dy <= 1;
+            return dx + dy == 1;
         }
 
         public bool Equals(BattleGridPosition other)

@@ -34,10 +34,10 @@ namespace Assets.Scripts.Editor
             public BattleEnemyActionType EnemyAction = BattleEnemyActionType.NormalAttack;
             public string ConfirmText = string.Empty;
             public int DamageMultiplier = 100;
-            public int Width = 5;
-            public int Height = 6;
-            public int StartX = 2;
-            public int StartY = 5;
+            public int Width = 7;
+            public int Height = 8;
+            public int StartX = 3;
+            public int StartY = 7;
             public readonly Dictionary<Vector2Int, BattleNodeType> Placements = new();
 
             public void Normalize()
