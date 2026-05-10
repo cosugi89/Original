@@ -1,6 +1,6 @@
 # Path-Activation System v2 TODO
 
-- 最終更新: 2026-05-08
+- 最終更新: 2026-05-09
 - 参照元: `docs/path-activation-system-v2-spec.md`
 - 方針: 仕様の理想と現在のコード差分を埋めるための実装 TODO を優先順で並べる
 
@@ -23,21 +23,22 @@
 - [x] ターン進行コントローラのデモ版を持つ
 - [x] Attack、Jump、Roll、Dance、Goal、危険の最小解決ルールを持つ
 - [x] Skill パレットのランタイム状態を持つ
-- [x] `BattleNodeType`、`BattleEnemyActionType`、`BattleSkillSlotRuntime`、`BattleTurnResolutionReport` を本番名で追加し、`BattleDemo*` 名称依存を薄くする
+- [x] `BattleNodeType`、`BattleEnemyActionType`、`BattleSkillSlotRuntime`、`BattleTurnResolutionReport` を本番名で追加し、旧デモ名称依存を外す
 - [x] `BattleBoardState` と `BattlePathDraft` を追加し、盤面状態と入力中状態を `BattleScene` から分離する
-- [x] `BattlePathRuleEvaluator` と `BattlePathTracer` を追加し、8 方向、再訪、交差、Goal 後延長を pure C# で判定する
+- [x] `BattlePathRuleEvaluator` と `BattlePathTracer` を追加し、4 方向、再訪、交差、Goal 後延長を pure C# で判定する
 - [x] `BattleTurnResolver` を追加し、解決ロジックを `BattleScene` から切り出す
 - [x] `BattleBoardController`、`BattleCellView`、`BattleTraceLineView`、`BattleTraceInputHandler`、`BattleHudController` を追加し、表示層を分離する
-- [ ] `BattleDemoTurnScript` と `BattleDemoContentFactory` を回帰確認用フィクスチャへ限定し、本番ターン進行の依存先から外す
-- [x] `StageData` / `StageMasterData` に `Battle` 配下の `Board`、`Enemy`、`TurnDefinitions`、`HazardGroups`、`CellPlacements` を追加する
-- [x] `BattleScene` のターン供給元を `BattleDemoTurnScript` から `StageData.Battle.TurnDefinitions` へ差し替える
-- [ ] プリセットターンスクリプト再生ではなく、実際の 5x5 盤面とノード配置を使う
+- [x] `StageMasterData` と `StageBattleEnemyMasterData` / `StageBattlePatternMasterData` の master 構造を追加する
+- [x] `BattleScene` のターン供給元を `StageData.Enemy.Patterns` へ差し替える
+- [ ] プリセットターンスクリプト再生ではなく、実際の 7x8 盤面とノード配置を使う
 - [x] ドラッグによるパス入力を実装する
-- [x] 8 方向接続判定を実装する
+- [x] 4 方向接続判定を実装する
 - [x] 再訪、交差、Goal 後の延長を不正パスとして弾く
 - [x] Goal 未到達で離した場合の引き直しフローを実装する
 - [ ] 不正パス時の引き直しフローを実装する
 - [x] 同ターン中の引き直しで盤面と Skill 選択が維持されるようにする
+- [x] 属性相性の計算を `BattleTurnResolver` に接続する
+- [x] プレイヤー右手武器属性 / 胴装備補正と、敵右手武器属性 / 胴装備補正を戦闘コンテキストへ流す
 
 ## 3. P1: 解決ルールの不足分
 
@@ -55,6 +56,9 @@
 - [x] 敵行動種別として `NormalAttack`、`Skill`、`Dance` を持つ
 - [ ] 敵の行動選択をターンスクリプト固定ではなく AI 重みで決める
 - [ ] `Balance` 型の行動比率を実データ化する
+- [ ] 当面は敵行動選択を完全ランダムのまま維持し、行動選択ルールの本実装は後回しにする
+- [ ] 将来 `StageBattleEnemyMasterData` に行動選択ルールを追加する
+- [ ] 行動重みの代替案として `StageBattlePatternMasterData` の難度を見て行動や盤面を寄せる方式を検討する
 - [ ] 敵 Skill による危険配置ルールを定義する
 - [ ] 敵 Dance による次ターン危険強化を本来の仕様に合わせて「危険マス数 1.5 倍」へ整理する
 - [ ] 現在の「危険ダメージ 1.5 倍」実装を残すか置き換えるかを決める
@@ -72,6 +76,7 @@
 - [ ] 確定情報テキストを実 UI として表示する
 - [ ] `次ターン危険強化` 表示を実装する
 - [ ] 行動ログ UI を実装する
+- [x] プレビュー文言とログに属性相性を暫定表示する
 - [ ] 属性相性のダメージ装飾差を実装する
 
 ## 6. P1: ステージ遷移と進捗
@@ -86,14 +91,29 @@
 
 ## 7. P2: マスターデータ拡張
 
-- [ ] 敵を名前と HP だけでなく、行動傾向、危険配置傾向、特殊敗北閾値、演出テキストまで持てるようにする
+- [ ] `StageBattleEnemyMasterData` に `EnemyKind` を追加する
+- [ ] `StageBattleEnemyMasterData` に `SpecialDefeatThreshold` を追加する
+- [ ] `StageBattleEnemyMasterData` にタイミング別フレーバーテキスト群を追加する
+- [ ] フレーバーテキスト群は `Dictionary` ではなく `TriggerType + List<string>` の serializable entry list で持つ
 - [ ] 武器データに Skill パレット構成を持たせる
 - [ ] `EquipmentMasterData.AssignableSkills` の候補スキル群から、実戦用 4 枠を選ぶロードアウトモデルを追加する
 - [ ] 候補スキル群から実戦用 4 枠を選ぶ画面を追加し、選択結果を `UserData` に保存する
 - [ ] `BattleScene` の固定 `SkillSlots` 初期化を、保存済みロードアウトから構築する形へ差し替える
 - [ ] アイテムデータに Dance 効果を持たせる
-- [ ] 胴装備データに属性耐性を持たせる
-- [ ] 属性定義マスタを追加する
+- [x] 右手武器データに通常攻撃用の属性を持たせる
+- [x] 胴装備データに属性補正を持たせる
+- [x] 属性補正は `Dictionary` ではなく `Attribute + Multiplier/Modifier` の serializable entry list で持つ
+- [x] 弱点補正は同一の属性補正テーブルに統合する
+- [x] `EquipmentMasterData` に装備カテゴリ補助タグを複数持てるようにする
+- [x] 属性定義マスタを追加する
+- [x] `BattleSkillMasterData` に属性参照を追加する
+- [x] `BattleSkillMasterData` に効果種別を追加する
+- [ ] `BattleSkillMasterData` の対象指定は将来拡張として TODO に残す
+- [x] `BattleSkillMasterData` に `EffectAnimationMasterData` 参照を追加する
+- [x] `BattleSkillMasterData` に説明文補助を追加する
+- [ ] `EffectAnimationMasterData` のフィールドを整理する
+- [ ] 実際に使用する Effect / VFX / SE 資産を作成する
+- [ ] `EffectAnimation` の実再生処理を `BattleScene` / runtime に接続する
 - [ ] 盤面テンプレートや危険配置テンプレートのデータ化を行う
 
 ## 8. P2: 特殊敗北と演出
