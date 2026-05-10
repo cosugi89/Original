@@ -114,15 +114,8 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         public void Initialize()
         {
-            if (_isInitialized)
-            {
-                return;
-            }
-
-            if (!TryResolveStageData(out var stageData))
-            {
-                return;
-            }
+            if (_isInitialized) return;
+            if (!TryResolveStageData(out var stageData)) return;
 
             ApplyStageSceneState(stageData);
             ResetRuntimeState(stageData);
@@ -348,14 +341,21 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
+        #region init
         private bool TryResolveStageData(out StageData stageData)
         {
             stageData = null;
-            var stageId = ResolveStageIdForSession();
+            var stageId = BattleSceneTransitionState.ConsumeSelectedStageId();
             if (stageId < 0)
             {
-                Debug.LogWarning("[Battle] StageId を解決できなかったため、バトル初期化を中断しました。");
-                return false;
+                // 遷移前にステージIDがセットされていない場合は、進行状況から現在選択中のステージIDを取得してみる
+                stageId = BattleProgressService.EnsureInitialized().GetCurrentOrRecommendedStageId();
+
+                if (stageId < 0)
+                {
+                    Debug.LogWarning("[Battle] StageId を解決できなかったため、バトル初期化を中断しました。");
+                    return false;
+                }
             }
 
             if (!MasterDataResourceLoader.TryLoadStageData(stageId, out stageData))
@@ -369,10 +369,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void ApplyStageSceneState(StageData stageData)
         {
-            if (stageData == null)
-            {
-                return;
-            }
+            if (stageData == null) return;
 
             BattleProgressService.EnsureInitialized().SetCurrentStage(stageData.StageId);
 
@@ -385,6 +382,8 @@ namespace Assets.Scripts.Features.Battle.Demo
             {
                 previewImage.sprite = stageData.PreviewImage;
             }
+
+            // TODO: BGMなど
         }
 
         private void ResetRuntimeState(StageData stageData)
@@ -441,6 +440,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 _enemyInstance.ApplyAppearanceData(_activeEnemyData.Appearance);
             }
         }
+        #endregion init
 
         private void GainTurnChargeToAllSkills()
         {
@@ -1060,17 +1060,6 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
 
             return string.Join(" / ", parts);
-        }
-
-        private int ResolveStageIdForSession()
-        {
-            var transitionStageId = BattleSceneTransitionState.ConsumeSelectedStageId();
-            if (transitionStageId >= 0)
-            {
-                return transitionStageId;
-            }
-
-            return BattleProgressService.EnsureInitialized().GetCurrentOrRecommendedStageId();
         }
 
         private void HandleBattleClear()

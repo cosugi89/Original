@@ -92,6 +92,18 @@ namespace Assets.Scripts.Systems.GameData
 
             if (!TryResolvePartsIndex(state, inventoryService, out var partsIndex))
             {
+                if (state.IsVisible)
+                {
+                    if (state.EquipmentId > 0)
+                    {
+                        Debug.LogWarning(
+                            $"[PartsManagerAvatarAdapter] {state.PartType} equipmentId={state.EquipmentId} を master から解決できませんでした。現在の見た目を維持します。");
+                    }
+
+                    partsManager.SetPartsVisible(state.PartType, true);
+                    return;
+                }
+
                 partsManager.UnequipParts(state.PartType);
                 partsManager.SetPartsVisible(state.PartType, false);
                 return;

@@ -178,6 +178,9 @@ namespace Assets.Scripts.Systems.GameData
             return orderedDefinitions[0].StageId;
         }
 
+        /// <summary>
+        /// 進行状況から現在選択中のステージIDを取得
+        /// </summary>
         public int GetCurrentOrRecommendedStageId()
         {
             if (Session.CurrentStageId >= 0)
