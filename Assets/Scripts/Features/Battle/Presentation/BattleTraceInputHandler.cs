@@ -58,6 +58,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             }
         }
 
+        /// <summary>
+        /// Goal 到達済みの確定パスが得られるまで待機する。
+        /// </summary>
         public UniTask<IReadOnlyList<BattleGridPosition>> WaitForConfirmedPathAsync(CancellationToken cancellationToken = default)
         {
             if (HasConfirmedPath)
@@ -71,6 +74,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
                 : _pathConfirmedTcs.Task;
         }
 
+        /// <summary>
+        /// 盤面 View と tracer を接続し、以後の pointer 入力をパス追跡へ流す。
+        /// </summary>
         public void Bind(BattleBoardController boardController, BattlePathTracer tracer, BattleTraceLineView traceLineView = null)
         {
             Unbind();
@@ -133,6 +139,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             Unbind();
         }
 
+        /// <summary>
+        /// Start 入力で新しいトレースを開始し、最初のマスを path draft に反映する。
+        /// </summary>
         private void HandleCellPointerDown(BattleGridPosition position, UnityEngine.EventSystems.PointerEventData _)
         {
             if (_tracer == null)
@@ -152,6 +161,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             ProcessTrace(position);
         }
 
+        /// <summary>
+        /// ドラッグ中に入った隣接マスを順次 tracer へ渡す。
+        /// </summary>
         private void HandleCellPointerEnter(BattleGridPosition position, UnityEngine.EventSystems.PointerEventData _)
         {
             if (!_isTracing || _tracer == null)
@@ -162,6 +174,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             ProcessTrace(position);
         }
 
+        /// <summary>
+        /// ドラッグ終了時に現在の仮パスを確定判定へ進める。
+        /// </summary>
         private void HandleCellPointerUp(BattleGridPosition _, UnityEngine.EventSystems.PointerEventData __)
         {
             if (_isTracing)
@@ -170,6 +185,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             }
         }
 
+        /// <summary>
+        /// 1 マス分の入力を tracer に適用し、受理/拒否結果をイベントと見た目へ反映する。
+        /// </summary>
         private void ProcessTrace(BattleGridPosition position)
         {
             var result = _tracer.TryTrace(position);
@@ -186,6 +204,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             RefreshVisuals();
         }
 
+        /// <summary>
+        /// 指離し時に Goal 到達済みなら確定し、未到達なら仮パスを破棄する。
+        /// </summary>
         private void FinalizeTrace()
         {
             _isTracing = false;
@@ -213,6 +234,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             RefreshVisuals();
         }
 
+        /// <summary>
+        /// 現在のドラフトまたは確定パスを、盤面ハイライトと軌跡線へ反映する。
+        /// </summary>
         private void RefreshVisuals()
         {
             if (_boardController == null)

@@ -35,6 +35,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
 
         public RectTransform RectTransform => transform as RectTransform;
 
+        /// <summary>
+        /// 論理セルの状態とノード見た目定義を、この prefab 表示へ結び付ける。
+        /// </summary>
         public void Bind(BattleCellState cell, BattleNodeVisualDatabase nodeVisualDatabase = null)
         {
             EnsureRuntimeVisuals();
@@ -64,6 +67,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             }
         }
 
+        /// <summary>
+        /// パス上か、現在位置か、確定可能かに応じてセル見た目を更新する。
+        /// </summary>
         public void SetTraceState(bool isInPath, bool isCurrent, bool canConfirm)
         {
             if (_cell == null)
@@ -123,6 +129,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
                         : 1f);
         }
 
+        /// <summary>
+        /// 軌跡線描画に使う、このセル中央のワールド座標を返す。
+        /// </summary>
         public Vector3 GetWorldCenter()
         {
             return RectTransform != null

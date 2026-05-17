@@ -97,6 +97,9 @@ namespace Assets.Scripts.Features.Battle.Runtime
             return result;
         }
 
+        /// <summary>
+        /// 座標列をノード種別列へ変換する。
+        /// </summary>
         public List<BattleNodeType> BuildNodePath(IReadOnlyList<BattleGridPosition> positions)
         {
             var result = new List<BattleNodeType>();
@@ -113,6 +116,9 @@ namespace Assets.Scripts.Features.Battle.Runtime
             return result;
         }
 
+        /// <summary>
+        /// 座標列をセル状態列へ変換する。
+        /// </summary>
         public List<BattleCellState> BuildCellPath(IReadOnlyList<BattleGridPosition> positions)
         {
             var result = new List<BattleCellState>();

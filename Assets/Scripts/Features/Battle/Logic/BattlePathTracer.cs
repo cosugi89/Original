@@ -22,6 +22,9 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         public BattlePathDraft Draft { get; }
 
+        /// <summary>
+        /// 1 マス分の入力を仮パスへ反映し、開始/追加/巻き戻し/拒否の結果を返す。
+        /// </summary>
         public BattlePathTraceResult TryTrace(BattleGridPosition position)
         {
             if (!Draft.HasPath)
@@ -56,6 +59,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return CreateResult(BattlePathTraceStatus.Appended, BattlePathValidationError.None, isGoal);
         }
 
+        /// <summary>
+        /// 入力終了時に仮パスを確定し、Goal 未到達なら破棄する。
+        /// </summary>
         public BattlePathTraceResult TryRelease()
         {
             if (!Draft.HasPath)
@@ -72,6 +78,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return CreateResult(BattlePathTraceStatus.ReleasedWithoutGoal, BattlePathValidationError.GoalNotReached, false);
         }
 
+        /// <summary>
+        /// 現在の仮パスを完全にリセットする。
+        /// </summary>
         public void Reset()
         {
             Draft.Reset();

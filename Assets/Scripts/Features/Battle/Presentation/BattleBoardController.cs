@@ -48,6 +48,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             SuppressLegacyChildrenIfNeeded();
         }
 
+        /// <summary>
+        /// 論理盤面をもとにセル prefab 群を生成し、入力可能な盤面 View を構築する。
+        /// </summary>
         public void RenderBoard(BattleBoardState board)
         {
             _board = board;
@@ -143,6 +146,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             SetTraceVisual(Array.Empty<BattleGridPosition>(), canConfirm: false);
         }
 
+        /// <summary>
+        /// パス中セルのハイライト状態を更新する。
+        /// </summary>
         public void SetTraceVisual(IReadOnlyList<BattleGridPosition> positions, bool canConfirm)
         {
             foreach (var pair in _cellViews)
@@ -167,6 +173,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             }
         }
 
+        /// <summary>
+        /// 論理パスを軌跡線描画用のワールド座標列へ変換する。
+        /// </summary>
         public List<Vector3> BuildWorldPointPath(IReadOnlyList<BattleGridPosition> positions)
         {
             var result = new List<Vector3>();
@@ -214,6 +223,9 @@ namespace Assets.Scripts.Features.Battle.Presentation
             Debug.Log($"[BattleBoard] 既存の authoring children を無効化しました Count={_suppressedLegacyChildren.Count}");
         }
 
+        /// <summary>
+        /// GridLayoutGroup の並び順に従って、生成順インデックスを論理座標へ変換する。
+        /// </summary>
         private BattleGridPosition GetPositionForLayoutIndex(int index)
         {
             var x = 0;

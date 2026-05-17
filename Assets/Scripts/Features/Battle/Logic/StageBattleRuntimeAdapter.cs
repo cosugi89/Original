@@ -24,6 +24,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             public IReadOnlyList<BattleGridPosition> FallbackTracePositions { get; }
         }
 
+        /// <summary>
+        /// Pattern master の定義から、1 ターンぶんの論理盤面と fallback ルートを構築する。
+        /// </summary>
         public static Layout CreateBoardLayout(StageBattlePatternData patternData)
         {
             var width = Math.Max(1, patternData?.Board?.Width ?? 7);
@@ -77,6 +80,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return new Layout(board, BuildFallbackTracePositions(board, explicitPositions));
         }
 
+        /// <summary>
+        /// 現在の player/enemy 状態と pattern 情報から、ターン解決用コンテキストを組み立てる。
+        /// </summary>
         public static BattleTurnContext CreateTurnContext(
             StageBattlePatternData patternData,
             int enemyDamage,
@@ -110,6 +116,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             };
         }
 
+        /// <summary>
+        /// Pattern から fallback ルートを自動生成し、そのまま 1 ターン分の解決まで行う。
+        /// </summary>
         public static BattleTurnResolutionReport ResolveWithRuntime(
             StageBattlePatternData patternData,
             bool hazardBoosted,

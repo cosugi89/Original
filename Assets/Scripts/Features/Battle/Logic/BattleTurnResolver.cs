@@ -32,6 +32,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             public string Summary { get; }
         }
 
+        /// <summary>
+        /// 確定パスを先頭から順に解釈し、攻撃・回避・被弾・Goal 到達を 1 ターン結果へ解決する。
+        /// </summary>
         public static BattleTurnResolutionReport Resolve(IReadOnlyList<BattleCellState> path, BattleTurnContext context)
         {
             if (context == null)
@@ -183,6 +186,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return report;
         }
 
+        /// <summary>
+        /// ノード種別列を簡易セル列へ変換してターン解決する。
+        /// </summary>
         public static BattleTurnResolutionReport Resolve(IReadOnlyList<BattleNodeType> path, BattleTurnContext context)
         {
             if (path == null || path.Count == 0)
@@ -203,6 +209,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return Resolve(cells, context);
         }
 
+        /// <summary>
+        /// 通常攻撃、連撃、Jump 攻撃、または選択スキルを判定して敵ダメージを算出する。
+        /// </summary>
         private static int ResolveAttackDamage(
             BattleTurnContext context,
             BattleSkillSlotRuntime selectedSkill,
@@ -279,6 +288,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return int.MinValue + stepIndex;
         }
 
+        /// <summary>
+        /// Hazard 接触時の被ダメージを、危険強化と属性相性込みで計算する。
+        /// </summary>
         private static int ResolveHazardDamage(BattleTurnContext context, BattleTurnResolutionReport report)
         {
             var hazardDamage = context != null ? Max(0, context.EnemyActionDamage) : 0;
@@ -293,6 +305,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             return resolution.Damage;
         }
 
+        /// <summary>
+        /// Goal 到達後、盤面上の Hazard 解決が無かった場合に敵行動の直ダメージを解決する。
+        /// </summary>
         private static void ResolvePendingEnemyActionIfNeeded(
             BattleTurnResolutionReport report,
             BattleTurnContext context,

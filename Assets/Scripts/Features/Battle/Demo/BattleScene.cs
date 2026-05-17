@@ -112,6 +112,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             CancelTurnExecution();
         }
 
+        /// <summary>
+        /// ステージ、戦闘状態、表示を初期化し、最初のターン入力を開始する。
+        /// </summary>
         public void Initialize()
         {
             if (_isInitialized) return;
@@ -128,11 +131,17 @@ namespace Assets.Scripts.Features.Battle.Demo
             SpawnPreviewCharacters();
         }
 
+        /// <summary>
+        /// 現在確定しているプレイヤーパスをもとにターン実行を開始する。
+        /// </summary>
         public void ExecuteTurn()
         {
             ExecuteTurnAsync().Forget();
         }
 
+        /// <summary>
+        /// パス解決、アニメーション再生、HP反映、次ターン準備までを 1 ターンとして進める。
+        /// </summary>
         private async UniTaskVoid ExecuteTurnAsync()
         {
             if (_isExecutingTurn)
@@ -450,6 +459,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
+        /// <summary>
+        /// resolver の結果を session の HP と勝敗状態へ反映する。
+        /// </summary>
         private void ApplyResolutionResult(BattleTurnResolutionReport result, StageBattlePatternData pattern)
         {
             if (result.EnemyDamageTaken > 0)
@@ -476,6 +488,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
+        /// <summary>
+        /// ターン終了後に敵行動由来の継続状態を次ターンへ持ち越す。
+        /// </summary>
         private void ApplyPostTurnEnemyState(StageBattlePatternData pattern)
         {
             if (_session.BattleEnded)
@@ -507,6 +522,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
+        /// <summary>
+        /// 次ターンの pattern を選び、盤面生成、入力待機、HUD 文言更新までを行う。
+        /// </summary>
         private void PrepareUpcomingTurnPresentation()
         {
             if (_session.BattleEnded)
@@ -599,6 +617,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             BeginAwaitNodePathInput(_preparedPattern);
         }
 
+        /// <summary>
+        /// 確定済みのプレイヤーパスを論理セル列へ変換し、実際のターン解決を行う。
+        /// </summary>
         private bool TryResolveInteractiveTurn(
             StageBattlePatternData pattern,
             out BattleTurnResolutionReport result,
@@ -836,6 +857,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             RefreshSkillButtonVisuals();
         }
 
+        /// <summary>
+        /// 現在の pattern に対するパス確定待機 UniTask を開始する。
+        /// </summary>
         private void BeginAwaitNodePathInput(StageBattlePatternData pattern)
         {
             CancelAwaitNodePathInput();
@@ -877,6 +901,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             _turnExecutionCts = null;
         }
 
+        /// <summary>
+        /// パス確定を待ち、条件が変わっていなければ自動で ExecuteTurn へ進める。
+        /// </summary>
         private async UniTaskVoid AwaitNodePathInputAsync(StageBattlePatternData pattern, CancellationToken cancellationToken)
         {
             try
@@ -904,6 +931,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
+        /// <summary>
+        /// 入力中または確定済みのパスを先読み解決し、HUD にターン予測を表示する。
+        /// </summary>
         private void UpdateInteractiveTurnPreview()
         {
             if (!preferInteractiveTraceInput || hudController == null || _preparedPattern == null)
@@ -940,6 +970,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             Debug.Log($"[Battle] PlayerTurn preview Path={FormatPath(pathPositions)} Nodes={FormatNodePath(path)} Summary={BuildTurnPreviewMessage(preview)}");
         }
 
+        /// <summary>
+        /// 現在のパスから preview 用の node/cell 列を組み、resolver で結果を先読みする。
+        /// </summary>
         private bool TryBuildInteractiveTurnPreview(
             IReadOnlyList<BattleGridPosition> positions,
             out BattleTurnResolutionReport preview,
@@ -965,6 +998,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             return true;
         }
 
+        /// <summary>
+        /// 現在の battle session と選択スキルを元に、このターン専用の解決コンテキストを作る。
+        /// </summary>
         private BattleTurnContext CreateCurrentTurnContext(StageBattlePatternData pattern, bool hazardBoosted)
         {
             return StageBattleRuntimeAdapter.CreateTurnContext(

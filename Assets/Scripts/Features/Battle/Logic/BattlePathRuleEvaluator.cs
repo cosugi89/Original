@@ -8,6 +8,9 @@ namespace Assets.Scripts.Features.Battle.Logic
     /// </summary>
     public class BattlePathRuleEvaluator
     {
+        /// <summary>
+        /// トレース開始位置が有効な Start マスかを判定する。
+        /// </summary>
         public BattlePathValidationError ValidateStart(BattleBoardState board, BattleGridPosition position)
         {
             if (board == null || !board.IsInside(position))
@@ -35,6 +38,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                    draft.PreviousPosition.Value == candidate;
         }
 
+        /// <summary>
+        /// 次に追加しようとしているマスが隣接・未再訪・非交差などの条件を満たすか判定する。
+        /// </summary>
         public BattlePathValidationError ValidateAppend(
             BattleBoardState board,
             BattlePathDraft draft,
