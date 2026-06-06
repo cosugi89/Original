@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Mana Bloom Effect
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EffectAnimationMasterData
   effectAnimationId: 3003
+  effectAnimationKey: mana-bloom-effect
   displayName: Mana Bloom Effect
   description: Mana Bloom 用の軽量開花演出。
   characterAnimationName: Dance

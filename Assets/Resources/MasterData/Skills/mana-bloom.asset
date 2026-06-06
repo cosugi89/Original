@@ -13,15 +13,16 @@ MonoBehaviour:
   m_Name: Mana Bloom
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillMasterData
   skillId: 2003
+  skillKey: mana-bloom
   displayName: Mana Bloom
   description: 発動は軽いが威力は控えめな魔力開花スキル。回転率重視の候補。
   icon: {fileID: 0}
   requiredCharge: 2
   startingCharge: 0
   turnChargeGain: 1
-  attackChargeGain: 2
-  damage: 90
-  attribute: {fileID: 11400000, guid: e4911a3b9c94435a89d1f925c63c6280, type: 2}
-  effectType: 3
+  attribute:
+  - {fileID: 11400000, guid: e4911a3b9c94435a89d1f925c63c6280, type: 2}
+  effectData:
+  - {fileID: 11400000, guid: f14df5a528aa4dbf97da8161ecb4206f, type: 2}
+  - {fileID: 11400000, guid: 55793b4f6c584fd7ac72d48dd6830c6c, type: 2}
   effectAnimation: {fileID: 11400000, guid: a29d0d8617f14a20bfd5ab197b2b3d78, type: 2}
-  descriptionSupplement: 土属性の支援寄りスキル。現状は軽ダメージの補助枠。

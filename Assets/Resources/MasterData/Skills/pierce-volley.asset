@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: Pierce Volley
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillMasterData
   skillId: 2002
+  skillKey: pierce-volley
   displayName: Pierce Volley
   description: 高密度の魔力弾を一点へ集中させる単体高火力スキル。
   icon: {fileID: 0}
   requiredCharge: 5
   startingCharge: 2
   turnChargeGain: 1
-  attackChargeGain: 1
-  damage: 220
-  attribute: {fileID: 11400000, guid: a8a34fb24e8b444bb9d2f7b721ef79d5, type: 2}
-  effectType: 0
+  attribute:
+  - {fileID: 11400000, guid: a8a34fb24e8b444bb9d2f7b721ef79d5, type: 2}
+  effectData:
+  - {fileID: 11400000, guid: 2c5826c1e8e1454e9aaaf78d4163498f, type: 2}
   effectAnimation: {fileID: 11400000, guid: 326c94b5bc0e4a49a91bfae8fae495e0, type: 2}
-  descriptionSupplement: 風属性の高火力スキル。単体突破向け。

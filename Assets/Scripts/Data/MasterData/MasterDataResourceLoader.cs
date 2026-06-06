@@ -87,6 +87,30 @@ namespace Assets.Scripts.Data.MasterData
             return skillData != null;
         }
 
+        public static bool TryLoadBattleSkillData(string skillKey, out BattleSkillData skillData)
+        {
+            skillData = null;
+            if (string.IsNullOrWhiteSpace(skillKey))
+            {
+                return false;
+            }
+
+            var database = LoadBattleSkillMasterDatabase();
+            if (database == null || !database.TryGetByKey(skillKey.Trim(), out var master) || master == null)
+            {
+                return false;
+            }
+
+            var skills = BuildBattleSkillData(new[] { master });
+            if (skills.Count == 0)
+            {
+                return false;
+            }
+
+            skillData = skills[0];
+            return skillData != null;
+        }
+
         /// <summary>
         /// 属性マスタを読み込み、DTO リストに変換して返す。
         /// </summary>
@@ -99,7 +123,7 @@ namespace Assets.Scripts.Data.MasterData
             }
 
             return database.Attributes
-                .Where(attribute => attribute != null)
+                .Where(attribute => attribute != null && attribute.IsVisibleInUI)
                 .OrderBy(attribute => attribute.SortOrder)
                 .ThenBy(attribute => attribute.AttributeId)
                 .Select(BuildAttributeData)
@@ -234,18 +258,16 @@ namespace Assets.Scripts.Data.MasterData
                 .Select(skill => new BattleSkillData
                 {
                     SkillId = skill.SkillId,
+                    SkillKey = skill.SkillKey,
                     DisplayName = skill.DisplayName,
                     Description = skill.Description,
                     Icon = skill.Icon,
                     RequiredCharge = Mathf.Max(1, skill.RequiredCharge),
                     StartingCharge = Mathf.Clamp(skill.StartingCharge, 0, Mathf.Max(1, skill.RequiredCharge)),
                     TurnChargeGain = Mathf.Max(0, skill.TurnChargeGain),
-                    AttackChargeGain = Mathf.Max(0, skill.AttackChargeGain),
-                    Damage = Mathf.Max(0, skill.Damage),
-                    Attribute = BuildAttributeData(skill.Attribute),
-                    EffectType = skill.EffectType,
+                    Attributes = BuildAttributeDataList(skill.Attributes),
+                    Effects = BuildBattleSkillEffectEntryData(skill.EffectData),
                     EffectAnimation = BuildEffectAnimationData(skill.EffectAnimation),
-                    DescriptionSupplement = skill.DescriptionSupplement ?? string.Empty,
                 })
                 .ToArray();
         }
@@ -260,12 +282,50 @@ namespace Assets.Scripts.Data.MasterData
             return new AttributeData
             {
                 AttributeId = attribute.AttributeId,
+                AttributeKey = attribute.AttributeKey,
                 DisplayName = attribute.DisplayName,
                 Description = attribute.Description,
-                AccentColor = attribute.AccentColor,
+                IsVisibleInUI = attribute.IsVisibleInUI,
                 Icon = attribute.Icon,
                 SortOrder = attribute.SortOrder,
             };
+        }
+
+        private static IReadOnlyList<AttributeData> BuildAttributeDataList(IReadOnlyList<AttributeMasterData> attributes)
+        {
+            if (attributes == null || attributes.Count == 0)
+            {
+                return Array.Empty<AttributeData>();
+            }
+
+            return attributes
+                .Where(attribute => attribute != null)
+                .Select(BuildAttributeData)
+                .Where(attribute => attribute != null)
+                .ToArray();
+        }
+
+        private static IReadOnlyList<BattleSkillEffectEntryData> BuildBattleSkillEffectEntryData(
+            IReadOnlyList<BattleSkillEffectData> effects)
+        {
+            if (effects == null || effects.Count == 0)
+            {
+                return Array.Empty<BattleSkillEffectEntryData>();
+            }
+
+            return effects
+                .Where(effect => effect != null)
+                .Select(effect => new BattleSkillEffectEntryData
+                {
+                    EffectType = effect.EffectType,
+                    TargetType = effect.TargetType,
+                    ParameterType = effect.ParameterType,
+                    ValueType = effect.ValueType,
+                    Value = effect.Value,
+                    DurationTurns = Mathf.Max(0, effect.DurationTurns),
+                    SuccessRate = Mathf.Clamp01(effect.SuccessRate),
+                })
+                .ToArray();
         }
 
         private static IReadOnlyList<EquipmentAttributeModifierData> BuildEquipmentAttributeModifierData(
@@ -309,6 +369,7 @@ namespace Assets.Scripts.Data.MasterData
             return new EffectAnimationData
             {
                 EffectAnimationId = effectAnimation.EffectAnimationId,
+                EffectAnimationKey = effectAnimation.EffectAnimationKey,
                 DisplayName = effectAnimation.DisplayName,
                 Description = effectAnimation.Description,
                 CharacterAnimationName = effectAnimation.CharacterAnimationName,

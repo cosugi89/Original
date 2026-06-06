@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Fire
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AttributeMasterData
   attributeId: 3001
+  attributeKey: fire
   displayName: Fire
   description: 炎属性。燃焼や高火力寄りの攻撃に使う基本属性。
-  accentColor: {r: 0.9411765, g: 0.427451, b: 0.1764706, a: 1}
+  isVisibleInUI: 1
   icon: {fileID: 0}
   sortOrder: 1

@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Earth
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AttributeMasterData
   attributeId: 3004
+  attributeKey: earth
   displayName: Earth
   description: 土属性。防御や支援寄りの効果に使う基本属性。
-  accentColor: {r: 0.68235296, g: 0.54509807, b: 0.30588236, a: 1}
+  isVisibleInUI: 1
   icon: {fileID: 0}
   sortOrder: 4

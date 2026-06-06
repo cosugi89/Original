@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Wind
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AttributeMasterData
   attributeId: 3003
+  attributeKey: wind
   displayName: Wind
   description: 風属性。貫通や速度感を伴う攻撃に使う基本属性。
-  accentColor: {r: 0.35686275, g: 0.8352941, b: 0.6117647, a: 1}
+  isVisibleInUI: 1
   icon: {fileID: 0}
   sortOrder: 3

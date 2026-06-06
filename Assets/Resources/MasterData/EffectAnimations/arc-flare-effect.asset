@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Arc Flare Effect
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EffectAnimationMasterData
   effectAnimationId: 3001
+  effectAnimationKey: arc-flare-effect
   displayName: Arc Flare Effect
   description: Arc Flare 用の標準魔力波演出。
   characterAnimationName: Attack

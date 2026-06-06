@@ -6,29 +6,8 @@ using UnityEngine;
 namespace Assets.Scripts.Data.MasterData
 {
     [CreateAssetMenu(menuName = "Original/Master Data/Equipment Master Data", fileName = "EquipmentMasterData")]
-    public class EquipmentMasterData : ScriptableObject
+    public class EquipmentMasterData : ValidatedMasterDataAsset
     {
-        public enum ValidationSeverity
-        {
-            Info = 0,
-            Warning = 1,
-            Error = 2,
-        }
-
-        public readonly struct ValidationIssue
-        {
-            public ValidationIssue(string code, string message, ValidationSeverity severity)
-            {
-                Code = code ?? "";
-                Message = message ?? "";
-                Severity = severity;
-            }
-
-            public string Code { get; }
-            public string Message { get; }
-            public ValidationSeverity Severity { get; }
-        }
-
         [SerializeField]
         [Tooltip("保存データから参照される装備IDです。0は未装備扱いなので、手動作成時は1以上の一意な値を入れてください。")]
         [Description("装備/見た目定義を一意に識別するID。保存データから参照されるキー。")]
@@ -85,128 +64,23 @@ namespace Assets.Scripts.Data.MasterData
         private List<string> categoryTags = new();
 
         public int EquipmentId => equipmentId;
-
         public string DisplayName => displayName;
-
         public PartsType PartType => partType;
-
         public PartsExclusiveGroup ExclusiveGroup => ResolveExclusiveGroup(partType);
-
         public bool IsRightHandEquipment => ExclusiveGroup == PartsExclusiveGroup.HandRight;
-
         public bool IsLeftHandEquipment => ExclusiveGroup == PartsExclusiveGroup.HandLeft;
-
         public int PartsIndex => partsIndex;
-
         public Sprite Icon => icon;
-
         public int SortOrder => sortOrder;
-
         public bool IsDefaultOwned => isDefaultOwned;
-
         public IReadOnlyList<BattleSkillMasterData> AssignableSkills => assignableSkills ??= new List<BattleSkillMasterData>();
-
         public AttributeMasterData NormalAttackAttribute => normalAttackAttribute;
-
         public IReadOnlyList<EquipmentAttributeModifierEntry> AttributeModifiers =>
             attributeModifiers ??= new List<EquipmentAttributeModifierEntry>();
-
         public IReadOnlyList<string> CategoryTags => categoryTags ??= new List<string>();
 
         [Description("partType と partsIndex から導ける既定の装備ID。旧データ移行との対応に使える。")]
         public int FallbackEquipmentId => EquipmentIdUtility.Build(PartType, PartsIndex);
-
-        public IReadOnlyList<ValidationIssue> GetValidationIssues()
-        {
-            var issues = new List<ValidationIssue>();
-
-            if (equipmentId <= 0)
-            {
-                issues.Add(new ValidationIssue(
-                    "missing_equipment_id",
-                    "EquipmentId が未設定です。保存データから参照されるため、1以上の一意な値を入れてください。",
-                    ValidationSeverity.Error));
-            }
-
-            if (string.IsNullOrWhiteSpace(displayName))
-            {
-                issues.Add(new ValidationIssue(
-                    "missing_display_name",
-                    "DisplayName が空です。Inspector や UI 上で識別しづらくなるため、意味のある名前を付けてください。",
-                    ValidationSeverity.Warning));
-            }
-
-            if (partsIndex < 0)
-            {
-                issues.Add(new ValidationIssue(
-                    "invalid_parts_index",
-                    "PartsIndex が未設定です。PartsManager で見た目を解決できません。",
-                    ValidationSeverity.Error));
-            }
-
-            if (icon == null)
-            {
-                issues.Add(new ValidationIssue(
-                    "missing_icon",
-                    "Icon が未設定です。ID から見た目を推測しない運用なので、一覧用のアイコンを設定してください。",
-                    ValidationSeverity.Warning));
-            }
-
-            if (partType == PartsType.Arrow || partType == PartsType.HelmetHair)
-            {
-                issues.Add(new ValidationIssue(
-                    "derived_part_type",
-                    $"{partType} は派生部位です。通常は直接 authoring せず、親装備の表示同期に任せる方が安全です。",
-                    ValidationSeverity.Info));
-            }
-
-            if (partType == PartsType.Skin)
-            {
-                issues.Add(new ValidationIssue(
-                    "skin_part_type",
-                    "Skin は通常 sprite index ではなく色で扱います。意図的な運用か確認してください。",
-                    ValidationSeverity.Info));
-            }
-
-            if (AssignableSkills.Count > 3)
-            {
-                issues.Add(new ValidationIssue(
-                    "too_many_skills",
-                    "装備に設定できる候補スキルは最大3件想定です。4件以上は登録しないでください。",
-                    ValidationSeverity.Error));
-            }
-
-            var seenSkills = new HashSet<BattleSkillMasterData>();
-            for (var i = 0; i < AssignableSkills.Count; i++)
-            {
-                var skill = AssignableSkills[i];
-                if (skill == null)
-                {
-                    issues.Add(new ValidationIssue(
-                        "null_skill_reference",
-                        $"AssignableSkills[{i}] が未設定です。空欄を残さず、不要なら要素自体を削除してください。",
-                        ValidationSeverity.Warning));
-                    continue;
-                }
-
-                if (!seenSkills.Add(skill))
-                {
-                    issues.Add(new ValidationIssue(
-                        "duplicate_skill_reference",
-                        $"候補スキルに重複参照があります: {skill.DisplayName}",
-                        ValidationSeverity.Warning));
-                }
-            }
-
-            return issues;
-        }
-
-        private void OnValidate()
-        {
-            equipmentId = Mathf.Max(0, equipmentId);
-            partsIndex = Mathf.Max(-1, partsIndex);
-            sortOrder = Mathf.Max(0, sortOrder);
-        }
 
         private static PartsExclusiveGroup ResolveExclusiveGroup(PartsType type)
         {
@@ -225,8 +99,105 @@ namespace Assets.Scripts.Data.MasterData
                 _ => PartsExclusiveGroup.None,
             };
         }
+
+        #region Validation
+        protected override void NormalizeFields()
+        {
+            equipmentId = Mathf.Max(0, equipmentId);
+            partsIndex = Mathf.Max(-1, partsIndex);
+            sortOrder = Mathf.Max(0, sortOrder);
+        }
+
+        protected override void CollectValidationIssues(List<ValidationIssue> issues)
+        {
+            AddMinValueIssue(
+                issues,
+                equipmentId,
+                1,
+                "missing_equipment_id",
+                "EquipmentId が未設定です。保存データから参照されるため、1以上の一意な値を入れてください。",
+                ValidationSeverity.Error);
+
+            AddRequiredStringIssue(
+                issues,
+                displayName,
+                "missing_display_name",
+                "DisplayName が空です。Inspector や UI 上で識別しづらくなるため、意味のある名前を付けてください。",
+                ValidationSeverity.Warning);
+
+            if (partsIndex < 0)
+            {
+                AddIssue(
+                    issues,
+                    "invalid_parts_index",
+                    "PartsIndex が未設定です。PartsManager で見た目を解決できません。",
+                    ValidationSeverity.Error);
+            }
+
+            AddNullReferenceIssue(
+                issues,
+                icon,
+                "missing_icon",
+                "Icon が未設定です。ID から見た目を推測しない運用なので、一覧用のアイコンを設定してください。",
+                ValidationSeverity.Warning);
+
+            if (partType == PartsType.Arrow || partType == PartsType.HelmetHair)
+            {
+                AddIssue(
+                    issues,
+                    "derived_part_type",
+                    $"{partType} は派生部位です。通常は直接 authoring せず、親装備の表示同期に任せる方が安全です。",
+                    ValidationSeverity.Info);
+            }
+
+            if (partType == PartsType.Skin)
+            {
+                AddIssue(
+                    issues,
+                    "skin_part_type",
+                    "Skin は通常 sprite index ではなく色で扱います。意図的な運用か確認してください。",
+                    ValidationSeverity.Info);
+            }
+
+            if (AssignableSkills.Count > 3)
+            {
+                AddIssue(
+                    issues,
+                    "too_many_skills",
+                    "装備に設定できる候補スキルは最大3件想定です。4件以上は登録しないでください。",
+                    ValidationSeverity.Error);
+            }
+
+            var seenSkills = new HashSet<BattleSkillMasterData>();
+            for (var i = 0; i < AssignableSkills.Count; i++)
+            {
+                var skill = AssignableSkills[i];
+                if (skill == null)
+                {
+                    AddIssue(
+                        issues,
+                        "null_skill_reference",
+                        $"AssignableSkills[{i}] が未設定です。空欄を残さず、不要なら要素自体を削除してください。",
+                        ValidationSeverity.Warning);
+                    continue;
+                }
+
+                if (!seenSkills.Add(skill))
+                {
+                    AddIssue(
+                        issues,
+                        "duplicate_skill_reference",
+                        $"候補スキルに重複参照があります: {skill.DisplayName}",
+                        ValidationSeverity.Warning);
+                }
+            }
+        }
+        #endregion
     }
 
+    /// <summary>
+    /// 装備の属性補正を表すエントリ。装備ごとに複数の属性補正を設定できます。
+    /// </summary>
     [System.Serializable]
     public class EquipmentAttributeModifierEntry
     {

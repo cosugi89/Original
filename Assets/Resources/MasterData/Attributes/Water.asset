@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Water
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AttributeMasterData
   attributeId: 3002
+  attributeKey: water
   displayName: Water
   description: 水属性。冷却や安定した制御寄りの攻撃に使う基本属性。
-  accentColor: {r: 0.227451, g: 0.5529412, b: 0.94509804, a: 1}
+  isVisibleInUI: 1
   icon: {fileID: 0}
   sortOrder: 2

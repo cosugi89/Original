@@ -34,12 +34,12 @@ namespace Assets.Scripts.Editor
             }
         }
 
-        private static MessageType ToMessageType(EquipmentMasterData.ValidationSeverity severity)
+        private static MessageType ToMessageType(ValidationSeverity severity)
         {
             return severity switch
             {
-                EquipmentMasterData.ValidationSeverity.Error => MessageType.Error,
-                EquipmentMasterData.ValidationSeverity.Warning => MessageType.Warning,
+                ValidationSeverity.Error => MessageType.Error,
+                ValidationSeverity.Warning => MessageType.Warning,
                 _ => MessageType.Info,
             };
         }

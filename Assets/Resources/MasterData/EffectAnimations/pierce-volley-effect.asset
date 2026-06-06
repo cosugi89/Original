@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Pierce Volley Effect
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EffectAnimationMasterData
   effectAnimationId: 3002
+  effectAnimationKey: pierce-volley-effect
   displayName: Pierce Volley Effect
   description: Pierce Volley 用の収束魔弾演出。
   characterAnimationName: Attack

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Assets.Scripts.Data.MasterData;
 using LayerLab.ArtMakerUnity;
@@ -21,10 +22,10 @@ namespace Assets.Scripts.Data.DTO
         public Sprite Icon { get; init; }
         public int SortOrder { get; init; } = 0;
         public bool IsDefaultOwned { get; init; }
-        public IReadOnlyList<BattleSkillData> AssignableSkills { get; init; } = System.Array.Empty<BattleSkillData>();
+        public IReadOnlyList<BattleSkillData> AssignableSkills { get; init; } = Array.Empty<BattleSkillData>();
         public AttributeData NormalAttackAttribute { get; init; }
-        public IReadOnlyList<EquipmentAttributeModifierData> AttributeModifiers { get; init; } = System.Array.Empty<EquipmentAttributeModifierData>();
-        public IReadOnlyList<string> CategoryTags { get; init; } = System.Array.Empty<string>();
+        public IReadOnlyList<EquipmentAttributeModifierData> AttributeModifiers { get; init; } = Array.Empty<EquipmentAttributeModifierData>();
+        public IReadOnlyList<string> CategoryTags { get; init; } = Array.Empty<string>();
     }
 
     /// <summary>
@@ -34,18 +35,95 @@ namespace Assets.Scripts.Data.DTO
     public class BattleSkillData
     {
         public int SkillId { get; init; } = 0;
+        public string SkillKey { get; init; } = string.Empty;
         public string DisplayName { get; init; } = "Skill";
         public string Description { get; init; } = string.Empty;
         public Sprite Icon { get; init; }
         public int RequiredCharge { get; init; } = 1;
         public int StartingCharge { get; init; } = 0;
         public int TurnChargeGain { get; init; } = 0;
-        public int AttackChargeGain { get; init; } = 0;
-        public int Damage { get; init; } = 0;
-        public AttributeData Attribute { get; init; }
-        public BattleSkillEffectType EffectType { get; init; } = BattleSkillEffectType.Damage;
+        public IReadOnlyList<AttributeData> Attributes { get; init; } = Array.Empty<AttributeData>();
+        public IReadOnlyList<BattleSkillEffectEntryData> Effects { get; init; } = Array.Empty<BattleSkillEffectEntryData>();
         public EffectAnimationData EffectAnimation { get; init; }
-        public string DescriptionSupplement { get; init; } = string.Empty;
+
+        public AttributeData Attribute => ResolvePrimaryAttribute();
+        public BattleSkillEffectEntryData PrimaryEffect => ResolvePrimaryEffect();
+        public BattleSkillEffectType EffectType => PrimaryEffect?.EffectType ?? BattleSkillEffectType.Damage;
+        public int Damage => ResolveDamageValue(PrimaryEffect);
+
+        private AttributeData ResolvePrimaryAttribute()
+        {
+            if (Attributes == null || Attributes.Count == 0)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < Attributes.Count; i++)
+            {
+                if (Attributes[i] != null)
+                {
+                    return Attributes[i];
+                }
+            }
+
+            return null;
+        }
+
+        private BattleSkillEffectEntryData ResolvePrimaryEffect()
+        {
+            if (Effects == null || Effects.Count == 0)
+            {
+                return null;
+            }
+
+            BattleSkillEffectEntryData firstNonNullEffect = null;
+            for (var i = 0; i < Effects.Count; i++)
+            {
+                var effect = Effects[i];
+                if (effect == null)
+                {
+                    continue;
+                }
+
+                firstNonNullEffect ??= effect;
+                if (effect.EffectType == BattleSkillEffectType.Damage)
+                {
+                    return effect;
+                }
+            }
+
+            return firstNonNullEffect;
+        }
+
+        private static int ResolveDamageValue(BattleSkillEffectEntryData primaryEffect)
+        {
+            if (primaryEffect == null || primaryEffect.EffectType != BattleSkillEffectType.Damage)
+            {
+                return 0;
+            }
+
+            if (primaryEffect.ValueType != BattleSkillValueType.FixedValue &&
+                primaryEffect.ValueType != BattleSkillValueType.None)
+            {
+                return 0;
+            }
+
+            return Mathf.Max(0, Mathf.RoundToInt(primaryEffect.Value));
+        }
+    }
+
+    /// <summary>
+    /// スキル効果1件の転送用データ。複数効果を持つ Skill の詳細を runtime へ渡す。
+    /// </summary>
+    public class BattleSkillEffectEntryData
+    {
+        public BattleSkillEffectType EffectType { get; init; } = BattleSkillEffectType.Damage;
+        public BattleSkillTargetType TargetType { get; init; } = BattleSkillTargetType.Enemy;
+        public BattleSkillParameterType ParameterType { get; init; } = BattleSkillParameterType.None;
+        public BattleSkillValueType ValueType { get; init; } = BattleSkillValueType.None;
+        public float Value { get; init; } = 0f;
+        public int DurationTurns { get; init; } = 0;
+        public float SuccessRate { get; init; } = 1f;
     }
 
     /// <summary>
@@ -54,6 +132,7 @@ namespace Assets.Scripts.Data.DTO
     public class EffectAnimationData
     {
         public int EffectAnimationId { get; init; } = 0;
+        public string EffectAnimationKey { get; init; } = string.Empty;
         public string DisplayName { get; init; } = "Effect Animation";
         public string Description { get; init; } = string.Empty;
         public string CharacterAnimationName { get; init; } = string.Empty;
@@ -68,9 +147,11 @@ namespace Assets.Scripts.Data.DTO
     public class AttributeData
     {
         public int AttributeId { get; init; } = 0;
+        public string AttributeKey { get; init; } = string.Empty;
         public string DisplayName { get; init; } = "Attribute";
         public string Description { get; init; } = string.Empty;
         public Color AccentColor { get; init; } = Color.white;
+        public bool IsVisibleInUI { get; init; } = true;
         public Sprite Icon { get; init; }
         public int SortOrder { get; init; } = 0;
     }

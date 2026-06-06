@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: Arc Flare
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillMasterData
   skillId: 2001
+  skillKey: arc-flare
   displayName: Arc Flare
   description: Wand から放つ広範囲の魔力波。扱いやすい標準火力スキル。
   icon: {fileID: 0}
   requiredCharge: 3
   startingCharge: 1
   turnChargeGain: 1
-  attackChargeGain: 1
-  damage: 140
-  attribute: {fileID: 11400000, guid: 337e2699b39f4548bc58ee1a3ba8f610, type: 2}
-  effectType: 0
+  attribute:
+  - {fileID: 11400000, guid: 337e2699b39f4548bc58ee1a3ba8f610, type: 2}
+  effectData:
+  - {fileID: 11400000, guid: 7a5274e9f3da4e92a6f0156e2fd4c101, type: 2}
   effectAnimation: {fileID: 11400000, guid: 0c5ca4937f0743178a2cfa94a8efbcb7, type: 2}
-  descriptionSupplement: 炎属性の標準攻撃スキル。弱点相手に扱いやすい。

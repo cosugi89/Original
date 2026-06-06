@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Data.MasterData;
@@ -49,10 +50,13 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public Sprite Icon => _skillData?.Icon;
 
         [Description("使いどころや条件を補う短い説明文。")]
-        public string DescriptionSupplement => _skillData?.DescriptionSupplement ?? string.Empty;
+        public string DescriptionSupplement => string.Empty;
 
         [Description("参照元スキルを識別する ID。")]
         public int SkillId => _skillData != null ? _skillData.SkillId : Max(0, _slotData.SkillId);
+
+        [Description("参照元スキルを識別する内部キー。")]
+        public string SkillKey => _skillData?.SkillKey ?? string.Empty;
 
         [Description("この枠が解放済みかどうか。未解放なら UNAVAILABLE 扱いになる。")]
         public bool IsUnlocked => _slotData.IsUnlocked;
@@ -76,9 +80,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
             : Max(0, _slotData.TurnChargeGain);
 
         [Description("Attack 解決時に加算されるチャージ量。")]
-        public int AttackChargeGain => _skillData != null
-            ? Max(0, _skillData.AttackChargeGain)
-            : Max(0, _slotData.AttackChargeGain);
+        public int AttackChargeGain => Max(0, _slotData.AttackChargeGain);
 
         [Description("スキル発動時に与える基礎ダメージ量。")]
         public int Damage => _skillData != null
@@ -87,6 +89,12 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         [Description("このスキルが持つ属性情報。")]
         public AttributeData Attribute => _skillData?.Attribute;
+
+        [Description("このスキルが持つ属性一覧。")]
+        public IReadOnlyList<AttributeData> Attributes => _skillData?.Attributes ?? Array.Empty<AttributeData>();
+
+        [Description("このスキルが持つ効果一覧。")]
+        public IReadOnlyList<BattleSkillEffectEntryData> Effects => _skillData?.Effects ?? Array.Empty<BattleSkillEffectEntryData>();
 
         [Description("スキルの主効果カテゴリ。")]
         public BattleSkillEffectType EffectType => _skillData?.EffectType ?? BattleSkillEffectType.Damage;

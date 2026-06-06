@@ -15,6 +15,7 @@ namespace Assets.Scripts.Data.MasterData
         public List<BattleSkillMasterData> Skills => skills ??= new List<BattleSkillMasterData>();
 
         private Dictionary<int, BattleSkillMasterData> _byId;
+        private Dictionary<string, BattleSkillMasterData> _byKey;
 
         private void OnEnable()
         {
@@ -32,6 +33,19 @@ namespace Assets.Scripts.Data.MasterData
             return _byId.TryGetValue(skillId, out definition);
         }
 
+        public bool TryGetByKey(string skillKey, out BattleSkillMasterData definition)
+        {
+            EnsureLookups();
+
+            if (string.IsNullOrWhiteSpace(skillKey))
+            {
+                definition = null;
+                return false;
+            }
+
+            return _byKey.TryGetValue(skillKey.Trim(), out definition);
+        }
+
         private void EnsureLookups()
         {
             if (_byId == null)
@@ -43,17 +57,24 @@ namespace Assets.Scripts.Data.MasterData
         private void RebuildLookups()
         {
             _byId = new Dictionary<int, BattleSkillMasterData>();
+            _byKey = new Dictionary<string, BattleSkillMasterData>(StringComparer.Ordinal);
 
             foreach (var skill in Skills)
             {
-                if (skill == null || skill.SkillId <= 0)
+                if (skill == null)
                 {
                     continue;
                 }
 
-                if (!_byId.TryAdd(skill.SkillId, skill))
+                if (skill.SkillId > 0 && !_byId.TryAdd(skill.SkillId, skill))
                 {
                     Debug.LogWarning($"Duplicate skillId detected in {name}: {skill.SkillId}", this);
+                }
+
+                if (!string.IsNullOrWhiteSpace(skill.SkillKey) &&
+                    !_byKey.TryAdd(skill.SkillKey, skill))
+                {
+                    Debug.LogWarning($"Duplicate skillKey detected in {name}: {skill.SkillKey}", this);
                 }
             }
         }
