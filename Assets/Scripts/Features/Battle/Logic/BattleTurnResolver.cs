@@ -214,7 +214,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         /// </summary>
         private static int ResolveAttackDamage(
             BattleTurnContext context,
-            BattleSkillSlotRuntime selectedSkill,
+            SkillSlotRuntime selectedSkill,
             int normalAttackDamage,
             int doubleAttackFollowUpDamage,
             int jumpAttackDamage,
@@ -272,7 +272,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             return attackResolution.Damage;
         }
 
-        private static void FinalizeOutcomeFlags(BattleTurnResolutionReport report, BattleSkillSlotRuntime selectedSkill)
+        private static void FinalizeOutcomeFlags(BattleTurnResolutionReport report, SkillSlotRuntime selectedSkill)
         {
             report.GoalEffectTriggered = report.GoalReached && !report.TookHit && !report.PlayerDefeated;
             report.SelectedSkillConsumed = report.PathConfirmed && selectedSkill != null;

@@ -165,6 +165,7 @@ namespace Assets.Scripts.Systems.Save
                             slot.SkillId = 2002;
                             break;
                         case "Locked Slot":
+                        case "Unavailable Slot":
                             slot.SkillId = 2003;
                             break;
                     }

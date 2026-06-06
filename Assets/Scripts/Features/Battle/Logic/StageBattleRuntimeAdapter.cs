@@ -87,7 +87,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             StageBattlePatternData patternData,
             int enemyDamage,
             bool hazardBoosted,
-            BattleSkillSlotRuntime selectedSkill,
+            SkillSlotRuntime selectedSkill,
             int currentEnemyHp,
             int currentPlayerHp,
             int normalAttackDamage,
@@ -122,7 +122,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         public static BattleTurnResolutionReport ResolveWithRuntime(
             StageBattlePatternData patternData,
             bool hazardBoosted,
-            BattleSkillSlotRuntime selectedSkill,
+            SkillSlotRuntime selectedSkill,
             int currentEnemyHp,
             int currentPlayerHp,
             int normalAttackDamage,

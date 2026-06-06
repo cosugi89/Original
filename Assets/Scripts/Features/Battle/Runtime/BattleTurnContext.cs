@@ -37,7 +37,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public BattleEnemyActionType EnemyAction { get; set; } = BattleEnemyActionType.NormalAttack;
 
-        public BattleSkillSlotRuntime SelectedSkill { get; set; }
+        public SkillSlotRuntime SelectedSkill { get; set; }
 
         public BattleTurnContext Clone()
         {

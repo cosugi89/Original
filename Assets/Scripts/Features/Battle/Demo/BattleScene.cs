@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Threading;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Battle.Demo
@@ -27,8 +28,6 @@ namespace Assets.Scripts.Features.Battle.Demo
     {
         private const float MinimumAnimationDurationSeconds = 0.1f;
 
-        private List<BattleSkillSlotRuntime> skillSlots = new();
-
         [Header("Preview")]
         [SerializeField] private GameObject playerPrefab;
         [SerializeField] private Transform playerRoot;
@@ -41,23 +40,19 @@ namespace Assets.Scripts.Features.Battle.Demo
         [SerializeField] private TMP_Text waveNumberText;
         [SerializeField] private TMP_Text playerHPText;
 
-        [Header("Characters")]
-        // Player
+        [FormerlySerializedAs("skillSlots")]
+        [SerializeField] private SkillSlot[] skillSlots;
+
+        [Header("Player")]
         [SerializeField] private Slider playerHPSlider;
         [SerializeField] private GameObject playerActionHistory; // TODO: 実装。UI装飾なので優先度低
         [SerializeField] private GameObject playerSpeechBubble; // TODO
 
-        // Enemy
+        [Header("Enemy")]
         [SerializeField] private TMP_Text enemyNameText;
         [SerializeField] private Slider enemyHPSlider;
         [SerializeField] private GameObject enemyActionHistory; // TODO
         [SerializeField] private GameObject enemySpeechBubble; // TODO
-
-        [Header("Input")]
-        [SerializeField] private Button skillButton1;
-        [SerializeField] private Button skillButton2;
-        [SerializeField] private Button skillButton3;
-        [SerializeField] private Button skillButton4;
 
         [Header("Presentation")]
         [SerializeField] private Transform panelsRoot;
@@ -78,7 +73,7 @@ namespace Assets.Scripts.Features.Battle.Demo
         private StageBattleEnemyData _activeEnemyData;
         private StageBattlePatternData _preparedPattern;
         private BattleBoardState _preparedBoard;
-        private UserBattleProfileData _activeBattleProfile;
+        private UserBattleProfileData _battleProfile;
         private AttributeData _playerAttackAttribute;
         private IReadOnlyList<EquipmentAttributeModifierData> _playerDefenseAttributeModifiers = Array.Empty<EquipmentAttributeModifierData>();
         private bool _presentationBootstrapped;
@@ -91,10 +86,12 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void Awake()
         {
-            if (skillButton1 != null) skillButton1.onClick.AddListener(OnClickSkillButton1);
-            if (skillButton2 != null) skillButton2.onClick.AddListener(OnClickSkillButton2);
-            if (skillButton3 != null) skillButton3.onClick.AddListener(OnClickSkillButton3);
-            if (skillButton4 != null) skillButton4.onClick.AddListener(OnClickSkillButton4);
+            for (var i = 0; i < skillSlots.Length; i++)
+            {
+                var skillSlot = skillSlots[i];
+                var slotIndex = i;
+                skillSlot.BindClickAction(() => SelectSkillSlot(slotIndex));
+            }
         }
 
         private void Start()
@@ -104,10 +101,11 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void OnDestroy()
         {
-            if (skillButton1 != null) skillButton1.onClick.RemoveListener(OnClickSkillButton1);
-            if (skillButton2 != null) skillButton2.onClick.RemoveListener(OnClickSkillButton2);
-            if (skillButton3 != null) skillButton3.onClick.RemoveListener(OnClickSkillButton3);
-            if (skillButton4 != null) skillButton4.onClick.RemoveListener(OnClickSkillButton4);
+            for (var i = 0; i < skillSlots.Length; i++)
+            {
+                skillSlots[i].UnbindClickAction();
+            }
+
             CancelAwaitNodePathInput();
             CancelTurnExecution();
         }
@@ -198,6 +196,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 ApplyPostTurnEnemyState(pattern);
                 PrepareUpcomingTurnPresentation();
                 RefreshHud();
+                RefreshSkillButtonVisuals();
                 LogResolutionReport(pattern, result);
                 Debug.Log($"[Battle] Turn {_session.TurnNumber} 終了 PlayerHP={_session.PlayerHp} EnemyHP={_session.EnemyHp}");
 
@@ -236,7 +235,7 @@ namespace Assets.Scripts.Features.Battle.Demo
         /// <summary>
         /// 指定スロットのスキル選択状態を更新する。
         /// </summary>
-        public void SelectSkillSlot(int slotIndex)
+        private void SelectSkillSlot(int slotIndex)
         {
             if (!_isInitialized)
             {
@@ -248,12 +247,12 @@ namespace Assets.Scripts.Features.Battle.Demo
                 return;
             }
 
-            if (slotIndex < 0 || slotIndex >= skillSlots.Count)
+            var slot = GetSkillSlotRuntime(slotIndex);
+            if (slot == null)
             {
                 return;
             }
-
-            var slot = skillSlots[slotIndex];
+            
             if (!slot.IsReady)
             {
                 Debug.Log($"[Battle] スキル{slotIndex + 1}は使用不可 ({slot.GetStateLabel()})");
@@ -265,14 +264,6 @@ namespace Assets.Scripts.Features.Battle.Demo
             UpdateInteractiveTurnPreview();
         }
 
-        private void OnClickSkillButton1() => SelectSkillSlot(0);
-
-        private void OnClickSkillButton2() => SelectSkillSlot(1);
-
-        private void OnClickSkillButton3() => SelectSkillSlot(2);
-
-        private void OnClickSkillButton4() => SelectSkillSlot(3);
-
         private void ResolvePlayerBattleProfile()
         {
             var saveService = GameSaveService.EnsureInitialized();
@@ -280,12 +271,12 @@ namespace Assets.Scripts.Features.Battle.Demo
             userData.Profile ??= new UserProfileData();
             userData.Profile.BattleProfile ??= new UserBattleProfileData();
 
-            _activeBattleProfile = userData.Profile.BattleProfile;
-            _activeBattleProfile.MaxHp = Mathf.Max(1, _activeBattleProfile.MaxHp);
-            _activeBattleProfile.NormalAttackDamage = Mathf.Max(1, _activeBattleProfile.NormalAttackDamage);
-            _activeBattleProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, _activeBattleProfile.DoubleAttackFollowUpDamage);
-            _activeBattleProfile.JumpAttackDamage = Mathf.Max(1, _activeBattleProfile.JumpAttackDamage);
-            skillSlots = CreateRuntimeSkillSlots(_activeBattleProfile);
+            _battleProfile = userData.Profile.BattleProfile;
+            _battleProfile.MaxHp = Mathf.Max(1, _battleProfile.MaxHp);
+            _battleProfile.NormalAttackDamage = Mathf.Max(1, _battleProfile.NormalAttackDamage);
+            _battleProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, _battleProfile.DoubleAttackFollowUpDamage);
+            _battleProfile.JumpAttackDamage = Mathf.Max(1, _battleProfile.JumpAttackDamage);
+            ApplyRuntimeSkillSlots(_battleProfile);
 
             var avatarService = AvatarService.EnsureInitialized();
             var inventoryService = InventoryService.EnsureInitialized();
@@ -319,34 +310,24 @@ namespace Assets.Scripts.Features.Battle.Demo
                 }
             }
 
-            Debug.Log($"[Battle] UserData BattleProfile HP={_activeBattleProfile.MaxHp} Attack={_activeBattleProfile.NormalAttackDamage}/{_activeBattleProfile.DoubleAttackFollowUpDamage}/{_activeBattleProfile.JumpAttackDamage} Attr={_playerAttackAttribute?.DisplayName ?? "-"} SkillSlots={skillSlots.Count}");
+            Debug.Log($"[Battle] UserData BattleProfile HP={_battleProfile.MaxHp} Attack={_battleProfile.NormalAttackDamage}/{_battleProfile.DoubleAttackFollowUpDamage}/{_battleProfile.JumpAttackDamage} Attr={_playerAttackAttribute?.DisplayName ?? "-"} SkillSlots={GetSkillSlotCount()}");
         }
 
         private void RefreshSkillButtonVisuals()
         {
-            var buttons = new[] { skillButton1, skillButton2, skillButton3, skillButton4 };
-
-            for (var i = 0; i < buttons.Length; i++)
+            for (var i = 0; i < skillSlots.Length; i++)
             {
-                var button = buttons[i];
-                if (button == null)
+                var slotView = skillSlots[i];
+                if (slotView == null)
                 {
                     continue;
                 }
 
-                var targetColor = i == _session.SelectedSkillSlotIndex ? selectedSkillButtonColor : normalSkillButtonColor;
-
-                var colors = button.colors;
-                colors.normalColor = targetColor;
-                colors.highlightedColor = targetColor;
-                colors.selectedColor = targetColor;
-                colors.pressedColor = targetColor * 0.9f;
-                button.colors = colors;
-
-                if (button.targetGraphic != null)
-                {
-                    button.targetGraphic.color = targetColor;
-                }
+                slotView.RefreshRuntime();
+                slotView.SetSelectedVisual(
+                    i == _session.SelectedSkillSlotIndex,
+                    normalSkillButtonColor,
+                    selectedSkillButtonColor);
             }
         }
 
@@ -410,7 +391,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 initialEnemyHp = Mathf.Max(1, _activeEnemyData.MaxHp);
             }
 
-            _session.ResetForBattle(enemyName, _activeBattleProfile.MaxHp, initialEnemyHp);
+            _session.ResetForBattle(enemyName, _battleProfile.MaxHp, initialEnemyHp);
             _preparedPattern = null;
             _lastPreparedPattern = null;
             _isInitialized = true;
@@ -420,9 +401,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 Debug.LogWarning($"[Battle] stageId={stageData.StageId} に pattern がありません。");
             }
 
-            foreach (var slot in skillSlots)
+            for (var i = 0; i < skillSlots.Length; i++)
             {
-                slot.ResetRuntime();
+                skillSlots[i].Runtime?.ResetRuntime();
             }
         }
 
@@ -453,9 +434,9 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void GainTurnChargeToAllSkills()
         {
-            foreach (var slot in skillSlots)
+            for (var i = 0; i < skillSlots.Length; i++)
             {
-                slot.GainTurnCharge();
+                skillSlots[i].Runtime?.GainTurnCharge();
             }
         }
 
@@ -650,9 +631,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
                 _session.PlayerHp,
-                _activeBattleProfile.NormalAttackDamage,
-                _activeBattleProfile.DoubleAttackFollowUpDamage,
-                _activeBattleProfile.JumpAttackDamage,
+                _battleProfile.NormalAttackDamage,
+                _battleProfile.DoubleAttackFollowUpDamage,
+                _battleProfile.JumpAttackDamage,
                 _playerAttackAttribute,
                 _activeEnemyData?.AttackAttribute,
                 _activeEnemyData?.DefenseAttributeModifiers,
@@ -695,9 +676,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
                 _session.PlayerHp,
-                _activeBattleProfile.NormalAttackDamage,
-                _activeBattleProfile.DoubleAttackFollowUpDamage,
-                _activeBattleProfile.JumpAttackDamage,
+                _battleProfile.NormalAttackDamage,
+                _battleProfile.DoubleAttackFollowUpDamage,
+                _battleProfile.JumpAttackDamage,
                 _playerAttackAttribute,
                 _activeEnemyData?.AttackAttribute,
                 _activeEnemyData?.DefenseAttributeModifiers,
@@ -842,7 +823,8 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void ConsumeSelectedSkillIfNeeded(BattleTurnResolutionReport result)
         {
-            if (_session.SelectedSkillSlotIndex < 0 || _session.SelectedSkillSlotIndex >= skillSlots.Count)
+            var selectedSkill = GetSkillSlotRuntime(_session.SelectedSkillSlotIndex);
+            if (selectedSkill == null)
             {
                 return;
             }
@@ -852,7 +834,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 return;
             }
 
-            skillSlots[_session.SelectedSkillSlotIndex].Consume();
+            selectedSkill.Consume();
             _session.SelectedSkillSlotIndex = -1;
             RefreshSkillButtonVisuals();
         }
@@ -1010,9 +992,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
                 _session.PlayerHp,
-                _activeBattleProfile.NormalAttackDamage,
-                _activeBattleProfile.DoubleAttackFollowUpDamage,
-                _activeBattleProfile.JumpAttackDamage,
+                _battleProfile.NormalAttackDamage,
+                _battleProfile.DoubleAttackFollowUpDamage,
+                _battleProfile.JumpAttackDamage,
                 _playerAttackAttribute,
                 _activeEnemyData?.AttackAttribute,
                 _activeEnemyData?.DefenseAttributeModifiers,
@@ -1118,107 +1100,77 @@ namespace Assets.Scripts.Features.Battle.Demo
             }
         }
 
-        private BattleSkillSlotRuntime GetSelectedSkill()
+        private SkillSlotRuntime GetSelectedSkill()
         {
-            if (_session.SelectedSkillSlotIndex < 0 || _session.SelectedSkillSlotIndex >= skillSlots.Count)
-            {
-                return null;
-            }
-            return skillSlots[_session.SelectedSkillSlotIndex];
+            return GetSkillSlotRuntime(_session.SelectedSkillSlotIndex);
         }
 
-        private BattleSkillSlotRuntime CreateSelectedSkillRuntime()
+        private SkillSlotRuntime CreateSelectedSkillRuntime()
         {
-            var selectedSkill = GetSelectedSkill();
-            return CloneSkillSlotRuntime(selectedSkill);
+            return GetSelectedSkill()?.Clone();
         }
 
-        private static List<BattleSkillSlotRuntime> CreateRuntimeSkillSlots(UserBattleProfileData battleProfile)
+        private void ApplyRuntimeSkillSlots(UserBattleProfileData battleProfile)
         {
-            var runtimeSlots = new List<BattleSkillSlotRuntime>();
-            var slotDataList = battleProfile?.SkillSlots;
-            if (slotDataList == null)
+            var slotDataList = ResolveSkillSlotDataList(battleProfile);
+            for (var i = 0; i < skillSlots.Length; i++)
             {
-                return runtimeSlots;
-            }
-
-            for (var i = 0; i < slotDataList.Count; i++)
-            {
-                runtimeSlots.Add(CreateRuntimeSkillSlot(slotDataList[i]));
-            }
-
-            return runtimeSlots;
-        }
-
-        private static BattleSkillSlotRuntime CreateRuntimeSkillSlot(UserBattleSkillSlotData slotData)
-        {
-            slotData ??= new UserBattleSkillSlotData();
-
-            if (slotData.SkillId > 0 &&
-                MasterDataResourceLoader.TryLoadBattleSkillData(slotData.SkillId, out var skillDefinition) &&
-                skillDefinition != null)
-            {
-                return new BattleSkillSlotRuntime
+                var slotView = skillSlots[i];
+                if (slotView == null)
                 {
-                    SkillId = skillDefinition.SkillId,
-                    DisplayName = skillDefinition.DisplayName,
-                    Description = skillDefinition.Description,
-                    DescriptionSupplement = skillDefinition.DescriptionSupplement ?? string.Empty,
-                    IsUnlocked = slotData.IsUnlocked,
-                    IsConfigured = slotData.IsConfigured,
-                    RequiredCharge = Mathf.Max(1, skillDefinition.RequiredCharge),
-                    StartingCharge = Mathf.Max(0, skillDefinition.StartingCharge),
-                    TurnChargeGain = Mathf.Max(0, skillDefinition.TurnChargeGain),
-                    AttackChargeGain = Mathf.Max(0, skillDefinition.AttackChargeGain),
-                    Damage = Mathf.Max(0, skillDefinition.Damage),
-                    Attribute = skillDefinition.Attribute,
-                    EffectType = skillDefinition.EffectType,
-                    EffectAnimation = skillDefinition.EffectAnimation,
-                };
-            }
+                    continue;
+                }
 
-            return new BattleSkillSlotRuntime
-            {
-                SkillId = Mathf.Max(0, slotData.SkillId),
-                DisplayName = slotData.DisplayName ?? "Skill",
-                Description = slotData.Description ?? string.Empty,
-                DescriptionSupplement = string.Empty,
-                IsUnlocked = slotData.IsUnlocked,
-                IsConfigured = slotData.IsConfigured,
-                RequiredCharge = Mathf.Max(1, slotData.RequiredCharge),
-                StartingCharge = Mathf.Max(0, slotData.StartingCharge),
-                TurnChargeGain = Mathf.Max(0, slotData.TurnChargeGain),
-                AttackChargeGain = Mathf.Max(0, slotData.AttackChargeGain),
-                Damage = Mathf.Max(0, slotData.Damage),
-            };
+                var slotData = slotDataList != null && i < slotDataList.Count ? slotDataList[i] : null;
+                slotView.SetRuntime(slotData != null ? CreateRuntimeSkillSlot(slotData) : null);
+            }
         }
 
-        private static BattleSkillSlotRuntime CloneSkillSlotRuntime(BattleSkillSlotRuntime source)
+        private static IReadOnlyList<UserBattleSkillSlotData> ResolveSkillSlotDataList(UserBattleProfileData battleProfile)
         {
-            if (source == null)
+            if (battleProfile?.SkillSlots != null && battleProfile.SkillSlots.Count > 0)
+            {
+                return battleProfile.SkillSlots;
+            }
+
+            return UserBattleProfileData.CreateDefaultSkillSlots();
+        }
+
+        private int GetSkillSlotCount()
+        {
+            return skillSlots != null ? skillSlots.Length : 0;
+        }
+
+        private SkillSlotRuntime GetSkillSlotRuntime(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= GetSkillSlotCount())
             {
                 return null;
             }
 
-            var clone = new BattleSkillSlotRuntime
+            return skillSlots[slotIndex]?.Runtime;
+        }
+
+        private static SkillSlotRuntime CreateRuntimeSkillSlot(UserBattleSkillSlotData slotData)
+        {
+            if (slotData == null)
             {
-                SkillId = source.SkillId,
-                DisplayName = source.DisplayName,
-                Description = source.Description,
-                DescriptionSupplement = source.DescriptionSupplement,
-                IsUnlocked = source.IsUnlocked,
-                IsConfigured = source.IsConfigured,
-                RequiredCharge = source.RequiredCharge,
-                StartingCharge = source.StartingCharge,
-                TurnChargeGain = source.TurnChargeGain,
-                AttackChargeGain = source.AttackChargeGain,
-                Damage = source.Damage,
-                Attribute = source.Attribute,
-                EffectType = source.EffectType,
-                EffectAnimation = source.EffectAnimation,
-            };
-            clone.SetCurrentCharge(source.CurrentCharge);
-            return clone;
+                return null;
+            }
+
+            return new SkillSlotRuntime(slotData, ResolveSkillDefinition(slotData));
+        }
+
+        private static BattleSkillData ResolveSkillDefinition(UserBattleSkillSlotData slotData)
+        {
+            if (slotData == null || slotData.SkillId <= 0)
+            {
+                return null;
+            }
+
+            return MasterDataResourceLoader.TryLoadBattleSkillData(slotData.SkillId, out var skillDefinition)
+                ? skillDefinition
+                : null;
         }
 
         private void LogResolutionReport(StageBattlePatternData pattern, BattleTurnResolutionReport result)

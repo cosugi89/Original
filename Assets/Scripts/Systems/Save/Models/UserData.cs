@@ -101,8 +101,8 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("Jump 後の Attack に適用するダメージ。")]
         public int JumpAttackDamage { get; set; } = 150;
 
-        [Description("BattleScene で使用するスキルスロット定義。ロード時にランタイムスロットへ変換する。")]
-        public List<UserBattleSkillSlotData> SkillSlots { get; set; } = CreateDefaultSkillSlots();
+        [Description("BattleScene で使用するスキルスロット定義。未設定なら BattleScene や save 正規化側で既定値を補う。")]
+        public List<UserBattleSkillSlotData> SkillSlots { get; set; }
 
         public static List<UserBattleSkillSlotData> CreateDefaultSkillSlots()
         {
@@ -137,8 +137,8 @@ namespace Assets.Scripts.Systems.Save.Models
                 new UserBattleSkillSlotData
                 {
                     SkillId = 2003,
-                    DisplayName = "Locked Slot",
-                    Description = "ゲーム進行で解放される想定のロック枠。",
+                    DisplayName = "Unavailable Slot",
+                    Description = "現在は使用できない枠。",
                     IsUnlocked = false,
                     IsConfigured = false,
                     RequiredCharge = 4,
@@ -149,8 +149,8 @@ namespace Assets.Scripts.Systems.Save.Models
                 },
                 new UserBattleSkillSlotData
                 {
-                    DisplayName = "Empty Slot",
-                    Description = "武器側に Skill が未設定の枠。",
+                    DisplayName = "Unavailable Slot",
+                    Description = "現在は使用できない枠。",
                     IsUnlocked = true,
                     IsConfigured = false,
                     RequiredCharge = 4,
