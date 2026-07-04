@@ -38,3 +38,4 @@ crashlytics-build.properties
 .claude/
 .uloop/
 UIElementsSchema/
+.dotnet_cli_home
