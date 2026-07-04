@@ -27,7 +27,7 @@ namespace Assets.Scripts.Data.MasterData
         private AttributeMasterData[] attribute = Array.Empty<AttributeMasterData>();
 
         [SerializeField][Description("効果データ")]
-        private BattleSkillEffectData[] effectData = Array.Empty<BattleSkillEffectData>();
+        private BattleSkillOperationData[] operationData = Array.Empty<BattleSkillOperationData>();
 
         [SerializeField][Description("エフェクトデータ")]
         private EffectAnimationMasterData effectAnimation;
@@ -41,6 +41,9 @@ namespace Assets.Scripts.Data.MasterData
         [SerializeField][Description("ターン毎に加算するチャージ量")]
         private int turnChargeGain = 1;
 
+        [SerializeField][Description("Attack 解決時に加算するチャージ量")]
+        private int attackChargeGain = 1;
+
         public int SkillId => skillId;
         public string SkillKey => skillKey ?? string.Empty;
         public string DisplayName => displayName ?? "Skill";
@@ -48,12 +51,13 @@ namespace Assets.Scripts.Data.MasterData
         public Sprite Icon => icon;
         public IReadOnlyList<AttributeMasterData> Attributes => attribute ?? Array.Empty<AttributeMasterData>();
         public AttributeMasterData PrimaryAttribute => ResolvePrimaryAttribute();
-        public IReadOnlyList<BattleSkillEffectData> EffectData => effectData ?? Array.Empty<BattleSkillEffectData>();
-        public BattleSkillEffectData PrimaryEffectData => ResolvePrimaryEffectData();
+        public IReadOnlyList<BattleSkillOperationData> EffectData => operationData ?? Array.Empty<BattleSkillOperationData>();
+        public BattleSkillOperationData PrimaryEffectData => ResolvePrimaryEffectData();
         public EffectAnimationMasterData EffectAnimation => effectAnimation;
         public int RequiredCharge => requiredCharge;
         public int StartingCharge => startingCharge;
         public int TurnChargeGain => turnChargeGain;
+        public int AttackChargeGain => attackChargeGain;
 
         private AttributeMasterData ResolvePrimaryAttribute()
         {
@@ -69,9 +73,9 @@ namespace Assets.Scripts.Data.MasterData
             return null;
         }
 
-        private BattleSkillEffectData ResolvePrimaryEffectData()
+        private BattleSkillOperationData ResolvePrimaryEffectData()
         {
-            BattleSkillEffectData firstNonNullEffect = null;
+            BattleSkillOperationData firstNonNullEffect = null;
             var effects = EffectData;
 
             for (var i = 0; i < effects.Count; i++)
@@ -83,7 +87,7 @@ namespace Assets.Scripts.Data.MasterData
                 }
 
                 firstNonNullEffect ??= effect;
-                if (effect.EffectType == BattleSkillEffectType.Damage)
+                if (effect.EffectType == BattleSkillOperationType.Damage)
                 {
                     return effect;
                 }
@@ -100,8 +104,9 @@ namespace Assets.Scripts.Data.MasterData
             requiredCharge = Mathf.Max(1, requiredCharge);
             startingCharge = Mathf.Clamp(startingCharge, 0, requiredCharge);
             turnChargeGain = Mathf.Max(0, turnChargeGain);
+            attackChargeGain = Mathf.Max(0, attackChargeGain);
             attribute ??= Array.Empty<AttributeMasterData>();
-            effectData ??= Array.Empty<BattleSkillEffectData>();
+            operationData ??= Array.Empty<BattleSkillOperationData>();
         }
 
         protected override void CollectValidationIssues(List<ValidationIssue> issues)
@@ -153,6 +158,14 @@ namespace Assets.Scripts.Data.MasterData
                 "TurnChargeGain は 0 以上にしてください。",
                 ValidationSeverity.Error);
 
+            AddMinValueIssue(
+                issues,
+                attackChargeGain,
+                0,
+                "invalid_attack_charge_gain",
+                "AttackChargeGain は 0 以上にしてください。",
+                ValidationSeverity.Error);
+
             if (!HasConfiguredEffects())
             {
                 AddIssue(
@@ -196,7 +209,7 @@ namespace Assets.Scripts.Data.MasterData
         private bool HasUnsupportedDamageEffectValue()
         {
             var primaryEffect = PrimaryEffectData;
-            if (primaryEffect == null || primaryEffect.EffectType != BattleSkillEffectType.Damage)
+            if (primaryEffect == null || primaryEffect.EffectType != BattleSkillOperationType.Damage)
             {
                 return false;
             }

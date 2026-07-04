@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a9333c7c9935b0e43834753d5d925ee2, type: 3}
-  m_Name: Mana Bloom Charge Effect
+  m_Name: mana-bloom-charge-operation
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillEffectData
   effectType: 3
   targetType: 1

@@ -42,13 +42,14 @@ namespace Assets.Scripts.Data.DTO
         public int RequiredCharge { get; init; } = 1;
         public int StartingCharge { get; init; } = 0;
         public int TurnChargeGain { get; init; } = 0;
+        public int AttackChargeGain { get; init; } = 0;
         public IReadOnlyList<AttributeData> Attributes { get; init; } = Array.Empty<AttributeData>();
         public IReadOnlyList<BattleSkillEffectEntryData> Effects { get; init; } = Array.Empty<BattleSkillEffectEntryData>();
         public EffectAnimationData EffectAnimation { get; init; }
 
         public AttributeData Attribute => ResolvePrimaryAttribute();
         public BattleSkillEffectEntryData PrimaryEffect => ResolvePrimaryEffect();
-        public BattleSkillEffectType EffectType => PrimaryEffect?.EffectType ?? BattleSkillEffectType.Damage;
+        public BattleSkillOperationType EffectType => PrimaryEffect?.EffectType ?? BattleSkillOperationType.Damage;
         public int Damage => ResolveDamageValue(PrimaryEffect);
 
         private AttributeData ResolvePrimaryAttribute()
@@ -86,7 +87,7 @@ namespace Assets.Scripts.Data.DTO
                 }
 
                 firstNonNullEffect ??= effect;
-                if (effect.EffectType == BattleSkillEffectType.Damage)
+                if (effect.EffectType == BattleSkillOperationType.Damage)
                 {
                     return effect;
                 }
@@ -97,7 +98,7 @@ namespace Assets.Scripts.Data.DTO
 
         private static int ResolveDamageValue(BattleSkillEffectEntryData primaryEffect)
         {
-            if (primaryEffect == null || primaryEffect.EffectType != BattleSkillEffectType.Damage)
+            if (primaryEffect == null || primaryEffect.EffectType != BattleSkillOperationType.Damage)
             {
                 return 0;
             }
@@ -117,7 +118,7 @@ namespace Assets.Scripts.Data.DTO
     /// </summary>
     public class BattleSkillEffectEntryData
     {
-        public BattleSkillEffectType EffectType { get; init; } = BattleSkillEffectType.Damage;
+        public BattleSkillOperationType EffectType { get; init; } = BattleSkillOperationType.Damage;
         public BattleSkillTargetType TargetType { get; init; } = BattleSkillTargetType.Enemy;
         public BattleSkillParameterType ParameterType { get; init; } = BattleSkillParameterType.None;
         public BattleSkillValueType ValueType { get; init; } = BattleSkillValueType.None;

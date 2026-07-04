@@ -55,7 +55,7 @@ namespace Assets.Scripts.Systems.GameData
 
         public void SetCurrentAppearance(AvatarAppearanceData appearance, bool markDirty = true)
         {
-            Session.UserData.Profile ??= new UserProfileData();
+            Session.UserData.Profile ??= new UserProfileDemoData();
 
             var normalized = appearance ?? new AvatarAppearanceData();
             normalized.Parts ??= new List<AvatarPartStateData>();
@@ -215,7 +215,7 @@ namespace Assets.Scripts.Systems.GameData
 
         private AvatarAppearanceData EnsureAppearance()
         {
-            Session.UserData.Profile ??= new UserProfileData();
+            Session.UserData.Profile ??= new UserProfileDemoData();
             Session.UserData.Profile.Avatar ??= new AvatarAppearanceData();
             Session.UserData.Profile.Avatar.Parts ??= new List<AvatarPartStateData>();
             Session.UserData.Profile.Avatar.Colors ??= new List<AvatarColorData>();

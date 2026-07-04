@@ -20,7 +20,7 @@ namespace Assets.Scripts.Systems.Save
             if (userData == null || !TryLoadLegacyAppearance(out var legacyAppearance))
                 return false;
 
-            userData.Profile ??= new UserProfileData();
+            userData.Profile ??= new UserProfileDemoData();
             userData.Profile.Avatar = ConvertAppearance(legacyAppearance);
             userData.Inventory ??= new InventoryData();
             MergeEquippedItemsIntoInventory(userData.Inventory, userData.Profile.Avatar);

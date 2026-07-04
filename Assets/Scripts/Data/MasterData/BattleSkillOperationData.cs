@@ -7,11 +7,11 @@ namespace Assets.Scripts.Data.MasterData
     /// スキルの効果データ
     /// 例: 90%の確率で敵単体に攻撃力の1.5倍のダメージを与える、など
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Skill Effect Data", fileName = "BattleSkillEffectData")]
-    public class BattleSkillEffectData : ScriptableObject
+    [CreateAssetMenu(menuName = "Original/Master Data/Battle Skill Operation Data", fileName = "BattleSkillOperationData")]
+    public class BattleSkillOperationData : ScriptableObject
     {
         [SerializeField][Description("効果種別")]
-        private BattleSkillEffectType effectType = BattleSkillEffectType.Damage;
+        private BattleSkillOperationType effectType = BattleSkillOperationType.Damage;
 
         [SerializeField][Description("対象")]
         private BattleSkillTargetType targetType = BattleSkillTargetType.Enemy;
@@ -32,7 +32,7 @@ namespace Assets.Scripts.Data.MasterData
         [Range(0f, 1f)]
         private float successRate = 1.0f;
 
-        public BattleSkillEffectType EffectType => effectType;
+        public BattleSkillOperationType EffectType => effectType;
         public BattleSkillTargetType TargetType => targetType;
         public BattleSkillParameterType ParameterType => parameterType;
         public BattleSkillValueType ValueType => valueType;

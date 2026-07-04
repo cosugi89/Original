@@ -42,6 +42,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         [FormerlySerializedAs("skillSlots")]
         [SerializeField] private SkillSlot[] skillSlots;
+        [SerializeField] private int unlockedSkillSlotCount = 2;
 
         [Header("Player")]
         [SerializeField] private Slider playerHPSlider;
@@ -73,7 +74,7 @@ namespace Assets.Scripts.Features.Battle.Demo
         private StageBattleEnemyData _activeEnemyData;
         private StageBattlePatternData _preparedPattern;
         private BattleBoardState _preparedBoard;
-        private UserBattleProfileData _battleProfile;
+        private UserProfileData _playerProfile;
         private AttributeData _playerAttackAttribute;
         private IReadOnlyList<EquipmentAttributeModifierData> _playerDefenseAttributeModifiers = Array.Empty<EquipmentAttributeModifierData>();
         private bool _presentationBootstrapped;
@@ -264,19 +265,18 @@ namespace Assets.Scripts.Features.Battle.Demo
             UpdateInteractiveTurnPreview();
         }
 
-        private void ResolvePlayerBattleProfile()
+        private void ResolvePlayerProfile()
         {
             var saveService = GameSaveService.EnsureInitialized();
             var userData = saveService.Session.UserData ?? new UserData();
-            userData.Profile ??= new UserProfileData();
-            userData.Profile.BattleProfile ??= new UserBattleProfileData();
+            userData.Profile ??= new UserProfileDemoData();
 
-            _battleProfile = userData.Profile.BattleProfile;
-            _battleProfile.MaxHp = Mathf.Max(1, _battleProfile.MaxHp);
-            _battleProfile.NormalAttackDamage = Mathf.Max(1, _battleProfile.NormalAttackDamage);
-            _battleProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, _battleProfile.DoubleAttackFollowUpDamage);
-            _battleProfile.JumpAttackDamage = Mathf.Max(1, _battleProfile.JumpAttackDamage);
-            ApplyRuntimeSkillSlots(_battleProfile);
+            _playerProfile = userData.Profile;
+            _playerProfile.MaxHp = Mathf.Max(1, _playerProfile.MaxHp);
+            _playerProfile.NormalAttackDamage = Mathf.Max(1, _playerProfile.NormalAttackDamage);
+            _playerProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, _playerProfile.DoubleAttackFollowUpDamage);
+            _playerProfile.JumpAttackDamage = Mathf.Max(1, _playerProfile.JumpAttackDamage);
+            ApplyRuntimeSkillSlots(_playerProfile);
 
             var avatarService = AvatarService.EnsureInitialized();
             var inventoryService = InventoryService.EnsureInitialized();
@@ -310,7 +310,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 }
             }
 
-            Debug.Log($"[Battle] UserData BattleProfile HP={_battleProfile.MaxHp} Attack={_battleProfile.NormalAttackDamage}/{_battleProfile.DoubleAttackFollowUpDamage}/{_battleProfile.JumpAttackDamage} Attr={_playerAttackAttribute?.DisplayName ?? "-"} SkillSlots={GetSkillSlotCount()}");
+            Debug.Log($"[Battle] UserData Profile HP={_playerProfile.MaxHp} Attack={_playerProfile.NormalAttackDamage}/{_playerProfile.DoubleAttackFollowUpDamage}/{_playerProfile.JumpAttackDamage} Attr={_playerAttackAttribute?.DisplayName ?? "-"} SkillSlots={GetSkillSlotCount()}");
         }
 
         private void RefreshSkillButtonVisuals()
@@ -378,7 +378,7 @@ namespace Assets.Scripts.Features.Battle.Demo
 
         private void ResetRuntimeState(StageData stageData)
         {
-            ResolvePlayerBattleProfile();
+            ResolvePlayerProfile();
             _activeEnemyData = stageData.Enemy ?? new StageBattleEnemyData();
             _patterns = _activeEnemyData.Patterns ?? Array.Empty<StageBattlePatternData>();
 
@@ -391,7 +391,7 @@ namespace Assets.Scripts.Features.Battle.Demo
                 initialEnemyHp = Mathf.Max(1, _activeEnemyData.MaxHp);
             }
 
-            _session.ResetForBattle(enemyName, _battleProfile.MaxHp, initialEnemyHp);
+            _session.ResetForBattle(enemyName, _playerProfile.MaxHp, initialEnemyHp);
             _preparedPattern = null;
             _lastPreparedPattern = null;
             _isInitialized = true;
@@ -631,9 +631,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
                 _session.PlayerHp,
-                _battleProfile.NormalAttackDamage,
-                _battleProfile.DoubleAttackFollowUpDamage,
-                _battleProfile.JumpAttackDamage,
+                _playerProfile.NormalAttackDamage,
+                _playerProfile.DoubleAttackFollowUpDamage,
+                _playerProfile.JumpAttackDamage,
                 _playerAttackAttribute,
                 _activeEnemyData?.AttackAttribute,
                 _activeEnemyData?.DefenseAttributeModifiers,
@@ -676,9 +676,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
                 _session.PlayerHp,
-                _battleProfile.NormalAttackDamage,
-                _battleProfile.DoubleAttackFollowUpDamage,
-                _battleProfile.JumpAttackDamage,
+                _playerProfile.NormalAttackDamage,
+                _playerProfile.DoubleAttackFollowUpDamage,
+                _playerProfile.JumpAttackDamage,
                 _playerAttackAttribute,
                 _activeEnemyData?.AttackAttribute,
                 _activeEnemyData?.DefenseAttributeModifiers,
@@ -992,9 +992,9 @@ namespace Assets.Scripts.Features.Battle.Demo
                 CreateSelectedSkillRuntime(),
                 _session.EnemyHp,
                 _session.PlayerHp,
-                _battleProfile.NormalAttackDamage,
-                _battleProfile.DoubleAttackFollowUpDamage,
-                _battleProfile.JumpAttackDamage,
+                _playerProfile.NormalAttackDamage,
+                _playerProfile.DoubleAttackFollowUpDamage,
+                _playerProfile.JumpAttackDamage,
                 _playerAttackAttribute,
                 _activeEnemyData?.AttackAttribute,
                 _activeEnemyData?.DefenseAttributeModifiers,
@@ -1110,9 +1110,9 @@ namespace Assets.Scripts.Features.Battle.Demo
             return GetSelectedSkill()?.Clone();
         }
 
-        private void ApplyRuntimeSkillSlots(UserBattleProfileData battleProfile)
+        private void ApplyRuntimeSkillSlots(UserProfileData battleProfile)
         {
-            var slotDataList = ResolveSkillSlotDataList(battleProfile);
+            var skillIdList = ResolveSkillIdList(battleProfile);
             for (var i = 0; i < skillSlots.Length; i++)
             {
                 var slotView = skillSlots[i];
@@ -1121,19 +1121,19 @@ namespace Assets.Scripts.Features.Battle.Demo
                     continue;
                 }
 
-                var slotData = slotDataList != null && i < slotDataList.Count ? slotDataList[i] : null;
-                slotView.SetRuntime(slotData != null ? CreateRuntimeSkillSlot(slotData) : null);
+                var skillId = skillIdList != null && i < skillIdList.Count ? skillIdList[i] : 0;
+                slotView.SetRuntime(CreateRuntimeSkillSlot(skillId, i));
             }
         }
 
-        private static IReadOnlyList<UserBattleSkillSlotData> ResolveSkillSlotDataList(UserBattleProfileData battleProfile)
+        private static IReadOnlyList<int> ResolveSkillIdList(UserProfileData battleProfile)
         {
-            if (battleProfile?.SkillSlots != null && battleProfile.SkillSlots.Count > 0)
+            if (battleProfile?.SkillSlotSkillIds != null && battleProfile.SkillSlotSkillIds.Count > 0)
             {
-                return battleProfile.SkillSlots;
+                return battleProfile.SkillSlotSkillIds;
             }
 
-            return UserBattleProfileData.CreateDefaultSkillSlots();
+            return new UserProfileDemoData().SkillSlotSkillIds;
         }
 
         private int GetSkillSlotCount()
@@ -1151,26 +1151,29 @@ namespace Assets.Scripts.Features.Battle.Demo
             return skillSlots[slotIndex]?.Runtime;
         }
 
-        private static SkillSlotRuntime CreateRuntimeSkillSlot(UserBattleSkillSlotData slotData)
+        private SkillSlotRuntime CreateRuntimeSkillSlot(int skillId, int slotIndex)
         {
-            if (slotData == null)
-            {
-                return null;
-            }
-
-            return new SkillSlotRuntime(slotData, ResolveSkillDefinition(slotData));
+            return new SkillSlotRuntime(
+                skillId,
+                ResolveSkillDefinition(skillId),
+                ResolveSkillSlotUnlockedState(slotIndex));
         }
 
-        private static BattleSkillData ResolveSkillDefinition(UserBattleSkillSlotData slotData)
+        private static BattleSkillData ResolveSkillDefinition(int skillId)
         {
-            if (slotData == null || slotData.SkillId <= 0)
+            if (skillId <= 0)
             {
                 return null;
             }
 
-            return MasterDataResourceLoader.TryLoadBattleSkillData(slotData.SkillId, out var skillDefinition)
+            return MasterDataResourceLoader.TryLoadBattleSkillData(skillId, out var skillDefinition)
                 ? skillDefinition
                 : null;
+        }
+
+        private bool ResolveSkillSlotUnlockedState(int slotIndex)
+        {
+            return slotIndex >= 0 && slotIndex < unlockedSkillSlotCount;
         }
 
         private void LogResolutionReport(StageBattlePatternData pattern, BattleTurnResolutionReport result)

@@ -22,29 +22,47 @@ namespace Assets.Scripts.Features.Battle.Runtime
     [Serializable]
     public class SkillSlotRuntime
     {
-        private readonly UserBattleSkillSlotData _slotData;
+        private readonly int _skillId;
         private readonly BattleSkillData _skillData;
+        private readonly bool _isUnlocked;
 
         [Description("現在保持しているチャージ量の内部値。")]
         private int _currentCharge;
 
-        public SkillSlotRuntime(UserBattleSkillSlotData slotData, BattleSkillData skillData = null)
+        public SkillSlotRuntime(int skillId, BattleSkillData skillData = null, bool isUnlocked = true)
         {
-            _slotData = slotData ?? new UserBattleSkillSlotData();
+            _skillId = Max(0, skillId);
             _skillData = skillData;
+            _isUnlocked = isUnlocked;
         }
-
-        [Description("参照元のセーブスロット定義。解放状態や未設定状態はこちらを使う。")]
-        public UserBattleSkillSlotData SlotData => _slotData;
 
         [Description("参照元のスキル定義。SkillId が有効ならマスタから解決した内容を参照する。")]
         public BattleSkillData SkillData => _skillData;
 
+        private bool HasAssignedSkill => _skillId > 0;
+        private bool HasResolvedSkill => _skillData != null;
+
         [Description("UI に表示するスキル名。")]
-        public string DisplayName => _skillData?.DisplayName ?? _slotData.DisplayName ?? "Skill";
+        public string DisplayName
+        {
+            get
+            {
+                if (HasResolvedSkill)
+                {
+                    return _skillData.DisplayName;
+                }
+
+                if (!HasAssignedSkill)
+                {
+                    return IsUnlocked ? "Empty Slot" : "Locked Slot";
+                }
+
+                return "Unknown Skill";
+            }
+        }
 
         [Description("スキルの基本説明文。")]
-        public string Description => _skillData?.Description ?? _slotData.Description ?? string.Empty;
+        public string Description => HasResolvedSkill ? _skillData.Description : string.Empty;
 
         [Description("スキルアイコン。未設定なら既定表示を使う。")]
         public Sprite Icon => _skillData?.Icon;
@@ -53,39 +71,31 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public string DescriptionSupplement => string.Empty;
 
         [Description("参照元スキルを識別する ID。")]
-        public int SkillId => _skillData != null ? _skillData.SkillId : Max(0, _slotData.SkillId);
+        public int SkillId => HasResolvedSkill ? _skillData.SkillId : _skillId;
 
         [Description("参照元スキルを識別する内部キー。")]
         public string SkillKey => _skillData?.SkillKey ?? string.Empty;
 
         [Description("この枠が解放済みかどうか。未解放なら UNAVAILABLE 扱いになる。")]
-        public bool IsUnlocked => _slotData.IsUnlocked;
+        public bool IsUnlocked => _isUnlocked;
 
         [Description("この枠に実際のスキルが設定されているかどうか。未設定でも使用不可として UNAVAILABLE 扱いになる。")]
-        public bool IsConfigured => _slotData.IsConfigured;
+        public bool IsConfigured => HasAssignedSkill;
 
         [Description("READY になるために必要なチャージ量。")]
-        public int RequiredCharge => _skillData != null
-            ? Max(1, _skillData.RequiredCharge)
-            : Max(1, _slotData.RequiredCharge);
+        public int RequiredCharge => HasResolvedSkill ? Max(1, _skillData.RequiredCharge) : 1;
 
         [Description("バトル開始時点で保持している初期チャージ量。")]
-        public int StartingCharge => _skillData != null
-            ? Clamp(_skillData.StartingCharge, 0, RequiredCharge)
-            : Clamp(_slotData.StartingCharge, 0, RequiredCharge);
+        public int StartingCharge => HasResolvedSkill ? Clamp(_skillData.StartingCharge, 0, RequiredCharge) : 0;
 
         [Description("ターン経過ごとに加算されるチャージ量。")]
-        public int TurnChargeGain => _skillData != null
-            ? Max(0, _skillData.TurnChargeGain)
-            : Max(0, _slotData.TurnChargeGain);
+        public int TurnChargeGain => HasResolvedSkill ? Max(0, _skillData.TurnChargeGain) : 0;
 
         [Description("Attack 解決時に加算されるチャージ量。")]
-        public int AttackChargeGain => Max(0, _slotData.AttackChargeGain);
+        public int AttackChargeGain => HasResolvedSkill ? Max(0, _skillData.AttackChargeGain) : 0;
 
         [Description("スキル発動時に与える基礎ダメージ量。")]
-        public int Damage => _skillData != null
-            ? Max(0, _skillData.Damage)
-            : Max(0, _slotData.Damage);
+        public int Damage => HasResolvedSkill ? Max(0, _skillData.Damage) : 0;
 
         [Description("このスキルが持つ属性情報。")]
         public AttributeData Attribute => _skillData?.Attribute;
@@ -97,7 +107,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public IReadOnlyList<BattleSkillEffectEntryData> Effects => _skillData?.Effects ?? Array.Empty<BattleSkillEffectEntryData>();
 
         [Description("スキルの主効果カテゴリ。")]
-        public BattleSkillEffectType EffectType => _skillData?.EffectType ?? BattleSkillEffectType.Damage;
+        public BattleSkillOperationType EffectType => _skillData?.EffectType ?? BattleSkillOperationType.Damage;
 
         [Description("発動時に再生する演出定義。")]
         public EffectAnimationData EffectAnimation => _skillData?.EffectAnimation;
@@ -112,7 +122,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
         {
             get
             {
-                if (!IsUnlocked || !IsConfigured)
+                if (!IsUnlocked || !HasAssignedSkill || !HasResolvedSkill)
                 {
                     return SkillState.Unavailable;
                 }
@@ -155,7 +165,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public SkillSlotRuntime Clone()
         {
-            var clone = new SkillSlotRuntime(_slotData, _skillData);
+            var clone = new SkillSlotRuntime(_skillId, _skillData, _isUnlocked);
             clone.SetCurrentCharge(_currentCharge);
             return clone;
         }
@@ -201,7 +211,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         private void GainCharge(int delta)
         {
-            if (!IsUnlocked || !IsConfigured || delta <= 0)
+            if (State == SkillState.Unavailable || delta <= 0)
             {
                 return;
             }

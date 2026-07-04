@@ -16,17 +16,10 @@ namespace Assets.Scripts.Systems.Save
                     CreatedAtUtc = now,
                     UpdatedAtUtc = now
                 },
-                Profile = new UserProfileData
+                Profile = new UserProfileDemoData
                 {
-                    Identity = new UserIdentityData
-                    {
-                        PlayerId = Guid.NewGuid().ToString("N"),
-                    },
-                    Activity = new UserActivityData
-                    {
-                        LastPlayedAtUtc = now
-                    },
-                    BattleProfile = new UserBattleProfileData()
+                    PlayerId = Guid.NewGuid().ToString("N"),
+                    LastPlayedAtUtc = now,
                 },
             };
         }

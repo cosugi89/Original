@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using Assets.Scripts.Systems.Save.Models;
 using UnityEngine;
@@ -81,7 +82,7 @@ namespace Assets.Scripts.Systems.Save
             }
 
             Normalize(userData);
-            userData.Profile.Activity.LastPlayedAtUtc = DefaultFactory.CreateTimestamp();
+            userData.Profile.LastPlayedAtUtc = DefaultFactory.CreateTimestamp();
 
             if (shouldPersistImmediately)
                 Repository.Save(userData);
@@ -99,7 +100,7 @@ namespace Assets.Scripts.Systems.Save
         {
             Normalize(userData);
             userData.Meta.UpdatedAtUtc = DefaultFactory.CreateTimestamp();
-            userData.Profile.Activity.LastPlayedAtUtc = userData.Meta.UpdatedAtUtc;
+            userData.Profile.LastPlayedAtUtc = userData.Meta.UpdatedAtUtc;
             Repository.Save(userData);
         }
 
@@ -114,13 +115,8 @@ namespace Assets.Scripts.Systems.Save
                 return;
 
             userData.Meta ??= new UserMetaData();
-            userData.Profile ??= new UserProfileData();
-            userData.Profile.Identity ??= new UserIdentityData();
-            userData.Profile.Activity ??= new UserActivityData();
-            userData.Profile.Economy ??= new UserEconomyData();
-            userData.Profile.Progression ??= new UserProgressionData();
+            userData.Profile ??= new UserProfileDemoData();
             userData.Profile.Avatar ??= new AvatarAppearanceData();
-            userData.Profile.BattleProfile ??= new UserBattleProfileData();
             userData.Inventory ??= new InventoryData();
             userData.BattleProgress ??= new BattleProgressData();
 
@@ -135,50 +131,25 @@ namespace Assets.Scripts.Systems.Save
             if (string.IsNullOrWhiteSpace(userData.Meta.UpdatedAtUtc))
                 userData.Meta.UpdatedAtUtc = userData.Meta.CreatedAtUtc;
 
-            if (string.IsNullOrWhiteSpace(userData.Profile.Identity.PlayerId))
-                userData.Profile.Identity.PlayerId = System.Guid.NewGuid().ToString("N");
+            if (string.IsNullOrWhiteSpace(userData.Profile.PlayerId))
+                userData.Profile.PlayerId = System.Guid.NewGuid().ToString("N");
 
-            userData.Profile.BattleProfile.MaxHp = Mathf.Max(1, userData.Profile.BattleProfile.MaxHp);
-            userData.Profile.BattleProfile.NormalAttackDamage = Mathf.Max(1, userData.Profile.BattleProfile.NormalAttackDamage);
-            userData.Profile.BattleProfile.DoubleAttackFollowUpDamage = Mathf.Max(1, userData.Profile.BattleProfile.DoubleAttackFollowUpDamage);
-            userData.Profile.BattleProfile.JumpAttackDamage = Mathf.Max(1, userData.Profile.BattleProfile.JumpAttackDamage);
-            userData.Profile.BattleProfile.SkillSlots ??= UserBattleProfileData.CreateDefaultSkillSlots();
+            var demoProfile = new UserProfileDemoData();
+            userData.Profile.MaxHp = Mathf.Max(1, userData.Profile.MaxHp);
+            userData.Profile.NormalAttackDamage = Mathf.Max(1, userData.Profile.NormalAttackDamage);
+            userData.Profile.DoubleAttackFollowUpDamage = Mathf.Max(1, userData.Profile.DoubleAttackFollowUpDamage);
+            userData.Profile.JumpAttackDamage = Mathf.Max(1, userData.Profile.JumpAttackDamage);
+            userData.Profile.SkillSlotSkillIds ??= new List<int>(demoProfile.SkillSlotSkillIds);
 
-            if (userData.Profile.BattleProfile.SkillSlots.Count == 0)
+            if (userData.Profile.SkillSlotSkillIds.Count == 0)
             {
-                userData.Profile.BattleProfile.SkillSlots = UserBattleProfileData.CreateDefaultSkillSlots();
+                userData.Profile.SkillSlotSkillIds = new List<int>(demoProfile.SkillSlotSkillIds);
             }
 
-            for (var i = 0; i < userData.Profile.BattleProfile.SkillSlots.Count; i++)
+            for (var i = 0; i < userData.Profile.SkillSlotSkillIds.Count; i++)
             {
-                userData.Profile.BattleProfile.SkillSlots[i] ??= new UserBattleSkillSlotData();
-
-                var slot = userData.Profile.BattleProfile.SkillSlots[i];
-                if (slot.SkillId <= 0)
-                {
-                    switch (slot.DisplayName)
-                    {
-                        case "Wide Blast":
-                            slot.SkillId = 2001;
-                            break;
-                        case "Pierce Volley":
-                            slot.SkillId = 2002;
-                            break;
-                        case "Locked Slot":
-                        case "Unavailable Slot":
-                            slot.SkillId = 2003;
-                            break;
-                    }
-                }
-
-                slot.SkillId = Mathf.Max(0, slot.SkillId);
-                slot.DisplayName ??= "Skill";
-                slot.Description ??= string.Empty;
-                slot.RequiredCharge = Mathf.Max(1, slot.RequiredCharge);
-                slot.StartingCharge = Mathf.Clamp(slot.StartingCharge, 0, slot.RequiredCharge);
-                slot.TurnChargeGain = Mathf.Max(0, slot.TurnChargeGain);
-                slot.AttackChargeGain = Mathf.Max(0, slot.AttackChargeGain);
-                slot.Damage = Mathf.Max(0, slot.Damage);
+                userData.Profile.SkillSlotSkillIds[i] =
+                    Mathf.Max(0, userData.Profile.SkillSlotSkillIds[i]);
             }
         }
     }

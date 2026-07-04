@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    public enum BattleSkillEffectType
+    public enum BattleSkillOperationType
     {
         [Description("ダメージを与える効果")]
         Damage = 0,

@@ -42,7 +42,10 @@ namespace Assets.Scripts.Systems.Save
                 return token.ToObject<UserData>(serializer) ?? new UserData();
 
             if (obj.ContainsKey("Meta") || obj.ContainsKey("Profile"))
+            {
+                MigrateProfileShape(obj);
                 return obj.ToObject<UserData>(serializer) ?? new UserData();
+            }
 
             var legacy = obj.ToObject<LegacyUserDataDocument>(serializer) ?? new LegacyUserDataDocument();
             return ConvertLegacy(legacy);
@@ -61,29 +64,16 @@ namespace Assets.Scripts.Systems.Save
                     CreatedAtUtc = legacy.CreatedAtUtc ?? "",
                     UpdatedAtUtc = legacy.UpdatedAtUtc ?? ""
                 },
-                Profile = new UserProfileData
+                Profile = new UserProfileDemoData
                 {
-                    Identity = new UserIdentityData
-                    {
-                        PlayerId = legacy.Player.PlayerId ?? "",
-                        PlayerName = legacy.Player.PlayerName ?? ""
-                    },
-                    Activity = new UserActivityData
-                    {
-                        LastPlayedAtUtc = legacy.Player.LastPlayedAtUtc ?? ""
-                    },
-                    Economy = new UserEconomyData
-                    {
-                        Gold = legacy.Player.Gold,
-                        Gem = legacy.Player.Gem
-                    },
-                    Progression = new UserProgressionData
-                    {
-                        Level = legacy.Player.Level,
-                        Experience = legacy.Player.Experience
-                    },
+                    PlayerId = legacy.Player.PlayerId ?? "",
+                    PlayerName = legacy.Player.PlayerName ?? "",
+                    LastPlayedAtUtc = legacy.Player.LastPlayedAtUtc ?? "",
+                    Gold = legacy.Player.Gold,
+                    Gem = legacy.Player.Gem,
+                    Level = legacy.Player.Level,
+                    Experience = legacy.Player.Experience,
                     Avatar = legacy.Player.AvatarAppearance ?? new AvatarAppearanceData(),
-                    BattleProfile = new UserBattleProfileData()
                 },
                 Inventory = legacy.Inventory ?? new InventoryData(),
                 BattleProgress = legacy.BattleProgress ?? new BattleProgressData()
@@ -110,6 +100,114 @@ namespace Assets.Scripts.Systems.Save
             public int Experience { get; set; } = 0;
             public string LastPlayedAtUtc { get; set; } = "";
             public AvatarAppearanceData AvatarAppearance { get; set; } = new();
+        }
+
+        private static void MigrateProfileShape(JObject root)
+        {
+            if (root["Profile"] is not JObject profile ||
+                profile == null)
+            {
+                return;
+            }
+
+            if (profile["Identity"] is JObject identity)
+            {
+                CopyIfMissing(profile, "PlayerId", identity["PlayerId"]);
+                CopyIfMissing(profile, "PlayerName", identity["PlayerName"]);
+                profile.Remove("Identity");
+            }
+
+            if (profile["Activity"] is JObject activity)
+            {
+                CopyIfMissing(profile, "LastPlayedAtUtc", activity["LastPlayedAtUtc"]);
+                profile.Remove("Activity");
+            }
+
+            if (profile["Economy"] is JObject economy)
+            {
+                CopyIfMissing(profile, "Gold", economy["Gold"]);
+                CopyIfMissing(profile, "Gem", economy["Gem"]);
+                profile.Remove("Economy");
+            }
+
+            if (profile["Progression"] is JObject progression)
+            {
+                CopyIfMissing(profile, "Level", progression["Level"]);
+                CopyIfMissing(profile, "Experience", progression["Experience"]);
+                profile.Remove("Progression");
+            }
+
+            if (profile["BattleProfile"] is not JObject battleProfile)
+            {
+                return;
+            }
+
+            CopyIfMissing(profile, "MaxHp", battleProfile["MaxHp"]);
+            CopyIfMissing(profile, "NormalAttackDamage", battleProfile["NormalAttackDamage"]);
+            CopyIfMissing(profile, "DoubleAttackFollowUpDamage", battleProfile["DoubleAttackFollowUpDamage"]);
+            CopyIfMissing(profile, "JumpAttackDamage", battleProfile["JumpAttackDamage"]);
+
+            if (profile["SkillSlotSkillIds"] is not JArray existingIds || existingIds.Count == 0)
+            {
+                if (battleProfile["SkillSlotSkillIds"] is JArray battleSkillIds && battleSkillIds.Count > 0)
+                {
+                    profile["SkillSlotSkillIds"] = battleSkillIds.DeepClone();
+                }
+                else if (battleProfile["SkillSlots"] is JArray legacySlots)
+                {
+                    var migratedIds = new JArray();
+                    for (var i = 0; i < legacySlots.Count; i++)
+                    {
+                        migratedIds.Add(ResolveLegacySkillId(legacySlots[i]));
+                    }
+
+                    profile["SkillSlotSkillIds"] = migratedIds;
+                }
+            }
+
+            profile.Remove("BattleProfile");
+        }
+
+        private static void CopyIfMissing(JObject target, string propertyName, JToken value)
+        {
+            if (target[propertyName] != null || value == null)
+            {
+                return;
+            }
+
+            target[propertyName] = value.DeepClone();
+        }
+
+        private static int ResolveLegacySkillId(JToken token)
+        {
+            if (token == null)
+            {
+                return 0;
+            }
+
+            if (token.Type == JTokenType.Integer)
+            {
+                return Math.Max(0, token.Value<int>());
+            }
+
+            if (token is not JObject slotObject)
+            {
+                return 0;
+            }
+
+            var explicitSkillId = slotObject.Value<int?>("SkillId") ?? 0;
+            if (explicitSkillId > 0)
+            {
+                return explicitSkillId;
+            }
+
+            var displayName = slotObject.Value<string>("DisplayName")?.Trim();
+            return displayName switch
+            {
+                "Wide Blast" => 2001,
+                "Pierce Volley" => 2002,
+                _ => 0,
+            };
         }
     }
 

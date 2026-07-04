@@ -265,6 +265,7 @@ namespace Assets.Scripts.Data.MasterData
                     RequiredCharge = Mathf.Max(1, skill.RequiredCharge),
                     StartingCharge = Mathf.Clamp(skill.StartingCharge, 0, Mathf.Max(1, skill.RequiredCharge)),
                     TurnChargeGain = Mathf.Max(0, skill.TurnChargeGain),
+                    AttackChargeGain = Mathf.Max(0, skill.AttackChargeGain),
                     Attributes = BuildAttributeDataList(skill.Attributes),
                     Effects = BuildBattleSkillEffectEntryData(skill.EffectData),
                     EffectAnimation = BuildEffectAnimationData(skill.EffectAnimation),
@@ -306,7 +307,7 @@ namespace Assets.Scripts.Data.MasterData
         }
 
         private static IReadOnlyList<BattleSkillEffectEntryData> BuildBattleSkillEffectEntryData(
-            IReadOnlyList<BattleSkillEffectData> effects)
+            IReadOnlyList<BattleSkillOperationData> effects)
         {
             if (effects == null || effects.Count == 0)
             {
