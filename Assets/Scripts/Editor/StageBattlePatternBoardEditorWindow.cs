@@ -34,6 +34,15 @@ namespace Assets.Scripts.Editor
             public BattleEnemyActionType EnemyAction = BattleEnemyActionType.NormalAttack;
             public string ConfirmText = string.Empty;
             public int DamageMultiplier = 100;
+            public bool UseEnemyActionDamageFormula;
+            public BattleSkillParameterType EnemyActionFormulaParameterType = BattleSkillParameterType.Attack;
+            public BattleSkillValueType EnemyActionFormulaValueType = BattleSkillValueType.Multiplier;
+            public float EnemyActionFormulaValue = 1f;
+            public int EnemyActionFormulaFlatBonus;
+            public float EnemyActionFormulaFinalMultiplier = 1f;
+            public string EnemyActionFormulaSourceScalarKey = string.Empty;
+            public float EnemyActionFormulaSourceScalarFallback = 1f;
+            public int EnemyActionFormulaMinimumDamage;
             public int Width = 7;
             public int Height = 8;
             public int StartX = 3;
@@ -47,6 +56,10 @@ namespace Assets.Scripts.Editor
                 StartX = Mathf.Clamp(StartX, 0, Width - 1);
                 StartY = Mathf.Clamp(StartY, 0, Height - 1);
                 DamageMultiplier = Mathf.Max(0, DamageMultiplier);
+                EnemyActionFormulaFlatBonus = Mathf.Max(0, EnemyActionFormulaFlatBonus);
+                EnemyActionFormulaFinalMultiplier = Mathf.Max(0f, EnemyActionFormulaFinalMultiplier);
+                EnemyActionFormulaSourceScalarKey = (EnemyActionFormulaSourceScalarKey ?? string.Empty).Trim();
+                EnemyActionFormulaMinimumDamage = Mathf.Max(0, EnemyActionFormulaMinimumDamage);
 
                 var invalidKeys = new List<Vector2Int>();
                 foreach (var pair in Placements)
@@ -156,6 +169,7 @@ namespace Assets.Scripts.Editor
             _draft.EnemyAction = (BattleEnemyActionType)EditorGUILayout.EnumPopup("Enemy Action", _draft.EnemyAction);
             _draft.ConfirmText = EditorGUILayout.TextField("Confirm Text", _draft.ConfirmText ?? string.Empty);
             _draft.DamageMultiplier = Mathf.Max(0, EditorGUILayout.IntField("Damage Multiplier (%)", _draft.DamageMultiplier));
+            DrawEnemyActionDamageFormulaEditor(_draft);
             _draft.Width = Mathf.Max(1, EditorGUILayout.IntField("Width", _draft.Width));
             _draft.Height = Mathf.Max(1, EditorGUILayout.IntField("Height", _draft.Height));
             _draft.StartX = Mathf.Clamp(EditorGUILayout.IntField("Start X", _draft.StartX), 0, _draft.Width - 1);
@@ -388,6 +402,7 @@ namespace Assets.Scripts.Editor
             var enemyActionProperty = serializedPattern.FindProperty("enemyAction");
             var confirmTextProperty = serializedPattern.FindProperty("confirmText");
             var damageMultiplierProperty = serializedPattern.FindProperty("damageMultiplier");
+            var enemyActionDamageFormulaProperty = serializedPattern.FindProperty("enemyActionDamageFormula");
             var boardProperty = serializedPattern.FindProperty("board");
 
             _draft = new PatternDraft
@@ -398,6 +413,18 @@ namespace Assets.Scripts.Editor
                 EnemyAction = (BattleEnemyActionType)enemyActionProperty.enumValueIndex,
                 ConfirmText = confirmTextProperty.stringValue,
                 DamageMultiplier = damageMultiplierProperty.intValue,
+                UseEnemyActionDamageFormula = enemyActionDamageFormulaProperty.FindPropertyRelative("isEnabled").boolValue,
+                EnemyActionFormulaParameterType =
+                    (BattleSkillParameterType)enemyActionDamageFormulaProperty.FindPropertyRelative("parameterType").enumValueIndex,
+                EnemyActionFormulaValueType =
+                    (BattleSkillValueType)enemyActionDamageFormulaProperty.FindPropertyRelative("valueType").enumValueIndex,
+                EnemyActionFormulaValue = enemyActionDamageFormulaProperty.FindPropertyRelative("value").floatValue,
+                EnemyActionFormulaFlatBonus = enemyActionDamageFormulaProperty.FindPropertyRelative("flatBonus").intValue,
+                EnemyActionFormulaFinalMultiplier = enemyActionDamageFormulaProperty.FindPropertyRelative("finalMultiplier").floatValue,
+                EnemyActionFormulaSourceScalarKey = enemyActionDamageFormulaProperty.FindPropertyRelative("sourceScalarKey").stringValue,
+                EnemyActionFormulaSourceScalarFallback =
+                    enemyActionDamageFormulaProperty.FindPropertyRelative("sourceScalarFallback").floatValue,
+                EnemyActionFormulaMinimumDamage = enemyActionDamageFormulaProperty.FindPropertyRelative("minimumDamage").intValue,
                 Width = Mathf.Max(1, boardProperty.FindPropertyRelative("width").intValue),
                 Height = Mathf.Max(1, boardProperty.FindPropertyRelative("height").intValue),
                 StartX = boardProperty.FindPropertyRelative("startX").intValue,
@@ -446,6 +473,17 @@ namespace Assets.Scripts.Editor
             serializedPattern.FindProperty("enemyAction").enumValueIndex = (int)_draft.EnemyAction;
             serializedPattern.FindProperty("confirmText").stringValue = _draft.ConfirmText ?? string.Empty;
             serializedPattern.FindProperty("damageMultiplier").intValue = Mathf.Max(0, _draft.DamageMultiplier);
+            WriteDamageFormulaDraft(
+                serializedPattern.FindProperty("enemyActionDamageFormula"),
+                _draft.UseEnemyActionDamageFormula,
+                _draft.EnemyActionFormulaParameterType,
+                _draft.EnemyActionFormulaValueType,
+                _draft.EnemyActionFormulaValue,
+                _draft.EnemyActionFormulaFlatBonus,
+                _draft.EnemyActionFormulaFinalMultiplier,
+                _draft.EnemyActionFormulaSourceScalarKey,
+                _draft.EnemyActionFormulaSourceScalarFallback,
+                _draft.EnemyActionFormulaMinimumDamage);
 
             var boardProperty = serializedPattern.FindProperty("board");
             boardProperty.FindPropertyRelative("width").intValue = _draft.Width;
@@ -518,6 +556,7 @@ namespace Assets.Scripts.Editor
             }
 
             AddGoalValidationIssue(draft, issues);
+            AddEnemyActionFormulaValidationIssue(draft, issues);
             return issues;
         }
 
@@ -535,6 +574,23 @@ namespace Assets.Scripts.Editor
             if (goalCount <= 0)
             {
                 issues.Add(new ValidationIssue(ValidationSeverity.Error, "終了ノード (Goal) を 1 つ以上配置してください。"));
+            }
+        }
+
+        private static void AddEnemyActionFormulaValidationIssue(PatternDraft draft, List<ValidationIssue> issues)
+        {
+            if (draft == null || !draft.UseEnemyActionDamageFormula)
+            {
+                return;
+            }
+
+            if (draft.EnemyActionFormulaValueType == BattleSkillValueType.None &&
+                draft.EnemyActionFormulaValue <= 0f &&
+                draft.EnemyActionFormulaFlatBonus <= 0)
+            {
+                issues.Add(new ValidationIssue(
+                    ValidationSeverity.Warning,
+                    "Enemy Action Formula が有効ですが、Value と Flat Bonus が 0 以下です。意図しない 0 ダメージになっていないか確認してください。"));
             }
         }
 
@@ -603,6 +659,34 @@ namespace Assets.Scripts.Editor
             }
         }
 
+        private static void WriteDamageFormulaDraft(
+            SerializedProperty formulaProperty,
+            bool isEnabled,
+            BattleSkillParameterType parameterType,
+            BattleSkillValueType valueType,
+            float value,
+            int flatBonus,
+            float finalMultiplier,
+            string sourceScalarKey,
+            float sourceScalarFallback,
+            int minimumDamage)
+        {
+            if (formulaProperty == null)
+            {
+                return;
+            }
+
+            formulaProperty.FindPropertyRelative("isEnabled").boolValue = isEnabled;
+            formulaProperty.FindPropertyRelative("parameterType").enumValueIndex = (int)parameterType;
+            formulaProperty.FindPropertyRelative("valueType").enumValueIndex = (int)valueType;
+            formulaProperty.FindPropertyRelative("value").floatValue = value;
+            formulaProperty.FindPropertyRelative("flatBonus").intValue = Mathf.Max(0, flatBonus);
+            formulaProperty.FindPropertyRelative("finalMultiplier").floatValue = Mathf.Max(0f, finalMultiplier);
+            formulaProperty.FindPropertyRelative("sourceScalarKey").stringValue = sourceScalarKey ?? string.Empty;
+            formulaProperty.FindPropertyRelative("sourceScalarFallback").floatValue = sourceScalarFallback;
+            formulaProperty.FindPropertyRelative("minimumDamage").intValue = Mathf.Max(0, minimumDamage);
+        }
+
         private void TryAssignFromSelection()
         {
             if (Selection.activeObject is StageBattlePatternMasterData selectedPattern)
@@ -619,6 +703,44 @@ namespace Assets.Scripts.Editor
             }
 
             return _visualDatabase;
+        }
+
+        private static void DrawEnemyActionDamageFormulaEditor(PatternDraft draft)
+        {
+            if (draft == null)
+            {
+                return;
+            }
+
+            EditorGUILayout.Space(2f);
+            EditorGUILayout.LabelField("Enemy Action Formula", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Use Custom Formula を有効にすると、Damage Multiplier (%) よりこちらの設定が優先されます。無効時は従来どおり敵 Attack x Damage Multiplier (%) を使います。",
+                MessageType.None);
+
+            draft.UseEnemyActionDamageFormula = EditorGUILayout.Toggle("Use Custom Formula", draft.UseEnemyActionDamageFormula);
+            if (!draft.UseEnemyActionDamageFormula)
+            {
+                return;
+            }
+
+            EditorGUI.indentLevel++;
+            draft.EnemyActionFormulaParameterType =
+                (BattleSkillParameterType)EditorGUILayout.EnumPopup("Parameter", draft.EnemyActionFormulaParameterType);
+            draft.EnemyActionFormulaValueType =
+                (BattleSkillValueType)EditorGUILayout.EnumPopup("Value Type", draft.EnemyActionFormulaValueType);
+            draft.EnemyActionFormulaValue = EditorGUILayout.FloatField("Value", draft.EnemyActionFormulaValue);
+            draft.EnemyActionFormulaFlatBonus =
+                Mathf.Max(0, EditorGUILayout.IntField("Flat Bonus", draft.EnemyActionFormulaFlatBonus));
+            draft.EnemyActionFormulaFinalMultiplier =
+                Mathf.Max(0f, EditorGUILayout.FloatField("Final Multiplier", draft.EnemyActionFormulaFinalMultiplier));
+            draft.EnemyActionFormulaSourceScalarKey =
+                EditorGUILayout.TextField("Source Scalar Key", draft.EnemyActionFormulaSourceScalarKey ?? string.Empty);
+            draft.EnemyActionFormulaSourceScalarFallback =
+                EditorGUILayout.FloatField("Source Scalar Fallback", draft.EnemyActionFormulaSourceScalarFallback);
+            draft.EnemyActionFormulaMinimumDamage =
+                Mathf.Max(0, EditorGUILayout.IntField("Minimum Damage", draft.EnemyActionFormulaMinimumDamage));
+            EditorGUI.indentLevel--;
         }
 
         private void DrawCellContent(Rect rect, CellVisual visual)

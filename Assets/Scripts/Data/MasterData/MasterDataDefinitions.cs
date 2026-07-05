@@ -62,11 +62,143 @@ namespace Assets.Scripts.Data.MasterData
         Guard = 101,
     }
 
+    public enum BattleStatModifierTargetType
+    {
+        Parameter = 0,
+        NamedValue = 1,
+    }
+
+    public enum BattleStatModifierOperationType
+    {
+        Set = 0,
+        Add = 1,
+        Multiply = 2,
+    }
+
     public enum ValidationSeverity
     {
         Info = 0,
         Warning = 1,
         Error = 2,
+    }
+
+    [System.Serializable]
+    public class BattleDamageFormulaDefinition
+    {
+        [SerializeField]
+        private bool isEnabled;
+
+        [SerializeField]
+        private BattleSkillParameterType parameterType = BattleSkillParameterType.Attack;
+
+        [SerializeField]
+        private BattleSkillValueType valueType = BattleSkillValueType.Multiplier;
+
+        [SerializeField]
+        private float value = 1f;
+
+        [SerializeField]
+        private int flatBonus = 0;
+
+        [SerializeField]
+        private float finalMultiplier = 1f;
+
+        [SerializeField]
+        private string sourceScalarKey = string.Empty;
+
+        [SerializeField]
+        private float sourceScalarFallback = 1f;
+
+        [SerializeField]
+        private int minimumDamage = 0;
+
+        public bool IsEnabled => isEnabled;
+        public BattleSkillParameterType ParameterType => parameterType;
+        public BattleSkillValueType ValueType => valueType;
+        public float Value => value;
+        public int FlatBonus => Mathf.Max(0, flatBonus);
+        public float FinalMultiplier => Mathf.Max(0f, finalMultiplier);
+        public string SourceScalarKey => sourceScalarKey ?? string.Empty;
+        public float SourceScalarFallback => sourceScalarFallback;
+        public int MinimumDamage => Mathf.Max(0, minimumDamage);
+
+        public void Normalize()
+        {
+            flatBonus = Mathf.Max(0, flatBonus);
+            finalMultiplier = Mathf.Max(0f, finalMultiplier);
+            minimumDamage = Mathf.Max(0, minimumDamage);
+            sourceScalarKey = (sourceScalarKey ?? string.Empty).Trim();
+        }
+    }
+
+    [System.Serializable]
+    public class BattleStatModifierDefinitionEntry
+    {
+        [SerializeField]
+        private BattleStatModifierTargetType targetType = BattleStatModifierTargetType.Parameter;
+
+        [SerializeField]
+        private BattleSkillParameterType parameterType = BattleSkillParameterType.Attack;
+
+        [SerializeField]
+        private string namedValueKey = string.Empty;
+
+        [SerializeField]
+        private BattleStatModifierOperationType operationType = BattleStatModifierOperationType.Add;
+
+        [SerializeField]
+        private float value = 0f;
+
+        public BattleStatModifierTargetType TargetType => targetType;
+        public BattleSkillParameterType ParameterType => parameterType;
+        public string NamedValueKey => namedValueKey ?? string.Empty;
+        public BattleStatModifierOperationType OperationType => operationType;
+        public float Value => value;
+
+        public void Normalize()
+        {
+            namedValueKey = (namedValueKey ?? string.Empty).Trim();
+        }
+    }
+
+    [System.Serializable]
+    public class BattleStatBlockDefinition
+    {
+        [SerializeField]
+        private int attack = 0;
+
+        [SerializeField]
+        private int defense = 0;
+
+        [SerializeField]
+        private int speed = 0;
+
+        [SerializeField]
+        private int guard = 0;
+
+        [SerializeField]
+        private List<BattleStatModifierDefinitionEntry> modifiers = new();
+
+        public int Attack => Mathf.Max(0, attack);
+        public int Defense => Mathf.Max(0, defense);
+        public int Speed => Mathf.Max(0, speed);
+        public int Guard => Mathf.Max(0, guard);
+        public IReadOnlyList<BattleStatModifierDefinitionEntry> Modifiers =>
+            modifiers ??= new List<BattleStatModifierDefinitionEntry>();
+
+        public void Normalize()
+        {
+            attack = Mathf.Max(0, attack);
+            defense = Mathf.Max(0, defense);
+            speed = Mathf.Max(0, speed);
+            guard = Mathf.Max(0, guard);
+            modifiers ??= new List<BattleStatModifierDefinitionEntry>();
+
+            for (var i = 0; i < modifiers.Count; i++)
+            {
+                modifiers[i]?.Normalize();
+            }
+        }
     }
 
     public readonly struct ValidationIssue

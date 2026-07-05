@@ -32,15 +32,6 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("プレイヤーの最大HP。現在の BattleScene では戦闘開始HPとして使う。")]
         public int MaxHp { get; set; } = 450; // TODO: メソッド化して装備や成長要素を反映させる
 
-        [Description("通常 Attack マス解決時のダメージ。")]
-        public int NormalAttackDamage { get; set; } = 100; // TODO: メソッド化して装備や成長要素を反映させる
-
-        [Description("連続 Attack の追撃ダメージ。")]
-        public int DoubleAttackFollowUpDamage { get; set; } = 125; // TODO: メソッド化して装備や成長要素を反映させる
-
-        [Description("Jump 後の Attack に適用するダメージ。")]
-        public int JumpAttackDamage { get; set; } = 150; // TODO: メソッド化して装備や成長要素を反映させる
-
         [Description("スキルスロット順に保持する SkillId。0 なら未設定スロット。")]
         public List<int> SkillSlotSkillIds { get; set; } = new();
     }
@@ -54,9 +45,6 @@ namespace Assets.Scripts.Systems.Save.Models
         public UserProfileDemoData()
         {
             MaxHp = 450;
-            NormalAttackDamage = 100;
-            DoubleAttackFollowUpDamage = 125;
-            JumpAttackDamage = 150;
 
             SkillSlotSkillIds = new List<int>
             {

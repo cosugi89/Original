@@ -34,6 +34,10 @@ namespace Assets.Scripts.Data.MasterData
         [FormerlySerializedAs("enemyActionDamageMultiplier")]
         private int damageMultiplier = 100;
 
+        [SerializeField]
+        [Tooltip("有効化時のみ BattleDamageCalculator に渡す敵行動用 custom damage formula。未設定なら DamageMultiplier と敵 Attack を使う。")]
+        private BattleDamageFormulaDefinition enemyActionDamageFormula = new();
+
         [Header("盤面情報")]
         [SerializeField]
         private StageBattleBoardMasterData board = new();
@@ -53,9 +57,19 @@ namespace Assets.Scripts.Data.MasterData
 
         public float DamageMultiplier => damageMultiplier / 100f;
 
+        public BattleDamageFormulaDefinition EnemyActionDamageFormula =>
+            enemyActionDamageFormula ??= new BattleDamageFormulaDefinition();
+
         public StageBattleBoardMasterData Board => board ??= new StageBattleBoardMasterData();
 
         public IReadOnlyList<StageTurnCellMasterData> CellPlacements => cellPlacements ??= new List<StageTurnCellMasterData>();
+
+        private void OnValidate()
+        {
+            damageMultiplier = Mathf.Max(0, damageMultiplier);
+            enemyActionDamageFormula ??= new BattleDamageFormulaDefinition();
+            enemyActionDamageFormula.Normalize();
+        }
     }
 
     /// <summary>

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Runtime;
 
@@ -12,26 +11,6 @@ namespace Assets.Scripts.Features.Battle.Logic
     /// </summary>
     public static class BattleTurnResolver
     {
-        private readonly struct AttributeDamageResolution
-        {
-            public AttributeDamageResolution(
-                int damage,
-                int appliedPercent,
-                BattleAttributeEffectiveness effectiveness,
-                string summary)
-            {
-                Damage = damage;
-                AppliedPercent = appliedPercent;
-                Effectiveness = effectiveness;
-                Summary = summary ?? string.Empty;
-            }
-
-            public int Damage { get; }
-            public int AppliedPercent { get; }
-            public BattleAttributeEffectiveness Effectiveness { get; }
-            public string Summary { get; }
-        }
-
         /// <summary>
         /// 確定パスを先頭から順に解釈し、攻撃・回避・被弾・Goal 到達を 1 ターン結果へ解決する。
         /// </summary>
@@ -48,25 +27,19 @@ namespace Assets.Scripts.Features.Battle.Logic
                 return report;
             }
 
-            var currentEnemyHp = Max(1, context.CurrentEnemyHp);
-            var currentPlayerHp = Max(1, context.CurrentPlayerHp);
-            var normalAttackDamage = Max(1, context.NormalAttackDamage);
-            var doubleAttackFollowUpDamage = Max(1, context.DoubleAttackFollowUpDamage);
-            var jumpAttackDamage = Max(1, context.JumpAttackDamage);
-            var enemyActionDamage = Max(0, context.EnemyActionDamage);
             var selectedSkill = context.SelectedSkill;
-
-            var jumpCanEvade = false;
-            var jumpAttackPrimed = false;
-            var rollCanEvade = false;
-            var resolvedHazardGroups = new HashSet<int>();
-            var basicAttackCount = 0;
+            var traversalState = new BattleTurnTraversalState();
+            var resolutionState = new BattleTurnResolutionState(
+                Max(1, context.CurrentEnemyHp),
+                Max(1, context.CurrentPlayerHp));
+            var actionFactory = new BattleTurnResolvedActionFactory(
+                context,
+                resolutionState);
 
             for (var i = 0; i < path.Count; i++)
             {
                 var cell = path[i];
                 var nodeType = cell?.NodeType ?? BattleNodeType.Empty;
-                report.ResolvedNodeCount++;
 
                 switch (nodeType)
                 {
@@ -75,114 +48,44 @@ namespace Assets.Scripts.Features.Battle.Logic
                         break;
 
                     case BattleNodeType.Jump:
-                        jumpCanEvade = true;
-                        jumpAttackPrimed = true;
-                        rollCanEvade = false;
-                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Jump);
-                        report.AddLog("Jump prepared.");
+                        traversalState.PrepareJump();
+                        ApplyResolvedAction(report, resolutionState, actionFactory.CreateJumpPreparedAction());
                         break;
 
                     case BattleNodeType.Roll:
-                        jumpCanEvade = false;
-                        jumpAttackPrimed = false;
-                        rollCanEvade = true;
-                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Roll);
-                        report.AddLog("Roll prepared.");
+                        traversalState.PrepareRoll();
+                        ApplyResolvedAction(report, resolutionState, actionFactory.CreateRollPreparedAction());
                         break;
 
                     case BattleNodeType.Dance:
-                        jumpCanEvade = false;
-                        jumpAttackPrimed = false;
-                        rollCanEvade = false;
-                        report.ResolvedDanceCount++;
-                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Dance);
-                        report.AddLog("Dance resolved.");
+                        traversalState.ResolveDance();
+                        ApplyResolvedAction(report, resolutionState, actionFactory.CreateDanceAction());
                         break;
 
                     case BattleNodeType.Attack:
-                    {
-                        report.ResolvedAttackCount++;
-                        report.EnemyDamageTaken += ResolveAttackDamage(
-                            context,
-                            selectedSkill,
-                            normalAttackDamage,
-                            doubleAttackFollowUpDamage,
-                            jumpAttackDamage,
-                            ref jumpAttackPrimed,
-                            ref basicAttackCount,
-                            report);
-
-                        jumpCanEvade = false;
-                        rollCanEvade = false;
-
-                        if (report.EnemyDamageTaken >= currentEnemyHp)
+                        if (HandleAttackNode(report, selectedSkill, traversalState, resolutionState, actionFactory))
                         {
-                            report.EnemyDefeated = true;
-                            report.AddLog("Enemy defeated.");
-                            FinalizeOutcomeFlags(report, selectedSkill);
+                            FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
                             return report;
                         }
                         break;
-                    }
 
                     case BattleNodeType.HazardNormal:
                     case BattleNodeType.HazardSkill:
-                    {
-                        report.ResolvedHazardCount++;
-                        var hazardGroupKey = ResolveHazardGroupKey(cell, i);
-
-                        if (resolvedHazardGroups.Contains(hazardGroupKey))
+                        if (HandleHazardNode(cell, i, nodeType, report, traversalState, resolutionState, actionFactory))
                         {
-                            report.AddLog($"Hazard group {hazardGroupKey} already resolved.");
-                            break;
+                            FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
+                            return report;
                         }
-
-                        if (nodeType == BattleNodeType.HazardNormal && jumpCanEvade)
-                        {
-                            jumpCanEvade = false;
-                            resolvedHazardGroups.Add(hazardGroupKey);
-                            report.AddLog($"Jump evaded hazard group {hazardGroupKey}.");
-                            break;
-                        }
-
-                        if (rollCanEvade)
-                        {
-                            rollCanEvade = false;
-                            jumpAttackPrimed = false;
-                            resolvedHazardGroups.Add(hazardGroupKey);
-                            report.AddLog($"Roll evaded hazard group {hazardGroupKey}.");
-                            break;
-                        }
-
-                        resolvedHazardGroups.Add(hazardGroupKey);
-                        report.TookHit = true;
-                        report.StoppedByHazardHit = true;
-                        report.PlayerDamageTaken += ResolveHazardDamage(context, report);
-                        report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Stun);
-                        report.AddLog($"Hazard group {hazardGroupKey} hit the player.");
-
-                        if (report.PlayerDamageTaken >= currentPlayerHp)
-                        {
-                            report.PlayerDefeated = true;
-                            report.AddLog("Player defeated.");
-                        }
-
-                        FinalizeOutcomeFlags(report, selectedSkill);
-                        return report;
-                    }
+                        break;
 
                     case BattleNodeType.Goal:
-                        report.GoalReached = true;
-                        report.PathConfirmed = true;
-                        report.AddLog("Goal reached.");
-                        ResolvePendingEnemyActionIfNeeded(report, context, enemyActionDamage, currentPlayerHp);
-                        FinalizeOutcomeFlags(report, selectedSkill);
-                        return report;
+                        return CompleteGoalNode(report, context, selectedSkill, resolutionState, actionFactory);
                 }
             }
 
-            ResolvePendingEnemyActionIfNeeded(report, context, enemyActionDamage, currentPlayerHp);
-            FinalizeOutcomeFlags(report, selectedSkill);
+            ResolvePendingEnemyActionIfNeeded(report, context, resolutionState, actionFactory);
+            FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
             return report;
         }
 
@@ -209,73 +112,93 @@ namespace Assets.Scripts.Features.Battle.Logic
             return Resolve(cells, context);
         }
 
-        /// <summary>
-        /// 通常攻撃、連撃、Jump 攻撃、または選択スキルを判定して敵ダメージを算出する。
-        /// </summary>
-        private static int ResolveAttackDamage(
-            BattleTurnContext context,
+        private static bool HandleAttackNode(
+            BattleTurnResolutionReport report,
             SkillSlotRuntime selectedSkill,
-            int normalAttackDamage,
-            int doubleAttackFollowUpDamage,
-            int jumpAttackDamage,
-            ref bool jumpAttackPrimed,
-            ref int basicAttackCount,
-            BattleTurnResolutionReport report)
+            BattleTurnTraversalState traversalState,
+            BattleTurnResolutionState resolutionState,
+            BattleTurnResolvedActionFactory actionFactory)
         {
-            if (selectedSkill != null)
-            {
-                report.ResolvedSkillCount++;
-                report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Skill);
-                var resolution = ResolveAttributeDamage(
-                    Max(0, selectedSkill.Damage),
-                    selectedSkill.Attribute,
-                    context?.EnemyDefenseAttributeModifiers);
-                ApplyEnemyDamageAttributeSummary(report, resolution);
-                report.AddLog($"Skill resolved: {selectedSkill.DisplayName}{BuildAttributeLogSuffix(resolution)}");
-                return resolution.Damage;
-            }
+            var action = selectedSkill != null
+                ? actionFactory.CreateSkillAction(selectedSkill)
+                : actionFactory.CreateBasicAttackAction(traversalState.ConsumeBasicAttackDamageKind());
 
-            if (jumpAttackPrimed)
-            {
-                basicAttackCount++;
-                jumpAttackPrimed = false;
-                report.AddPlayerAnimationCue(BattlePlayerAnimationCue.JumpAttack);
-                var resolution = ResolveAttributeDamage(
-                    jumpAttackDamage,
-                    context?.PlayerAttackAttribute,
-                    context?.EnemyDefenseAttributeModifiers);
-                ApplyEnemyDamageAttributeSummary(report, resolution);
-                report.AddLog($"Jump attack resolved{BuildAttributeLogSuffix(resolution)}.");
-                return resolution.Damage;
-            }
-
-            basicAttackCount++;
-            if (basicAttackCount >= 2)
-            {
-                report.AddPlayerAnimationCue(BattlePlayerAnimationCue.DoubleAttack);
-                var resolution = ResolveAttributeDamage(
-                    doubleAttackFollowUpDamage,
-                    context?.PlayerAttackAttribute,
-                    context?.EnemyDefenseAttributeModifiers);
-                ApplyEnemyDamageAttributeSummary(report, resolution);
-                report.AddLog($"Double attack follow-up resolved{BuildAttributeLogSuffix(resolution)}.");
-                return resolution.Damage;
-            }
-
-            report.AddPlayerAnimationCue(BattlePlayerAnimationCue.Attack);
-            var attackResolution = ResolveAttributeDamage(
-                normalAttackDamage,
-                context?.PlayerAttackAttribute,
-                context?.EnemyDefenseAttributeModifiers);
-            ApplyEnemyDamageAttributeSummary(report, attackResolution);
-            report.AddLog($"Normal attack resolved{BuildAttributeLogSuffix(attackResolution)}.");
-            return attackResolution.Damage;
+            ApplyResolvedAction(report, resolutionState, action);
+            traversalState.ResolveAttackExecution();
+            return resolutionState != null && resolutionState.EnemyDefeated;
         }
 
-        private static void FinalizeOutcomeFlags(BattleTurnResolutionReport report, SkillSlotRuntime selectedSkill)
+        private static bool HandleHazardNode(
+            BattleCellState cell,
+            int stepIndex,
+            BattleNodeType nodeType,
+            BattleTurnResolutionReport report,
+            BattleTurnTraversalState traversalState,
+            BattleTurnResolutionState resolutionState,
+            BattleTurnResolvedActionFactory actionFactory)
         {
-            report.GoalEffectTriggered = report.GoalReached && !report.TookHit && !report.PlayerDefeated;
-            report.SelectedSkillConsumed = report.PathConfirmed && selectedSkill != null;
+            var hazardGroupKey = ResolveHazardGroupKey(cell, stepIndex);
+            if (traversalState.IsHazardResolved(hazardGroupKey))
+            {
+                ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardIgnoredAction(hazardGroupKey));
+                return false;
+            }
+
+            if (traversalState.TryEvadeHazardWithJump(nodeType, hazardGroupKey))
+            {
+                ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardEvadedAction("Jump", hazardGroupKey));
+                return false;
+            }
+
+            if (traversalState.TryEvadeHazardWithRoll(hazardGroupKey))
+            {
+                ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardEvadedAction("Roll", hazardGroupKey));
+                return false;
+            }
+
+            traversalState.MarkHazardResolved(hazardGroupKey);
+            ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardHitAction(hazardGroupKey));
+            return true;
+        }
+
+        private static BattleTurnResolutionReport CompleteGoalNode(
+            BattleTurnResolutionReport report,
+            BattleTurnContext context,
+            SkillSlotRuntime selectedSkill,
+            BattleTurnResolutionState resolutionState,
+            BattleTurnResolvedActionFactory actionFactory)
+        {
+            ApplyResolvedAction(report, resolutionState, actionFactory.CreateGoalReachedAction());
+            ResolvePendingEnemyActionIfNeeded(report, context, resolutionState, actionFactory);
+            FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
+            return report;
+        }
+
+        private static void FinalizeOutcomeFlags(
+            BattleTurnResolutionReport report,
+            SkillSlotRuntime selectedSkill,
+            BattleTurnResolutionState resolutionState,
+            BattleTurnResolvedActionFactory actionFactory)
+        {
+            if (report == null || actionFactory == null)
+            {
+                return;
+            }
+
+            if (resolutionState != null &&
+                resolutionState.GoalReached &&
+                !resolutionState.TookHit &&
+                !resolutionState.PlayerDefeated)
+            {
+                ApplyResolvedAction(report, resolutionState, actionFactory.CreateGoalEffectTriggeredAction());
+            }
+
+            if (resolutionState != null &&
+                resolutionState.PathConfirmed &&
+                selectedSkill != null)
+            {
+                ApplyResolvedAction(report, resolutionState, actionFactory.CreateSkillCommittedAction(selectedSkill));
+            }
         }
 
         private static int ResolveHazardGroupKey(BattleCellState cell, int stepIndex)
@@ -288,215 +211,69 @@ namespace Assets.Scripts.Features.Battle.Logic
             return int.MinValue + stepIndex;
         }
 
-        /// <summary>
-        /// Hazard 接触時の被ダメージを、危険強化と属性相性込みで計算する。
-        /// </summary>
-        private static int ResolveHazardDamage(BattleTurnContext context, BattleTurnResolutionReport report)
-        {
-            var hazardDamage = context != null ? Max(0, context.EnemyActionDamage) : 0;
-            var boostedDamage = context != null && context.HazardBoosted
-                ? RoundToInt(hazardDamage * 1.5f)
-                : hazardDamage;
-            var resolution = ResolveAttributeDamage(
-                boostedDamage,
-                context?.EnemyAttackAttribute,
-                context?.PlayerDefenseAttributeModifiers);
-            ApplyPlayerDamageAttributeSummary(report, resolution);
-            return resolution.Damage;
-        }
-
-        /// <summary>
-        /// Goal 到達後、盤面上の Hazard 解決が無かった場合に敵行動の直ダメージを解決する。
-        /// </summary>
         private static void ResolvePendingEnemyActionIfNeeded(
             BattleTurnResolutionReport report,
             BattleTurnContext context,
-            int enemyActionDamage,
-            int currentPlayerHp)
+            BattleTurnResolutionState resolutionState,
+            BattleTurnResolvedActionFactory actionFactory)
         {
             if (report == null ||
-                !report.PathConfirmed ||
-                report.EnemyDefeated ||
-                report.PlayerDefeated ||
-                report.ResolvedHazardCount > 0)
+                resolutionState == null ||
+                actionFactory == null ||
+                !resolutionState.PathConfirmed ||
+                resolutionState.EnemyDefeated ||
+                resolutionState.PlayerDefeated ||
+                resolutionState.ResolvedHazardCount > 0)
             {
                 return;
             }
-
-            var resolution = ResolveAttributeDamage(
-                enemyActionDamage,
-                context?.EnemyAttackAttribute,
-                context?.PlayerDefenseAttributeModifiers);
 
             switch (context != null ? context.EnemyAction : BattleEnemyActionType.NormalAttack)
             {
                 case BattleEnemyActionType.Dance:
-                    report.AddLog("Enemy dance reserved the next turn hazard boost.");
+                    ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardBoostReservedAction());
                     return;
 
                 case BattleEnemyActionType.Skill:
-                    if (enemyActionDamage <= 0)
+                {
+                    var action = actionFactory.CreateEnemyAction(isSkill: true);
+                    if (action != null)
                     {
-                        return;
+                        ApplyResolvedAction(report, resolutionState, action);
                     }
-
-                    report.ResolvedEnemyActionCount++;
-                    report.PlayerDamageTaken += resolution.Damage;
-                    ApplyPlayerDamageAttributeSummary(report, resolution);
-                    report.AddLog($"Enemy skill resolved{BuildAttributeLogSuffix(resolution)}.");
                     break;
+                }
 
                 case BattleEnemyActionType.NormalAttack:
                 default:
-                    if (enemyActionDamage <= 0)
-                    {
-                        return;
-                    }
-
-                    report.ResolvedEnemyActionCount++;
-                    report.PlayerDamageTaken += resolution.Damage;
-                    ApplyPlayerDamageAttributeSummary(report, resolution);
-                    report.AddLog($"Enemy normal attack resolved{BuildAttributeLogSuffix(resolution)}.");
-                    break;
-            }
-
-            if (report.PlayerDamageTaken >= currentPlayerHp)
-            {
-                report.PlayerDefeated = true;
-                report.AddLog("Player defeated.");
-            }
-        }
-
-        private static AttributeDamageResolution ResolveAttributeDamage(
-            int baseDamage,
-            AttributeData attackAttribute,
-            IReadOnlyList<EquipmentAttributeModifierData> defenseModifiers)
-        {
-            var clampedBaseDamage = Max(0, baseDamage);
-            if (clampedBaseDamage <= 0)
-            {
-                return new AttributeDamageResolution(0, 0, BattleAttributeEffectiveness.None, string.Empty);
-            }
-
-            if (attackAttribute == null || attackAttribute.AttributeId <= 0)
-            {
-                return new AttributeDamageResolution(clampedBaseDamage, 100, BattleAttributeEffectiveness.None, string.Empty);
-            }
-
-            var appliedPercent = ResolveAttributePercent(attackAttribute.AttributeId, defenseModifiers);
-            var effectiveness = ResolveEffectiveness(appliedPercent);
-            var resolvedDamage = RoundToInt(clampedBaseDamage * (appliedPercent / 100f));
-            return new AttributeDamageResolution(
-                resolvedDamage,
-                appliedPercent,
-                effectiveness,
-                BuildAttributeSummary(attackAttribute.DisplayName, effectiveness));
-        }
-
-        private static int ResolveAttributePercent(
-            int attributeId,
-            IReadOnlyList<EquipmentAttributeModifierData> defenseModifiers)
-        {
-            if (attributeId <= 0 || defenseModifiers == null || defenseModifiers.Count == 0)
-            {
-                return 100;
-            }
-
-            for (var i = 0; i < defenseModifiers.Count; i++)
-            {
-                var modifier = defenseModifiers[i];
-                if (modifier?.Attribute != null && modifier.Attribute.AttributeId == attributeId)
                 {
-                    return Max(0, modifier.DamagePercent);
+                    var action = actionFactory.CreateEnemyAction(isSkill: false);
+                    if (action != null)
+                    {
+                        ApplyResolvedAction(report, resolutionState, action);
+                    }
+                    break;
                 }
             }
-
-            return 100;
         }
 
-        private static BattleAttributeEffectiveness ResolveEffectiveness(int appliedPercent)
-        {
-            if (appliedPercent <= 0)
-            {
-                return BattleAttributeEffectiveness.Immune;
-            }
-
-            if (appliedPercent < 100)
-            {
-                return BattleAttributeEffectiveness.Resist;
-            }
-
-            if (appliedPercent > 100)
-            {
-                return BattleAttributeEffectiveness.Weak;
-            }
-
-            return BattleAttributeEffectiveness.Neutral;
-        }
-
-        private static string BuildAttributeSummary(string attributeName, BattleAttributeEffectiveness effectiveness)
-        {
-            if (string.IsNullOrWhiteSpace(attributeName) ||
-                effectiveness == BattleAttributeEffectiveness.None ||
-                effectiveness == BattleAttributeEffectiveness.Neutral)
-            {
-                return string.Empty;
-            }
-
-            var suffix = effectiveness switch
-            {
-                BattleAttributeEffectiveness.Weak => "弱点",
-                BattleAttributeEffectiveness.Resist => "耐性",
-                BattleAttributeEffectiveness.Immune => "無効",
-                _ => "等倍",
-            };
-            return $"{attributeName}/{suffix}";
-        }
-
-        private static string BuildAttributeLogSuffix(AttributeDamageResolution resolution)
-        {
-            if (string.IsNullOrWhiteSpace(resolution.Summary))
-            {
-                return string.Empty;
-            }
-
-            return $" ({resolution.Summary} {resolution.AppliedPercent}%)";
-        }
-
-        private static void ApplyEnemyDamageAttributeSummary(
+        private static void ApplyResolvedAction(
             BattleTurnResolutionReport report,
-            AttributeDamageResolution resolution)
+            BattleTurnResolutionState resolutionState,
+            BattleResolvedAction action)
         {
-            if (report == null || string.IsNullOrWhiteSpace(resolution.Summary))
+            if (report == null || action == null)
             {
                 return;
             }
 
-            report.EnemyDamageAttributeSummary = resolution.Summary;
-            report.EnemyDamageEffectiveness = resolution.Effectiveness;
-        }
-
-        private static void ApplyPlayerDamageAttributeSummary(
-            BattleTurnResolutionReport report,
-            AttributeDamageResolution resolution)
-        {
-            if (report == null || string.IsNullOrWhiteSpace(resolution.Summary))
-            {
-                return;
-            }
-
-            report.PlayerDamageAttributeSummary = resolution.Summary;
-            report.PlayerDamageEffectiveness = resolution.Effectiveness;
+            report.ApplyResolvedAction(action);
+            resolutionState?.Apply(action);
         }
 
         private static int Max(int left, int right)
         {
             return left > right ? left : right;
-        }
-
-        private static int RoundToInt(float value)
-        {
-            return (int)MathF.Round(value, MidpointRounding.AwayFromZero);
         }
     }
 }

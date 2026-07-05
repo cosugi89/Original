@@ -113,6 +113,43 @@ namespace Assets.Scripts.Features.Battle.Core
     }
 
     /// <summary>
+    /// ダメージ算出パイプラインへ渡す行動種別。
+    /// どの基礎ダメージ式と属性参照元を使うかを共通化する。
+    /// </summary>
+    public enum BattleDamageKind
+    {
+        NormalAttack,
+        DoubleAttackFollowUp,
+        JumpAttack,
+        Skill,
+        EnemyAction,
+    }
+
+    /// <summary>
+    /// 1 ターン解決中に発生した action event の分類。
+    /// BattleTurnResolver は action 列を組み立て、report はそれを集計する。
+    /// </summary>
+    public enum BattleResolvedActionType
+    {
+        None,
+        JumpPrepared,
+        RollPrepared,
+        Dance,
+        PlayerAttack,
+        Skill,
+        HazardIgnored,
+        HazardEvaded,
+        HazardHit,
+        GoalReached,
+        EnemyAction,
+        EnemyIntent,
+        SkillCommitted,
+        GoalEffectTriggered,
+        HazardBoostReserved,
+        SystemLog,
+    }
+
+    /// <summary>
     /// 1 回のトレース入力の状態。
     /// </summary>
     public enum BattlePathTraceStatus

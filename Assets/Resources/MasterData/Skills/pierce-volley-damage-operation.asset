@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: pierce-volley-damage-operation
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillEffectData
   effectType: 0
-  targetType: 0
-  parameterType: 1
-  valueType: 2
-  value: 220
+  targetType: 1
+  parameterType: 2
+  valueType: 1
+  value: 2.2
   durationTurns: 0
   successRate: 1

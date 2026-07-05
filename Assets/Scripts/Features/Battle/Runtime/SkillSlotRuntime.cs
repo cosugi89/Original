@@ -20,6 +20,9 @@ namespace Assets.Scripts.Features.Battle.Runtime
     /// ひとまずデモ版の能力を引き継ぎつつ、将来の HUD / 装備連携の受け皿にする。
     /// </summary>
     [Serializable]
+    /// <summary>
+    /// 戦闘中スキルスロットの状態、チャージ、参照マスタを保持する。
+    /// </summary>
     public class SkillSlotRuntime
     {
         private readonly int _skillId;
@@ -93,9 +96,6 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         [Description("Attack 解決時に加算されるチャージ量。")]
         public int AttackChargeGain => HasResolvedSkill ? Max(0, _skillData.AttackChargeGain) : 0;
-
-        [Description("スキル発動時に与える基礎ダメージ量。")]
-        public int Damage => HasResolvedSkill ? Max(0, _skillData.Damage) : 0;
 
         [Description("このスキルが持つ属性情報。")]
         public AttributeData Attribute => _skillData?.Attribute;
@@ -240,3 +240,4 @@ namespace Assets.Scripts.Features.Battle.Runtime
         }
     }
 }
+

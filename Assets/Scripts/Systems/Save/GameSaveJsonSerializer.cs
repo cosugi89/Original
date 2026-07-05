@@ -143,9 +143,6 @@ namespace Assets.Scripts.Systems.Save
             }
 
             CopyIfMissing(profile, "MaxHp", battleProfile["MaxHp"]);
-            CopyIfMissing(profile, "NormalAttackDamage", battleProfile["NormalAttackDamage"]);
-            CopyIfMissing(profile, "DoubleAttackFollowUpDamage", battleProfile["DoubleAttackFollowUpDamage"]);
-            CopyIfMissing(profile, "JumpAttackDamage", battleProfile["JumpAttackDamage"]);
 
             if (profile["SkillSlotSkillIds"] is not JArray existingIds || existingIds.Count == 0)
             {

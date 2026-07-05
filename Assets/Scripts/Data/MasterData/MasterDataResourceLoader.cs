@@ -31,24 +31,7 @@ namespace Assets.Scripts.Data.MasterData
             if (database == null)
                 return Array.Empty<EquipmentData>();
 
-            return database.Equipments
-                .Where(m => m != null)
-                .Select(m => new EquipmentData
-                {
-                    EquipmentId = m.EquipmentId,
-                    DisplayName = m.DisplayName,
-                    PartType = m.PartType,
-                    ExclusiveGroup = m.ExclusiveGroup,
-                    PartsIndex = m.PartsIndex,
-                    Icon = m.Icon,
-                    SortOrder = m.SortOrder > 0 ? m.SortOrder : Mathf.Max(m.PartsIndex, 0),
-                    IsDefaultOwned = m.IsDefaultOwned,
-                    AssignableSkills = BuildBattleSkillData(m.AssignableSkills),
-                    NormalAttackAttribute = BuildAttributeData(m.NormalAttackAttribute),
-                    AttributeModifiers = BuildEquipmentAttributeModifierData(m.AttributeModifiers),
-                    CategoryTags = BuildCategoryTags(m.CategoryTags),
-                })
-                .ToArray();
+            return BuildEquipmentData(database.Equipments);
         }
 
         /// <summary>
@@ -323,10 +306,32 @@ namespace Assets.Scripts.Data.MasterData
                     ParameterType = effect.ParameterType,
                     ValueType = effect.ValueType,
                     Value = effect.Value,
+                    DamageFormula = BuildBattleDamageFormulaData(effect.DamageFormula),
                     DurationTurns = Mathf.Max(0, effect.DurationTurns),
                     SuccessRate = Mathf.Clamp01(effect.SuccessRate),
                 })
                 .ToArray();
+        }
+
+        private static BattleDamageFormulaData BuildBattleDamageFormulaData(BattleDamageFormulaDefinition formula)
+        {
+            if (formula == null)
+            {
+                return null;
+            }
+
+            return new BattleDamageFormulaData
+            {
+                IsEnabled = formula.IsEnabled,
+                ParameterType = formula.ParameterType,
+                ValueType = formula.ValueType,
+                Value = formula.Value,
+                FlatBonus = Mathf.Max(0, formula.FlatBonus),
+                FinalMultiplier = Mathf.Max(0f, formula.FinalMultiplier),
+                SourceScalarKey = formula.SourceScalarKey?.Trim() ?? string.Empty,
+                SourceScalarFallback = formula.SourceScalarFallback,
+                MinimumDamage = Mathf.Max(0, formula.MinimumDamage),
+            };
         }
 
         private static IReadOnlyList<EquipmentAttributeModifierData> BuildEquipmentAttributeModifierData(
@@ -345,6 +350,76 @@ namespace Assets.Scripts.Data.MasterData
                     DamagePercent = Mathf.Max(0, modifier.DamagePercent),
                 })
                 .ToArray();
+        }
+
+        private static IReadOnlyList<BattleStatModifierData> BuildBattleStatModifierData(
+            IReadOnlyList<BattleStatModifierDefinitionEntry> modifiers)
+        {
+            if (modifiers == null || modifiers.Count == 0)
+            {
+                return Array.Empty<BattleStatModifierData>();
+            }
+
+            return modifiers
+                .Where(modifier => modifier != null)
+                .Select(modifier => new BattleStatModifierData
+                {
+                    TargetType = modifier.TargetType,
+                    ParameterType = modifier.ParameterType,
+                    NamedValueKey = modifier.NamedValueKey?.Trim() ?? string.Empty,
+                    OperationType = modifier.OperationType,
+                    Value = modifier.Value,
+                })
+                .ToArray();
+        }
+
+        private static BattleStatBlockData BuildBattleStatBlockData(
+            BattleStatBlockDefinition statBlock,
+            IReadOnlyList<BattleStatModifierData> additionalModifiers = null)
+        {
+            var definition = statBlock ?? new BattleStatBlockDefinition();
+            var baseModifiers = BuildBattleStatModifierData(definition.Modifiers);
+            var mergedModifiers = MergeBattleStatModifiers(baseModifiers, additionalModifiers);
+
+            return new BattleStatBlockData
+            {
+                Attack = Mathf.Max(0, definition.Attack),
+                Defense = Mathf.Max(0, definition.Defense),
+                Speed = Mathf.Max(0, definition.Speed),
+                Guard = Mathf.Max(0, definition.Guard),
+                Modifiers = mergedModifiers,
+            };
+        }
+
+        private static IReadOnlyList<BattleStatModifierData> MergeBattleStatModifiers(
+            IReadOnlyList<BattleStatModifierData> primaryModifiers,
+            IReadOnlyList<BattleStatModifierData> secondaryModifiers)
+        {
+            var result = new List<BattleStatModifierData>();
+
+            if (primaryModifiers != null)
+            {
+                for (var i = 0; i < primaryModifiers.Count; i++)
+                {
+                    if (primaryModifiers[i] != null)
+                    {
+                        result.Add(primaryModifiers[i]);
+                    }
+                }
+            }
+
+            if (secondaryModifiers != null)
+            {
+                for (var i = 0; i < secondaryModifiers.Count; i++)
+                {
+                    if (secondaryModifiers[i] != null)
+                    {
+                        result.Add(secondaryModifiers[i]);
+                    }
+                }
+            }
+
+            return result.Count > 0 ? result.ToArray() : Array.Empty<BattleStatModifierData>();
         }
 
         private static IReadOnlyList<string> BuildCategoryTags(IReadOnlyList<string> categoryTags)
@@ -394,13 +469,16 @@ namespace Assets.Scripts.Data.MasterData
                         continue;
                     }
 
+                    var equipmentDerivedData = BuildEnemyEquipmentDerivedData(enemyMaster);
                     return new StageBattleEnemyData
                     {
                         Name = enemyMaster.Name ?? string.Empty,
                         MaxHp = Mathf.Max(1, enemyMaster.MaxHp),
-                        Damage = Mathf.Max(0, enemyMaster.Damage),
-                        AttackAttribute = BuildAttributeData(ResolveEnemyRightHandWeaponAttribute(enemyMaster)),
-                        DefenseAttributeModifiers = BuildEquipmentAttributeModifierData(ResolveEnemyChestAttributeModifiers(enemyMaster)),
+                        Stats = BuildBattleStatBlockData(
+                            enemyMaster.Stats,
+                            equipmentDerivedData.BattleStatModifiers),
+                        AttackAttribute = equipmentDerivedData.AttackAttribute,
+                        DefenseAttributeModifiers = equipmentDerivedData.DefenseAttributeModifiers,
                         Appearance = BuildResolvedEnemyAppearanceData(enemyMaster),
                         Patterns = BuildPatterns(enemyMaster),
                     };
@@ -411,7 +489,10 @@ namespace Assets.Scripts.Data.MasterData
             {
                 Name = string.Empty,
                 MaxHp = 1,
-                Damage = 80,
+                Stats = new BattleStatBlockData
+                {
+                    Attack = 80,
+                },
                 AttackAttribute = null,
                 DefenseAttributeModifiers = Array.Empty<EquipmentAttributeModifierData>(),
                 Appearance = new AppearanceData(),
@@ -419,45 +500,71 @@ namespace Assets.Scripts.Data.MasterData
             };
         }
 
-        private static AttributeMasterData ResolveEnemyRightHandWeaponAttribute(StageBattleEnemyMasterData enemyMaster)
+        private static BattleEquipmentDerivedData BuildEnemyEquipmentDerivedData(StageBattleEnemyMasterData enemyMaster)
         {
             var slotMasters = enemyMaster?.AppearanceSlots;
-            if (slotMasters == null)
+            if (slotMasters == null || slotMasters.Count == 0)
+            {
+                return new BattleEquipmentDerivedData();
+            }
+
+            var equipmentDefinitions = new List<EquipmentData>();
+            for (var i = 0; i < slotMasters.Count; i++)
+            {
+                var equipment = slotMasters[i]?.Equipment;
+                var equipmentData = BuildEquipmentData(equipment);
+                if (equipmentData != null)
+                {
+                    equipmentDefinitions.Add(equipmentData);
+                }
+            }
+
+            return BattleEquipmentDerivedDataResolver.Resolve(equipmentDefinitions);
+        }
+
+        private static IReadOnlyList<EquipmentData> BuildEquipmentData(IReadOnlyList<EquipmentMasterData> masters)
+        {
+            if (masters == null || masters.Count == 0)
+            {
+                return Array.Empty<EquipmentData>();
+            }
+
+            var result = new List<EquipmentData>();
+            for (var i = 0; i < masters.Count; i++)
+            {
+                var equipmentData = BuildEquipmentData(masters[i]);
+                if (equipmentData != null)
+                {
+                    result.Add(equipmentData);
+                }
+            }
+
+            return result.Count > 0 ? result.ToArray() : Array.Empty<EquipmentData>();
+        }
+
+        private static EquipmentData BuildEquipmentData(EquipmentMasterData master)
+        {
+            if (master == null)
             {
                 return null;
             }
 
-            for (var i = 0; i < slotMasters.Count; i++)
+            return new EquipmentData
             {
-                var equipment = slotMasters[i]?.Equipment;
-                if (equipment != null && equipment.IsRightHandEquipment && equipment.NormalAttackAttribute != null)
-                {
-                    return equipment.NormalAttackAttribute;
-                }
-            }
-
-            return null;
-        }
-
-        private static IReadOnlyList<EquipmentAttributeModifierEntry> ResolveEnemyChestAttributeModifiers(
-            StageBattleEnemyMasterData enemyMaster)
-        {
-            var slotMasters = enemyMaster?.AppearanceSlots;
-            if (slotMasters == null)
-            {
-                return Array.Empty<EquipmentAttributeModifierEntry>();
-            }
-
-            for (var i = 0; i < slotMasters.Count; i++)
-            {
-                var equipment = slotMasters[i]?.Equipment;
-                if (equipment != null && equipment.PartType == PartsType.Chest)
-                {
-                    return equipment.AttributeModifiers;
-                }
-            }
-
-            return Array.Empty<EquipmentAttributeModifierEntry>();
+                EquipmentId = master.EquipmentId,
+                DisplayName = master.DisplayName,
+                PartType = master.PartType,
+                ExclusiveGroup = master.ExclusiveGroup,
+                PartsIndex = master.PartsIndex,
+                Icon = master.Icon,
+                SortOrder = master.SortOrder > 0 ? master.SortOrder : Mathf.Max(master.PartsIndex, 0),
+                IsDefaultOwned = master.IsDefaultOwned,
+                AssignableSkills = BuildBattleSkillData(master.AssignableSkills),
+                NormalAttackAttribute = BuildAttributeData(master.NormalAttackAttribute),
+                AttributeModifiers = BuildEquipmentAttributeModifierData(master.AttributeModifiers),
+                BattleStatModifiers = BuildBattleStatModifierData(master.BattleStatModifiers),
+                CategoryTags = BuildCategoryTags(master.CategoryTags),
+            };
         }
 
         private static AppearanceData BuildResolvedEnemyAppearanceData(StageBattleEnemyMasterData enemyMaster)
@@ -564,6 +671,7 @@ namespace Assets.Scripts.Data.MasterData
                     Description = pattern.Description,
                     ConfirmText = pattern.ConfirmText,
                     EnemyActionDamageMultiplier = Mathf.Max(0f, pattern.DamageMultiplier),
+                    EnemyActionDamageFormula = BuildBattleDamageFormulaData(pattern.EnemyActionDamageFormula),
                     CellPlacements = BuildCellPlacements(pattern.CellPlacements),
                 });
             }

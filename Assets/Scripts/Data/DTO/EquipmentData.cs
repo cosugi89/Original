@@ -25,6 +25,7 @@ namespace Assets.Scripts.Data.DTO
         public IReadOnlyList<BattleSkillData> AssignableSkills { get; init; } = Array.Empty<BattleSkillData>();
         public AttributeData NormalAttackAttribute { get; init; }
         public IReadOnlyList<EquipmentAttributeModifierData> AttributeModifiers { get; init; } = Array.Empty<EquipmentAttributeModifierData>();
+        public IReadOnlyList<BattleStatModifierData> BattleStatModifiers { get; init; } = Array.Empty<BattleStatModifierData>();
         public IReadOnlyList<string> CategoryTags { get; init; } = Array.Empty<string>();
     }
 
@@ -50,7 +51,6 @@ namespace Assets.Scripts.Data.DTO
         public AttributeData Attribute => ResolvePrimaryAttribute();
         public BattleSkillEffectEntryData PrimaryEffect => ResolvePrimaryEffect();
         public BattleSkillOperationType EffectType => PrimaryEffect?.EffectType ?? BattleSkillOperationType.Damage;
-        public int Damage => ResolveDamageValue(PrimaryEffect);
 
         private AttributeData ResolvePrimaryAttribute()
         {
@@ -95,22 +95,6 @@ namespace Assets.Scripts.Data.DTO
 
             return firstNonNullEffect;
         }
-
-        private static int ResolveDamageValue(BattleSkillEffectEntryData primaryEffect)
-        {
-            if (primaryEffect == null || primaryEffect.EffectType != BattleSkillOperationType.Damage)
-            {
-                return 0;
-            }
-
-            if (primaryEffect.ValueType != BattleSkillValueType.FixedValue &&
-                primaryEffect.ValueType != BattleSkillValueType.None)
-            {
-                return 0;
-            }
-
-            return Mathf.Max(0, Mathf.RoundToInt(primaryEffect.Value));
-        }
     }
 
     /// <summary>
@@ -123,6 +107,7 @@ namespace Assets.Scripts.Data.DTO
         public BattleSkillParameterType ParameterType { get; init; } = BattleSkillParameterType.None;
         public BattleSkillValueType ValueType { get; init; } = BattleSkillValueType.None;
         public float Value { get; init; } = 0f;
+        public BattleDamageFormulaData DamageFormula { get; init; }
         public int DurationTurns { get; init; } = 0;
         public float SuccessRate { get; init; } = 1f;
     }
@@ -164,5 +149,34 @@ namespace Assets.Scripts.Data.DTO
     {
         public AttributeData Attribute { get; init; }
         public int DamagePercent { get; init; } = 100;
+    }
+
+    /// <summary>
+    /// 装備などから渡される、戦闘計算用の汎用ステータス補正1件ぶんの転送用データ。
+    /// </summary>
+    public class BattleStatModifierData
+    {
+        public BattleStatModifierTargetType TargetType { get; init; } = BattleStatModifierTargetType.Parameter;
+        public BattleSkillParameterType ParameterType { get; init; } = BattleSkillParameterType.Attack;
+        public string NamedValueKey { get; init; } = string.Empty;
+        public BattleStatModifierOperationType OperationType { get; init; } = BattleStatModifierOperationType.Add;
+        public float Value { get; init; } = 0f;
+    }
+
+    /// <summary>
+    /// master data から runtime へ渡す damage formula 定義。
+    /// IsEnabled が false の間は既存の固定ロジックを使う。
+    /// </summary>
+    public class BattleDamageFormulaData
+    {
+        public bool IsEnabled { get; init; }
+        public BattleSkillParameterType ParameterType { get; init; } = BattleSkillParameterType.Attack;
+        public BattleSkillValueType ValueType { get; init; } = BattleSkillValueType.Multiplier;
+        public float Value { get; init; } = 1f;
+        public int FlatBonus { get; init; } = 0;
+        public float FinalMultiplier { get; init; } = 1f;
+        public string SourceScalarKey { get; init; } = string.Empty;
+        public float SourceScalarFallback { get; init; } = 1f;
+        public int MinimumDamage { get; init; } = 0;
     }
 }

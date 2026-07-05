@@ -25,6 +25,10 @@ namespace Assets.Scripts.Data.MasterData
         [SerializeField][Description("効果値")]
         private float value = 1.0f;
 
+        [SerializeField]
+        [Description("有効化時のみ BattleDamageCalculator へ渡すカスタム damage formula。未設定なら parameter/value をそのまま使う。")]
+        private BattleDamageFormulaDefinition damageFormula = new();
+
         [SerializeField][Description("継続ターン数")]
         private int durationTurns = 0;
 
@@ -37,6 +41,7 @@ namespace Assets.Scripts.Data.MasterData
         public BattleSkillParameterType ParameterType => parameterType;
         public BattleSkillValueType ValueType => valueType;
         public float Value => value;
+        public BattleDamageFormulaDefinition DamageFormula => damageFormula ??= new BattleDamageFormulaDefinition();
         public int DurationTurns => durationTurns;
         public float SuccessRate => successRate;
 
@@ -44,6 +49,8 @@ namespace Assets.Scripts.Data.MasterData
         {
             durationTurns = Mathf.Max(0, durationTurns);
             successRate = Mathf.Clamp01(successRate);
+            damageFormula ??= new BattleDamageFormulaDefinition();
+            damageFormula.Normalize();
         }
     }
 }

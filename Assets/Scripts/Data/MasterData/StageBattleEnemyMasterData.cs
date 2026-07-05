@@ -23,7 +23,7 @@ namespace Assets.Scripts.Data.MasterData
         private int maxHp = 1;
 
         [SerializeField]
-        private int damage = 80;
+        private BattleStatBlockDefinition stats = new();
 
         [SerializeField]
         private List<StageBattleEnemyAppearanceSlotMasterData> appearanceSlots = new();
@@ -40,7 +40,7 @@ namespace Assets.Scripts.Data.MasterData
 
         public int MaxHp => maxHp;
 
-        public int Damage => damage;
+        public BattleStatBlockDefinition Stats => stats ??= new BattleStatBlockDefinition();
 
         public IReadOnlyList<StageBattleEnemyAppearanceSlotMasterData> AppearanceSlots =>
             appearanceSlots ??= new List<StageBattleEnemyAppearanceSlotMasterData>();
@@ -49,6 +49,16 @@ namespace Assets.Scripts.Data.MasterData
             appearanceColors ??= new List<StageBattleEnemyAppearanceColorMasterData>();
 
         public IReadOnlyList<StageBattlePatternMasterData> Patterns => patterns ??= new List<StageBattlePatternMasterData>();
+
+        private void OnValidate()
+        {
+            maxHp = Mathf.Max(1, maxHp);
+            stats ??= new BattleStatBlockDefinition();
+            stats.Normalize();
+            appearanceSlots ??= new List<StageBattleEnemyAppearanceSlotMasterData>();
+            appearanceColors ??= new List<StageBattleEnemyAppearanceColorMasterData>();
+            patterns ??= new List<StageBattlePatternMasterData>();
+        }
     }
 
     [System.Serializable]

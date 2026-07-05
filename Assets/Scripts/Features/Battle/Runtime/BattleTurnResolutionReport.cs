@@ -7,68 +7,51 @@ namespace Assets.Scripts.Features.Battle.Runtime
     /// 1 ターンのパス解決結果。
     /// シーン側はこのレポートだけを見て HP 更新、演出、ログ表示を行う想定。
     /// </summary>
-    public class BattleTurnResolutionReport
+    public sealed class BattleTurnResolutionReport
     {
-        private readonly List<string> _logEntries = new();
-        private readonly List<BattlePlayerAnimationCue> _playerAnimationCues = new();
+        private readonly List<BattleResolvedAction> _resolvedActions = new();
+        private BattleResolvedActionSummary _cachedSummary;
+        private bool _isSummaryDirty = true;
 
-        public bool PathConfirmed { get; set; }
+        public IReadOnlyList<BattleResolvedAction> ResolvedActions => _resolvedActions;
 
-        public bool GoalReached { get; set; }
+        public BattleResolvedActionSummary Summary
+        {
+            get
+            {
+                if (_isSummaryDirty || _cachedSummary == null)
+                {
+                    _cachedSummary = BattleResolvedActionSummary.Build(_resolvedActions);
+                    _isSummaryDirty = false;
+                }
 
-        public bool GoalEffectTriggered { get; set; }
+                return _cachedSummary;
+            }
+        }
 
-        public bool TookHit { get; set; }
+        public void ApplyResolvedAction(BattleResolvedAction action)
+        {
+            if (action == null)
+            {
+                return;
+            }
 
-        public bool StoppedByHazardHit { get; set; }
+            _resolvedActions.Add(action);
+            _isSummaryDirty = true;
+        }
 
-        public bool EnemyDefeated { get; set; }
-
-        public bool PlayerDefeated { get; set; }
-
-        public bool SelectedSkillConsumed { get; set; }
-
-        public int EnemyDamageTaken { get; set; }
-
-        public int PlayerDamageTaken { get; set; }
-
-        public int ResolvedAttackCount { get; set; }
-
-        public int ResolvedSkillCount { get; set; }
-
-        public int ResolvedHazardCount { get; set; }
-
-        public int ResolvedDanceCount { get; set; }
-
-        public int ResolvedEnemyActionCount { get; set; }
-
-        public int ResolvedNodeCount { get; set; }
-
-        public string EnemyDamageAttributeSummary { get; set; } = string.Empty;
-
-        public BattleAttributeEffectiveness EnemyDamageEffectiveness { get; set; } = BattleAttributeEffectiveness.None;
-
-        public string PlayerDamageAttributeSummary { get; set; } = string.Empty;
-
-        public BattleAttributeEffectiveness PlayerDamageEffectiveness { get; set; } = BattleAttributeEffectiveness.None;
-
-        public IReadOnlyList<string> LogEntries => _logEntries;
-
-        public IReadOnlyList<BattlePlayerAnimationCue> PlayerAnimationCues => _playerAnimationCues;
-
-        public void AddLog(string message)
+        public void AddSystemLog(string message)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
                 return;
             }
 
-            _logEntries.Add(message);
-        }
-
-        public void AddPlayerAnimationCue(BattlePlayerAnimationCue cue)
-        {
-            _playerAnimationCues.Add(cue);
+            ApplyResolvedAction(new BattleResolvedAction
+            {
+                ActionType = BattleResolvedActionType.SystemLog,
+                LogMessages = new[] { message },
+            });
         }
     }
 }

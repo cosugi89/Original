@@ -136,9 +136,6 @@ namespace Assets.Scripts.Systems.Save
 
             var demoProfile = new UserProfileDemoData();
             userData.Profile.MaxHp = Mathf.Max(1, userData.Profile.MaxHp);
-            userData.Profile.NormalAttackDamage = Mathf.Max(1, userData.Profile.NormalAttackDamage);
-            userData.Profile.DoubleAttackFollowUpDamage = Mathf.Max(1, userData.Profile.DoubleAttackFollowUpDamage);
-            userData.Profile.JumpAttackDamage = Mathf.Max(1, userData.Profile.JumpAttackDamage);
             userData.Profile.SkillSlotSkillIds ??= new List<int>(demoProfile.SkillSlotSkillIds);
 
             if (userData.Profile.SkillSlotSkillIds.Count == 0)

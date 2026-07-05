@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: mana-bloom-charge-operation
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillEffectData
   effectType: 3
-  targetType: 1
+  targetType: 3
   parameterType: 100
   valueType: 2
   value: 1

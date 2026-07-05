@@ -187,7 +187,7 @@ namespace Assets.Scripts.Data.MasterData
                 AddIssue(
                     issues,
                     "unsupported_damage_effect_value_type",
-                    "現在の BattleTurnResolver は Damage 効果の FixedValue/None を直接扱います。Multiplier/Percentage は将来ロジック追加が必要です。",
+                    "Damage 効果の Multiplier / Percentage は BattleDamageCalculator で解決されます。意図した ParameterType と Value を設定してください。",
                     ValidationSeverity.Warning);
             }
         }
@@ -214,8 +214,7 @@ namespace Assets.Scripts.Data.MasterData
                 return false;
             }
 
-            return primaryEffect.ValueType != BattleSkillValueType.FixedValue &&
-                   primaryEffect.ValueType != BattleSkillValueType.None;
+            return primaryEffect.ValueType == BattleSkillValueType.None && primaryEffect.Value <= 0f;
         }
         #endregion
     }

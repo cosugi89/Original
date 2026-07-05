@@ -63,6 +63,11 @@ namespace Assets.Scripts.Data.MasterData
         [Description("装備の補助タグ一覧。")]
         private List<string> categoryTags = new();
 
+        [SerializeField]
+        [Tooltip("戦闘計算へ流し込む汎用ステータス補正です。Attack などの parameter 加算や、attack.normal.multiplier のような named value 補正を定義できます。")]
+        [Description("BattlePlayerStatsBuilder へ適用する汎用ステータス補正一覧。")]
+        private List<BattleStatModifierDefinitionEntry> battleStatModifiers = new();
+
         public int EquipmentId => equipmentId;
         public string DisplayName => displayName;
         public PartsType PartType => partType;
@@ -78,6 +83,8 @@ namespace Assets.Scripts.Data.MasterData
         public IReadOnlyList<EquipmentAttributeModifierEntry> AttributeModifiers =>
             attributeModifiers ??= new List<EquipmentAttributeModifierEntry>();
         public IReadOnlyList<string> CategoryTags => categoryTags ??= new List<string>();
+        public IReadOnlyList<BattleStatModifierDefinitionEntry> BattleStatModifiers =>
+            battleStatModifiers ??= new List<BattleStatModifierDefinitionEntry>();
 
         [Description("partType と partsIndex から導ける既定の装備ID。旧データ移行との対応に使える。")]
         public int FallbackEquipmentId => EquipmentIdUtility.Build(PartType, PartsIndex);
@@ -106,6 +113,12 @@ namespace Assets.Scripts.Data.MasterData
             equipmentId = Mathf.Max(0, equipmentId);
             partsIndex = Mathf.Max(-1, partsIndex);
             sortOrder = Mathf.Max(0, sortOrder);
+            battleStatModifiers ??= new List<BattleStatModifierDefinitionEntry>();
+
+            for (var i = 0; i < battleStatModifiers.Count; i++)
+            {
+                battleStatModifiers[i]?.Normalize();
+            }
         }
 
         protected override void CollectValidationIssues(List<ValidationIssue> issues)
@@ -188,6 +201,30 @@ namespace Assets.Scripts.Data.MasterData
                         issues,
                         "duplicate_skill_reference",
                         $"候補スキルに重複参照があります: {skill.DisplayName}",
+                        ValidationSeverity.Warning);
+                }
+            }
+
+            for (var i = 0; i < BattleStatModifiers.Count; i++)
+            {
+                var modifier = BattleStatModifiers[i];
+                if (modifier == null)
+                {
+                    AddIssue(
+                        issues,
+                        "null_battle_stat_modifier",
+                        $"BattleStatModifiers[{i}] が未設定です。空欄を残さず、不要なら要素自体を削除してください。",
+                        ValidationSeverity.Warning);
+                    continue;
+                }
+
+                if (modifier.TargetType == BattleStatModifierTargetType.NamedValue &&
+                    string.IsNullOrWhiteSpace(modifier.NamedValueKey))
+                {
+                    AddIssue(
+                        issues,
+                        "missing_named_value_key",
+                        $"BattleStatModifiers[{i}] は NamedValue 対象ですが key が空です。",
                         ValidationSeverity.Warning);
                 }
             }

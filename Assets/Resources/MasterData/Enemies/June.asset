@@ -15,7 +15,12 @@ MonoBehaviour:
   enemyId: 1001
   enemyName: June
   maxHp: 1000
-  damage: 80
+  stats:
+    attack: 80
+    defense: 0
+    speed: 0
+    guard: 0
+    modifiers: []
   appearanceSlots:
   - partType: 0
     equipment: {fileID: 11400000, guid: 5f2a1e7a4d3041de8a07978cb9a4e401, type: 2}

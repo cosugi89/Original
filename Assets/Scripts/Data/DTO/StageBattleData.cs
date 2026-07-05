@@ -18,6 +18,23 @@ namespace Assets.Scripts.Data.DTO
     }
 
     /// <summary>
+    /// 戦闘で使う基本ステータス群。
+    /// base parameter と可変 modifier を分けて持ち、player/enemy 共通の組み立て方へ寄せる。
+    /// </summary>
+    public class BattleStatBlockData
+    {
+        public int Attack { get; init; } = 0;
+
+        public int Defense { get; init; } = 0;
+
+        public int Speed { get; init; } = 0;
+
+        public int Guard { get; init; } = 0;
+
+        public IReadOnlyList<BattleStatModifierData> Modifiers { get; init; } = Array.Empty<BattleStatModifierData>();
+    }
+
+    /// <summary>
     /// ステージ戦闘で対面する敵の基本情報。
     /// Appearance は現在の敵装備・見た目定義として扱い、
     /// Patterns はこの敵が使用可能な固定盤面候補を持つ。
@@ -28,7 +45,7 @@ namespace Assets.Scripts.Data.DTO
 
         public int MaxHp { get; init; } = 1;
 
-        public int Damage { get; init; } = 80;
+        public BattleStatBlockData Stats { get; init; } = new();
 
         public AttributeData AttackAttribute { get; init; }
 
@@ -57,6 +74,8 @@ namespace Assets.Scripts.Data.DTO
         public string ConfirmText { get; init; } = "";
 
         public float EnemyActionDamageMultiplier { get; init; } = 1f;
+
+        public BattleDamageFormulaData EnemyActionDamageFormula { get; init; }
 
         public IReadOnlyList<StageTurnCellData> CellPlacements { get; init; } = Array.Empty<StageTurnCellData>();
     }

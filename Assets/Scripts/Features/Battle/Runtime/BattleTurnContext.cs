@@ -15,13 +15,13 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public int CurrentPlayerHp { get; set; }
 
-        public int NormalAttackDamage { get; set; } = 100;
+        public BattlePlayerStats PlayerStats { get; set; } = new(baseAttackPower: 100);
 
-        public int DoubleAttackFollowUpDamage { get; set; } = 125;
+        public BattleCombatantStats EnemyStats { get; set; } = new();
 
-        public int JumpAttackDamage { get; set; } = 150;
+        public float EnemyActionMultiplier { get; set; } = 1f;
 
-        public int EnemyActionDamage { get; set; } = 80;
+        public BattleDamageFormulaData EnemyActionDamageFormula { get; set; }
 
         public AttributeData PlayerAttackAttribute { get; set; }
 
@@ -45,10 +45,10 @@ namespace Assets.Scripts.Features.Battle.Runtime
             {
                 CurrentEnemyHp = CurrentEnemyHp,
                 CurrentPlayerHp = CurrentPlayerHp,
-                NormalAttackDamage = NormalAttackDamage,
-                DoubleAttackFollowUpDamage = DoubleAttackFollowUpDamage,
-                JumpAttackDamage = JumpAttackDamage,
-                EnemyActionDamage = EnemyActionDamage,
+                PlayerStats = PlayerStats,
+                EnemyStats = EnemyStats,
+                EnemyActionMultiplier = EnemyActionMultiplier,
+                EnemyActionDamageFormula = EnemyActionDamageFormula,
                 PlayerAttackAttribute = PlayerAttackAttribute,
                 EnemyAttackAttribute = EnemyAttackAttribute,
                 EnemyDefenseAttributeModifiers = EnemyDefenseAttributeModifiers ?? Array.Empty<EquipmentAttributeModifierData>(),
