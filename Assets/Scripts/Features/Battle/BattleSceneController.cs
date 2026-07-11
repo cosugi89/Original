@@ -56,7 +56,7 @@ namespace Assets.Scripts.Features.Battle
         [SerializeField] private Color selectedSkillButtonColor = BattleUiColors.SelectedSkillButton;
         
         private IReadOnlyList<StageBattlePatternData> _patterns = Array.Empty<StageBattlePatternData>();
-        private readonly BattleSceneSetupFactory _sceneSetupFactory = new();
+        private BattleSceneSetupFactory _sceneSetupFactory;
         private readonly BattleTurnViewCoordinator _turnViewCoordinator = new();
         private readonly BattleTurnResultApplier _turnResultApplier = new();
         private readonly List<string> _actionLogEntries = new();
@@ -75,6 +75,8 @@ namespace Assets.Scripts.Features.Battle
 
         private void Awake()
         {
+            _sceneSetupFactory ??= new BattleSceneSetupFactory();
+
             for (var i = 0; i < skillSlots.Length; i++)
             {
                 var skillSlot = skillSlots[i];
@@ -115,6 +117,7 @@ namespace Assets.Scripts.Features.Battle
         public void Initialize()
         {
             if (_isInitialized) return;
+            _sceneSetupFactory ??= new BattleSceneSetupFactory();
             if (!_sceneSetupFactory.TryCreate(GetSkillSlotCount(), unlockedSkillSlotCount, out var setup))
             {
                 Debug.LogWarning("[Battle] 戦闘セットアップを構築できなかったため、バトル初期化を中断しました。");
