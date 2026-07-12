@@ -1,79 +1,91 @@
-# MasterData Current Direction
+# マスターデータ現行方針
 
-This note is for Codex working memory inside this workspace. It is not project documentation.
+このメモは、このワークスペースでの Codex の作業記憶です。
+プロジェクト仕様ではなく、AI が実装判断をするときの補助資料として扱います。
 
-Last updated: 2026-05-08
+最終更新: 2026-07-12
 
-## Core Decisions
+## 中心方針
 
-- Use `Database` as the unified naming for master-data list/search assets.
-- Use `int` as the unified ID type for master-data identifiers.
-- Keep master asset references as direct `ScriptableObject` references where authoring benefits from it.
-- Treat `Database` assets as list/lookup utilities, not as the main authoring relationship when direct references already exist.
-- Do not keep `BattleStage*` as a separate long-term line; absorb that role into `StageMaster*`.
-- Validation is not a primary design goal for master data. Keep authoring simple by default.
-- Reduce `MasterDataResourceLoader` fallback and legacy branches gradually rather than preserving them indefinitely.
+- マスターデータの一覧 / 検索用 asset の命名は `Database` に統一する。
+- マスターデータの識別子は `int` に統一する。
+- 作成時の見通しが良い場合は、master asset 同士の参照を直接 `ScriptableObject` 参照として持たせる。
+- `Database` asset は直接参照で表現できる作成時関係の正本ではなく、一覧や検索の補助として扱う。
+- `BattleStage*` を長期的に別系列として残さず、その役割は `StageMaster*` へ吸収する。
+- 検証はマスターデータ設計の主目的にしない。通常は作成時の軽さを優先する。
+- `MasterDataResourceLoader` の代替処理や旧互換分岐は、残し続けるのではなく段階的に減らす。
 
-## Naming Direction
+## 命名方針
 
-- Prefer names like:
-  - `StageMasterData`
-  - `StageMasterDatabase`
-  - `StageBattleEnemyMasterData`
-  - `StageBattleEnemyMasterDatabase`
-  - `StageBattlePatternMasterData`
-  - `StageBattlePatternMasterDatabase`
-  - `EquipmentMasterData`
-  - `EquipmentMasterDatabase`
-  - `BattleSkillMasterData`
-  - `BattleSkillMasterDatabase`
-- Avoid mixing `Catalog` and `Database` for the same kind of role.
+次のような名前を優先する。
 
-## ID Direction
+- `StageMasterData`
+- `StageMasterDatabase`
+- `StageBattleEnemyMasterData`
+- `StageBattleEnemyMasterDatabase`
+- `StageBattlePatternMasterData`
+- `StageBattlePatternMasterDatabase`
+- `EquipmentMasterData`
+- `EquipmentMasterDatabase`
+- `BattleSkillMasterData`
+- `BattleSkillOperationData`
+- `BattleSkillMasterDatabase`
+- `EffectAnimationMasterData`
 
-- New master-data IDs should use `int`.
-- Existing string IDs should be considered migration targets unless there is a very strong reason to keep them.
-- Save/runtime data should also prefer `int` IDs for master-data references.
+同じ役割のものに `Catalog` と `Database` を混在させない。
 
-## Reference Direction
+## 識別子方針
 
-- Authoring-side relationships may use direct `ScriptableObject` references:
-  - `Stage -> Enemy`
-  - `Enemy -> Pattern`
-  - `Equipment -> Skill`
-- `Database` assets remain useful for:
-  - global lists
-  - ID lookup
-  - selection UI sources
-  - migration or verification helpers
+- 新規のマスターデータ ID は `int` を使う。
+- 既存の string ID は、維持する強い理由がない限り移行対象として考える。
+- セーブ / 実行時データでも、マスターデータ参照は `int` ID を優先する。
 
-## Stage Direction
+## 参照方針
 
-- `StageMasterData` should become the single long-term source of truth for stage master data.
-- `BattleStageMasterData` / `BattleStageMasterCatalog` are not the desired end state.
-- If stage-selection-specific data is needed, prefer extending `StageMasterData` rather than maintaining a second parallel stage master line.
+作成側の関係は、必要に応じて直接 `ScriptableObject` 参照で持ってよい。
 
-## Validation Direction
+- `Stage -> Enemy`
+- `Enemy -> Pattern`
+- `Equipment -> Skill`
 
-- Default stance: no heavy validation-first architecture for master data.
-- Keep authoring friction low.
-- Small local checks may still be acceptable when they directly prevent obvious breakage, but validation systems should not dominate the design.
+スキル効果の採用区分や効果配列の詳細は `docs/specs/スキル仕様書.md` を正とする。
 
-## Loader Direction
+`Database` asset は次の用途で引き続き有用。
 
-- `MasterDataResourceLoader` may temporarily keep fallback/legacy branches during migration.
-- Long term, remove:
-  - legacy duplicate master paths
-  - old compatibility-only branches once assets are migrated
-  - unnecessary fallback generation that obscures the real source of truth
-- Prefer a simpler loader that resolves current master data cleanly over a broad compatibility hub.
+- グローバルな一覧
+- ID 検索
+- 選択 UI の候補元
+- 移行や検証の補助
 
-## Working Rule For Future Refactors
+## ステージ方針
 
-When touching `Assets/Scripts/Data/MasterData`, prefer this order:
+- `StageMasterData` を、長期的なステージマスターデータの唯一の正本にする。
+- `BattleStageMasterData` / `BattleStageMasterCatalog` は望ましい最終形ではない。
+- ステージ選択固有のデータが必要になった場合は、並行するステージマスター系列を維持するより `StageMasterData` の拡張を優先する。
 
-1. Remove parallel naming or duplicate concepts.
-2. Normalize ID types to `int`.
-3. Keep direct reference authoring where it is clearer.
-4. Keep `Database` only as the shared lookup/list layer.
-5. Reduce legacy/fallback paths if the current assets are already migrated.
+## 検証方針
+
+- 基本姿勢として、マスターデータに重い検証優先の構成は導入しない。
+- 作成時の負担を低く保つ。
+- 破損を直接防げる小さな局所チェックは許容するが、検証の仕組みが設計の中心にならないようにする。
+
+## ローダー方針
+
+`MasterDataResourceLoader` は移行期間中、一時的に代替処理 / 旧互換分岐を持ってよい。
+長期的には次を削除する。
+
+- 旧重複マスターパス
+- asset 移行済みの古い互換分岐
+- 本当の正本を見えにくくする不要な代替生成
+
+広い互換中継役より、現在のマスターデータを素直に解決する単純なローダーを優先する。
+
+## 今後のリファクタリング作業ルール
+
+`Assets/Scripts/Data/MasterData` に触るときは、次の順番を優先する。
+
+1. 並行命名や重複概念を取り除く。
+2. ID 型を `int` に正規化する。
+3. 直接参照による作成のほうが明確な箇所は維持する。
+4. `Database` は共有検索 / 一覧レイヤーとしてだけ残す。
+5. 現在の asset が移行済みなら、旧互換 / 代替経路を減らす。

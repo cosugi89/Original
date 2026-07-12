@@ -1,78 +1,79 @@
-# Appearance Current Spec
+# 見た目システム現行仕様メモ
 
-This note is for Codex working memory inside this workspace. It is not project documentation.
+このメモは、このワークスペースでの Codex の作業記憶です。
+プロジェクト仕様ではなく、将来見た目システムをリファクタリングする前の現状整理として扱います。
 
-Last updated: 2026-05-08
+最終更新: 2026-05-08
 
-## Scope
+## 対象範囲
 
-- Current enemy appearance authoring for `StageBattleEnemyMasterData.AppearanceSlots / AppearanceColors`
-- Current runtime path using `PartsManager.Init()` and `ApplyAppearanceData(...)`
-- Current caveats before any future appearance-system refactor
+- `StageBattleEnemyMasterData.AppearanceSlots / AppearanceColors` による現在の敵見た目設定
+- `PartsManager.Init()` と `ApplyAppearanceData(...)` を使う現在の実行時経路
+- 将来見た目システムをリファクタリングする前に把握すべき現行の注意点
 
-## Current Direction
+## 現在の方向性
 
-- Keep save/runtime-facing appearance state as resolved or ID-based data.
-- Use `EquipmentMasterData` as the reusable appearance master asset for visual parts.
-- Master-side enemy authoring now prefers `EquipmentMasterData` references instead of direct `partsIndex` entry authoring.
-- Runtime battle code still receives resolved `AppearanceData`.
-- `EquipmentId` is now an `int`, not a semantic string key.
-- Current convention uses `0` as "none / unequipped".
+- セーブ / 実行時向けの見た目状態は、解決済みデータまたは ID ベースのデータとして保持する。
+- 見た目パーツの再利用可能なマスターアセットとして `EquipmentMasterData` を使う。
+- マスター側の敵見た目設定は、直接 `partsIndex` を書くより `EquipmentMasterData` 参照を優先する。
+- 実行時の戦闘コードは、引き続き解決済みの `AppearanceData` を受け取る。
+- `EquipmentId` は意味付き文字列キーではなく `int`。
+- 現在の規約では `0` を「なし / 未装備」として扱う。
 
-## Equipment Appearance Asset Generation
+## 装備見た目アセット生成
 
-- `EquipmentMasterData` is currently the shared appearance master asset.
-- A rebuild tool exists at:
+- `EquipmentMasterData` は現在、共有の見た目マスターアセットとして使われている。
+- 再生成ツールは次の場所にある。
   - `Tools > Original > Rebuild Equipment Database`
-- Tool source:
+- ツールソース:
   - `Assets/Scripts/Editor/EquipmentMasterCatalogBuilder.cs`
-- The tool reads:
+- ツールは次を読み取る。
   - `Assets/Layer Lab/2D Minimal-CharacterMaker/Prefabs/Character.prefab`
-- It generates or updates:
+- ツールは次を生成または更新する。
   - `Assets/Resources/MasterData/EquipmentDatabase.asset`
   - `Assets/Resources/MasterData/Equipments/<PartsType>/<PartsType>_<index>.asset`
-- Generated asset content includes:
+- 生成されるアセット内容は次の通り。
   - `equipmentId`
   - `displayName`
   - `partType`
-  - `exclusiveGroup` as a derived runtime concept from `partType`
+  - `exclusiveGroup`: `partType` から導出される実行時概念
   - `partsIndex`
   - `icon`
   - `sortOrder`
   - `isDefaultOwned`
-- Current generator intentionally skips:
+- 現在の生成処理は次を意図的に除外する。
   - `Arrow`
   - `HelmetHair`
   - `Skin`
-- Current rebuild behavior:
-  - always syncs `partType`
-  - always syncs `partsIndex`
-  - always syncs `icon`
-  - initializes `sortOrder` from `partsIndex` when unset
-  - preserves existing `equipmentId` if already set
-  - preserves existing `displayName` if already set
-  - preserves existing `isDefaultOwned`
+- 現在の再生成時の挙動は次の通り。
+  - `partType` は常に同期する。
+  - `partsIndex` は常に同期する。
+  - `icon` は常に同期する。
+  - `sortOrder` が未設定なら `partsIndex` から初期化する。
+  - 既存の `equipmentId` がある場合は維持する。
+  - 既存の `displayName` がある場合は維持する。
+  - 既存の `isDefaultOwned` は維持する。
 
-## Equipment ID Rules
+## 装備 ID ルール
 
-- `EquipmentIdUtility.Build(partType, partsIndex)` now returns `int`.
-- Generated IDs currently use a `partType` block convention, but runtime/save data should treat any positive `int` as a valid equipment ID.
-- Legacy string ids like `Hair:10` are accepted only during JSON migration.
-- Runtime appearance resolution should not depend on parsing IDs back into parts.
-- `EquipmentMasterData.OnValidate()` no longer overwrites `equipmentId` from `partType + partsIndex`.
+- `EquipmentIdUtility.Build(partType, partsIndex)` は現在 `int` を返す。
+- 生成 ID は現在 `partType` ごとのブロック規約を使うが、実行時 / セーブデータは正の `int` であれば有効な装備 ID として扱う。
+- `Hair:10` のような旧文字列 ID は、JSON 移行時だけ受け付ける。
+- 実行時の見た目解決は、ID をパーツ情報へ逆解析することに依存しない。
+- `EquipmentMasterData.OnValidate()` は、`partType + partsIndex` から `equipmentId` を上書きしない。
 
-## Runtime Resolution Rules
+## 実行時解決ルール
 
-- `PartsManagerAvatarAdapter.ApplyAppearance(...)` now resolves visual parts only through `InventoryService -> EquipmentData`.
-- The old fallback of reconstructing `partsIndex` from `EquipmentId` is removed.
-- `PartsManagerAvatarAdapter.CaptureAppearance(...)` also no longer fabricates semantic IDs from `partType:index`.
-- This means:
-  - `EquipmentMasterData` / `EquipmentData` are now the source of truth
-  - missing master definitions lead to unresolved equipment ids instead of hidden fallback behavior
+- `PartsManagerAvatarAdapter.ApplyAppearance(...)` は、見た目パーツを `InventoryService -> EquipmentData` 経由でのみ解決する。
+- `EquipmentId` から `partsIndex` を再構築する古い代替処理は削除済み。
+- `PartsManagerAvatarAdapter.CaptureAppearance(...)` も、`partType:index` から意味付き ID を捏造しない。
+- つまり現在は次が正本になる。
+  - `EquipmentMasterData` / `EquipmentData`
+  - マスター定義が欠けている場合は、隠れた代替挙動ではなく未解決の装備 ID になる。
 
-## Equipment Master Output
+## 装備マスター出力
 
-- `EquipmentMasterData` exposes:
+- `EquipmentMasterData` は次を公開する。
   - `EquipmentId`
   - `DisplayName`
   - `PartType`
@@ -83,135 +84,138 @@ Last updated: 2026-05-08
   - `Icon`
   - `SortOrder`
   - `IsDefaultOwned`
-- Inspector authoring guidance now uses `Tooltip` on serialized fields in `EquipmentMasterData`.
-- A custom inspector exists for `EquipmentMasterData` and shows single-asset validation hints while editing one equipment asset.
+- Inspector 上の作成ガイドは、`EquipmentMasterData` の serialized field 上の `Tooltip` を使う。
+- `EquipmentMasterData` にはカスタム Inspector があり、単一装備アセット編集時に検証ヒントを表示する。
 
-## Catalog Validation Rules
+## カタログ検証ルール
 
-- `EquipmentMasterCatalog` now builds validation issues for:
-  - missing `EquipmentId`
-  - missing `PartsIndex`
-  - missing `Icon`
-  - duplicate `EquipmentId`
-  - duplicate `PartType + PartsIndex`
-  - null entries inside the catalog list
-- Validation is intended as the main place to catch broken equipment appearance master data.
-- A custom inspector exists for `EquipmentMasterCatalog` and shows these validation issues directly in Inspector.
+- `EquipmentMasterCatalog` は次の検証問題を組み立てる。
+  - `EquipmentId` 欠落
+  - `PartsIndex` 欠落
+  - `Icon` 欠落
+  - `EquipmentId` 重複
+  - `PartType + PartsIndex` 重複
+  - catalog list 内の null entry
+- 検証は、壊れた装備見た目マスターデータを見つける主な場所として意図されている。
+- `EquipmentMasterCatalog` にはカスタム Inspector があり、これらの検証問題を Inspector 上で直接表示する。
 
-## Runtime Path
+## 実行時経路
 
-- `BattleScene` creates both player and enemy character instances.
-- Enemy rendering currently uses:
+- `BattleScene` はプレイヤーと敵の character instance を両方生成する。
+- 敵描画は現在、次を使う。
   - `PartsManager.Init()`
   - `PartsManager.ApplyAppearanceData(_activeEnemyData.Appearance)`
-- Relevant file:
+- 関連ファイル:
   - `Assets/Scripts/Features/Battle/Demo/BattleScene.cs`
 
-## Current Data Shape
+## 現在のデータ形状
 
-- Enemy master uses `AppearanceData`.
-- `AppearanceData` has:
-  - `parts: List<PartsEntry>` where each entry is `PartsType + index`
-  - `colors: List<ColorEntry>` where each entry is `ColorTargetType + Color`
-  - `visibility: List<VisibilityEntry>` where each entry is `PartsType + visible`
-- Relevant file:
+- 敵マスターは `AppearanceData` を使う。
+- `AppearanceData` は次を持つ。
+  - `parts: List<PartsEntry>`: 各 entry は `PartsType + index`
+  - `colors: List<ColorEntry>`: 各 entry は `ColorTargetType + Color`
+  - `visibility: List<VisibilityEntry>`: 各 entry は `PartsType + visible`
+- 関連ファイル:
   - `Assets/Scripts/Data/DTO/AppearanceData.cs`
 
-## Enemy Master Data Shape
+## 敵マスターデータ形状
 
-- `StageBattleEnemyMasterData` now has:
+- `StageBattleEnemyMasterData` は現在次を持つ。
   - `AppearanceSlots`
   - `AppearanceColors`
-- `AppearanceSlots` use:
+- `AppearanceSlots` は次を使う。
   - `PartsType`
   - `EquipmentMasterData` reference
   - `IsVisible`
-- `AppearanceColors` use:
+- `AppearanceColors` は次を使う。
   - `ColorTargetType`
   - `UnityEngine.Color`
-- Loader resolves these into runtime `AppearanceData`.
-- `legacyAppearance` fallback is removed.
+- loader はこれらを実行時の `AppearanceData` へ解決する。
+- `legacyAppearance` の代替処理は削除済み。
 
-## PartsManager Init Behavior
+## PartsManager 初期化挙動
 
-- `Init()` builds category maps and sets every known part to:
+- `Init()` はカテゴリマップを構築し、既知の全パーツを次の状態にする。
   - `ActiveIndices[type] = 0`
   - `Visibility[type] = category.DefaultVisible`
-- Current `Character.prefab` categories are effectively all `defaultVisible = true`.
-- `Init()` also sets:
-  - `Skin`, `Hair`, `Eye`, `Beard` colors to white
-- Current special handling inside `Init()`:
-  - `Beard` is forced to `CanChangeColor = true` and `ColorTarget = Beard` if needed
-  - `Eye` is forced to `CanChangeColor = false`
-- After base setup, `Init()` runs:
+- 現在の `Character.prefab` のカテゴリは実質的にすべて `defaultVisible = true`。
+- `Init()` は次の色も白に設定する。
+  - `Skin`
+  - `Hair`
+  - `Eye`
+  - `Beard`
+- `Init()` 内の現在の特殊処理は次の通り。
+  - `Beard` は必要に応じて `CanChangeColor = true` と `ColorTarget = Beard` を強制する。
+  - `Eye` は `CanChangeColor = false` を強制する。
+- 基本セットアップ後、`Init()` は次を実行する。
   - `SyncHelmetHairVisibility()`
   - `SyncArrowVisibility()`
-- Relevant file:
+- 関連ファイル:
   - `Assets/Scripts/Core/PartsManager.cs`
 
-## ApplyAppearanceData Behavior
+## ApplyAppearanceData 挙動
 
-- `parts` entries are applied first.
-- `index < 0` means `UnequipParts(type)`.
-- `index >= 0` means `EquipParts(type, index)`.
-- `colors` are then applied with `SetColor`.
-- `visibility` is then applied, except:
+- `parts` entry を先に適用する。
+- `index < 0` は `UnequipParts(type)` を意味する。
+- `index >= 0` は `EquipParts(type, index)` を意味する。
+- その後、`colors` を `SetColor` で適用する。
+- 最後に `visibility` を適用する。ただし次は除外する。
   - `Arrow`
   - `HelmetHair`
-- Those two are skipped because they are derived parts.
-- After all entries are applied, sync runs again:
+- この2つは派生パーツなので除外する。
+- すべての entry 適用後、再度同期を実行する。
   - `SyncArrowVisibility()`
   - `SyncHelmetHairVisibility()`
 
-## Authoring Rules For Enemy Appearance
+## 敵見た目の作成ルール
 
-- Enemy appearance master authoring is now reference-based:
-  - choose `EquipmentMasterData` assets per visible part slot
-  - set colors separately
-- Enemy runtime application is still direct-index based after loader resolution.
-- Ground truth for valid indices is the `PartsManager` category data in:
+- 敵見た目マスターの作成は現在、参照ベース。
+  - 表示するパーツスロットごとに `EquipmentMasterData` アセットを選ぶ。
+  - 色は別途設定する。
+- 敵の実行時適用は、loader 解決後も直接 index ベース。
+- 有効な index の正本は次にある `PartsManager` のカテゴリデータ。
   - `Assets/Layer Lab/2D Minimal-CharacterMaker/Prefabs/Character.prefab`
-- Do not author these directly in `AppearanceData.visibility`:
+- 次は `AppearanceData.visibility` に直接書かない。
   - `Arrow`
   - `HelmetHair`
-- Prefer not to author these directly in `AppearanceData.parts` either:
+- 次も `AppearanceData.parts` に直接書かないことを推奨する。
   - `Arrow`
   - `HelmetHair`
-- `Skin` should usually be handled by `colors`, not by `parts`.
-- If a part is omitted entirely, its `Init()` default remains.
-- Because defaults are currently visible and index `0`, deterministic enemy looks usually require explicitly hiding or unequipping unwanted parts.
+- `Skin` は通常、`parts` ではなく `colors` で扱う。
+- パーツが完全に省略された場合は、`Init()` の初期値が残る。
+- 現在の初期値は表示かつ index `0` なので、敵の見た目を決定的にするには通常、不要パーツの明示的な非表示または装備解除が必要。
 
-## Enemy Loader Resolution Rules
+## 敵 Loader 解決ルール
 
-- When `AppearanceSlots` exist:
-  - loader starts from a deterministic hidden state for all non-derived, non-skin parts
-  - each slot resolves `EquipmentMasterData.PartType + PartsIndex`
-  - mismatched or missing references resolve to unequipped/hidden
-- Even when no slots are authored:
-  - loader starts from hidden / unequipped defaults for non-derived parts
-  - loader applies only authored colors
-- Derived parts remain runtime-synced:
+- `AppearanceSlots` が存在する場合:
+  - loader は非派生 / 非 skin パーツをすべて非表示にした決定的な非表示状態から開始する。
+  - 各 slot は `EquipmentMasterData.PartType + PartsIndex` へ解決される。
+  - 参照の不一致や欠落は未装備 / 非表示として解決される。
+- slot が作成されていない場合でも:
+  - loader は非派生パーツの非表示 / 未装備初期値から開始する。
+  - loader は作成済みの色だけを適用する。
+- 派生パーツは実行時同期に任せる。
   - `Arrow`
   - `HelmetHair`
 
-## Important Caveat
+## 重要な注意点
 
-- `ApplyAppearanceData` does not use `SetGroupActiveType(...)`.
-- It applies parts and visibility directly.
-- That means right-hand and left-hand equipment exclusivity is not automatically enforced by appearance authoring alone.
-- If multiple weapon/shield/subitem parts remain visible, they can overlap visually.
-- Current battle enemy authoring should explicitly hide or unequip unwanted equipment parts.
+- `ApplyAppearanceData` は `SetGroupActiveType(...)` を使わない。
+- parts と visibility を直接適用する。
+- そのため、右手 / 左手装備の排他性は見た目作成だけでは自動的に保証されない。
+- 複数の武器 / 盾 / サブアイテムパーツが表示されたまま残ると、見た目が重なる可能性がある。
+- 現在の戦闘敵作成では、不要な装備パーツを明示的に非表示または装備解除すること。
 
-## Derived-Part Rules
+## 派生パーツルール
 
 - `Arrow`
-  - visibility is derived from `Bow` or `Crossbow`
-  - `Bolt` renderer is shown only for `Crossbow`
+  - 表示状態は `Bow` または `Crossbow` から導出される。
+  - `Bolt` renderer は `Crossbow` の場合だけ表示される。
 - `HelmetHair`
-  - visibility is derived from `Hair` visibility plus `Helmet` visibility
-  - hair index also propagates to `HelmetHair` when `Hair` is equipped
+  - 表示状態は `Hair` の表示状態と `Helmet` の表示状態から導出される。
+  - `Hair` が装備されている場合、hair index も `HelmetHair` へ伝播する。
 
-## Valid PartsType Index Ranges
+## 有効な PartsType Index 範囲
 
 - `Eye`: `0-19`
 - `Hair`: `0-25`
@@ -230,28 +234,28 @@ Last updated: 2026-05-08
 - `SubItem`: `0-51`
 - `Arrow`: `0-19`
 - `HelmetHair`: `0-25`
-- `Skin`: no sprite index set; treat as color-driven
+- `Skin`: sprite index は持たない。色駆動として扱う。
 
-## Color Targets
+## 色対象
 
 - `Skin`
 - `Hair`
 - `Eye`
 - `Beard`
 
-## Practical Authoring Guidance For June
+## June 用の実務作成ガイド
 
-- `June.asset` currently has empty `appearance.parts/colors/visibility`.
-- Under the new system, `June` should be filled mainly through:
+- `June.asset` は現在 `appearance.parts/colors/visibility` が空。
+- 新システムでは、`June` は主に次で埋める。
   - `AppearanceSlots`
   - `AppearanceColors`
-- To make `June` deterministic, define at least:
-  - visible face/hair/body/weapon choices
-  - explicit hides or unequips for unwanted equipment groups
-  - base colors for skin, hair, and optionally beard and eye
-- If a future refactor migrates enemy appearance to equipment-id-based authoring, revisit this note and the current direct-index assumption.
+- `June` の見た目を決定的にするには、少なくとも次を定義する。
+  - 表示する face / hair / body / weapon の選択
+  - 不要な装備グループの明示的な非表示または装備解除
+  - skin、hair、必要なら beard と eye の基本色
+- 将来、敵見た目を装備 ID ベースの作成へ移行する場合は、このメモと現在の直接 index 前提を見直す。
 
-## Source Files
+## 関連ファイル
 
 - `Assets/Scripts/Features/Battle/Demo/BattleScene.cs`
 - `Assets/Scripts/Core/PartsManager.cs`

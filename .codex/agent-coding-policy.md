@@ -1,50 +1,54 @@
-# Agent Coding Policy
+# エージェント実装方針
 
-This note is for Codex working style inside this workspace. It is not project documentation.
+このメモは、このワークスペースでの Codex の作業方針です。
+プロジェクト仕様ではなく、AI が実装判断をするときの基準として扱います。
 
-## Priority
+## 優先順位
 
-- Minimize the number of classes and files when possible.
-- Optimize for low reading fatigue over textbook decomposition.
-- Prefer keeping related logic in the caller when the extracted method would be used only once.
-- Extract a private method only when the role is clearly different, the boundary is meaningful, or reuse is likely.
-- Latest direct user instruction overrides this note.
+- 可能な限り、クラス数とファイル数を増やしすぎない。
+- 教科書的な分割よりも、読む疲労が少ない構成を優先する。
+- 抽出したメソッドが一度しか使われない場合は、関連ロジックを呼び出し元に残すことを優先する。
+- private メソッドへの抽出は、役割が明確に違う、境界に意味がある、または再利用の可能性が高い場合に限る。
+- ユーザーの発話が質問である場合は、まず質問へ回答し、明示的に依頼されていない限り実装、編集、生成へ進まない。
+- ユーザーからの最新の直接指示は、このメモより優先する。
+- このファイルを含む `.codex/` 配下の文書も日本語で記述する。コード識別子、API 名、ファイルパス、Unity メニュー名などは必要に応じて英語のまま残してよい。
 
-## Refactoring Bias
+## リファクタリング傾向
 
-- Do not split code into many tiny controller, presenter, executor, or helper classes just to satisfy abstract cleanliness.
-- Prefer one coherent class with a readable flow over several thin classes that require file-hopping.
-- Prefer a slightly longer method over multiple one-off private methods when the logic belongs to one continuous action.
-- Split files only when the separation is durable and easy to justify.
-- When constants or enums are truly shared building blocks, prefer one reusable common definition instead of redefining similar values in multiple classes.
-- For shared enums and constants, optimize for low management cost: prefer a dedicated common location and reuse it from callers.
+- 抽象的なきれいさのためだけに、小さな controller、presenter、executor、helper クラスへ細分化しない。
+- ファイルを行き来しないと読めない薄いクラス群より、流れが読める一つのまとまったクラスを優先する。
+- 一連の処理として読めるロジックは、一度しか使わない private メソッド群へ分割するより、少し長めのメソッドとして残すことを許容する。
+- ファイル分割は、その分離が長く保てて、理由を簡単に説明できる場合だけ行う。
+- 定数や enum が本当に共有基盤である場合は、似た定義を複数箇所に置かず、共通定義を一つ用意して呼び出し側から再利用する。
+- 共有 enum や定数は管理コストを低く保つ。専用の共通置き場にまとめ、呼び出し側から再利用することを優先する。
 
-## Good Reasons To Split
+## 分割してよい理由
 
-- The new type is reused by multiple features or scenes.
-- The new type becomes a clear source of truth for persistent data or master data.
-- Unity serialization, inspector wiring, or lifecycle handling clearly benefits from a dedicated component.
-- Pure logic becomes meaningfully testable and independent after extraction.
-- One class currently mixes obviously different concerns and the separation reduces confusion more than it increases navigation cost.
+- 新しい型が複数の機能やシーンから再利用される。
+- 新しい型が永続データやマスターデータの明確な正本になる。
+- Unity の serialization、Inspector 配線、ライフサイクル処理が専用コンポーネントによって明らかに扱いやすくなる。
+- pure logic が抽出によって意味のある単位でテストしやすくなり、Unity 依存から切り離せる。
+- 一つのクラスが明らかに異なる責務を混ぜており、分離によって移動コスト以上に混乱が減る。
 
-## BattleScene-Specific Guidance
+## BattleScene 固有の指針
 
-- Keep `BattleScene` as the main orchestration class unless a separation is clearly worth the extra file.
-- Prefer consolidating scene-only flow inside `BattleScene` rather than creating one-use helper classes.
-- Keep runtime source-of-truth data in `UserData`, `StageData`, or existing services when appropriate.
-- Avoid introducing new files for presentation details that are only touched from `BattleScene`, unless the boundary is already established and repeatedly useful.
-- Before adding a new class or extracting a one-use method, ask whether it truly reduces reading effort for a future pass through the code.
+- 分離する価値が明確でない限り、`BattleScene` を主要な orchestration class として保つ。
+- scene 内だけで使う flow は、一度しか使わない helper クラスを作るより `BattleScene` 内へ集約する。
+- 実行時の正本データは、必要に応じて `UserData`、`StageData`、既存 service に置く。
+- `BattleScene` からしか触らない presentation detail のために新規ファイルを増やすことは避ける。ただし、既に境界が確立され、繰り返し使う価値がある場合は例外とする。
+- 新しいクラスを追加したり一度しか使わないメソッドを抽出したりする前に、将来そのコードを読む人の負担が本当に減るかを確認する。
 
-## Practical Check Before Refactoring
+## リファクタリング前の実務チェック
 
-Ask these in order:
+次の順番で確認する。
 
-1. Can this stay in the current class without making the flow confusing?
-2. If extracted, will it reduce reading effort more than it increases navigation?
-3. Is the extracted unit reused, or does it represent a genuinely distinct responsibility?
-4. If not, keep it local and avoid adding a file.
+1. 現在のクラスに残しても処理の流れが分かりにくくならないか。
+2. 抽出した場合、読む負担の減少がファイル移動コストを上回るか。
+3. 抽出先は再利用されるか、または本当に別責務を表しているか。
+4. そうでないなら、現在の場所に残してファイル追加を避ける。
 
-## Reference Notes
+## 参照メモ
 
-- Appearance-related current behavior and authoring rules are tracked in `.codex/appearance-current-spec.md`.
-- Master-data naming, ID, and loader direction are tracked in `.codex/masterdata-current-direction.md`.
+- Unity の serialized reference と `Resources.Load<T>()` に関する全体方針は `.codex/unity-reference-policy.md` にある。
+- 見た目関連の現行挙動と作成ルールは `.codex/appearance-current-spec.md` で管理する。
+- マスターデータの命名、ID、ローダー方針は `.codex/masterdata-current-direction.md` で管理する。
