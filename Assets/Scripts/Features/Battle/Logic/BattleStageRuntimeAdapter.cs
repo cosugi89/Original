@@ -36,8 +36,8 @@ namespace Assets.Scripts.Features.Battle.Logic
         /// </summary>
         public static Layout CreateBoardLayout(StageBattlePatternData patternData)
         {
-            var width = Math.Max(1, patternData?.Board?.Width ?? 7);
-            var height = Math.Max(1, patternData?.Board?.Height ?? 8);
+            var width = Math.Max(1, patternData?.Board?.Width ?? 5);
+            var height = Math.Max(1, patternData?.Board?.Height ?? 6);
             var startPosition = ResolveStartPosition(patternData, width, height);
 
             var board = new BattleBoardState(width, height);
@@ -188,10 +188,18 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private static IEnumerable<BattleGridPosition> GetNeighbors(BattleGridPosition origin)
         {
-            yield return new BattleGridPosition(origin.X + 1, origin.Y);
-            yield return new BattleGridPosition(origin.X - 1, origin.Y);
-            yield return new BattleGridPosition(origin.X, origin.Y + 1);
-            yield return new BattleGridPosition(origin.X, origin.Y - 1);
+            for (var dy = -1; dy <= 1; dy++)
+            {
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    if (dx == 0 && dy == 0)
+                    {
+                        continue;
+                    }
+
+                    yield return new BattleGridPosition(origin.X + dx, origin.Y + dy);
+                }
+            }
         }
 
         private static void AssignConnectedHazardGroups(BattleBoardState board)
@@ -302,4 +310,3 @@ namespace Assets.Scripts.Features.Battle.Logic
         }
     }
 }
-

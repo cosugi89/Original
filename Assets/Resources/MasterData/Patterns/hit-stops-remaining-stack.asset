@@ -19,28 +19,19 @@ MonoBehaviour:
   confirmText: "\u5371\u306A\u3044"
   damageMultiplier: 100
   board:
-    width: 7
-    height: 8
-    startX: 3
-    startY: 7
+    width: 5
+    height: 6
+    startX: 2
+    startY: 5
   cellPlacements:
-  - x: 4
-    y: 0
-    nodeType: 6
-  - x: 0
-    y: 1
-    nodeType: 8
-  - x: 3
-    y: 1
-    nodeType: 6
-  - x: 5
-    y: 1
-    nodeType: 5
-  - x: 6
+  - x: 2
     y: 1
     nodeType: 8
   - x: 2
     y: 2
+    nodeType: 5
+  - x: 0
+    y: 3
     nodeType: 6
   - x: 1
     y: 3
@@ -54,24 +45,18 @@ MonoBehaviour:
   - x: 4
     y: 3
     nodeType: 6
-  - x: 5
-    y: 3
-    nodeType: 6
-  - x: 6
-    y: 3
-    nodeType: 6
   - x: 0
     y: 4
-    nodeType: 2
-  - x: 5
+    nodeType: 3
+  - x: 1
     y: 4
-    nodeType: 6
-  - x: 4
-    y: 5
-    nodeType: 6
-  - x: 6
-    y: 5
+    nodeType: 3
+  - x: 2
+    y: 4
     nodeType: 5
   - x: 3
-    y: 6
-    nodeType: 6
+    y: 4
+    nodeType: 3
+  - x: 4
+    y: 4
+    nodeType: 3

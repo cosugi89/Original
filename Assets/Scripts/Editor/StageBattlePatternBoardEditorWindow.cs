@@ -43,10 +43,10 @@ namespace Assets.Scripts.Editor
             public string EnemyActionFormulaSourceScalarKey = string.Empty;
             public float EnemyActionFormulaSourceScalarFallback = 1f;
             public int EnemyActionFormulaMinimumDamage;
-            public int Width = 7;
-            public int Height = 8;
-            public int StartX = 3;
-            public int StartY = 7;
+            public int Width = 5;
+            public int Height = 6;
+            public int StartX = 2;
+            public int StartY = 5;
             public readonly Dictionary<Vector2Int, BattleNodeType> Placements = new();
 
             public void Normalize()

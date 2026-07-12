@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Assets.Scripts.Data.MasterData;
-using Assets.Scripts.Features.Battle.Const;
 using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Runtime;
 using UnityEngine;
@@ -19,13 +18,15 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         [SerializeField] private BattleCellView cellPrefab;
         [SerializeField] private GridLayoutGroup gridLayoutGroup;
         [SerializeField] private BattleNodeVisualDatabase nodeVisualDatabase;
+        [Header("Editor Generation")]
+        [SerializeField, Min(1)] private int editorPreviewWidth = 5;
+        [SerializeField, Min(1)] private int editorPreviewHeight = 6;
+        [SerializeField] private List<BattleCellView> authoredCellViews = new();
 
         private readonly Dictionary<BattleGridPosition, BattleCellView> _cellViews = new();
         private readonly List<BattleCellView> _activeViews = new();
         private readonly List<BattleCellView> _spawnedViews = new();
-        private readonly List<GameObject> _suppressedLegacyChildren = new();
         private BattleBoardState _board;
-        private bool _legacyChildrenSuppressed;
 
         public event Action<BattleGridPosition, PointerEventData> CellPointerDown;
         public event Action<BattleGridPosition, PointerEventData> CellPointerEnter;
@@ -34,6 +35,10 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         public BattleBoardState Board => _board;
 
         public BattleNodeVisualDatabase NodeVisualDatabase => nodeVisualDatabase;
+
+        public int EditorPreviewWidth => editorPreviewWidth;
+
+        public int EditorPreviewHeight => editorPreviewHeight;
 
         public void ConfigureGeneratedCells(RectTransform root, GridLayoutGroup layoutGroup = null, BattleCellView prefab = null)
         {
@@ -44,7 +49,8 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 cellPrefab = prefab;
             }
 
-            SuppressLegacyChildrenIfNeeded();
+            ResolveMissingSceneReferences();
+            CollectAuthoredCellViewsIfNeeded();
         }
 
         /// <summary>
@@ -61,10 +67,8 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 return;
             }
 
-            if (nodeVisualDatabase == null)
-            {
-                nodeVisualDatabase = Resources.Load<BattleNodeVisualDatabase>(BattleNodeVisualDatabase.DefaultResourcePath);
-            }
+            ResolveMissingSceneReferences();
+            CollectAuthoredCellViewsIfNeeded();
 
             if (cellRoot == null)
             {
@@ -78,20 +82,15 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 gridLayoutGroup.constraintCount = _board.Width;
             }
 
-            if (cellPrefab == null)
+            var total = _board.Width * _board.Height;
+            if (RequiresPrefab(total) && cellPrefab == null)
             {
-                cellPrefab = Resources.Load<BattleCellView>(BattleResourcePaths.CellPrefab);
-            }
-
-            if (cellPrefab == null)
-            {
-                Debug.LogWarning($"[BattleBoard] cellPrefab が未設定です Path={BattleResourcePaths.CellPrefab}");
+                Debug.LogWarning("[BattleBoard] cellPrefab が未設定です。BattleBoardController の Inspector で BattleCellView prefab を割り当ててください。");
                 return;
             }
 
             Debug.Log($"[BattleBoard] prefab 生成で描画します Board={_board.Width}x{_board.Height}");
 
-            var total = _board.Width * _board.Height;
             for (var i = 0; i < total; i++)
             {
                 var position = GetPositionForLayoutIndex(i);
@@ -100,15 +99,22 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                     continue;
                 }
 
-                var view = Instantiate(cellPrefab, cellRoot);
+                var view = GetOrCreateCellView(i);
+                if (view == null)
+                {
+                    continue;
+                }
+
+                view.gameObject.SetActive(true);
                 view.Bind(cell, nodeVisualDatabase);
                 view.PointerDownReceived += OnCellPointerDown;
                 view.PointerEnterReceived += OnCellPointerEnter;
                 view.PointerUpReceived += OnCellPointerUp;
                 _cellViews[position] = view;
                 _activeViews.Add(view);
-                _spawnedViews.Add(view);
             }
+
+            DisableUnusedAuthoredCellViews(total);
         }
 
         public void ClearBoard()
@@ -124,6 +130,10 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 view.PointerDownReceived -= OnCellPointerDown;
                 view.PointerEnterReceived -= OnCellPointerEnter;
                 view.PointerUpReceived -= OnCellPointerUp;
+                if (!_spawnedViews.Contains(view))
+                {
+                    view.gameObject.SetActive(false);
+                }
             }
 
             _cellViews.Clear();
@@ -132,7 +142,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             {
                 if (_spawnedViews[i] != null)
                 {
-                    Destroy(_spawnedViews[i].gameObject);
+                    DestroyCellView(_spawnedViews[i]);
                 }
             }
 
@@ -199,9 +209,22 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             ClearBoard();
         }
 
-        private void SuppressLegacyChildrenIfNeeded()
+        private void ResolveMissingSceneReferences()
         {
-            if (_legacyChildrenSuppressed || cellRoot == null)
+            if (cellRoot == null)
+            {
+                cellRoot = transform as RectTransform;
+            }
+
+            if (gridLayoutGroup == null && cellRoot != null)
+            {
+                gridLayoutGroup = cellRoot.GetComponent<GridLayoutGroup>();
+            }
+        }
+
+        private void CollectAuthoredCellViewsIfNeeded()
+        {
+            if (authoredCellViews.Count > 0 || cellRoot == null)
             {
                 return;
             }
@@ -209,17 +232,70 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             for (var i = 0; i < cellRoot.childCount; i++)
             {
                 var child = cellRoot.GetChild(i);
-                if (child == null)
+                if (child != null && child.TryGetComponent<BattleCellView>(out var view))
                 {
-                    continue;
+                    authoredCellViews.Add(view);
                 }
+            }
+        }
 
-                child.gameObject.SetActive(false);
-                _suppressedLegacyChildren.Add(child.gameObject);
+        private bool RequiresPrefab(int total)
+        {
+            for (var i = 0; i < total; i++)
+            {
+                if (i >= authoredCellViews.Count || authoredCellViews[i] == null)
+                {
+                    return true;
+                }
             }
 
-            _legacyChildrenSuppressed = true;
-            Debug.Log($"[BattleBoard] 既存の authoring children を無効化しました Count={_suppressedLegacyChildren.Count}");
+            return false;
+        }
+
+        private BattleCellView GetOrCreateCellView(int index)
+        {
+            if (index < authoredCellViews.Count && authoredCellViews[index] != null)
+            {
+                return authoredCellViews[index];
+            }
+
+            if (cellPrefab == null || cellRoot == null)
+            {
+                return null;
+            }
+
+            var view = Instantiate(cellPrefab, cellRoot);
+            _spawnedViews.Add(view);
+            return view;
+        }
+
+        private void DisableUnusedAuthoredCellViews(int usedCount)
+        {
+            for (var i = usedCount; i < authoredCellViews.Count; i++)
+            {
+                var view = authoredCellViews[i];
+                if (view != null)
+                {
+                    view.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private static void DestroyCellView(BattleCellView view)
+        {
+            if (view == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(view.gameObject);
+            }
+            else
+            {
+                DestroyImmediate(view.gameObject);
+            }
         }
 
         /// <summary>

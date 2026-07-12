@@ -80,16 +80,16 @@ namespace Assets.Scripts.Data.MasterData
     public class StageBattleBoardMasterData
     {
         [SerializeField]
-        private int width = 7;
+        private int width = 5;
 
         [SerializeField]
-        private int height = 8;
+        private int height = 6;
 
         [SerializeField]
-        private int startX = 3;
+        private int startX = 2;
 
         [SerializeField]
-        private int startY = 7;
+        private int startY = 5;
 
         public int Width => width;
 
