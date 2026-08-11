@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
@@ -9,14 +10,52 @@ namespace Assets.Scripts.Data.MasterData
         [Description("ダメージを与える効果")]
         Damage = 0,
 
-        [Description("味方を強化する効果")]
-        Buff = 1,
+        [Obsolete("旧 Buff 値の互換用です。新規データでは Buff を使ってください。")]
+        [Description("旧 Buff 値の互換用。新規データでは使わない。")]
+        LegacyBuff = 1,
 
-        [Description("敵を弱体化する効果")]
-        Debuff = 2,
+        [Obsolete("旧 Debuff 値の互換用です。新規データでは Debuff を使ってください。")]
+        [Description("旧 Debuff 値の互換用。新規データでは使わない。")]
+        LegacyDebuff = 2,
 
-        [Description("その他の効果")]
-        Utility = 3,
+        [Description("自分またはスキルのチャージを増やす効果")]
+        ChargeGain = 3,
+
+        [Description("自分のHPを回復する効果")]
+        Heal = 4,
+
+        [Description("一時的なGuardまたは防御値を得る効果")]
+        GuardGain = 5,
+
+        [Description("自分のステータスやNamedValueを一時強化する効果")]
+        Buff = 20,
+
+        [Description("敵のステータスや行動性能を一時弱体化する効果")]
+        Debuff = 21,
+
+        [Description("スキルチャージの増減や回転補助、阻害を行う効果")]
+        CooldownOrChargeControl = 22,
+
+        [Description("毒、スタン、脆弱などの状態を付与する効果")]
+        Status = 30,
+
+        [Description("盤面セルの生成、削除、変換を行う効果")]
+        BoardManipulation = 31,
+
+        [Description("危険マスの軽減、消去、移動、弱体化を行う効果")]
+        HazardControl = 32,
+
+        [Description("追加行動、再行動、追加パス入力を行う効果")]
+        ExtraAction = 33,
+
+        [Description("召喚や一時ユニットを扱う保留効果")]
+        Summon = 90,
+
+        [Description("HP、チャージ、Guardなどのリソースを変換する保留効果")]
+        ResourceConvert = 91,
+
+        [Description("一時的にパス接続や危険判定などのルールを書き換える保留効果")]
+        RuleOverride = 92,
     }
 
     public enum BattleSkillTargetType
@@ -56,10 +95,23 @@ namespace Assets.Scripts.Data.MasterData
         Hp = 1,
         Attack = 2,
         Defense = 3,
-        Speed = 4,
+
+        [Obsolete("旧 Speed 値の互換用です。新仕様の戦闘計算では使用しません。")]
+        [Description("旧 Speed 値の互換用。新仕様では使わない。")]
+        LegacySpeed = 4,
 
         Charge = 100,
         Guard = 101,
+    }
+
+    public static class BattleSkillParameterTypeUtility
+    {
+        private const int LegacySpeedRawValue = 4;
+
+        public static bool IsLegacySpeed(BattleSkillParameterType parameterType)
+        {
+            return (int)parameterType == LegacySpeedRawValue;
+        }
     }
 
     public enum BattleStatModifierTargetType
@@ -171,6 +223,7 @@ namespace Assets.Scripts.Data.MasterData
         private int defense = 0;
 
         [SerializeField]
+        [Tooltip("旧 Speed 実装の互換フィールドです。新仕様の戦闘計算では使用しません。")]
         private int speed = 0;
 
         [SerializeField]
@@ -181,7 +234,7 @@ namespace Assets.Scripts.Data.MasterData
 
         public int Attack => Mathf.Max(0, attack);
         public int Defense => Mathf.Max(0, defense);
-        public int Speed => Mathf.Max(0, speed);
+        public int LegacySpeed => Mathf.Max(0, speed);
         public int Guard => Mathf.Max(0, guard);
         public IReadOnlyList<BattleStatModifierDefinitionEntry> Modifiers =>
             modifiers ??= new List<BattleStatModifierDefinitionEntry>();

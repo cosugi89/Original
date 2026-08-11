@@ -136,6 +136,8 @@ namespace Assets.Scripts.Systems.Save
 
             var demoProfile = new UserProfileDemoData();
             userData.Profile.MaxHp = Mathf.Max(1, userData.Profile.MaxHp);
+            userData.Profile.SkillLoadout ??= new BattleSkillLoadoutData();
+            userData.Profile.SkillLoadout.SkillIds ??= new List<int>();
             userData.Profile.SkillSlotSkillIds ??= new List<int>(demoProfile.SkillSlotSkillIds);
 
             if (userData.Profile.SkillSlotSkillIds.Count == 0)
@@ -143,10 +145,35 @@ namespace Assets.Scripts.Systems.Save
                 userData.Profile.SkillSlotSkillIds = new List<int>(demoProfile.SkillSlotSkillIds);
             }
 
-            for (var i = 0; i < userData.Profile.SkillSlotSkillIds.Count; i++)
+            if (userData.Profile.SkillLoadout.SkillIds.Count == 0)
             {
-                userData.Profile.SkillSlotSkillIds[i] =
-                    Mathf.Max(0, userData.Profile.SkillSlotSkillIds[i]);
+                userData.Profile.SkillLoadout.SkillIds = new List<int>(userData.Profile.SkillSlotSkillIds);
+            }
+
+            NormalizeSkillIdList(userData.Profile.SkillLoadout.SkillIds);
+            userData.Profile.SkillSlotSkillIds = new List<int>(userData.Profile.SkillLoadout.SkillIds);
+        }
+
+        private static void NormalizeSkillIdList(List<int> skillIds)
+        {
+            if (skillIds == null)
+            {
+                return;
+            }
+
+            while (skillIds.Count < UserProfileData.BattleSkillLoadoutSlotCount)
+            {
+                skillIds.Add(0);
+            }
+
+            while (skillIds.Count > UserProfileData.BattleSkillLoadoutSlotCount)
+            {
+                skillIds.RemoveAt(skillIds.Count - 1);
+            }
+
+            for (var i = 0; i < skillIds.Count; i++)
+            {
+                skillIds[i] = Mathf.Max(0, skillIds[i]);
             }
         }
     }

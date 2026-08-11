@@ -23,8 +23,7 @@ namespace Assets.Scripts.Data.DTO
         public int SortOrder { get; init; } = 0;
         public bool IsDefaultOwned { get; init; }
         public IReadOnlyList<BattleSkillData> AssignableSkills { get; init; } = Array.Empty<BattleSkillData>();
-        public AttributeData NormalAttackAttribute { get; init; }
-        public IReadOnlyList<EquipmentAttributeModifierData> AttributeModifiers { get; init; } = Array.Empty<EquipmentAttributeModifierData>();
+        public BattleSkillData DanceSkill { get; init; }
         public IReadOnlyList<BattleStatModifierData> BattleStatModifiers { get; init; } = Array.Empty<BattleStatModifierData>();
         public IReadOnlyList<string> CategoryTags { get; init; } = Array.Empty<string>();
     }
@@ -44,31 +43,11 @@ namespace Assets.Scripts.Data.DTO
         public int StartingCharge { get; init; } = 0;
         public int TurnChargeGain { get; init; } = 0;
         public int AttackChargeGain { get; init; } = 0;
-        public IReadOnlyList<AttributeData> Attributes { get; init; } = Array.Empty<AttributeData>();
         public IReadOnlyList<BattleSkillEffectEntryData> Effects { get; init; } = Array.Empty<BattleSkillEffectEntryData>();
         public EffectAnimationData EffectAnimation { get; init; }
 
-        public AttributeData Attribute => ResolvePrimaryAttribute();
         public BattleSkillEffectEntryData PrimaryEffect => ResolvePrimaryEffect();
         public BattleSkillOperationType EffectType => PrimaryEffect?.EffectType ?? BattleSkillOperationType.Damage;
-
-        private AttributeData ResolvePrimaryAttribute()
-        {
-            if (Attributes == null || Attributes.Count == 0)
-            {
-                return null;
-            }
-
-            for (var i = 0; i < Attributes.Count; i++)
-            {
-                if (Attributes[i] != null)
-                {
-                    return Attributes[i];
-                }
-            }
-
-            return null;
-        }
 
         private BattleSkillEffectEntryData ResolvePrimaryEffect()
         {
@@ -140,15 +119,6 @@ namespace Assets.Scripts.Data.DTO
         public bool IsVisibleInUI { get; init; } = true;
         public Sprite Icon { get; init; }
         public int SortOrder { get; init; } = 0;
-    }
-
-    /// <summary>
-    /// 装備の属性補正1件ぶんの転送用データ。
-    /// </summary>
-    public class EquipmentAttributeModifierData
-    {
-        public AttributeData Attribute { get; init; }
-        public int DamagePercent { get; init; } = 100;
     }
 
     /// <summary>

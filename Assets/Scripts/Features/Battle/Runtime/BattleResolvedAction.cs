@@ -42,6 +42,19 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public BattleResolvedActionSemantics Semantics { get; init; } = BattleResolvedActionSemantics.None;
 
+        public BattleSkillEffectSuccessResult SkillEffectSuccess { get; init; }
+
+        public int PlayerHealing { get; init; }
+
+        public int PlayerGuardGain { get; init; }
+
+        public int PlayerGuardAbsorbed { get; init; }
+
+        public int SkillChargeGain { get; init; }
+
+        public IReadOnlyList<BattleTemporaryStatModifier> TemporaryStatModifiers { get; init; } =
+            Array.Empty<BattleTemporaryStatModifier>();
+
         public BattlePlayerAnimationCue? AnimationCue { get; init; }
 
         public IReadOnlyList<string> LogMessages { get; init; } = Array.Empty<string>();
@@ -52,4 +65,3 @@ namespace Assets.Scripts.Features.Battle.Runtime
         }
     }
 }
-

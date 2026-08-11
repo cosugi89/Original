@@ -18,7 +18,6 @@ namespace Assets.Scripts.Features.Battle.Logic
             {
                 Attack = ResolveLevelBasedAttack(normalizedProfile),
                 Defense = 0,
-                Speed = 0,
                 Guard = 0,
                 Modifiers = equipmentDerivedData?.BattleStatModifiers ?? Array.Empty<BattleStatModifierData>(),
             };

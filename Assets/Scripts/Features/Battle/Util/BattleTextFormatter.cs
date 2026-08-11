@@ -230,6 +230,31 @@ namespace Assets.Scripts.Features.Battle.Util
                     : $"敵-{resolvedSummary.EnemyDamageTaken} [{resolvedSummary.EnemyDamageAttributeSummary}]");
             }
 
+            if (resolvedSummary.PlayerHealing > 0)
+            {
+                parts.Add($"自分+{resolvedSummary.PlayerHealing}");
+            }
+
+            if (resolvedSummary.PlayerGuardGained > 0)
+            {
+                parts.Add($"Guard+{resolvedSummary.PlayerGuardGained}");
+            }
+
+            if (resolvedSummary.SkillChargeGained > 0)
+            {
+                parts.Add($"Charge+{resolvedSummary.SkillChargeGained}");
+            }
+
+            if (resolvedSummary.PlayerTemporaryModifierCount > 0)
+            {
+                parts.Add($"Buff+{resolvedSummary.PlayerTemporaryModifierCount}");
+            }
+
+            if (resolvedSummary.EnemyTemporaryModifierCount > 0)
+            {
+                parts.Add($"Debuff+{resolvedSummary.EnemyTemporaryModifierCount}");
+            }
+
             if (resolvedSummary.ResolvedHazardCount > 0)
             {
                 parts.Add(resolvedSummary.PlayerDamageTaken > 0 || !string.IsNullOrWhiteSpace(resolvedSummary.PlayerDamageAttributeSummary)

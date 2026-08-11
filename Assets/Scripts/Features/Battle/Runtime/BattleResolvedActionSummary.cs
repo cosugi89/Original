@@ -23,6 +23,15 @@ namespace Assets.Scripts.Features.Battle.Runtime
             var resolvedHazardCount = 0;
             var resolvedDanceCount = 0;
             var resolvedEnemyActionCount = 0;
+            var resolvedSkillEffectCount = 0;
+            var succeededSkillEffectCount = 0;
+            var failedSkillEffectCount = 0;
+            var playerHealing = 0;
+            var playerGuardGained = 0;
+            var playerGuardAbsorbed = 0;
+            var skillChargeGained = 0;
+            var playerTemporaryModifierCount = 0;
+            var enemyTemporaryModifierCount = 0;
             var skillDisplayName = string.Empty;
             var enemyDamageAttributeSummary = string.Empty;
             var playerDamageAttributeSummary = string.Empty;
@@ -36,6 +45,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
             var selectedSkillConsumed = false;
             var nextTurnHazardBoostReserved = false;
             var logEntries = new List<string>();
+            var temporaryStatModifiers = new List<BattleTemporaryStatModifier>();
             var animationSequence = new List<BattlePlayerAnimationCue>();
 
             for (var i = 0; i < actions.Count; i++)
@@ -76,9 +86,51 @@ namespace Assets.Scripts.Features.Battle.Runtime
                     resolvedEnemyActionCount++;
                 }
 
+                var skillEffectSuccess = action.SkillEffectSuccess;
+                if (skillEffectSuccess != null)
+                {
+                    resolvedSkillEffectCount++;
+                    if (skillEffectSuccess.Succeeded)
+                    {
+                        succeededSkillEffectCount++;
+                    }
+                    else
+                    {
+                        failedSkillEffectCount++;
+                    }
+                }
+
                 if (action.AnimationCue.HasValue)
                 {
                     animationSequence.Add(action.AnimationCue.Value);
+                }
+
+                playerHealing += Math.Max(0, action.PlayerHealing);
+                playerGuardGained += Math.Max(0, action.PlayerGuardGain);
+                playerGuardAbsorbed += Math.Max(0, action.PlayerGuardAbsorbed);
+                skillChargeGained += Math.Max(0, action.SkillChargeGain);
+
+                var actionTemporaryModifiers = action.TemporaryStatModifiers;
+                if (actionTemporaryModifiers != null)
+                {
+                    for (var modifierIndex = 0; modifierIndex < actionTemporaryModifiers.Count; modifierIndex++)
+                    {
+                        var temporaryModifier = actionTemporaryModifiers[modifierIndex];
+                        if (temporaryModifier == null || temporaryModifier.IsExpired)
+                        {
+                            continue;
+                        }
+
+                        temporaryStatModifiers.Add(temporaryModifier);
+                        if (temporaryModifier.TargetsPlayer)
+                        {
+                            playerTemporaryModifierCount++;
+                        }
+                        else
+                        {
+                            enemyTemporaryModifierCount++;
+                        }
+                    }
                 }
 
                 var actionLogMessages = action.LogMessages;
@@ -145,6 +197,15 @@ namespace Assets.Scripts.Features.Battle.Runtime
                 ResolvedHazardCount = resolvedHazardCount,
                 ResolvedDanceCount = resolvedDanceCount,
                 ResolvedEnemyActionCount = resolvedEnemyActionCount,
+                ResolvedSkillEffectCount = resolvedSkillEffectCount,
+                SucceededSkillEffectCount = succeededSkillEffectCount,
+                FailedSkillEffectCount = failedSkillEffectCount,
+                PlayerHealing = playerHealing,
+                PlayerGuardGained = playerGuardGained,
+                PlayerGuardAbsorbed = playerGuardAbsorbed,
+                SkillChargeGained = skillChargeGained,
+                PlayerTemporaryModifierCount = playerTemporaryModifierCount,
+                EnemyTemporaryModifierCount = enemyTemporaryModifierCount,
                 SkillDisplayName = skillDisplayName,
                 EnemyDamageAttributeSummary = enemyDamageAttributeSummary,
                 PlayerDamageAttributeSummary = playerDamageAttributeSummary,
@@ -157,6 +218,9 @@ namespace Assets.Scripts.Features.Battle.Runtime
                 SelectedSkillConsumed = selectedSkillConsumed,
                 NextTurnHazardBoostReserved = nextTurnHazardBoostReserved,
                 LogEntries = logEntries.ToArray(),
+                TemporaryStatModifiers = temporaryStatModifiers.Count > 0
+                    ? temporaryStatModifiers.ToArray()
+                    : Array.Empty<BattleTemporaryStatModifier>(),
                 AnimationSequence = animationSequence.ToArray(),
             };
         }
@@ -176,6 +240,24 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public int ResolvedDanceCount { get; init; }
 
         public int ResolvedEnemyActionCount { get; init; }
+
+        public int ResolvedSkillEffectCount { get; init; }
+
+        public int SucceededSkillEffectCount { get; init; }
+
+        public int FailedSkillEffectCount { get; init; }
+
+        public int PlayerHealing { get; init; }
+
+        public int PlayerGuardGained { get; init; }
+
+        public int PlayerGuardAbsorbed { get; init; }
+
+        public int SkillChargeGained { get; init; }
+
+        public int PlayerTemporaryModifierCount { get; init; }
+
+        public int EnemyTemporaryModifierCount { get; init; }
 
         public string SkillDisplayName { get; init; } = string.Empty;
 
@@ -200,6 +282,9 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public bool NextTurnHazardBoostReserved { get; init; }
 
         public IReadOnlyList<string> LogEntries { get; init; } = Array.Empty<string>();
+
+        public IReadOnlyList<BattleTemporaryStatModifier> TemporaryStatModifiers { get; init; } =
+            Array.Empty<BattleTemporaryStatModifier>();
 
         public IReadOnlyList<BattlePlayerAnimationCue> AnimationSequence { get; init; } =
             Array.Empty<BattlePlayerAnimationCue>();

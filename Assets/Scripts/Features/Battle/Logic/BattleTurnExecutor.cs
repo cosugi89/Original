@@ -121,10 +121,11 @@ namespace Assets.Scripts.Features.Battle.Logic
                 session.EnemyHp,
                 session.PlayerHp,
                 playerSnapshot.Stats,
-                playerSnapshot.AttackAttribute,
-                enemyData?.AttackAttribute,
-                enemyData?.DefenseAttributeModifiers,
-                playerSnapshot.DefenseAttributeModifiers);
+                playerSnapshot.MaxHp,
+                session.TemporaryStatModifiers);
+            context.SkillEffectSuccessResolver = beginTurn
+                ? BattleSkillEffectSuccessResolver.CreateRuntime()
+                : BattleSkillEffectSuccessResolver.CreatePreview();
 
             var executedCellPath = preparedTurn.Board.BuildCellPath(positions);
             var report = BattleTurnResolver.Resolve(executedCellPath, context);

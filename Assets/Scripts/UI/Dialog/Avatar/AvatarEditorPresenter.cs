@@ -91,6 +91,12 @@ namespace Assets.Scripts.UI.Dialog
                 SelectedEquipmentId = selectedOption?.EquipmentId ?? 0,
                 SelectedDisplayName = selectedOption?.DisplayName ?? string.Empty,
                 SelectedIcon = selectedOption?.Icon,
+                SelectedTagsText = FormatTags(selectedOption?.CategoryTags),
+                SelectedSkillsText = FormatNames(selectedOption?.AssignableSkillNames),
+                SelectedDanceSkillText = selectedOption == null || string.IsNullOrWhiteSpace(selectedOption.DanceSkillName)
+                    ? string.Empty
+                    : selectedOption.DanceSkillName,
+                TagBonusText = BuildTagBonusSummary(ResolveDraftEquipmentDerivedData()),
                 SupportsColor = supportsColor,
                 ColorTarget = colorTarget,
                 CurrentColorHtml = currentColorHtml,
@@ -246,7 +252,10 @@ namespace Assets.Scripts.UI.Dialog
                                      partState.EquipmentId == definition.EquipmentId,
                         IsVisible = partState?.IsVisible ?? false,
                         CanSelect = isOwned,
-                        SortOrder = (groupIndex * 10000) + Mathf.Max(definition.SortOrder, 0)
+                        SortOrder = (groupIndex * 10000) + Mathf.Max(definition.SortOrder, 0),
+                        CategoryTags = definition.CategoryTags ?? Array.Empty<string>(),
+                        AssignableSkillNames = BuildSkillNames(definition.AssignableSkills),
+                        DanceSkillName = definition.DanceSkill?.DisplayName ?? string.Empty
                     });
                 }
             }
@@ -414,6 +423,84 @@ namespace Assets.Scripts.UI.Dialog
         {
             target = value;
             return true;
+        }
+
+        private BattleEquipmentDerivedData ResolveDraftEquipmentDerivedData()
+        {
+            if (_draftAppearance?.Parts == null)
+            {
+                return new BattleEquipmentDerivedData();
+            }
+
+            var definitions = new List<EquipmentData>();
+            for (var i = 0; i < _draftAppearance.Parts.Count; i++)
+            {
+                var state = _draftAppearance.Parts[i];
+                if (state == null ||
+                    !state.IsVisible ||
+                    state.EquipmentId <= 0 ||
+                    !_inventoryService.TryGetDefinition(state.EquipmentId, out var definition) ||
+                    definition == null)
+                {
+                    continue;
+                }
+
+                definitions.Add(definition);
+            }
+
+            return BattleEquipmentDerivedDataResolver.Resolve(definitions);
+        }
+
+        private static IReadOnlyList<string> BuildSkillNames(IReadOnlyList<BattleSkillData> skills)
+        {
+            if (skills == null || skills.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            return skills
+                .Where(skill => skill != null && !string.IsNullOrWhiteSpace(skill.DisplayName))
+                .Select(skill => skill.DisplayName.Trim())
+                .ToArray();
+        }
+
+        private static string BuildTagBonusSummary(BattleEquipmentDerivedData derivedData)
+        {
+            var matches = derivedData?.TagBonusMatches;
+            if (matches == null || matches.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join(
+                ", ",
+                matches
+                    .Where(match => match != null && !string.IsNullOrWhiteSpace(match.Tag))
+                    .Select(match => $"{match.Tag} 全一致"));
+        }
+
+        private static string FormatTags(IReadOnlyList<string> tags)
+        {
+            if (tags == null || tags.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join(
+                ", ",
+                tags.Where(tag => !string.IsNullOrWhiteSpace(tag)).Select(tag => tag.Trim()));
+        }
+
+        private static string FormatNames(IReadOnlyList<string> names)
+        {
+            if (names == null || names.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join(
+                ", ",
+                names.Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim()));
         }
 
         private static void EnsurePartsManagerInitialized(PartsManager partsManager)

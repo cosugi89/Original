@@ -250,4 +250,240 @@ namespace Assets.Scripts.Systems.GameData
                 SaveService.MarkDirty();
         }
     }
+
+    public class BattleSkillLoadoutService
+    {
+        public static BattleSkillLoadoutService Instance { get; private set; }
+
+        public GameSaveService SaveService { get; }
+        public AvatarService AvatarService { get; }
+        public InventoryService InventoryService { get; }
+
+        public static BattleSkillLoadoutService EnsureInitialized()
+        {
+            if (Instance != null)
+                return Instance;
+
+            Instance = new BattleSkillLoadoutService(
+                GameSaveService.EnsureInitialized(),
+                AvatarService.EnsureInitialized(),
+                InventoryService.EnsureInitialized());
+            return Instance;
+        }
+
+        public BattleSkillLoadoutService(
+            GameSaveService saveService,
+            AvatarService avatarService,
+            InventoryService inventoryService)
+        {
+            SaveService = saveService;
+            AvatarService = avatarService;
+            InventoryService = inventoryService;
+        }
+
+        public IReadOnlyList<BattleSkillData> GetCandidateSkillsFromEquippedEquipment()
+        {
+            var result = new List<BattleSkillData>();
+            var seenSkillIds = new HashSet<int>();
+            var equippedParts = AvatarService.GetAllPartStates();
+            for (var i = 0; i < equippedParts.Count; i++)
+            {
+                var state = equippedParts[i];
+                if (state == null ||
+                    state.EquipmentId <= 0 ||
+                    !InventoryService.TryGetDefinition(state.EquipmentId, out var equipment) ||
+                    equipment == null)
+                {
+                    continue;
+                }
+
+                AddSkills(equipment.AssignableSkills, result, seenSkillIds);
+            }
+
+            return result;
+        }
+
+        public IReadOnlyList<int> GetCurrentSkillIds()
+        {
+            var loadout = EnsureLoadout();
+            return loadout.SkillIds.ToArray();
+        }
+
+        public IReadOnlyList<int> EnsureUsableLoadout(bool persistImmediately = false)
+        {
+            var loadout = EnsureLoadout();
+            NormalizeLoadout(loadout.SkillIds);
+            var candidateSkillIds = new HashSet<int>(
+                GetCandidateSkillsFromEquippedEquipment()
+                    .Where(skill => skill != null && skill.SkillId > 0)
+                    .Select(skill => skill.SkillId));
+            var hasChanges = RemoveUnavailableSkills(loadout.SkillIds, candidateSkillIds);
+
+            if (loadout.SkillIds.Any(skillId => skillId > 0))
+            {
+                MirrorLegacySkillSlots(loadout.SkillIds);
+                if (hasChanges)
+                {
+                    SaveService.MarkDirty();
+                    if (persistImmediately)
+                    {
+                        SaveService.SaveSession();
+                    }
+                }
+
+                return loadout.SkillIds.ToArray();
+            }
+
+            var defaultSkillIds = BuildDefaultSkillIdsFromCandidates();
+            if (defaultSkillIds.Count == 0)
+            {
+                MirrorLegacySkillSlots(loadout.SkillIds);
+                return loadout.SkillIds.ToArray();
+            }
+
+            for (var i = 0; i < loadout.SkillIds.Count; i++)
+            {
+                loadout.SkillIds[i] = i < defaultSkillIds.Count ? defaultSkillIds[i] : 0;
+            }
+
+            MirrorLegacySkillSlots(loadout.SkillIds);
+            SaveService.MarkDirty();
+            if (persistImmediately)
+            {
+                SaveService.SaveSession();
+            }
+
+            return loadout.SkillIds.ToArray();
+        }
+
+        public void SaveLoadout(IReadOnlyList<int> requestedSkillIds, bool persistImmediately = true)
+        {
+            var loadout = EnsureLoadout();
+            var allowedSkillIds = new HashSet<int>(
+                GetCandidateSkillsFromEquippedEquipment()
+                    .Where(skill => skill != null && skill.SkillId > 0)
+                    .Select(skill => skill.SkillId));
+
+            loadout.SkillIds.Clear();
+            for (var i = 0; i < UserProfileData.BattleSkillLoadoutSlotCount; i++)
+            {
+                var skillId = requestedSkillIds != null && i < requestedSkillIds.Count
+                    ? Mathf.Max(0, requestedSkillIds[i])
+                    : 0;
+                loadout.SkillIds.Add(skillId > 0 && allowedSkillIds.Contains(skillId) ? skillId : 0);
+            }
+
+            MirrorLegacySkillSlots(loadout.SkillIds);
+            SaveService.MarkDirty();
+            if (persistImmediately)
+            {
+                SaveService.SaveSession();
+            }
+        }
+
+        private BattleSkillLoadoutData EnsureLoadout()
+        {
+            SaveService.Session.UserData.Profile ??= new UserProfileDemoData();
+            var profile = SaveService.Session.UserData.Profile;
+            profile.SkillLoadout ??= new BattleSkillLoadoutData();
+            profile.SkillLoadout.SkillIds ??= new List<int>();
+            if (profile.SkillLoadout.SkillIds.Count == 0)
+            {
+                if (profile.SkillSlotSkillIds != null)
+                {
+                    profile.SkillLoadout.SkillIds.AddRange(profile.SkillSlotSkillIds);
+                }
+            }
+
+            NormalizeLoadout(profile.SkillLoadout.SkillIds);
+            MirrorLegacySkillSlots(profile.SkillLoadout.SkillIds);
+            return profile.SkillLoadout;
+        }
+
+        private IReadOnlyList<int> BuildDefaultSkillIdsFromCandidates()
+        {
+            return GetCandidateSkillsFromEquippedEquipment()
+                .Where(skill => skill != null && skill.SkillId > 0)
+                .Select(skill => skill.SkillId)
+                .Take(UserProfileData.BattleSkillLoadoutSlotCount)
+                .ToArray();
+        }
+
+        private void MirrorLegacySkillSlots(IReadOnlyList<int> skillIds)
+        {
+            SaveService.Session.UserData.Profile.SkillSlotSkillIds =
+                skillIds != null
+                    ? skillIds.Select(skillId => Mathf.Max(0, skillId)).ToList()
+                    : new List<int>();
+        }
+
+        private static bool RemoveUnavailableSkills(
+            List<int> skillIds,
+            HashSet<int> candidateSkillIds)
+        {
+            if (skillIds == null || candidateSkillIds == null || candidateSkillIds.Count == 0)
+            {
+                return false;
+            }
+
+            var hasChanges = false;
+            for (var i = 0; i < skillIds.Count; i++)
+            {
+                if (skillIds[i] <= 0 || candidateSkillIds.Contains(skillIds[i]))
+                {
+                    continue;
+                }
+
+                skillIds[i] = 0;
+                hasChanges = true;
+            }
+
+            return hasChanges;
+        }
+
+        private static void NormalizeLoadout(List<int> skillIds)
+        {
+            if (skillIds == null)
+            {
+                return;
+            }
+
+            while (skillIds.Count < UserProfileData.BattleSkillLoadoutSlotCount)
+            {
+                skillIds.Add(0);
+            }
+
+            while (skillIds.Count > UserProfileData.BattleSkillLoadoutSlotCount)
+            {
+                skillIds.RemoveAt(skillIds.Count - 1);
+            }
+
+            for (var i = 0; i < skillIds.Count; i++)
+            {
+                skillIds[i] = Mathf.Max(0, skillIds[i]);
+            }
+        }
+
+        private static void AddSkills(
+            IReadOnlyList<BattleSkillData> source,
+            List<BattleSkillData> destination,
+            HashSet<int> seenSkillIds)
+        {
+            if (source == null || destination == null || seenSkillIds == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < source.Count; i++)
+            {
+                var skill = source[i];
+                if (skill == null || skill.SkillId <= 0 || !seenSkillIds.Add(skill.SkillId))
+                {
+                    continue;
+                }
+
+                destination.Add(skill);
+            }
+        }
+    }
 }

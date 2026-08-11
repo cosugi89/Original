@@ -17,6 +17,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private readonly GameSaveService _saveService;
         private readonly AvatarService _avatarService;
         private readonly InventoryService _inventoryService;
+        private readonly BattleSkillLoadoutService _skillLoadoutService;
         private readonly BattleProgressService _battleProgressService;
         private readonly BattlePlayerSnapshotFactory _playerSnapshotFactory;
 
@@ -24,12 +25,14 @@ namespace Assets.Scripts.Features.Battle.Logic
             GameSaveService saveService = null,
             AvatarService avatarService = null,
             InventoryService inventoryService = null,
+            BattleSkillLoadoutService skillLoadoutService = null,
             BattleProgressService battleProgressService = null,
             BattlePlayerSnapshotFactory playerSnapshotFactory = null)
         {
             _saveService = saveService ?? GameSaveService.EnsureInitialized();
             _avatarService = avatarService ?? AvatarService.EnsureInitialized();
             _inventoryService = inventoryService ?? InventoryService.EnsureInitialized();
+            _skillLoadoutService = skillLoadoutService ?? BattleSkillLoadoutService.EnsureInitialized();
             _battleProgressService = battleProgressService ?? BattleProgressService.EnsureInitialized();
             _playerSnapshotFactory = playerSnapshotFactory ?? new BattlePlayerSnapshotFactory();
         }
@@ -90,6 +93,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private BattlePlayerSnapshotSource ResolvePlayerSnapshotSource()
         {
             var profile = _saveService.Session.UserData?.Profile ?? new UserProfileDemoData();
+            _skillLoadoutService.EnsureUsableLoadout();
             var equipmentDerivedData = ResolveEquippedEquipmentDerivedData();
             return new BattlePlayerSnapshotSource(profile, equipmentDerivedData);
         }

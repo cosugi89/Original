@@ -5,6 +5,8 @@ namespace Assets.Scripts.Systems.Save.Models
 {
     public class UserProfileData
     {
+        public const int BattleSkillLoadoutSlotCount = 4;
+
         [Description("プレイヤーを一意に識別するID。将来の連携や移行時に使う。")]
         public string PlayerId { get; set; } = "";
 
@@ -32,8 +34,17 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("プレイヤーの最大HP。現在の BattleScene では戦闘開始HPとして使う。")]
         public int MaxHp { get; set; } = 450; // TODO: メソッド化して装備や成長要素を反映させる
 
+        [Description("戦闘で使用するスキルロードアウト。装備候補スキル群から選んだ実戦用4枠。")]
+        public BattleSkillLoadoutData SkillLoadout { get; set; } = new();
+
         [Description("スキルスロット順に保持する SkillId。0 なら未設定スロット。")]
         public List<int> SkillSlotSkillIds { get; set; } = new();
+    }
+
+    public class BattleSkillLoadoutData
+    {
+        [Description("戦闘で使用するスキルIDの並び。0 なら未設定スロット。")]
+        public List<int> SkillIds { get; set; } = new();
     }
 
     /// <summary>
@@ -52,6 +63,11 @@ namespace Assets.Scripts.Systems.Save.Models
                 2002,
                 0,
                 0,
+            };
+
+            SkillLoadout = new BattleSkillLoadoutData
+            {
+                SkillIds = new List<int>(SkillSlotSkillIds),
             };
         }
     }

@@ -33,17 +33,15 @@ namespace Assets.Scripts.Features.Battle.Logic
             var profile = resolvedSource.Profile ?? new UserProfileDemoData();
             var equipmentDerivedData = resolvedSource.EquipmentDerivedData ?? new BattleEquipmentDerivedData();
             var stats = CreatePlayerStats(profile, equipmentDerivedData);
-            var attackAttribute = equipmentDerivedData.AttackAttribute;
-            var defenseAttributeModifiers = equipmentDerivedData.DefenseAttributeModifiers;
             var skillSlots = CreateSkillSlots(profile, slotViewCount, unlockedSkillSlotCount);
 
             Debug.Log(
                 $"[Battle] UserData Profile HP={profile.MaxHp} " +
                 $"Attack={stats.BaseAttackPower} " +
                 $"x{stats.NormalAttackMultiplier:0.##}/x{stats.DoubleAttackFollowUpMultiplier:0.##}/x{stats.JumpAttackMultiplier:0.##} " +
-                $"Attr={attackAttribute?.DisplayName ?? "-"} SkillSlots={skillSlots.Length}");
+                $"SkillSlots={skillSlots.Length}");
 
-            return new BattlePlayerSnapshot(profile, stats, attackAttribute, defenseAttributeModifiers, skillSlots);
+            return new BattlePlayerSnapshot(profile, stats, skillSlots);
         }
 
         private BattlePlayerStats CreatePlayerStats(
@@ -79,6 +77,11 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private static IReadOnlyList<int> ResolveSkillIdList(UserProfileData profile)
         {
+            if (profile?.SkillLoadout?.SkillIds != null && profile.SkillLoadout.SkillIds.Count > 0)
+            {
+                return profile.SkillLoadout.SkillIds;
+            }
+
             if (profile?.SkillSlotSkillIds != null && profile.SkillSlotSkillIds.Count > 0)
             {
                 return profile.SkillSlotSkillIds;

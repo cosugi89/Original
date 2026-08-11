@@ -95,8 +95,10 @@ namespace Assets.Scripts.Data.MasterData
         }
 
         /// <summary>
-        /// 属性マスタを読み込み、DTO リストに変換して返す。
+        /// 旧属性マスタを読み込み、DTO リストに変換して返す。
+        /// 新仕様の戦闘計算や UI では使用しない。
         /// </summary>
+        [Obsolete("旧属性実装の互換 API です。新仕様の戦闘計算や UI では使用しません。")]
         public static IReadOnlyList<AttributeData> LoadAttributeData()
         {
             var database = LoadAttributeMasterDatabase();
@@ -229,15 +231,18 @@ namespace Assets.Scripts.Data.MasterData
             };
         }
 
-        private static IReadOnlyList<BattleSkillData> BuildBattleSkillData(IReadOnlyList<BattleSkillMasterData> skillMasters)
+        private static IReadOnlyList<BattleSkillData> BuildBattleSkillData(
+            IReadOnlyList<BattleSkillMasterData> skillMasters,
+            int maxCount = int.MaxValue)
         {
-            if (skillMasters == null || skillMasters.Count == 0)
+            if (skillMasters == null || skillMasters.Count == 0 || maxCount <= 0)
             {
                 return Array.Empty<BattleSkillData>();
             }
 
             return skillMasters
                 .Where(skill => skill != null)
+                .Take(maxCount)
                 .Select(skill => new BattleSkillData
                 {
                     SkillId = skill.SkillId,
@@ -249,11 +254,21 @@ namespace Assets.Scripts.Data.MasterData
                     StartingCharge = Mathf.Clamp(skill.StartingCharge, 0, Mathf.Max(1, skill.RequiredCharge)),
                     TurnChargeGain = Mathf.Max(0, skill.TurnChargeGain),
                     AttackChargeGain = Mathf.Max(0, skill.AttackChargeGain),
-                    Attributes = BuildAttributeDataList(skill.Attributes),
                     Effects = BuildBattleSkillEffectEntryData(skill.EffectData),
                     EffectAnimation = BuildEffectAnimationData(skill.EffectAnimation),
                 })
                 .ToArray();
+        }
+
+        private static BattleSkillData BuildBattleSkillData(BattleSkillMasterData skillMaster)
+        {
+            if (skillMaster == null)
+            {
+                return null;
+            }
+
+            var skills = BuildBattleSkillData(new[] { skillMaster }, maxCount: 1);
+            return skills.Count > 0 ? skills[0] : null;
         }
 
         private static AttributeData BuildAttributeData(AttributeMasterData attribute)
@@ -273,20 +288,6 @@ namespace Assets.Scripts.Data.MasterData
                 Icon = attribute.Icon,
                 SortOrder = attribute.SortOrder,
             };
-        }
-
-        private static IReadOnlyList<AttributeData> BuildAttributeDataList(IReadOnlyList<AttributeMasterData> attributes)
-        {
-            if (attributes == null || attributes.Count == 0)
-            {
-                return Array.Empty<AttributeData>();
-            }
-
-            return attributes
-                .Where(attribute => attribute != null)
-                .Select(BuildAttributeData)
-                .Where(attribute => attribute != null)
-                .ToArray();
         }
 
         private static IReadOnlyList<BattleSkillEffectEntryData> BuildBattleSkillEffectEntryData(
@@ -334,24 +335,6 @@ namespace Assets.Scripts.Data.MasterData
             };
         }
 
-        private static IReadOnlyList<EquipmentAttributeModifierData> BuildEquipmentAttributeModifierData(
-            IReadOnlyList<EquipmentAttributeModifierEntry> modifiers)
-        {
-            if (modifiers == null || modifiers.Count == 0)
-            {
-                return Array.Empty<EquipmentAttributeModifierData>();
-            }
-
-            return modifiers
-                .Where(modifier => modifier != null && modifier.Attribute != null)
-                .Select(modifier => new EquipmentAttributeModifierData
-                {
-                    Attribute = BuildAttributeData(modifier.Attribute),
-                    DamagePercent = Mathf.Max(0, modifier.DamagePercent),
-                })
-                .ToArray();
-        }
-
         private static IReadOnlyList<BattleStatModifierData> BuildBattleStatModifierData(
             IReadOnlyList<BattleStatModifierDefinitionEntry> modifiers)
         {
@@ -385,7 +368,6 @@ namespace Assets.Scripts.Data.MasterData
             {
                 Attack = Mathf.Max(0, definition.Attack),
                 Defense = Mathf.Max(0, definition.Defense),
-                Speed = Mathf.Max(0, definition.Speed),
                 Guard = Mathf.Max(0, definition.Guard),
                 Modifiers = mergedModifiers,
             };
@@ -477,8 +459,6 @@ namespace Assets.Scripts.Data.MasterData
                         Stats = BuildBattleStatBlockData(
                             enemyMaster.Stats,
                             equipmentDerivedData.BattleStatModifiers),
-                        AttackAttribute = equipmentDerivedData.AttackAttribute,
-                        DefenseAttributeModifiers = equipmentDerivedData.DefenseAttributeModifiers,
                         Appearance = BuildResolvedEnemyAppearanceData(enemyMaster),
                         Patterns = BuildPatterns(enemyMaster),
                     };
@@ -493,8 +473,6 @@ namespace Assets.Scripts.Data.MasterData
                 {
                     Attack = 80,
                 },
-                AttackAttribute = null,
-                DefenseAttributeModifiers = Array.Empty<EquipmentAttributeModifierData>(),
                 Appearance = new AppearanceData(),
                 Patterns = Array.Empty<StageBattlePatternData>(),
             };
@@ -559,9 +537,10 @@ namespace Assets.Scripts.Data.MasterData
                 Icon = master.Icon,
                 SortOrder = master.SortOrder > 0 ? master.SortOrder : Mathf.Max(master.PartsIndex, 0),
                 IsDefaultOwned = master.IsDefaultOwned,
-                AssignableSkills = BuildBattleSkillData(master.AssignableSkills),
-                NormalAttackAttribute = BuildAttributeData(master.NormalAttackAttribute),
-                AttributeModifiers = BuildEquipmentAttributeModifierData(master.AttributeModifiers),
+                AssignableSkills = BuildBattleSkillData(
+                    master.AssignableSkills,
+                    EquipmentMasterData.MaxAssignableSkillCount),
+                DanceSkill = BuildBattleSkillData(master.DanceSkill),
                 BattleStatModifiers = BuildBattleStatModifierData(master.BattleStatModifiers),
                 CategoryTags = BuildCategoryTags(master.CategoryTags),
             };

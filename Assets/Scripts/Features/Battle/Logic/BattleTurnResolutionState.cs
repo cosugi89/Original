@@ -7,15 +7,20 @@ namespace Assets.Scripts.Features.Battle.Logic
     /// </summary>
     internal sealed class BattleTurnResolutionState
     {
-        public BattleTurnResolutionState(int currentEnemyHp, int currentPlayerHp)
+        public BattleTurnResolutionState(int currentEnemyHp, int currentPlayerHp, int maxPlayerHp)
         {
             CurrentEnemyHp = Max(0, currentEnemyHp);
             CurrentPlayerHp = Max(0, currentPlayerHp);
+            MaxPlayerHp = Max(CurrentPlayerHp, maxPlayerHp);
         }
 
         public int CurrentEnemyHp { get; private set; }
 
         public int CurrentPlayerHp { get; private set; }
+
+        public int MaxPlayerHp { get; }
+
+        public int CurrentPlayerGuard { get; private set; }
 
         public int EnemyDamageTaken { get; private set; }
 
@@ -40,6 +45,21 @@ namespace Assets.Scripts.Features.Battle.Logic
             if (action == null)
             {
                 return;
+            }
+
+            if (action.PlayerHealing > 0)
+            {
+                CurrentPlayerHp = Min(MaxPlayerHp, CurrentPlayerHp + action.PlayerHealing);
+            }
+
+            if (action.PlayerGuardGain > 0)
+            {
+                CurrentPlayerGuard += action.PlayerGuardGain;
+            }
+
+            if (action.PlayerGuardAbsorbed > 0)
+            {
+                CurrentPlayerGuard = Max(0, CurrentPlayerGuard - action.PlayerGuardAbsorbed);
             }
 
             var resolution = action.DamageResolution;
@@ -73,6 +93,11 @@ namespace Assets.Scripts.Features.Battle.Logic
         private static int Max(int left, int right)
         {
             return left > right ? left : right;
+        }
+
+        private static int Min(int left, int right)
+        {
+            return left < right ? left : right;
         }
     }
 }

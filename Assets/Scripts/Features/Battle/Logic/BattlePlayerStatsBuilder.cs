@@ -18,12 +18,22 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         public BattlePlayerStatsBuilder SetParameter(BattleSkillParameterType parameterType, int value)
         {
+            if (ShouldIgnoreParameter(parameterType))
+            {
+                return this;
+            }
+
             _parameterValues[parameterType] = Math.Max(0, value);
             return this;
         }
 
         public BattlePlayerStatsBuilder AddParameter(BattleSkillParameterType parameterType, int delta)
         {
+            if (ShouldIgnoreParameter(parameterType))
+            {
+                return this;
+            }
+
             var current = GetParameter(parameterType, 0);
             _parameterValues[parameterType] = Math.Max(0, current + delta);
             return this;
@@ -31,6 +41,11 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         public BattlePlayerStatsBuilder MultiplyParameter(BattleSkillParameterType parameterType, float multiplier)
         {
+            if (ShouldIgnoreParameter(parameterType))
+            {
+                return this;
+            }
+
             var current = GetParameter(parameterType, 0);
             _parameterValues[parameterType] = Mathf.Max(0, Mathf.RoundToInt(current * multiplier));
             return this;
@@ -76,6 +91,11 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         public int GetParameter(BattleSkillParameterType parameterType, int fallbackValue)
         {
+            if (ShouldIgnoreParameter(parameterType))
+            {
+                return Math.Max(0, fallbackValue);
+            }
+
             return _parameterValues.TryGetValue(parameterType, out var value)
                 ? Math.Max(0, value)
                 : Math.Max(0, fallbackValue);
@@ -141,6 +161,11 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private BattlePlayerStatsBuilder ApplyParameterModifier(BattleStatModifierData modifier)
         {
+            if (BattleSkillParameterTypeUtility.IsLegacySpeed(modifier.ParameterType))
+            {
+                return this;
+            }
+
             return modifier.OperationType switch
             {
                 BattleStatModifierOperationType.Set => SetParameter(
@@ -153,6 +178,11 @@ namespace Assets.Scripts.Features.Battle.Logic
                     modifier.ParameterType,
                     Mathf.RoundToInt(modifier.Value)),
             };
+        }
+
+        private static bool ShouldIgnoreParameter(BattleSkillParameterType parameterType)
+        {
+            return BattleSkillParameterTypeUtility.IsLegacySpeed(parameterType);
         }
     }
 }

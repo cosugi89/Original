@@ -27,8 +27,6 @@ namespace Assets.Scripts.Data.DTO
 
         public int Defense { get; init; } = 0;
 
-        public int Speed { get; init; } = 0;
-
         public int Guard { get; init; } = 0;
 
         public IReadOnlyList<BattleStatModifierData> Modifiers { get; init; } = Array.Empty<BattleStatModifierData>();
@@ -46,11 +44,6 @@ namespace Assets.Scripts.Data.DTO
         public int MaxHp { get; init; } = 1;
 
         public BattleStatBlockData Stats { get; init; } = new();
-
-        public AttributeData AttackAttribute { get; init; }
-
-        public IReadOnlyList<EquipmentAttributeModifierData> DefenseAttributeModifiers { get; init; } =
-            Array.Empty<EquipmentAttributeModifierData>();
 
         public AppearanceData Appearance { get; init; } = new();
 

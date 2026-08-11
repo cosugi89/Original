@@ -17,6 +17,9 @@ namespace Assets.Scripts.UI.Dialog
         public bool IsVisible { get; set; }
         public bool CanSelect { get; set; }
         public int SortOrder { get; set; }
+        public IReadOnlyList<string> CategoryTags { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<string> AssignableSkillNames { get; set; } = Array.Empty<string>();
+        public string DanceSkillName { get; set; } = string.Empty;
     }
 
     public class AvatarPartSectionViewData
@@ -29,6 +32,10 @@ namespace Assets.Scripts.UI.Dialog
         public int SelectedEquipmentId { get; set; } = 0;
         public string SelectedDisplayName { get; set; } = string.Empty;
         public Sprite SelectedIcon { get; set; }
+        public string SelectedTagsText { get; set; } = string.Empty;
+        public string SelectedSkillsText { get; set; } = string.Empty;
+        public string SelectedDanceSkillText { get; set; } = string.Empty;
+        public string TagBonusText { get; set; } = string.Empty;
         public bool SupportsColor { get; set; }
         public ColorTargetType ColorTarget { get; set; }
         public string CurrentColorHtml { get; set; } = "#FFFFFFFF";

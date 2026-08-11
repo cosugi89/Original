@@ -8,6 +8,8 @@ namespace Assets.Scripts.Data.MasterData
     [CreateAssetMenu(menuName = "Original/Master Data/Equipment Master Data", fileName = "EquipmentMasterData")]
     public class EquipmentMasterData : ValidatedMasterDataAsset
     {
+        public const int MaxAssignableSkillCount = 2;
+
         [SerializeField]
         [Tooltip("保存データから参照される装備IDです。0は未装備扱いなので、手動作成時は1以上の一意な値を入れてください。")]
         [Description("装備/見た目定義を一意に識別するID。保存データから参照されるキー。")]
@@ -44,18 +46,23 @@ namespace Assets.Scripts.Data.MasterData
         private bool isDefaultOwned;
 
         [SerializeField]
-        [Tooltip("この装備に紐づく候補スキル一覧です。最大3件までを想定します。ここに登録した候補群の中から、将来は実戦用4枠を別途選びます。")]
-        [Description("この装備が提供する候補スキル一覧。最大3件を想定。")]
+        [Tooltip("この装備に紐づく候補スキル一覧です。最大2件までを想定します。ここに登録した候補群の中から、将来は実戦用4枠を別途選びます。")]
+        [Description("この装備が提供する候補スキル一覧。最大2件を想定。")]
         private List<BattleSkillMasterData> assignableSkills = new();
 
         [SerializeField]
-        [Tooltip("右手武器が持つ通常攻撃用の属性です。右手武器以外では未設定でも構いません。")]
-        [Description("通常攻撃に適用する属性。主に右手武器で使う。")]
+        [Tooltip("アイテム相当の装備に紐づける Dance 効果です。未設定なら Dance 効果なしとして扱います。")]
+        [Description("アイテム相当の装備が提供する Dance 効果。")]
+        private BattleSkillMasterData danceSkill;
+
+        [SerializeField]
+        [Tooltip("旧属性実装の互換フィールドです。新仕様では戦闘計算やUIに使用しません。")]
+        [Description("旧属性実装の互換フィールド。新仕様では未使用。")]
         private AttributeMasterData normalAttackAttribute;
 
         [SerializeField]
-        [Tooltip("装備が持つ属性補正一覧です。100 が等倍、50 が半減、150 が弱点などを表します。")]
-        [Description("属性ごとの被ダメージ補正一覧。")]
+        [Tooltip("旧属性実装の互換フィールドです。新仕様では戦闘計算やUIに使用しません。")]
+        [Description("旧属性実装の互換フィールド。新仕様では未使用。")]
         private List<EquipmentAttributeModifierEntry> attributeModifiers = new();
 
         [SerializeField]
@@ -79,9 +86,7 @@ namespace Assets.Scripts.Data.MasterData
         public int SortOrder => sortOrder;
         public bool IsDefaultOwned => isDefaultOwned;
         public IReadOnlyList<BattleSkillMasterData> AssignableSkills => assignableSkills ??= new List<BattleSkillMasterData>();
-        public AttributeMasterData NormalAttackAttribute => normalAttackAttribute;
-        public IReadOnlyList<EquipmentAttributeModifierEntry> AttributeModifiers =>
-            attributeModifiers ??= new List<EquipmentAttributeModifierEntry>();
+        public BattleSkillMasterData DanceSkill => danceSkill;
         public IReadOnlyList<string> CategoryTags => categoryTags ??= new List<string>();
         public IReadOnlyList<BattleStatModifierDefinitionEntry> BattleStatModifiers =>
             battleStatModifiers ??= new List<BattleStatModifierDefinitionEntry>();
@@ -172,12 +177,12 @@ namespace Assets.Scripts.Data.MasterData
                     ValidationSeverity.Info);
             }
 
-            if (AssignableSkills.Count > 3)
+            if (AssignableSkills.Count > MaxAssignableSkillCount)
             {
                 AddIssue(
                     issues,
                     "too_many_skills",
-                    "装備に設定できる候補スキルは最大3件想定です。4件以上は登録しないでください。",
+                    $"装備に設定できる候補スキルは最大{MaxAssignableSkillCount}件です。{MaxAssignableSkillCount + 1}件以上は登録しないでください。",
                     ValidationSeverity.Error);
             }
 
@@ -233,7 +238,7 @@ namespace Assets.Scripts.Data.MasterData
     }
 
     /// <summary>
-    /// 装備の属性補正を表すエントリ。装備ごとに複数の属性補正を設定できます。
+    /// 旧属性実装の互換エントリ。新仕様では戦闘計算や UI に使用しません。
     /// </summary>
     [System.Serializable]
     public class EquipmentAttributeModifierEntry
@@ -242,7 +247,7 @@ namespace Assets.Scripts.Data.MasterData
         private AttributeMasterData attribute;
 
         [SerializeField]
-        [Tooltip("100 が等倍、50 が半減、150 が弱点です。")]
+        [Tooltip("旧属性実装の互換値です。新仕様では戦闘計算やUIに使用しません。")]
         private int damagePercent = 100;
 
         public AttributeMasterData Attribute => attribute;

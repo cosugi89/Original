@@ -31,7 +31,8 @@ namespace Assets.Scripts.Features.Battle.Logic
             var traversalState = new BattleTurnTraversalState();
             var resolutionState = new BattleTurnResolutionState(
                 Max(1, context.CurrentEnemyHp),
-                Max(1, context.CurrentPlayerHp));
+                Max(1, context.CurrentPlayerHp),
+                Max(context.CurrentPlayerHp, context.MaxPlayerHp));
             var actionFactory = new BattleTurnResolvedActionFactory(
                 context,
                 resolutionState);
@@ -119,13 +120,53 @@ namespace Assets.Scripts.Features.Battle.Logic
             BattleTurnResolutionState resolutionState,
             BattleTurnResolvedActionFactory actionFactory)
         {
-            var action = selectedSkill != null
-                ? actionFactory.CreateSkillAction(selectedSkill)
-                : actionFactory.CreateBasicAttackAction(traversalState.ConsumeBasicAttackDamageKind());
+            var stopped = selectedSkill != null
+                ? HandleSkillAttackNode(report, selectedSkill, resolutionState, actionFactory)
+                : HandleBasicAttackNode(report, traversalState, resolutionState, actionFactory);
 
-            ApplyResolvedAction(report, resolutionState, action);
             traversalState.ResolveAttackExecution();
+            return stopped;
+        }
+
+        private static bool HandleBasicAttackNode(
+            BattleTurnResolutionReport report,
+            BattleTurnTraversalState traversalState,
+            BattleTurnResolutionState resolutionState,
+            BattleTurnResolvedActionFactory actionFactory)
+        {
+            var action = actionFactory.CreateBasicAttackAction(traversalState.ConsumeBasicAttackDamageKind());
+            ApplyResolvedAction(report, resolutionState, action);
             return resolutionState != null && resolutionState.EnemyDefeated;
+        }
+
+        private static bool HandleSkillAttackNode(
+            BattleTurnResolutionReport report,
+            SkillSlotRuntime selectedSkill,
+            BattleTurnResolutionState resolutionState,
+            BattleTurnResolvedActionFactory actionFactory)
+        {
+            ApplyResolvedAction(report, resolutionState, actionFactory.CreateSkillStartedAction(selectedSkill));
+
+            var effects = selectedSkill?.Effects;
+            if (effects == null || effects.Count == 0)
+            {
+                return IsBattleStopped(resolutionState);
+            }
+
+            for (var i = 0; i < effects.Count; i++)
+            {
+                ApplyResolvedAction(
+                    report,
+                    resolutionState,
+                    actionFactory.CreateSkillEffectAction(selectedSkill, effects[i], i));
+
+                if (IsBattleStopped(resolutionState))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool HandleHazardNode(
@@ -269,6 +310,12 @@ namespace Assets.Scripts.Features.Battle.Logic
 
             report.ApplyResolvedAction(action);
             resolutionState?.Apply(action);
+        }
+
+        private static bool IsBattleStopped(BattleTurnResolutionState resolutionState)
+        {
+            return resolutionState != null &&
+                   (resolutionState.EnemyDefeated || resolutionState.PlayerDefeated);
         }
 
         private static int Max(int left, int right)

@@ -16,6 +16,11 @@ namespace LayerLab.ArtMakerUnity
         [SerializeField] private ColorSelectScrollUIScript colorPicker;
         [SerializeField] private Image imgSelectFrame;
         [SerializeField] private Button buttonReset;
+        [SerializeField] private Text selectedEquipmentNameText;
+        [SerializeField] private Text selectedTagsText;
+        [SerializeField] private Text selectedSkillsText;
+        [SerializeField] private Text selectedDanceSkillText;
+        [SerializeField] private Text tagBonusText;
 
         private readonly List<PartsListSlot> _slots = new();
         private PartsType _activeType;
@@ -84,6 +89,7 @@ namespace LayerLab.ArtMakerUnity
                 LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
 
             UpdateSelectFrame();
+            RefreshDetailTexts();
         }
 
         private void ShowGroup(UICategory category)
@@ -425,6 +431,7 @@ namespace LayerLab.ArtMakerUnity
             }
 
             UpdateSelectFrame();
+            RefreshDetailTexts();
         }
 
         private bool IsRelevantToActiveCategory(PartsType type)
@@ -439,6 +446,38 @@ namespace LayerLab.ArtMakerUnity
             }
 
             return false;
+        }
+
+        private void RefreshDetailTexts()
+        {
+            if (_presenter == null)
+            {
+                SetDetailText(selectedEquipmentNameText, string.Empty);
+                SetDetailText(selectedTagsText, string.Empty);
+                SetDetailText(selectedSkillsText, string.Empty);
+                SetDetailText(selectedDanceSkillText, string.Empty);
+                SetDetailText(tagBonusText, string.Empty);
+                return;
+            }
+
+            SetDetailText(selectedEquipmentNameText, _activeSection?.SelectedDisplayName ?? string.Empty);
+            SetDetailText(selectedTagsText, PrefixIfAny("Tags: ", _activeSection?.SelectedTagsText));
+            SetDetailText(selectedSkillsText, PrefixIfAny("Skills: ", _activeSection?.SelectedSkillsText));
+            SetDetailText(selectedDanceSkillText, PrefixIfAny("Dance: ", _activeSection?.SelectedDanceSkillText));
+            SetDetailText(tagBonusText, PrefixIfAny("Bonus: ", _activeSection?.TagBonusText));
+        }
+
+        private static string PrefixIfAny(string prefix, string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? string.Empty : prefix + value.Trim();
+        }
+
+        private static void SetDetailText(Text text, string value)
+        {
+            if (text != null)
+            {
+                text.text = value ?? string.Empty;
+            }
         }
 
         private void OnDestroy()

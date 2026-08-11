@@ -23,7 +23,9 @@ namespace Assets.Scripts.Data.MasterData
         [SerializeField][Description("アイコン")]
         private Sprite icon;
 
-        [SerializeField][Description("属性")]
+        [SerializeField]
+        [Tooltip("旧属性実装の互換フィールドです。新仕様では戦闘計算やUIに使用しません。")]
+        [Description("旧属性実装の互換フィールド。新仕様では未使用。")]
         private AttributeMasterData[] attribute = Array.Empty<AttributeMasterData>();
 
         [SerializeField][Description("効果データ")]
@@ -49,8 +51,6 @@ namespace Assets.Scripts.Data.MasterData
         public string DisplayName => displayName ?? "Skill";
         public string Description => description ?? string.Empty;
         public Sprite Icon => icon;
-        public IReadOnlyList<AttributeMasterData> Attributes => attribute ?? Array.Empty<AttributeMasterData>();
-        public AttributeMasterData PrimaryAttribute => ResolvePrimaryAttribute();
         public IReadOnlyList<BattleSkillOperationData> EffectData => operationData ?? Array.Empty<BattleSkillOperationData>();
         public BattleSkillOperationData PrimaryEffectData => ResolvePrimaryEffectData();
         public EffectAnimationMasterData EffectAnimation => effectAnimation;
@@ -58,20 +58,6 @@ namespace Assets.Scripts.Data.MasterData
         public int StartingCharge => startingCharge;
         public int TurnChargeGain => turnChargeGain;
         public int AttackChargeGain => attackChargeGain;
-
-        private AttributeMasterData ResolvePrimaryAttribute()
-        {
-            var attributes = Attributes;
-            for (var i = 0; i < attributes.Count; i++)
-            {
-                if (attributes[i] != null)
-                {
-                    return attributes[i];
-                }
-            }
-
-            return null;
-        }
 
         private BattleSkillOperationData ResolvePrimaryEffectData()
         {

@@ -98,27 +98,58 @@ namespace Assets.Scripts.Features.Battle.Logic
             int currentEnemyHp,
             int currentPlayerHp,
             BattlePlayerStats playerStats,
-            AttributeData playerAttackAttribute,
-            AttributeData enemyAttackAttribute,
-            IReadOnlyList<EquipmentAttributeModifierData> enemyDefenseAttributeModifiers,
-            IReadOnlyList<EquipmentAttributeModifierData> playerDefenseAttributeModifiers)
+            int maxPlayerHp = 0,
+            IReadOnlyList<BattleTemporaryStatModifier> temporaryStatModifiers = null)
         {
+            var playerTemporaryModifiers = ResolveTemporaryStatModifiers(temporaryStatModifiers, targetsPlayer: true);
+            var enemyTemporaryModifiers = ResolveTemporaryStatModifiers(temporaryStatModifiers, targetsPlayer: false);
+            var resolvedPlayerStats = CombatantStatsFactory.ApplyModifiers(
+                playerStats ?? new BattlePlayerStats(baseAttackPower: 1),
+                playerTemporaryModifiers);
+            var resolvedEnemyStats = CombatantStatsFactory.ApplyModifiers(
+                CombatantStatsFactory.CreateCombatantStats(enemyStatBlock, currentEnemyHp),
+                enemyTemporaryModifiers);
+
             return new BattleTurnContext
             {
                 CurrentEnemyHp = currentEnemyHp,
                 CurrentPlayerHp = currentPlayerHp,
-                PlayerStats = playerStats ?? new BattlePlayerStats(baseAttackPower: 1),
-                EnemyStats = CombatantStatsFactory.CreateCombatantStats(enemyStatBlock, currentEnemyHp),
+                MaxPlayerHp = Math.Max(currentPlayerHp, maxPlayerHp),
+                PlayerStats = resolvedPlayerStats,
+                EnemyStats = resolvedEnemyStats,
                 EnemyActionMultiplier = ResolveEnemyActionMultiplier(patternData),
                 EnemyActionDamageFormula = patternData?.EnemyActionDamageFormula,
-                PlayerAttackAttribute = playerAttackAttribute,
-                EnemyAttackAttribute = enemyAttackAttribute,
-                EnemyDefenseAttributeModifiers = enemyDefenseAttributeModifiers ?? Array.Empty<EquipmentAttributeModifierData>(),
-                PlayerDefenseAttributeModifiers = playerDefenseAttributeModifiers ?? Array.Empty<EquipmentAttributeModifierData>(),
                 HazardBoosted = hazardBoosted,
                 EnemyAction = patternData?.EnemyAction ?? BattleEnemyActionType.NormalAttack,
                 SelectedSkill = selectedSkill,
             };
+        }
+
+        private static IReadOnlyList<BattleStatModifierData> ResolveTemporaryStatModifiers(
+            IReadOnlyList<BattleTemporaryStatModifier> temporaryStatModifiers,
+            bool targetsPlayer)
+        {
+            if (temporaryStatModifiers == null || temporaryStatModifiers.Count == 0)
+            {
+                return Array.Empty<BattleStatModifierData>();
+            }
+
+            var result = new List<BattleStatModifierData>();
+            for (var i = 0; i < temporaryStatModifiers.Count; i++)
+            {
+                var temporaryModifier = temporaryStatModifiers[i];
+                if (temporaryModifier == null ||
+                    temporaryModifier.IsExpired ||
+                    temporaryModifier.TargetsPlayer != targetsPlayer ||
+                    temporaryModifier.Modifier == null)
+                {
+                    continue;
+                }
+
+                result.Add(temporaryModifier.Modifier);
+            }
+
+            return result.Count > 0 ? result.ToArray() : Array.Empty<BattleStatModifierData>();
         }
 
         private static BattleGridPosition ResolveStartPosition(StageBattlePatternData patternData, int width, int height)

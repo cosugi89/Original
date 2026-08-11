@@ -71,7 +71,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public Sprite Icon => _skillData?.Icon;
 
         [Description("使いどころや条件を補う短い説明文。")]
-        public string DescriptionSupplement => string.Empty;
+        public string DescriptionSupplement => BuildDescriptionSupplement();
 
         [Description("参照元スキルを識別する ID。")]
         public int SkillId => HasResolvedSkill ? _skillData.SkillId : _skillId;
@@ -96,12 +96,6 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         [Description("Attack 解決時に加算されるチャージ量。")]
         public int AttackChargeGain => HasResolvedSkill ? Max(0, _skillData.AttackChargeGain) : 0;
-
-        [Description("このスキルが持つ属性情報。")]
-        public AttributeData Attribute => _skillData?.Attribute;
-
-        [Description("このスキルが持つ属性一覧。")]
-        public IReadOnlyList<AttributeData> Attributes => _skillData?.Attributes ?? Array.Empty<AttributeData>();
 
         [Description("このスキルが持つ効果一覧。")]
         public IReadOnlyList<BattleSkillEffectEntryData> Effects => _skillData?.Effects ?? Array.Empty<BattleSkillEffectEntryData>();
@@ -158,6 +152,11 @@ namespace Assets.Scripts.Features.Battle.Runtime
             GainCharge(AttackChargeGain * resolvedAttackCount);
         }
 
+        public void GainCharge(int amount)
+        {
+            GainChargeInternal(amount);
+        }
+
         public void Consume()
         {
             _currentCharge = 0;
@@ -209,7 +208,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
             return $"{_currentCharge}/{GetRequiredCharge()}";
         }
 
-        private void GainCharge(int delta)
+        private void GainChargeInternal(int delta)
         {
             if (State == SkillState.Unavailable || delta <= 0)
             {
@@ -237,6 +236,36 @@ namespace Assets.Scripts.Features.Battle.Runtime
         private static int Min(int left, int right)
         {
             return left < right ? left : right;
+        }
+
+        private string BuildDescriptionSupplement()
+        {
+            if (!HasResolvedSkill)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>
+            {
+                $"Charge {RequiredCharge}",
+            };
+
+            if (StartingCharge > 0)
+            {
+                parts.Add($"Start +{StartingCharge}");
+            }
+
+            if (TurnChargeGain > 0)
+            {
+                parts.Add($"Turn +{TurnChargeGain}");
+            }
+
+            if (AttackChargeGain > 0)
+            {
+                parts.Add($"Attack +{AttackChargeGain}");
+            }
+
+            return string.Join(" / ", parts);
         }
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Data.DTO;
+using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Runtime;
 
@@ -100,16 +102,50 @@ namespace Assets.Scripts.Features.Battle.Logic
                 defeatLogMessage: "Player defeated.");
         }
 
-        public BattleResolvedAction CreateSkillAction(SkillSlotRuntime selectedSkill)
+        public BattleResolvedAction CreateSkillStartedAction(SkillSlotRuntime selectedSkill)
         {
-            return CreatePlayerDamageAction(
+            return CreateSimpleAction(
                 BattleResolvedActionType.Skill,
-                BattleDamageKind.Skill,
-                BattlePlayerAnimationCue.Skill,
-                $"Skill resolved: {selectedSkill?.DisplayName}",
-                selectedSkill: selectedSkill,
-                appendPeriod: false,
+                animationCue: BattlePlayerAnimationCue.Skill,
+                logMessage: $"Skill resolved: {selectedSkill?.DisplayName}",
+                displayName: selectedSkill?.DisplayName ?? string.Empty,
                 semantics: BattleResolvedActionSemantics.ResolvedAttack | BattleResolvedActionSemantics.ResolvedSkill);
+        }
+
+        public BattleResolvedAction CreateSkillEffectAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            int effectIndex)
+        {
+            if (selectedSkill == null || effect == null)
+            {
+                return null;
+            }
+
+            var success = ResolveSkillEffectSuccess(selectedSkill, effect, effectIndex);
+            if (success != null && !success.Succeeded)
+            {
+                return CreateSkillEffectFailedAction(selectedSkill, success);
+            }
+
+            return effect.EffectType switch
+            {
+                BattleSkillOperationType.Damage => CreateSkillDamageEffectAction(selectedSkill, effect, success),
+                BattleSkillOperationType.ChargeGain => CreateSkillChargeGainEffectAction(selectedSkill, effect, success),
+                BattleSkillOperationType.Heal => CreateSkillHealEffectAction(selectedSkill, effect, success),
+                BattleSkillOperationType.GuardGain => CreateSkillGuardGainEffectAction(selectedSkill, effect, success),
+                BattleSkillOperationType.Buff => CreateSkillTemporaryStatModifierEffectAction(
+                    selectedSkill,
+                    effect,
+                    success,
+                    targetsPlayer: true),
+                BattleSkillOperationType.Debuff => CreateSkillTemporaryStatModifierEffectAction(
+                    selectedSkill,
+                    effect,
+                    success,
+                    targetsPlayer: false),
+                _ => CreateSkillNoOpEffectAction(selectedSkill, success),
+            };
         }
 
         public BattleResolvedAction CreateBasicAttackAction(BattleDamageKind damageKind)
@@ -176,11 +212,126 @@ namespace Assets.Scripts.Features.Battle.Logic
                 defeatLogMessage: "Enemy defeated.");
         }
 
+        private BattleResolvedAction CreateSkillDamageEffectAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            BattleSkillEffectSuccessResult success)
+        {
+            return CreateDamageAction(
+                BattleResolvedActionType.Skill,
+                BattleDamageKind.Skill,
+                targetIsEnemy: true,
+                selectedSkill: selectedSkill,
+                skillEffect: effect,
+                skillEffectSuccess: success,
+                logWhenZeroBaseDamage: false,
+                semantics: BattleResolvedActionSemantics.None,
+                defeatLogMessage: "Enemy defeated.");
+        }
+
+        private BattleResolvedAction CreateSkillNoOpEffectAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectSuccessResult success)
+        {
+            return CreateSimpleAction(
+                BattleResolvedActionType.Skill,
+                displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffectSuccess: success);
+        }
+
+        private BattleResolvedAction CreateSkillChargeGainEffectAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            BattleSkillEffectSuccessResult success)
+        {
+            var amount = ResolveSkillEffectAmount(selectedSkill, effect);
+            return CreateSimpleAction(
+                BattleResolvedActionType.Skill,
+                logMessage: amount > 0 ? $"Skill charge +{amount}." : string.Empty,
+                displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffectSuccess: success,
+                skillChargeGain: amount);
+        }
+
+        private BattleResolvedAction CreateSkillHealEffectAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            BattleSkillEffectSuccessResult success)
+        {
+            var amount = ResolveActualPlayerHealing(ResolveSkillEffectAmount(selectedSkill, effect));
+            return CreateSimpleAction(
+                BattleResolvedActionType.Skill,
+                logMessage: amount > 0 ? $"Player healed +{amount}." : string.Empty,
+                displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffectSuccess: success,
+                playerHealing: amount);
+        }
+
+        private BattleResolvedAction CreateSkillGuardGainEffectAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            BattleSkillEffectSuccessResult success)
+        {
+            var amount = ResolveSkillEffectAmount(selectedSkill, effect);
+            return CreateSimpleAction(
+                BattleResolvedActionType.Skill,
+                logMessage: amount > 0 ? $"Guard +{amount}." : string.Empty,
+                displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffectSuccess: success,
+                playerGuardGain: amount);
+        }
+
+        private BattleResolvedAction CreateSkillTemporaryStatModifierEffectAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            BattleSkillEffectSuccessResult success,
+            bool targetsPlayer)
+        {
+            var temporaryModifier = CreateTemporaryStatModifier(effect, targetsPlayer);
+            var hasModifier = temporaryModifier != null;
+            var label = targetsPlayer ? "Buff" : "Debuff";
+            return CreateSimpleAction(
+                BattleResolvedActionType.Skill,
+                logMessage: hasModifier ? $"{label} reserved for {temporaryModifier.RemainingTurns} turn(s)." : string.Empty,
+                displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffectSuccess: success,
+                temporaryStatModifiers: hasModifier
+                    ? new[] { temporaryModifier }
+                    : Array.Empty<BattleTemporaryStatModifier>());
+        }
+
+        private BattleResolvedAction CreateSkillEffectFailedAction(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectSuccessResult success)
+        {
+            return CreateSimpleAction(
+                BattleResolvedActionType.Skill,
+                displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffectSuccess: success);
+        }
+
+        private BattleSkillEffectSuccessResult ResolveSkillEffectSuccess(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            int effectIndex)
+        {
+            var resolver = _context?.SkillEffectSuccessResolver ?? BattleSkillEffectSuccessResolver.CreatePreview();
+            return resolver.Resolve(new BattleSkillEffectSuccessContext
+            {
+                TurnContext = _context,
+                Skill = selectedSkill,
+                Effect = effect,
+                EffectIndex = effectIndex,
+            });
+        }
+
         private BattleResolvedAction CreateDamageAction(
             BattleResolvedActionType actionType,
             BattleDamageKind damageKind,
             bool targetIsEnemy,
             SkillSlotRuntime selectedSkill = null,
+            BattleSkillEffectEntryData skillEffect = null,
+            BattleSkillEffectSuccessResult skillEffectSuccess = null,
             bool hazardBoosted = false,
             BattlePlayerAnimationCue? animationCue = null,
             string logMessage = "",
@@ -195,6 +346,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                 Context = _context,
                 DamageKind = damageKind,
                 Skill = selectedSkill,
+                SkillEffect = skillEffect,
                 HazardBoosted = hazardBoosted,
             });
 
@@ -202,6 +354,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             {
                 return null;
             }
+
+            var playerGuardAbsorbed = 0;
+            resolution = ApplyPlayerGuardToDamage(resolution, targetIsEnemy, out playerGuardAbsorbed);
 
             var marksDefeated = IsTargetDefeatedAfterResolution(
                 resolution,
@@ -222,6 +377,8 @@ namespace Assets.Scripts.Features.Battle.Logic
                 DamageResolution = resolution,
                 TargetsEnemy = targetIsEnemy,
                 Semantics = resolvedSemantics,
+                SkillEffectSuccess = skillEffectSuccess,
+                PlayerGuardAbsorbed = playerGuardAbsorbed,
                 AnimationCue = animationCue,
                 LogMessages = BuildDamageActionLogMessages(
                     resolution,
@@ -237,13 +394,23 @@ namespace Assets.Scripts.Features.Battle.Logic
             BattlePlayerAnimationCue? animationCue = null,
             string logMessage = "",
             string displayName = "",
-            BattleResolvedActionSemantics semantics = BattleResolvedActionSemantics.None)
+            BattleResolvedActionSemantics semantics = BattleResolvedActionSemantics.None,
+            BattleSkillEffectSuccessResult skillEffectSuccess = null,
+            int playerHealing = 0,
+            int playerGuardGain = 0,
+            int skillChargeGain = 0,
+            IReadOnlyList<BattleTemporaryStatModifier> temporaryStatModifiers = null)
         {
             return new BattleResolvedAction
             {
                 ActionType = actionType,
                 DisplayName = displayName ?? string.Empty,
                 Semantics = semantics,
+                SkillEffectSuccess = skillEffectSuccess,
+                PlayerHealing = Max(0, playerHealing),
+                PlayerGuardGain = Max(0, playerGuardGain),
+                SkillChargeGain = Max(0, skillChargeGain),
+                TemporaryStatModifiers = temporaryStatModifiers ?? Array.Empty<BattleTemporaryStatModifier>(),
                 AnimationCue = animationCue,
                 LogMessages = string.IsNullOrWhiteSpace(logMessage)
                     ? Array.Empty<string>()
@@ -262,6 +429,137 @@ namespace Assets.Scripts.Features.Battle.Logic
 
             var targetCurrentHp = targetIsEnemy ? _state.CurrentEnemyHp : _state.CurrentPlayerHp;
             return targetCurrentHp > 0 && resolution.Damage >= Max(1, targetCurrentHp);
+        }
+
+        private BattleDamageResolution ApplyPlayerGuardToDamage(
+            BattleDamageResolution resolution,
+            bool targetIsEnemy,
+            out int playerGuardAbsorbed)
+        {
+            playerGuardAbsorbed = 0;
+            if (targetIsEnemy ||
+                resolution == null ||
+                resolution.Damage <= 0 ||
+                _state == null ||
+                _state.CurrentPlayerGuard <= 0)
+            {
+                return resolution;
+            }
+
+            playerGuardAbsorbed = Min(_state.CurrentPlayerGuard, resolution.Damage);
+            return new BattleDamageResolution
+            {
+                BaseDamage = resolution.BaseDamage,
+                Damage = Max(0, resolution.Damage - playerGuardAbsorbed),
+                AppliedPercent = resolution.AppliedPercent,
+                Effectiveness = resolution.Effectiveness,
+                AttributeSummary = resolution.AttributeSummary,
+            };
+        }
+
+        private int ResolveSkillEffectAmount(
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect)
+        {
+            if (effect == null)
+            {
+                return 0;
+            }
+
+            var input = new BattleDamageCalculationInput(_context, selectedSkill);
+            var baseValue = effect.ParameterType == BattleSkillParameterType.None
+                ? 0
+                : input.ResolveParameterValue(effect.ParameterType);
+            var resolved = effect.ValueType switch
+            {
+                BattleSkillValueType.FixedValue => effect.Value,
+                BattleSkillValueType.Multiplier => baseValue * effect.Value,
+                BattleSkillValueType.Percentage => baseValue * effect.Value,
+                _ => 0f,
+            };
+
+            return Max(0, RoundToInt(resolved));
+        }
+
+        private int ResolveActualPlayerHealing(int requestedHealing)
+        {
+            if (requestedHealing <= 0)
+            {
+                return 0;
+            }
+
+            var currentHp = _state?.CurrentPlayerHp ?? _context?.CurrentPlayerHp ?? 0;
+            var maxHp = _state?.MaxPlayerHp ?? Max(currentHp, _context?.MaxPlayerHp ?? currentHp);
+            return Max(0, Min(requestedHealing, maxHp - currentHp));
+        }
+
+        private BattleTemporaryStatModifier CreateTemporaryStatModifier(
+            BattleSkillEffectEntryData effect,
+            bool targetsPlayer)
+        {
+            if (effect == null ||
+                effect.DurationTurns <= 0 ||
+                effect.ParameterType == BattleSkillParameterType.None ||
+                BattleSkillParameterTypeUtility.IsLegacySpeed(effect.ParameterType))
+            {
+                return null;
+            }
+
+            if (!TryResolveTemporaryStatModifierOperation(
+                    effect,
+                    targetsPlayer,
+                    out var operationType,
+                    out var value))
+            {
+                return null;
+            }
+
+            return new BattleTemporaryStatModifier(
+                targetsPlayer,
+                new BattleStatModifierData
+                {
+                    TargetType = BattleStatModifierTargetType.Parameter,
+                    ParameterType = effect.ParameterType,
+                    OperationType = operationType,
+                    Value = value,
+                },
+                effect.DurationTurns);
+        }
+
+        private static bool TryResolveTemporaryStatModifierOperation(
+            BattleSkillEffectEntryData effect,
+            bool targetsPlayer,
+            out BattleStatModifierOperationType operationType,
+            out float value)
+        {
+            operationType = BattleStatModifierOperationType.Add;
+            value = 0f;
+
+            if (effect == null)
+            {
+                return false;
+            }
+
+            var isBuff = targetsPlayer;
+            switch (effect.ValueType)
+            {
+                case BattleSkillValueType.FixedValue:
+                    operationType = BattleStatModifierOperationType.Add;
+                    value = isBuff ? Max(0f, effect.Value) : -Max(0f, effect.Value);
+                    return Math.Abs(value) > 0.0001f;
+                case BattleSkillValueType.Multiplier:
+                    operationType = BattleStatModifierOperationType.Multiply;
+                    value = Max(0f, effect.Value);
+                    return Math.Abs(value - 1f) > 0.0001f;
+                case BattleSkillValueType.Percentage:
+                    operationType = BattleStatModifierOperationType.Multiply;
+                    value = isBuff
+                        ? 1f + Max(0f, effect.Value)
+                        : Max(0f, 1f - Max(0f, effect.Value));
+                    return Math.Abs(value - 1f) > 0.0001f;
+                default:
+                    return false;
+            }
         }
 
         private static IReadOnlyList<string> BuildDamageActionLogMessages(
@@ -289,6 +587,21 @@ namespace Assets.Scripts.Features.Battle.Logic
         private static int Max(int left, int right)
         {
             return left > right ? left : right;
+        }
+
+        private static float Max(float left, float right)
+        {
+            return left > right ? left : right;
+        }
+
+        private static int Min(int left, int right)
+        {
+            return left < right ? left : right;
+        }
+
+        private static int RoundToInt(float value)
+        {
+            return (int)MathF.Round(value, MidpointRounding.AwayFromZero);
         }
     }
 }

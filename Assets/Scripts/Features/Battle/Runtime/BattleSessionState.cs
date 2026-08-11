@@ -1,11 +1,16 @@
 namespace Assets.Scripts.Features.Battle.Runtime
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// バトルシーンで共有するセッション進行状態。
     /// BattleScene からターン数、HP、選択スキルなどの散在した状態をまとめる。
     /// </summary>
     public class BattleSessionState
     {
+        private readonly List<BattleTemporaryStatModifier> _temporaryStatModifiers = new();
+
         public string EnemyName { get; private set; } = string.Empty;
 
         public int PlayerHp { get; private set; }
@@ -28,6 +33,8 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public bool NextTurnHazardBoosted { get; private set; }
 
+        public IReadOnlyList<BattleTemporaryStatModifier> TemporaryStatModifiers => _temporaryStatModifiers;
+
         public void ResetForBattle(string enemyName, int initialPlayerHp, int initialEnemyHp)
         {
             EnemyName = enemyName ?? string.Empty;
@@ -41,6 +48,7 @@ namespace Assets.Scripts.Features.Battle.Runtime
             BattleEnded = false;
             IsPathInputLocked = false;
             NextTurnHazardBoosted = false;
+            _temporaryStatModifiers.Clear();
         }
 
         public void AdvanceTurn()
@@ -72,6 +80,16 @@ namespace Assets.Scripts.Features.Battle.Runtime
             }
         }
 
+        public void ApplyPlayerHealing(int healing)
+        {
+            if (healing <= 0 || PlayerHp <= 0)
+            {
+                return;
+            }
+
+            PlayerHp = Min(InitialPlayerHp, PlayerHp + healing);
+        }
+
         public bool ConsumeHazardBoostFlag()
         {
             var result = NextTurnHazardBoosted;
@@ -84,9 +102,48 @@ namespace Assets.Scripts.Features.Battle.Runtime
             NextTurnHazardBoosted = true;
         }
 
+        public void AddTemporaryStatModifier(BattleTemporaryStatModifier modifier)
+        {
+            if (modifier == null || modifier.IsExpired)
+            {
+                return;
+            }
+
+            _temporaryStatModifiers.Add(modifier);
+        }
+
+        public void ConsumeTemporaryStatModifierTurn()
+        {
+            if (_temporaryStatModifiers.Count == 0)
+            {
+                return;
+            }
+
+            for (var i = _temporaryStatModifiers.Count - 1; i >= 0; i--)
+            {
+                var modifier = _temporaryStatModifiers[i];
+                if (modifier == null)
+                {
+                    _temporaryStatModifiers.RemoveAt(i);
+                    continue;
+                }
+
+                modifier.ConsumeTurn();
+                if (modifier.IsExpired)
+                {
+                    _temporaryStatModifiers.RemoveAt(i);
+                }
+            }
+        }
+
         private static int Max(int left, int right)
         {
             return left > right ? left : right;
+        }
+
+        private static int Min(int left, int right)
+        {
+            return left < right ? left : right;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             var coreDamage = formula.ValueType switch
             {
                 BattleSkillValueType.Multiplier => baseValue * formula.Value,
-                BattleSkillValueType.Percentage => baseValue * (formula.Value / 100f),
+                BattleSkillValueType.Percentage => baseValue * formula.Value,
                 BattleSkillValueType.FixedValue => formula.Value,
                 BattleSkillValueType.None => formula.Value,
                 _ => 0f,
@@ -90,18 +90,20 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         public static int ResolveSkillDamage(BattleTurnContext context, SkillSlotRuntime selectedSkill)
         {
-            if (selectedSkill == null)
-            {
-                return 0;
-            }
+            return ResolveSkillDamage(context, selectedSkill, ResolvePrimaryDamageEffect(selectedSkill));
+        }
 
-            var effect = ResolvePrimaryDamageEffect(selectedSkill);
-            if (effect == null)
-            {
-                return 0;
-            }
-
+        public static int ResolveSkillDamage(
+            BattleTurnContext context,
+            SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect)
+        {
             var input = new BattleDamageCalculationInput(context, selectedSkill);
+            if (selectedSkill == null || effect == null || effect.EffectType != BattleSkillOperationType.Damage)
+            {
+                return 0;
+            }
+
             if (effect.DamageFormula != null && effect.DamageFormula.IsEnabled)
             {
                 return ResolveDamage(
@@ -175,7 +177,6 @@ namespace Assets.Scripts.Features.Battle.Logic
                 return null;
             }
 
-            BattleSkillEffectEntryData firstNonNullEffect = null;
             for (var i = 0; i < effects.Count; i++)
             {
                 var effect = effects[i];
@@ -184,14 +185,13 @@ namespace Assets.Scripts.Features.Battle.Logic
                     continue;
                 }
 
-                firstNonNullEffect ??= effect;
                 if (effect.EffectType == BattleSkillOperationType.Damage)
                 {
                     return effect;
                 }
             }
 
-            return firstNonNullEffect;
+            return null;
         }
 
         private static float ResolveGlobalDamageMultiplier(BattleDamageCalculationInput input)

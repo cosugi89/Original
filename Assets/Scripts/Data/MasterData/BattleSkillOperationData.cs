@@ -4,13 +4,15 @@ using UnityEngine;
 namespace Assets.Scripts.Data.MasterData
 {
     /// <summary>
-    /// スキルの効果データ
-    /// 例: 90%の確率で敵単体に攻撃力の1.5倍のダメージを与える、など
+    /// スキルの効果データ。
+    /// 例: 敵単体に攻撃力の1.5倍ダメージ、自分のチャージ+1、HP回復など。
     /// </summary>
     [CreateAssetMenu(menuName = "Original/Master Data/Battle Skill Operation Data", fileName = "BattleSkillOperationData")]
     public class BattleSkillOperationData : ScriptableObject
     {
-        [SerializeField][Description("効果種別")]
+        [SerializeField]
+        [Tooltip("Damage / ChargeGain / Heal / GuardGain など、効果の処理カテゴリです。")]
+        [Description("効果種別")]
         private BattleSkillOperationType effectType = BattleSkillOperationType.Damage;
 
         [SerializeField][Description("対象")]

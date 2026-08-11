@@ -44,6 +44,25 @@ namespace Assets.Scripts.Features.Battle.Logic
             return builder.BuildCombatantStats();
         }
 
+        public BattlePlayerStats ApplyModifiers(
+            BattlePlayerStats baseStats,
+            IReadOnlyList<BattleStatModifierData> modifiers)
+        {
+            var builder = CreateBuilderFromStats(
+                baseStats ?? new BattlePlayerStats(baseAttackPower: 1));
+            ApplyModifiers(builder, modifiers);
+            return builder.Build();
+        }
+
+        public BattleCombatantStats ApplyModifiers(
+            BattleCombatantStats baseStats,
+            IReadOnlyList<BattleStatModifierData> modifiers)
+        {
+            var builder = CreateBuilderFromStats(baseStats ?? new BattleCombatantStats());
+            ApplyModifiers(builder, modifiers);
+            return builder.BuildCombatantStats();
+        }
+
         private static BattlePlayerStatsBuilder CreateBuilder(
             BattleStatBlockData statBlock,
             int maxHp,
@@ -54,11 +73,31 @@ namespace Assets.Scripts.Features.Battle.Logic
                 .SetParameter(BattleSkillParameterType.Attack, Math.Max(0, resolvedStatBlock.Attack))
                 .SetParameter(BattleSkillParameterType.Hp, Math.Max(0, maxHp))
                 .SetParameter(BattleSkillParameterType.Defense, Math.Max(0, resolvedStatBlock.Defense))
-                .SetParameter(BattleSkillParameterType.Speed, Math.Max(0, resolvedStatBlock.Speed))
                 .SetParameter(BattleSkillParameterType.Guard, Math.Max(0, resolvedStatBlock.Guard));
 
             ApplyNamedDefaults(builder, namedDefaults);
             ApplyModifiers(builder, resolvedStatBlock.Modifiers);
+            return builder;
+        }
+
+        private static BattlePlayerStatsBuilder CreateBuilderFromStats(BattleCombatantStats stats)
+        {
+            var builder = new BattlePlayerStatsBuilder();
+            if (stats == null)
+            {
+                return builder;
+            }
+
+            foreach (var pair in stats.ParameterValues)
+            {
+                builder.SetParameter(pair.Key, pair.Value);
+            }
+
+            foreach (var pair in stats.NamedValues)
+            {
+                builder.SetNamedValue(pair.Key, pair.Value);
+            }
+
             return builder;
         }
 

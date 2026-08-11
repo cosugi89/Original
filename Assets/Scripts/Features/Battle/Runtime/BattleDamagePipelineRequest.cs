@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Features.Battle.Core;
 
@@ -16,12 +14,9 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public SkillSlotRuntime Skill { get; init; }
 
+        public BattleSkillEffectEntryData SkillEffect { get; init; }
+
         public int? BaseDamageOverride { get; init; }
-
-        public AttributeData AttackAttribute { get; init; }
-
-        public IReadOnlyList<EquipmentAttributeModifierData> DefenseAttributeModifiers { get; init; } =
-            Array.Empty<EquipmentAttributeModifierData>();
 
         public bool HazardBoosted { get; init; }
     }

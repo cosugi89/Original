@@ -100,8 +100,8 @@ namespace Assets.Scripts.Features.Battle.Core
     }
 
     /// <summary>
-    /// 属性相性の結果分類。
-    /// ログや簡易UIで弱点/耐性を表現するための共通キーとして使う。
+    /// 旧属性相性の互換分類。
+    /// 新仕様では属性相性を採用しないため、戦闘解決では None のみを使う。
     /// </summary>
     public enum BattleAttributeEffectiveness
     {

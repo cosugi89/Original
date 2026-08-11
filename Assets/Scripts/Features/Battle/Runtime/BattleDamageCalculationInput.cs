@@ -50,6 +50,11 @@ namespace Assets.Scripts.Features.Battle.Runtime
 
         public int ResolveParameterValue(BattleSkillParameterType parameterType)
         {
+            if (BattleSkillParameterTypeUtility.IsLegacySpeed(parameterType))
+            {
+                return 0;
+            }
+
             if (_parameterOverrides.TryGetValue(parameterType, out var overrideValue))
             {
                 return Math.Max(0, overrideValue);

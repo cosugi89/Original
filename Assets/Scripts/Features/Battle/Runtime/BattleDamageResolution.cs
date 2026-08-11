@@ -3,7 +3,8 @@ using Assets.Scripts.Features.Battle.Core;
 namespace Assets.Scripts.Features.Battle.Runtime
 {
     /// <summary>
-    /// ダメージ計算後の値と属性補足を保持する。
+    /// ダメージ計算後の値を保持する。
+    /// AttributeSummary は旧属性表示との互換受け口で、新仕様では空文字のまま扱う。
     /// </summary>
     public sealed class BattleDamageResolution
     {
