@@ -61,12 +61,16 @@
 - [x] `playerHPText` を `BattleHudController` 経由で更新する
 - [x] 旧属性相性をプレビュー文言とログに暫定表示する
 - [x] `docs/specs/戦闘画面仕様書.md` に縦長 9:16 前提、領域分割、戦闘イベント通知、常設ログ廃止方針を整理する
-- [ ] 縦長 9:16 前提の `BattleScreenRoot` を作り、最上部 HUD / 上部バトル演出 / 情報・コマンド / 最下部盤面 / Overlay の領域を分ける
-- [ ] `BattleBoardView` が盤面領域、セル生成、セル更新、パス線、入力フィードバックを所有する形へ整理する
-- [ ] `EnemyUnitView` を作り、敵名、敵 HP、敵戦型ゲージを敵側表示へ寄せる
-- [ ] `PlayerAreaView` を作り、プレイヤー HP とプレイヤー状態をプレイヤー側表示へ寄せる
-- [ ] `BattleEventNoticeView` を実装し、技名、Goal、回避、被弾、危険強化、敵の体勢変化などを短命通知として表示する
-- [ ] 常設の `confirmText` と行動ログ履歴を初期画面から外し、不正入力は盤面の赤表示、揺れ、トースト、バイブレーション候補へ分担する
+- [x] `BattleScreenRoot`、`BattleTopHudView`、`BattlePresentationView`、`EnemyAreaView` を追加し、戦闘画面の主要領域をコード上で分離する
+- [x] `BattleBoardView` を追加し、盤面領域の所有者を `BattleBoardController` 互換で差し替え可能にする
+- [x] `EnemyUnitView` を追加し、敵名、敵 HP、敵戦型ゲージを敵側 View へ寄せられるようにする
+- [x] `PlayerAreaView` を追加し、プレイヤー HP とプレイヤー状態をプレイヤー側 View へ寄せられるようにする
+- [x] `BattleEventNoticeView` を実装し、技名、Goal、回避、被弾、危険強化、敵の体勢変化などを短命通知として扱う
+- [x] 常設の `confirmText` と行動ログ履歴を初期画面から外し、`confirmText` は必要に応じて短命通知のフォールバックとして使う
+- [x] `BattleScene.unity` に `BattleScreenRoot` と現行 Scene で使う主要 View コンポーネントを割り当てる
+- [x] `BattleScreenRoot` で縦長 9:16 の基本領域比率を適用し、`BattleBoardView` のセルサイズを盤面領域に合わせて自動調整する
+- [ ] Unity Play 実機相当の画面で `BattleScene` の余白、重なり、通知位置を確認して微調整する
+- [ ] 不正入力は盤面の赤表示、揺れ、トースト、バイブレーション候補へ分担する
 - [ ] Skill パレットの Ready、Charging、Locked、Empty を見分けやすい本 UI として整える
 - [ ] `waveNumberText` を実際の wave 概念に接続するか削除する
 - [ ] 敵戦型ゲージ UI と `Guard / Burst / Rush` 表示を実装する
@@ -122,27 +126,19 @@
 - [x] `EffectAnimationMasterData` に表示名、説明、キャラ animation 名、VFX キー、SE キー、待機秒数を持たせる
 - [x] Damage 効果の `Multiplier` / `Percentage` / `FixedValue` を `BattleDamageCalculator` で解決する
 - [x] `docs/specs/スキル仕様書.md` にスキル効果一覧、採用区分、対象、値種別、参照パラメータ、成功率方針を整理する
-- [ ] `EquipmentMasterData.AssignableSkills` の上限を最大 2 件へ変更し、validation / tooltip / docs を揃える
-- [ ] 旧属性実装を撤去または無効化し、戦闘仕様から属性相性を外す
-- [ ] `BattleSkillOperationType` と周辺データを、`Damage` / `ChargeGain` / `Heal` / `GuardGain` などのスキル仕様書の効果区分に合わせて再整理する
-- [ ] `BattleSkillParameterType.Speed` を削除するか、互換用に残すか決めて実装へ反映する
-- [ ] スキル効果を配列順に複数解決し、途中効果が失敗しても後続効果を継続する処理を実装する
-- [ ] `SuccessRate` を戦闘解決へ接続し、タグ、状態、盤面結果、敵行動などから補正できる拡張点を用意する
-- [ ] `ChargeGain` / `Heal` / `GuardGain` の初期スキル効果を実装する
-- [ ] `Buff` / `Debuff` を `BattleStatModifiers` 相当の一時補正として扱うランタイムを実装する
-- [ ] `EquipmentMasterData.CategoryTags` をタグ一致ボーナス判定へ接続する
-- [ ] タグ一致ボーナスの成立条件を決める。初期は全一致または一定数一致のどちらかに絞る
-- [ ] タグ一致ボーナスを `BattleStatModifiers` 相当の追加補正として適用する
-- [ ] 装備詳細 UI にタグとタグ一致ボーナスを表示する
-- [ ] 装備候補スキル群から実戦用 4 枠を選ぶロードアウトモデルを追加する
-- [ ] 候補スキル群から実戦用 4 枠を選ぶ画面を追加し、選択結果を `UserData` に保存する
-- [ ] `BattleScene` の固定 Skill スロット初期化を、保存済みロードアウトから構築する形へ差し替える
-- [ ] 武器ごとの Skill パレット構成をマスターデータとして持つか、保存済みロードアウトだけで扱うか決める
-- [ ] アイテムデータに Dance 効果を持たせる
-- [ ] Skill 説明文補助の扱いを決める。現行 runtime の `DescriptionSupplement` は空文字固定
+- [x] `EquipmentMasterData.AssignableSkills` の上限を最大 2 件へ変更し、validation / tooltip / docs / DTO 変換を揃える
+- [x] 旧属性実装を runtime DTO / 装備派生データ / 戦闘コンテキスト / ダメージ計算から無効化し、戦闘仕様から属性相性を外す
+- [x] `BattleSkillOperationType` と周辺データを、`Damage` / `ChargeGain` / `Heal` / `GuardGain` などのスキル仕様書の効果区分に合わせて再整理する
+- [x] `BattleSkillParameterType.Speed` を active parameter から外し、互換用の `LegacySpeed = 4` として残す
+- [x] スキル効果を配列順に複数解決し、途中効果が失敗しても後続効果を継続する処理を実装する
+- [x] `SuccessRate` を戦闘解決へ接続し、タグ、状態、盤面結果、敵行動などから補正できる拡張点を用意する
+- [x] `ChargeGain` / `Heal` / `GuardGain` の初期スキル効果を実装する
+- [x] `Buff` / `Debuff` を Parameter 対象の一時補正として扱うランタイムを実装する
+- [x] `EquipmentMasterData.CategoryTags` をタグ一致ボーナス判定へ接続する
 - [ ] 実際に使用する Effect / VFX / SE 資産を作成する
 - [ ] `EffectAnimationData` の実再生処理を `BattleScene` / runtime に接続する
 - [ ] 盤面テンプレートや危険配置テンプレートを、単発 pattern 以外で再利用できるデータとして整理する
+- [ ] 旧属性 field / asset の完全削除可否と既存 serialized data の移行方針を決める
 
 ## 7. P3: 将来拡張
 
@@ -174,13 +170,10 @@
 
 ## 9. まず着手する順番
 
-1. 縦長 9:16 前提の `BattleScreenRoot` と主要領域を作る
-2. `BattleBoardView` が盤面領域、セル生成、セル更新、パス線、入力フィードバックを所有する形へ整理する
-3. `EnemyUnitView`、`PlayerAreaView`、`SkillPaletteView` を作り、情報を持ち主の近くへ寄せる
-4. `BattleEventNoticeView` を実装し、常設 `confirmText` と行動ログ履歴を初期画面から外す
-5. ドラッグ入力中の操作ロックを実装する
-6. Skill 消費条件の UI 明示とテストを追加する
-7. `AttackChargeGain` を解決済み Attack 数に応じて反映する
-8. 勝敗演出、再挑戦導線、戦闘終了時 save を接続する
-9. ステージ選択画面と未解放ステージ制御を実装する
-10. ロードアウト保存と Skill スロット初期化を正式接続する
+1. Unity Play 実機相当の画面で `BattleScene` の余白、重なり、通知位置を確認して微調整する
+2. ドラッグ入力中の操作ロックを実装する
+3. Skill 消費条件の UI 明示とテストを追加する
+4. `AttackChargeGain` を解決済み Attack 数に応じて反映する
+5. 勝敗演出、再挑戦導線、戦闘終了時 save を接続する
+6. ステージ選択画面と未解放ステージ制御を実装する
+7. ロードアウト保存と Skill スロット初期化を正式接続する
