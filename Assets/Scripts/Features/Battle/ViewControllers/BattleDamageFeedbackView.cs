@@ -17,25 +17,47 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         public void ResetView()
         {
-            rootObject.SetActive(false);
-            enemyDamageText.text = string.Empty;
-            enemyDamageAttributeText.text = string.Empty;
-            playerDamageText.text = string.Empty;
-            playerDamageAttributeText.text = string.Empty;
+            if (rootObject != null)
+            {
+                rootObject.SetActive(false);
+            }
+
+            SetText(enemyDamageText, string.Empty);
+            SetText(enemyDamageAttributeText, string.Empty);
+            SetText(playerDamageText, string.Empty);
+            SetText(playerDamageAttributeText, string.Empty);
         }
 
         public void Apply(BattleResolvedActionSummary summary)
         {
+            if (summary == null)
+            {
+                ResetView();
+                return;
+            }
+
             var hasEnemyDamage = summary.EnemyDamageTaken > 0 ||
                                  !string.IsNullOrWhiteSpace(summary.EnemyDamageAttributeSummary);
             var hasPlayerDamage = summary.PlayerDamageTaken > 0 ||
                                   !string.IsNullOrWhiteSpace(summary.PlayerDamageAttributeSummary);
 
-            rootObject.SetActive(hasEnemyDamage || hasPlayerDamage);
-            enemyDamageText.text = hasEnemyDamage ? $"-{summary.EnemyDamageTaken}" : string.Empty;
-            enemyDamageAttributeText.text = summary.EnemyDamageAttributeSummary;
-            playerDamageText.text = hasPlayerDamage ? $"-{summary.PlayerDamageTaken}" : string.Empty;
-            playerDamageAttributeText.text = summary.PlayerDamageAttributeSummary;
+            if (rootObject != null)
+            {
+                rootObject.SetActive(hasEnemyDamage || hasPlayerDamage);
+            }
+
+            SetText(enemyDamageText, hasEnemyDamage ? $"-{summary.EnemyDamageTaken}" : string.Empty);
+            SetText(enemyDamageAttributeText, summary.EnemyDamageAttributeSummary);
+            SetText(playerDamageText, hasPlayerDamage ? $"-{summary.PlayerDamageTaken}" : string.Empty);
+            SetText(playerDamageAttributeText, summary.PlayerDamageAttributeSummary);
+        }
+
+        private static void SetText(TMP_Text target, string value)
+        {
+            if (target != null)
+            {
+                target.text = value ?? string.Empty;
+            }
         }
     }
 }

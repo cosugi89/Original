@@ -23,9 +23,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             UnityAction onNextStage,
             UnityAction onBackToStage)
         {
-            retryButton.onClick.AddListener(onRetry);
-            nextStageButton.onClick.AddListener(onNextStage);
-            backToStageButton.onClick.AddListener(onBackToStage);
+            retryButton?.onClick.AddListener(onRetry);
+            nextStageButton?.onClick.AddListener(onNextStage);
+            backToStageButton?.onClick.AddListener(onBackToStage);
         }
 
         public void UnbindActions(
@@ -33,41 +33,68 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             UnityAction onNextStage,
             UnityAction onBackToStage)
         {
-            retryButton.onClick.RemoveListener(onRetry);
-            nextStageButton.onClick.RemoveListener(onNextStage);
-            backToStageButton.onClick.RemoveListener(onBackToStage);
+            retryButton?.onClick.RemoveListener(onRetry);
+            nextStageButton?.onClick.RemoveListener(onNextStage);
+            backToStageButton?.onClick.RemoveListener(onBackToStage);
         }
 
         public void ResetView()
         {
-            victoryPanel.SetActive(false);
-            victoryText.text = string.Empty;
-            defeatPanel.SetActive(false);
-            defeatText.text = string.Empty;
+            SetActive(victoryPanel, false);
+            SetText(victoryText, string.Empty);
+            SetActive(defeatPanel, false);
+            SetText(defeatText, string.Empty);
             SetButtonsVisible(false, false);
         }
 
         public void ShowVictory(string message)
         {
-            victoryPanel.SetActive(true);
-            defeatPanel.SetActive(false);
-            victoryText.text = message ?? string.Empty;
-            defeatText.text = string.Empty;
+            SetActive(victoryPanel, true);
+            SetActive(defeatPanel, false);
+            SetText(victoryText, message);
+            SetText(defeatText, string.Empty);
         }
 
         public void ShowDefeat(string message)
         {
-            victoryPanel.SetActive(false);
-            defeatPanel.SetActive(true);
-            defeatText.text = message ?? string.Empty;
-            victoryText.text = string.Empty;
+            SetActive(victoryPanel, false);
+            SetActive(defeatPanel, true);
+            SetText(defeatText, message);
+            SetText(victoryText, string.Empty);
         }
 
         public void SetButtonsVisible(bool isBattleEnded, bool hasNextStage)
         {
-            retryButton.gameObject.SetActive(isBattleEnded);
-            nextStageButton.gameObject.SetActive(isBattleEnded && hasNextStage);
-            backToStageButton.gameObject.SetActive(isBattleEnded);
+            if (retryButton != null)
+            {
+                retryButton.gameObject.SetActive(isBattleEnded);
+            }
+
+            if (nextStageButton != null)
+            {
+                nextStageButton.gameObject.SetActive(isBattleEnded && hasNextStage);
+            }
+
+            if (backToStageButton != null)
+            {
+                backToStageButton.gameObject.SetActive(isBattleEnded);
+            }
+        }
+
+        private static void SetActive(GameObject target, bool active)
+        {
+            if (target != null)
+            {
+                target.SetActive(active);
+            }
+        }
+
+        private static void SetText(TMP_Text target, string value)
+        {
+            if (target != null)
+            {
+                target.text = value ?? string.Empty;
+            }
         }
     }
 }

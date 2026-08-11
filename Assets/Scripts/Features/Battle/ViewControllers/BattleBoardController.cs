@@ -18,6 +18,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         [SerializeField] private BattleCellView cellPrefab;
         [SerializeField] private GridLayoutGroup gridLayoutGroup;
         [SerializeField] private BattleNodeVisualDatabase nodeVisualDatabase;
+        [SerializeField] private bool fitCellsToRoot = true;
+        [SerializeField, Min(24f)] private float minimumCellSize = 48f;
+        [SerializeField, Min(24f)] private float maximumCellSize = 180f;
         [Header("Editor Generation")]
         [SerializeField, Min(1)] private int editorPreviewWidth = 5;
         [SerializeField, Min(1)] private int editorPreviewHeight = 6;
@@ -80,6 +83,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             {
                 gridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
                 gridLayoutGroup.constraintCount = _board.Width;
+                ApplyResponsiveGridCellSize();
             }
 
             var total = _board.Width * _board.Height;
@@ -237,6 +241,33 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                     authoredCellViews.Add(view);
                 }
             }
+        }
+
+        private void ApplyResponsiveGridCellSize()
+        {
+            if (!fitCellsToRoot || gridLayoutGroup == null || cellRoot == null || _board == null)
+            {
+                return;
+            }
+
+            var rect = cellRoot.rect;
+            if (rect.width <= 0f || rect.height <= 0f)
+            {
+                return;
+            }
+
+            var padding = gridLayoutGroup.padding;
+            var spacing = gridLayoutGroup.spacing;
+            var availableWidth = rect.width - padding.left - padding.right - spacing.x * Mathf.Max(0, _board.Width - 1);
+            var availableHeight = rect.height - padding.top - padding.bottom - spacing.y * Mathf.Max(0, _board.Height - 1);
+            if (availableWidth <= 0f || availableHeight <= 0f)
+            {
+                return;
+            }
+
+            var cellSize = Mathf.Floor(Mathf.Min(availableWidth / _board.Width, availableHeight / _board.Height));
+            cellSize = Mathf.Clamp(cellSize, minimumCellSize, maximumCellSize);
+            gridLayoutGroup.cellSize = new Vector2(cellSize, cellSize);
         }
 
         private bool RequiresPrefab(int total)

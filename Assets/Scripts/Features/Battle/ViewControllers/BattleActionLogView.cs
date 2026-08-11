@@ -14,15 +14,29 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         public void ResetView()
         {
-            rootObject.SetActive(false);
-            logText.text = string.Empty;
+            if (rootObject != null)
+            {
+                rootObject.SetActive(false);
+            }
+
+            if (logText != null)
+            {
+                logText.text = string.Empty;
+            }
         }
 
         public void SetEntries(IReadOnlyList<string> entries)
         {
             var hasEntries = entries != null && entries.Count > 0;
-            rootObject.SetActive(hasEntries);
-            logText.text = hasEntries ? string.Join("\n", entries) : string.Empty;
+            if (rootObject != null)
+            {
+                rootObject.SetActive(hasEntries);
+            }
+
+            if (logText != null)
+            {
+                logText.text = hasEntries ? string.Join("\n", entries) : string.Empty;
+            }
         }
     }
 }

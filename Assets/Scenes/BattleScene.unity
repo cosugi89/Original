@@ -129,6 +129,10 @@ GameObject:
   m_Component:
   - component: {fileID: 15989062}
   - component: {fileID: 15989063}
+  - component: {fileID: 15989064}
+  - component: {fileID: 15989065}
+  - component: {fileID: 15989066}
+  - component: {fileID: 15989067}
   m_Layer: 5
   m_Name: HudPanel
   m_TagString: Untagged
@@ -174,8 +178,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6843ecb2ce3643c6a17a9b9104d2ba85, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.BattleHudController
+  topHudView: {fileID: 15989064}
+  enemyUnitView: {fileID: 15989065}
+  playerAreaView: {fileID: 15989066}
   turnNumberText: {fileID: 2070814806}
   waveNumberText: {fileID: 711606909}
   enemyNameText: {fileID: 2127941475}
@@ -185,6 +192,70 @@ MonoBehaviour:
   playerHpSlider: {fileID: 606814141}
   enemyHpSlider: {fileID: 1767681127}
   nextHazardBoostObject: {fileID: 1515156387}
+  enableLegacyConfirmText: 0
+--- !u!114 &15989064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 15989061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a7d0e78c4b8401da6d0f30c51f7a001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.BattleTopHudView
+  turnNumberText: {fileID: 2070814806}
+  waveNumberText: {fileID: 711606909}
+  menuButtonObject: {fileID: 0}
+  pauseButtonObject: {fileID: 0}
+--- !u!114 &15989065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 15989061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43a5d8cfb9e14bda8b10c0b40c0e1202, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.EnemyUnitView
+  rootObject: {fileID: 0}
+  enemyNameText: {fileID: 2127941475}
+  enemyHpText: {fileID: 1576320016}
+  enemyHpSlider: {fileID: 1767681127}
+  battleTypeView: {fileID: 212685889}
+--- !u!114 &15989066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 15989061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d9f8a1b0c6c4a18b6c7d9e0f1a2b3c4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.PlayerAreaView
+  rootObject: {fileID: 0}
+  playerHpText: {fileID: 910649516}
+  playerHpSlider: {fileID: 606814141}
+--- !u!114 &15989067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 15989061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b12d8e6f0a1432eabcd1234567890ab, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.BattleEventNoticeView
+  rootObject: {fileID: 704145421}
+  noticeText: {fileID: 704145423}
+  visibleSeconds: 1.5
 --- !u!1 &16851587
 GameObject:
   m_ObjectHideFlags: 0
@@ -264,7 +335,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -370,7 +441,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 20b1e9fb41d5478dbf31a4bc13f38d11, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.Presentation.BattleCellView
 --- !u!224 &39186641 stripped
 RectTransform:
@@ -386,7 +457,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 20b1e9fb41d5478dbf31a4bc13f38d11, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.Presentation.BattleCellView
 --- !u!1001 &72688720
 PrefabInstance:
@@ -3431,6 +3502,15 @@ MonoBehaviour:
     filled: {fileID: 1975256098}
     unavailable: {fileID: 253416996}
   unlockedSkillSlotCount: 2
+  screenRoot: {fileID: 1077656492}
+  topHudView: {fileID: 15989064}
+  presentationView: {fileID: 0}
+  enemyAreaView: {fileID: 0}
+  enemyUnitView: {fileID: 15989065}
+  playerAreaView: {fileID: 15989066}
+  skillPaletteView: {fileID: 1225072965}
+  boardView: {fileID: 1934936195}
+  eventNoticeView: {fileID: 15989067}
   panelsRoot: {fileID: 1934936193}
   boardController: {fileID: 1934936195}
   traceInputHandler: {fileID: 1787354242}
@@ -6029,6 +6109,7 @@ GameObject:
   - component: {fileID: 1077656489}
   - component: {fileID: 1077656491}
   - component: {fileID: 1077656490}
+  - component: {fileID: 1077656492}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -6103,6 +6184,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1077656488}
   m_CullTransparentMesh: 1
+--- !u!114 &1077656492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1077656488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d34fa0812c3456ea234567890abcdef, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.BattleScreenRoot
+  topHudView: {fileID: 15989064}
+  presentationView: {fileID: 0}
+  enemyAreaView: {fileID: 0}
+  enemyUnitView: {fileID: 15989065}
+  playerAreaView: {fileID: 15989066}
+  skillPaletteView: {fileID: 1225072965}
+  boardView: {fileID: 1934936195}
+  eventNoticeView: {fileID: 15989067}
+  resultOverlayView: {fileID: 415461913}
 --- !u!1 &1091268842
 GameObject:
   m_ObjectHideFlags: 0
@@ -6620,6 +6722,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1225072963}
   - component: {fileID: 1225072964}
+  - component: {fileID: 1225072965}
   m_Layer: 5
   m_Name: SkillSlotArea
   m_TagString: Untagged
@@ -6674,6 +6777,35 @@ MonoBehaviour:
   m_Spacing: {x: 15, y: 0}
   m_Constraint: 1
   m_ConstraintCount: 4
+--- !u!114 &1225072965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1225072962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a01c7d5e9f94f8f9876543210abcd12, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.SkillPaletteView
+  skillSlots:
+  - button: {fileID: 4330027619665474410}
+    image: {fileID: 8837259894832506890}
+    filled: {fileID: 1739360502}
+    unavailable: {fileID: 9038377072578054437}
+  - button: {fileID: 752493648}
+    image: {fileID: 1186624573}
+    filled: {fileID: 181943479}
+    unavailable: {fileID: 955681378}
+  - button: {fileID: 1496052251}
+    image: {fileID: 747283068}
+    filled: {fileID: 1687610165}
+    unavailable: {fileID: 1472751843}
+  - button: {fileID: 1548207851}
+    image: {fileID: 1235457132}
+    filled: {fileID: 1975256098}
+    unavailable: {fileID: 253416996}
 --- !u!1 &1232140467
 GameObject:
   m_ObjectHideFlags: 0
@@ -10991,9 +11123,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1934936192}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a62d684d17b4bfbba3013a7b921d078, type: 3}
+  m_Script: {fileID: 11500000, guid: 8c23e9f701b24d3fb1234567890abcde, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.BattleBoardController
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Battle.ViewControllers.BattleBoardView
   cellRoot: {fileID: 1934936193}
   cellPrefab: {fileID: 6549579108264588663, guid: 9c8cf4ed8b0d41b59d60cb2f6bb425cf, type: 3}
   gridLayoutGroup: {fileID: 1934936194}

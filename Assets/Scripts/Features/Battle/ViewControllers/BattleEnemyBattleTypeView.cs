@@ -17,7 +17,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         [SerializeField] private Image battleTypeGaugeFillImage;
         [SerializeField] private TMP_Text battleTypeValueText;
 
-        public Sprite CurrentIcon => battleTypeIcon.sprite;
+        public Sprite CurrentIcon => battleTypeIcon != null ? battleTypeIcon.sprite : null;
 
         public void SetGauge(
             string battleTypeName,
@@ -27,20 +27,42 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             Color gaugeColor,
             Sprite icon = null)
         {
-            rootObject.SetActive(true);
-            battleTypeNameText.text = battleTypeName ?? string.Empty;
+            if (rootObject != null)
+            {
+                rootObject.SetActive(true);
+            }
 
-            if (icon != null)
+            if (battleTypeNameText != null)
+            {
+                battleTypeNameText.text = battleTypeName ?? string.Empty;
+            }
+
+            if (icon != null && battleTypeIcon != null)
             {
                 battleTypeIcon.sprite = icon;
             }
 
-            battleTypeIcon.enabled = battleTypeIcon.sprite != null;
-            battleTypeGauge.minValue = 0f;
-            battleTypeGauge.maxValue = Mathf.Max(BattleUiValues.MinimumGaugeMaxValue, maxValue);
-            battleTypeGauge.value = Mathf.Clamp(currentValue, 0f, battleTypeGauge.maxValue);
-            battleTypeGaugeFillImage.color = gaugeColor;
-            battleTypeValueText.text = valueText ?? string.Empty;
+            if (battleTypeIcon != null)
+            {
+                battleTypeIcon.enabled = battleTypeIcon.sprite != null;
+            }
+
+            if (battleTypeGauge != null)
+            {
+                battleTypeGauge.minValue = 0f;
+                battleTypeGauge.maxValue = Mathf.Max(BattleUiValues.MinimumGaugeMaxValue, maxValue);
+                battleTypeGauge.value = Mathf.Clamp(currentValue, 0f, battleTypeGauge.maxValue);
+            }
+
+            if (battleTypeGaugeFillImage != null)
+            {
+                battleTypeGaugeFillImage.color = gaugeColor;
+            }
+
+            if (battleTypeValueText != null)
+            {
+                battleTypeValueText.text = valueText ?? string.Empty;
+            }
         }
     }
 }

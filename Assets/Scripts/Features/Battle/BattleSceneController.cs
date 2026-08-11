@@ -38,6 +38,17 @@ namespace Assets.Scripts.Features.Battle
         [SerializeField] private BattleSkillSlot[] skillSlots;
         [SerializeField] private int unlockedSkillSlotCount = 2;
 
+        [Header("Screen Structure")]
+        [SerializeField] private BattleScreenRoot screenRoot;
+        [SerializeField] private BattleTopHudView topHudView;
+        [SerializeField] private BattlePresentationView presentationView;
+        [SerializeField] private EnemyAreaView enemyAreaView;
+        [SerializeField] private EnemyUnitView enemyUnitView;
+        [SerializeField] private PlayerAreaView playerAreaView;
+        [SerializeField] private SkillPaletteView skillPaletteView;
+        [SerializeField] private BattleBoardView boardView;
+        [SerializeField] private BattleEventNoticeView eventNoticeView;
+
         [Header("View Controllers")]
         [SerializeField] private Transform panelsRoot;
         [SerializeField] private BattleBoardController boardController;
@@ -76,15 +87,10 @@ namespace Assets.Scripts.Features.Battle
         private void Awake()
         {
             _sceneSetupFactory ??= new BattleSceneSetupFactory();
+            ResolveScreenReferences();
+            BindSkillInput();
 
-            for (var i = 0; i < skillSlots.Length; i++)
-            {
-                var skillSlot = skillSlots[i];
-                var slotIndex = i;
-                skillSlot.BindClickAction(() => SelectSkillSlot(slotIndex));
-            }
-
-            resultView.BindActions(
+            ResolveResultView()?.BindActions(
                 HandleRetryButtonClicked,
                 HandleNextStageButtonClicked,
                 HandleBackToStageButtonClicked);
@@ -97,12 +103,9 @@ namespace Assets.Scripts.Features.Battle
 
         private void OnDestroy()
         {
-            for (var i = 0; i < skillSlots.Length; i++)
-            {
-                skillSlots[i].UnbindClickAction();
-            }
+            UnbindSkillInput();
 
-            resultView.UnbindActions(
+            ResolveResultView()?.UnbindActions(
                 HandleRetryButtonClicked,
                 HandleNextStageButtonClicked,
                 HandleBackToStageButtonClicked);
@@ -118,6 +121,7 @@ namespace Assets.Scripts.Features.Battle
         {
             if (_isInitialized) return;
             _sceneSetupFactory ??= new BattleSceneSetupFactory();
+            ResolveScreenReferences();
             if (!_sceneSetupFactory.TryCreate(GetSkillSlotCount(), unlockedSkillSlotCount, out var setup))
             {
                 Debug.LogWarning("[Battle] 戦闘セットアップを構築できなかったため、バトル初期化を中断しました。");
@@ -129,11 +133,12 @@ namespace Assets.Scripts.Features.Battle
             _turnViewCoordinator.ConfigureScene(
                 gameObject,
                 panelsRoot,
-                boardController,
+                ResolveBoardController(),
                 traceInputHandler,
                 traceLineView,
                 hudController,
-                preferInteractiveTraceInput);
+                preferInteractiveTraceInput,
+                ResolveEventNoticeView());
             _turnViewCoordinator.SetTurnContext(
                 _session,
                 _patterns,
@@ -284,7 +289,19 @@ namespace Assets.Scripts.Features.Battle
 
         private void ApplyPlayerSnapshot(BattlePlayerSnapshot playerSnapshot)
         {
+            var paletteView = ResolveSkillPaletteView();
+            if (paletteView != null && paletteView.SlotCount > 0)
+            {
+                paletteView.ApplyPlayerSnapshot(playerSnapshot);
+                return;
+            }
+
             var runtimes = playerSnapshot?.SkillSlots ?? Array.Empty<SkillSlotRuntime>();
+            if (skillSlots == null)
+            {
+                return;
+            }
+
             for (var i = 0; i < skillSlots.Length; i++)
             {
                 var slotView = skillSlots[i];
@@ -299,6 +316,21 @@ namespace Assets.Scripts.Features.Battle
 
         private void RefreshSkillButtonVisuals()
         {
+            var paletteView = ResolveSkillPaletteView();
+            if (paletteView != null && paletteView.SlotCount > 0)
+            {
+                paletteView.RefreshSlots(
+                    _session.SelectedSkillSlotIndex,
+                    normalSkillButtonColor,
+                    selectedSkillButtonColor);
+                return;
+            }
+
+            if (skillSlots == null)
+            {
+                return;
+            }
+
             for (var i = 0; i < skillSlots.Length; i++)
             {
                 var slotView = skillSlots[i];
@@ -387,7 +419,12 @@ namespace Assets.Scripts.Features.Battle
 
         private void RefreshHud()
         {
-            ResolveHudController().ApplySession(_session);
+            ResolveHudController()?.ApplySession(_session);
+            ResolveTopHudView()?.ApplySession(_session);
+            ResolvePresentationView()?.ApplySession(_session);
+            ResolveEnemyAreaView()?.ApplySingleEnemy(_session);
+            ResolveEnemyUnitView()?.ApplySession(_session);
+            ResolvePlayerAreaView()?.ApplySession(_session);
             RefreshBattleTypeUi();
         }
 
@@ -418,6 +455,12 @@ namespace Assets.Scripts.Features.Battle
 
         private int GetSkillSlotCount()
         {
+            var paletteView = ResolveSkillPaletteView();
+            if (paletteView != null && paletteView.SlotCount > 0)
+            {
+                return paletteView.SlotCount;
+            }
+
             return skillSlots != null ? skillSlots.Length : 0;
         }
 
@@ -444,9 +487,189 @@ namespace Assets.Scripts.Features.Battle
             _turnExecutionCts = null;
         }
 
+        private void BindSkillInput()
+        {
+            var paletteView = ResolveSkillPaletteView();
+            if (paletteView != null && paletteView.SlotCount > 0)
+            {
+                paletteView.BindSlotClickActions(SelectSkillSlot);
+                return;
+            }
+
+            if (skillSlots == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < skillSlots.Length; i++)
+            {
+                var skillSlot = skillSlots[i];
+                var slotIndex = i;
+                skillSlot?.BindClickAction(() => SelectSkillSlot(slotIndex));
+            }
+        }
+
+        private void UnbindSkillInput()
+        {
+            var paletteView = ResolveSkillPaletteView();
+            if (paletteView != null && paletteView.SlotCount > 0)
+            {
+                paletteView.UnbindSlotClickActions();
+                return;
+            }
+
+            if (skillSlots == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < skillSlots.Length; i++)
+            {
+                skillSlots[i]?.UnbindClickAction();
+            }
+        }
+
+        private void ResolveScreenReferences()
+        {
+            if (screenRoot == null)
+            {
+                screenRoot = FindFirstObjectByType<BattleScreenRoot>(FindObjectsInactive.Include);
+            }
+
+            screenRoot?.ResolveMissingReferences();
+
+            if (topHudView == null)
+            {
+                topHudView = screenRoot?.TopHudView ?? hudController?.TopHudView;
+            }
+
+            if (presentationView == null)
+            {
+                presentationView = screenRoot?.PresentationView;
+            }
+
+            if (enemyAreaView == null)
+            {
+                enemyAreaView = screenRoot?.EnemyAreaView;
+            }
+
+            if (enemyUnitView == null)
+            {
+                enemyUnitView = screenRoot?.EnemyUnitView ?? hudController?.EnemyUnitView;
+            }
+
+            if (playerAreaView == null)
+            {
+                playerAreaView = screenRoot?.PlayerAreaView ?? hudController?.PlayerAreaView;
+            }
+
+            if (skillPaletteView == null)
+            {
+                skillPaletteView = screenRoot?.SkillPaletteView;
+            }
+
+            if (boardView == null)
+            {
+                boardView = screenRoot?.BoardView;
+            }
+
+            if (eventNoticeView == null)
+            {
+                eventNoticeView = screenRoot?.EventNoticeView ?? presentationView?.EventNoticeView;
+            }
+
+            if (resultView == null)
+            {
+                resultView = screenRoot?.ResultOverlayView;
+            }
+        }
+
+        private BattleScreenRoot ResolveScreenRoot()
+        {
+            ResolveScreenReferences();
+            return screenRoot;
+        }
+
+        private BattleBoardController ResolveBoardController()
+        {
+            ResolveScreenReferences();
+            return boardView != null ? boardView : boardController;
+        }
+
         private BattleHudController ResolveHudController()
         {
             return _turnViewCoordinator.HudController ?? hudController;
+        }
+
+        private BattleTopHudView ResolveTopHudView()
+        {
+            ResolveScreenReferences();
+            return topHudView;
+        }
+
+        private BattlePresentationView ResolvePresentationView()
+        {
+            ResolveScreenReferences();
+            return presentationView;
+        }
+
+        private EnemyAreaView ResolveEnemyAreaView()
+        {
+            ResolveScreenReferences();
+            return enemyAreaView;
+        }
+
+        private EnemyUnitView ResolveEnemyUnitView()
+        {
+            ResolveScreenReferences();
+            return enemyUnitView ?? enemyAreaView?.PrimaryEnemyUnit;
+        }
+
+        private PlayerAreaView ResolvePlayerAreaView()
+        {
+            ResolveScreenReferences();
+            return playerAreaView;
+        }
+
+        private SkillPaletteView ResolveSkillPaletteView()
+        {
+            ResolveScreenReferences();
+            return skillPaletteView;
+        }
+
+        private BattleDamageFeedbackView ResolveDamageFeedbackView()
+        {
+            ResolveScreenReferences();
+            return presentationView?.DamageFeedbackView ?? damageFeedbackView;
+        }
+
+        private BattleEnemyBattleTypeView ResolveEnemyBattleTypeView()
+        {
+            ResolveScreenReferences();
+            return ResolveEnemyUnitView()?.BattleTypeView ?? enemyBattleTypeView;
+        }
+
+        private BattleEventNoticeView ResolveEventNoticeView()
+        {
+            ResolveScreenReferences();
+            if (eventNoticeView == null && hudController != null && hudController.LegacyConfirmText != null)
+            {
+                eventNoticeView = hudController.GetComponent<BattleEventNoticeView>();
+                if (eventNoticeView == null)
+                {
+                    eventNoticeView = hudController.gameObject.AddComponent<BattleEventNoticeView>();
+                }
+
+                eventNoticeView.Configure(hudController.LegacyConfirmRoot, hudController.LegacyConfirmText);
+            }
+
+            return eventNoticeView;
+        }
+
+        private BattleResultView ResolveResultView()
+        {
+            ResolveScreenReferences();
+            return resultView;
         }
 
         private void ResetConnectedBattleUi()
@@ -454,10 +677,12 @@ namespace Assets.Scripts.Features.Battle
             _actionLogEntries.Clear();
             _playerActionHistoryEntries.Clear();
             _enemyActionHistoryEntries.Clear();
-            actionLogView.ResetView();
-            damageFeedbackView.ResetView();
-            narrativeView.ResetView();
-            resultView.ResetView();
+            actionLogView?.ResetView();
+            ResolveDamageFeedbackView()?.ResetView();
+            narrativeView?.ResetView();
+            ResolveHudController()?.ClearConfirmText();
+            ResolveEventNoticeView()?.ResetView();
+            ResolveResultView()?.ResetView();
             RefreshBattleTypeUi();
             RefreshResultButtons();
         }
@@ -471,13 +696,14 @@ namespace Assets.Scripts.Features.Battle
             var battleTypeName = guardValue > 0 ? BattleUiText.GuardBattleType : BattleUiText.BattleType;
             var valueText = BattleTextFormatter.BuildBattleTypeValueText(guardValue);
 
-            enemyBattleTypeView.SetGauge(
+            var battleTypeView = ResolveEnemyBattleTypeView();
+            battleTypeView?.SetGauge(
                 battleTypeName,
                 guardValue,
                 Mathf.Max(1, guardValue),
                 valueText,
                 gaugeColor,
-                enemyBattleTypeView.CurrentIcon);
+                battleTypeView.CurrentIcon);
         }
 
         private void ApplyTurnUi(StageBattlePatternData pattern, BattleResolvedActionSummary summary)
@@ -487,17 +713,14 @@ namespace Assets.Scripts.Features.Battle
                 return;
             }
 
-            AppendActionLogs(summary.LogEntries);
-            _playerActionHistoryEntries.Add(BattleTextFormatter.BuildPlayerHistoryEntry(summary));
-            _enemyActionHistoryEntries.Add(BattleTextFormatter.BuildEnemyHistoryEntry(pattern, summary));
-
-            actionLogView.SetEntries(_actionLogEntries);
-            damageFeedbackView.Apply(summary);
-            narrativeView.SetPlayerNarrative(
-                string.Join("\n", _playerActionHistoryEntries),
+            actionLogView?.ResetView();
+            ResolveDamageFeedbackView()?.Apply(summary);
+            ResolveEventNoticeView()?.ShowTurnResult(summary);
+            narrativeView?.SetPlayerNarrative(
+                string.Empty,
                 BattleTextFormatter.BuildPlayerSpeech(summary));
-            narrativeView.SetEnemyNarrative(
-                string.Join("\n", _enemyActionHistoryEntries),
+            narrativeView?.SetEnemyNarrative(
+                string.Empty,
                 BattleTextFormatter.BuildEnemySpeech(pattern, summary),
                 BattleTextFormatter.BuildEnemyFlavor(pattern, summary));
         }
@@ -528,11 +751,11 @@ namespace Assets.Scripts.Features.Battle
 
             if (summary.EnemyDefeated)
             {
-                resultView.ShowVictory(BattleTextFormatter.BuildEnemyDefeatedMessage(_session.EnemyName));
+                ResolveResultView()?.ShowVictory(BattleTextFormatter.BuildEnemyDefeatedMessage(_session.EnemyName));
             }
             else if (summary.PlayerDefeated || _session.PlayerHp <= 0)
             {
-                resultView.ShowDefeat(BattleUiText.DefeatMessage);
+                ResolveResultView()?.ShowDefeat(BattleUiText.DefeatMessage);
             }
 
             RefreshResultButtons();
@@ -540,7 +763,7 @@ namespace Assets.Scripts.Features.Battle
 
         private void RefreshResultButtons()
         {
-            resultView.SetButtonsVisible(_session.BattleEnded, _nextStageId >= 0);
+            ResolveResultView()?.SetButtonsVisible(_session.BattleEnded, _nextStageId >= 0);
         }
 
         private void HandleRetryButtonClicked()

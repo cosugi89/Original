@@ -20,32 +20,48 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         public void ResetView()
         {
-            playerActionHistoryRoot.SetActive(false);
-            playerActionHistoryText.text = string.Empty;
-            playerSpeechBubbleRoot.SetActive(false);
-            playerSpeechText.text = string.Empty;
-            enemyActionHistoryRoot.SetActive(false);
-            enemyActionHistoryText.text = string.Empty;
-            enemySpeechBubbleRoot.SetActive(false);
-            enemySpeechText.text = string.Empty;
-            enemyFlavorText.text = string.Empty;
+            SetActive(playerActionHistoryRoot, false);
+            SetText(playerActionHistoryText, string.Empty);
+            SetActive(playerSpeechBubbleRoot, false);
+            SetText(playerSpeechText, string.Empty);
+            SetActive(enemyActionHistoryRoot, false);
+            SetText(enemyActionHistoryText, string.Empty);
+            SetActive(enemySpeechBubbleRoot, false);
+            SetText(enemySpeechText, string.Empty);
+            SetText(enemyFlavorText, string.Empty);
         }
 
         public void SetPlayerNarrative(string history, string speech)
         {
-            playerActionHistoryRoot.SetActive(!string.IsNullOrWhiteSpace(history));
-            playerActionHistoryText.text = history ?? string.Empty;
-            playerSpeechBubbleRoot.SetActive(!string.IsNullOrWhiteSpace(speech));
-            playerSpeechText.text = speech ?? string.Empty;
+            SetActive(playerActionHistoryRoot, !string.IsNullOrWhiteSpace(history));
+            SetText(playerActionHistoryText, history);
+            SetActive(playerSpeechBubbleRoot, !string.IsNullOrWhiteSpace(speech));
+            SetText(playerSpeechText, speech);
         }
 
         public void SetEnemyNarrative(string history, string speech, string flavor)
         {
-            enemyActionHistoryRoot.SetActive(!string.IsNullOrWhiteSpace(history));
-            enemyActionHistoryText.text = history ?? string.Empty;
-            enemySpeechBubbleRoot.SetActive(!string.IsNullOrWhiteSpace(speech));
-            enemySpeechText.text = speech ?? string.Empty;
-            enemyFlavorText.text = flavor ?? string.Empty;
+            SetActive(enemyActionHistoryRoot, !string.IsNullOrWhiteSpace(history));
+            SetText(enemyActionHistoryText, history);
+            SetActive(enemySpeechBubbleRoot, !string.IsNullOrWhiteSpace(speech));
+            SetText(enemySpeechText, speech);
+            SetText(enemyFlavorText, flavor);
+        }
+
+        private static void SetActive(GameObject target, bool active)
+        {
+            if (target != null)
+            {
+                target.SetActive(active);
+            }
+        }
+
+        private static void SetText(TMP_Text target, string value)
+        {
+            if (target != null)
+            {
+                target.text = value ?? string.Empty;
+            }
         }
     }
 }

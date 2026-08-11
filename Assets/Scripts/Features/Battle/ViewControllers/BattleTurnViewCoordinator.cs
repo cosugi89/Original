@@ -27,6 +27,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         private BattleTraceInputHandler _traceInputHandler;
         private BattleTraceLineView _traceLineView;
         private BattleHudController _hudController;
+        private BattleEventNoticeView _eventNoticeView;
         private bool _preferInteractiveTraceInput;
         private bool _viewBootstrapped;
         private CancellationTokenSource _awaitNodePathCts;
@@ -54,7 +55,8 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             BattleTraceInputHandler traceInputHandler,
             BattleTraceLineView traceLineView,
             BattleHudController hudController,
-            bool preferInteractiveTraceInput)
+            bool preferInteractiveTraceInput,
+            BattleEventNoticeView eventNoticeView = null)
         {
             _hostObject = hostObject;
             _panelsRoot = panelsRoot;
@@ -62,6 +64,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             _traceInputHandler = traceInputHandler;
             _traceLineView = traceLineView;
             _hudController = hudController;
+            _eventNoticeView = eventNoticeView;
             _preferInteractiveTraceInput = preferInteractiveTraceInput;
         }
 
@@ -105,6 +108,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             if (PreparedTurn?.Pattern == null || PreparedTurn.Board == null)
             {
                 _hudController?.SetConfirmText(BattleUiText.NoValidPattern);
+                _eventNoticeView?.Show(BattleUiText.NoValidPattern);
                 _boardController?.ClearTraceVisual();
                 _traceLineView?.Clear();
                 return;
@@ -362,7 +366,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         private void OnTraceUpdated(BattlePathTraceResult result)
         {
-            if (PreparedTurn?.Pattern == null || _hudController == null)
+            if (PreparedTurn?.Pattern == null)
             {
                 return;
             }
@@ -380,7 +384,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
             if (result.Status == BattlePathTraceStatus.ReleasedWithoutGoal)
             {
-                _hudController.SetConfirmText(BattleUiText.GoalNotReached);
+                _eventNoticeView?.ShowInputRejected(BattleUiText.GoalNotReached);
                 return;
             }
 
@@ -388,21 +392,17 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 result.Status == BattlePathTraceStatus.Appended ||
                 result.Status == BattlePathTraceStatus.Backtracked)
             {
-                _hudController.SetConfirmText(BattleUiText.ConnectGoalToConfirm);
                 return;
             }
 
-            _hudController.SetConfirmText(BattleTextFormatter.BuildTurnPrompt(_session, _preferInteractiveTraceInput, PreparedTurn.Pattern));
+            _hudController?.SetConfirmText(BattleTextFormatter.BuildTurnPrompt(_session, _preferInteractiveTraceInput, PreparedTurn.Pattern));
         }
 
         private void OnTraceRejected(BattlePathTraceResult result)
         {
-            if (_hudController == null)
-            {
-                return;
-            }
-
-            _hudController.SetConfirmText(BattleTextFormatter.BuildTraceValidationErrorMessage(result.ValidationError));
+            var errorMessage = BattleTextFormatter.BuildTraceValidationErrorMessage(result.ValidationError);
+            _eventNoticeView?.ShowInputRejected(errorMessage);
+            _hudController?.SetConfirmText(errorMessage);
         }
 
         private void OnPathConfirmed(IReadOnlyList<BattleGridPosition> _)
@@ -412,6 +412,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 return;
             }
 
+            _eventNoticeView?.Show(BattleUiText.GoalLabel);
             RefreshPreview();
         }
 
