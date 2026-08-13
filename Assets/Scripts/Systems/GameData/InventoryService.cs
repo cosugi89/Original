@@ -338,6 +338,15 @@ namespace Assets.Scripts.Systems.GameData
             if (defaultSkillIds.Count == 0)
             {
                 MirrorLegacySkillSlots(loadout.SkillIds);
+                if (hasChanges)
+                {
+                    SaveService.MarkDirty();
+                    if (persistImmediately)
+                    {
+                        SaveService.SaveSession();
+                    }
+                }
+
                 return loadout.SkillIds.ToArray();
             }
 
@@ -421,7 +430,7 @@ namespace Assets.Scripts.Systems.GameData
             List<int> skillIds,
             HashSet<int> candidateSkillIds)
         {
-            if (skillIds == null || candidateSkillIds == null || candidateSkillIds.Count == 0)
+            if (skillIds == null || candidateSkillIds == null)
             {
                 return false;
             }

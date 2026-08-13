@@ -108,16 +108,23 @@ namespace Assets.Scripts.Features.Battle.Logic
                 return null;
             }
 
+            SkillSlotRuntime selectedSkillForContext;
             if (beginTurn)
             {
                 BeginTurn(session, playerSnapshot);
+                selectedSkillForContext = selectedSkill?.Clone();
+            }
+            else
+            {
+                selectedSkillForContext = selectedSkill?.Clone();
+                selectedSkillForContext?.GainTurnCharge();
             }
 
             var context = BattleStageRuntimeAdapter.CreateTurnContext(
                 preparedTurn.Pattern,
                 enemyData?.Stats,
                 hazardBoosted,
-                selectedSkill?.Clone(),
+                selectedSkillForContext,
                 session.EnemyHp,
                 session.PlayerHp,
                 playerSnapshot.Stats,

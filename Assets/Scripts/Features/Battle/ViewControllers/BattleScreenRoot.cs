@@ -206,9 +206,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 ApplyBand(topHudRoot, topHudMinY, 1f, horizontalMargin, verticalGap);
                 ApplyBand(overlayRoot, 0f, 1f, 0f, 0f);
 
-                ApplyBand(FindChildRect("DamageFeedbackPanel"), presentationMinY, presentationMaxY, horizontalMargin, verticalGap);
-                ApplyBand(FindChildRect("NarrativePanel"), presentationMinY, presentationMaxY, horizontalMargin, verticalGap);
-                ApplyBand(FindChildRect("EnemyBattleTypePanel"), presentationMinY, presentationMaxY, horizontalMargin, verticalGap);
+                ApplyLegacyBand("DamageFeedbackPanel", presentationMinY, presentationMaxY, horizontalMargin, verticalGap);
+                ApplyLegacyBand("NarrativePanel", presentationMinY, presentationMaxY, horizontalMargin, verticalGap);
+                ApplyLegacyBand("EnemyBattleTypePanel", presentationMinY, presentationMaxY, horizontalMargin, verticalGap);
                 ApplyFullParent(boardView != null ? boardView.transform as RectTransform : null);
                 ApplyFullParent(FindChildRect("TraceLineLayer"));
             }
@@ -257,6 +257,17 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
             var child = FindChildRecursive(transform, childName);
             return child != null ? child as RectTransform : null;
+        }
+
+        private void ApplyLegacyBand(string childName, float minY, float maxY, float marginX, float gapY)
+        {
+            var target = FindChildRect(childName);
+            if (target == null || target.parent != transform)
+            {
+                return;
+            }
+
+            ApplyBand(target, minY, maxY, marginX, gapY);
         }
 
         private static Transform FindChildRecursive(Transform root, string childName)

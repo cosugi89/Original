@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87994763178f4ae9b909adfd0e6beff6, type: 3}
+  m_Name: roll-evade-enemy-attack-timing
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.StageBattlePatternMasterData
+  patternId: 1010
+  label: Roll Evade Enemy Attack Timing
+  description: "Roll \u306E\u76F4\u5F8C\u306B\u6575\u901A\u5E38\u5371\u967A\u3092\u8E0F\u307F\u3001\u56DE\u907F\u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u3068\u6575
+    Attack \u30A2\u30CB\u30E1\u30FC\u30B7\u30E7\u30F3\u306E\u540C\u6642\u518D\u751F\u3092\u78BA\u8A8D\u3059\u308B\u305F\u3081\u306E\u56FA\u5B9A\u76E4\u9762\u3002"
+  enemyAction: 0
+  confirmText: 
+  damageMultiplier: 100
+  enemyActionDamageFormula:
+    isEnabled: 0
+    parameterType: 2
+    valueType: 1
+    value: 1
+    flatBonus: 0
+    finalMultiplier: 1
+    sourceScalarKey: 
+    sourceScalarFallback: 1
+    minimumDamage: 0
+  board:
+    width: 5
+    height: 6
+    startX: 2
+    startY: 5
+  cellPlacements:
+  - x: 2
+    y: 5
+    nodeType: 0
+  - x: 2
+    y: 4
+    nodeType: 3
+  - x: 2
+    y: 3
+    nodeType: 6
+  - x: 2
+    y: 2
+    nodeType: 5
+  - x: 2
+    y: 1
+    nodeType: 8

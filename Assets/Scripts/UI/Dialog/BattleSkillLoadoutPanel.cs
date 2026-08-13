@@ -45,7 +45,7 @@ namespace Assets.Scripts.UI.Dialog
             _candidates.AddRange(_loadoutService.GetCandidateSkillsFromEquippedEquipment());
 
             _draftSkillIds.Clear();
-            _draftSkillIds.AddRange(_loadoutService.GetCurrentSkillIds());
+            _draftSkillIds.AddRange(_loadoutService.EnsureUsableLoadout(persistImmediately: true));
             NormalizeDraft();
             _selectedSlotIndex = Mathf.Clamp(
                 _selectedSlotIndex,
@@ -201,9 +201,15 @@ namespace Assets.Scripts.UI.Dialog
                 _draftSkillIds.RemoveAt(_draftSkillIds.Count - 1);
             }
 
+            var candidateSkillIds = new HashSet<int>(
+                _candidates
+                    .Where(candidate => candidate != null && candidate.SkillId > 0)
+                    .Select(candidate => candidate.SkillId));
+
             for (var i = 0; i < _draftSkillIds.Count; i++)
             {
-                _draftSkillIds[i] = Mathf.Max(0, _draftSkillIds[i]);
+                var skillId = Mathf.Max(0, _draftSkillIds[i]);
+                _draftSkillIds[i] = skillId > 0 && candidateSkillIds.Contains(skillId) ? skillId : 0;
             }
         }
     }

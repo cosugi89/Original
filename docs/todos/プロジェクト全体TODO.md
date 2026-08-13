@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-07-12
+- 最終更新: 2026-08-11
 - 主な参照元: `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 関連タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -69,9 +69,9 @@
 - [x] 常設の `confirmText` と行動ログ履歴を初期画面から外し、`confirmText` は必要に応じて短命通知のフォールバックとして使う
 - [x] `BattleScene.unity` に `BattleScreenRoot` と現行 Scene で使う主要 View コンポーネントを割り当てる
 - [x] `BattleScreenRoot` で縦長 9:16 の基本領域比率を適用し、`BattleBoardView` のセルサイズを盤面領域に合わせて自動調整する
-- [ ] Unity Play 実機相当の画面で `BattleScene` の余白、重なり、通知位置を確認して微調整する
+- [x] Unity Play 実機相当の画面で `BattleScene` の余白、重なり、通知位置を確認して微調整する
 - [ ] 不正入力は盤面の赤表示、揺れ、トースト、バイブレーション候補へ分担する
-- [ ] Skill パレットの Ready、Charging、Locked、Empty を見分けやすい本 UI として整える
+- [x] Skill パレットの Ready、Charging、Locked、Empty を見分けやすい本 UI として整える
 - [ ] `waveNumberText` を実際の wave 概念に接続するか削除する
 - [ ] 敵戦型ゲージ UI と `Guard / Burst / Rush` 表示を実装する
 - [ ] タグ / セットボーナス表示 UI を実装する
@@ -170,10 +170,9 @@
 
 ## 9. まず着手する順番
 
-1. Unity Play 実機相当の画面で `BattleScene` の余白、重なり、通知位置を確認して微調整する
-2. ドラッグ入力中の操作ロックを実装する
-3. Skill 消費条件の UI 明示とテストを追加する
-4. `AttackChargeGain` を解決済み Attack 数に応じて反映する
-5. 勝敗演出、再挑戦導線、戦闘終了時 save を接続する
-6. ステージ選択画面と未解放ステージ制御を実装する
-7. ロードアウト保存と Skill スロット初期化を正式接続する
+1. ドラッグ入力中の操作ロックを実装する
+2. Skill 消費条件の UI 明示とテストを追加する
+3. `AttackChargeGain` を解決済み Attack 数に応じて反映する
+4. 勝敗演出、再挑戦導線、戦闘終了時 save を接続する
+5. ステージ選択画面と未解放ステージ制御を実装する
+6. ロードアウト保存と Skill スロット初期化を正式接続する

@@ -81,11 +81,10 @@ namespace Assets.Scripts.Features.Battle.Logic
                         break;
 
                     case BattleNodeType.Goal:
-                        return CompleteGoalNode(report, context, selectedSkill, resolutionState, actionFactory);
+                        return CompleteGoalNode(report, selectedSkill, resolutionState, actionFactory);
                 }
             }
 
-            ResolvePendingEnemyActionIfNeeded(report, context, resolutionState, actionFactory);
             FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
             return report;
         }
@@ -187,30 +186,31 @@ namespace Assets.Scripts.Features.Battle.Logic
 
             if (traversalState.TryEvadeHazardWithJump(nodeType, hazardGroupKey))
             {
+                ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardEnemyIntentAction(nodeType));
                 ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardEvadedAction("Jump", hazardGroupKey));
                 return false;
             }
 
             if (traversalState.TryEvadeHazardWithRoll(hazardGroupKey))
             {
+                ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardEnemyIntentAction(nodeType));
                 ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardEvadedAction("Roll", hazardGroupKey));
                 return false;
             }
 
             traversalState.MarkHazardResolved(hazardGroupKey);
+            ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardEnemyIntentAction(nodeType));
             ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardHitAction(hazardGroupKey));
             return true;
         }
 
         private static BattleTurnResolutionReport CompleteGoalNode(
             BattleTurnResolutionReport report,
-            BattleTurnContext context,
             SkillSlotRuntime selectedSkill,
             BattleTurnResolutionState resolutionState,
             BattleTurnResolvedActionFactory actionFactory)
         {
             ApplyResolvedAction(report, resolutionState, actionFactory.CreateGoalReachedAction());
-            ResolvePendingEnemyActionIfNeeded(report, context, resolutionState, actionFactory);
             FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
             return report;
         }
@@ -250,52 +250,6 @@ namespace Assets.Scripts.Features.Battle.Logic
             }
 
             return int.MinValue + stepIndex;
-        }
-
-        private static void ResolvePendingEnemyActionIfNeeded(
-            BattleTurnResolutionReport report,
-            BattleTurnContext context,
-            BattleTurnResolutionState resolutionState,
-            BattleTurnResolvedActionFactory actionFactory)
-        {
-            if (report == null ||
-                resolutionState == null ||
-                actionFactory == null ||
-                !resolutionState.PathConfirmed ||
-                resolutionState.EnemyDefeated ||
-                resolutionState.PlayerDefeated ||
-                resolutionState.ResolvedHazardCount > 0)
-            {
-                return;
-            }
-
-            switch (context != null ? context.EnemyAction : BattleEnemyActionType.NormalAttack)
-            {
-                case BattleEnemyActionType.Dance:
-                    ApplyResolvedAction(report, resolutionState, actionFactory.CreateHazardBoostReservedAction());
-                    return;
-
-                case BattleEnemyActionType.Skill:
-                {
-                    var action = actionFactory.CreateEnemyAction(isSkill: true);
-                    if (action != null)
-                    {
-                        ApplyResolvedAction(report, resolutionState, action);
-                    }
-                    break;
-                }
-
-                case BattleEnemyActionType.NormalAttack:
-                default:
-                {
-                    var action = actionFactory.CreateEnemyAction(isSkill: false);
-                    if (action != null)
-                    {
-                        ApplyResolvedAction(report, resolutionState, action);
-                    }
-                    break;
-                }
-            }
         }
 
         private static void ApplyResolvedAction(

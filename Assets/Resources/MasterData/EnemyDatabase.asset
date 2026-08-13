@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.StageBattleEnemyMasterDatabase
   enemies:
   - {fileID: 11400000, guid: 5a1d6fbc9a2f47d1a13825a19f8f0d20, type: 2}
+  - {fileID: 11400000, guid: 62f87bfc4d5e5c840b10860ce9b1604a, type: 2}

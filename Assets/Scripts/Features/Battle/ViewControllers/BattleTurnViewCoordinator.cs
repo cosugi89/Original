@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Assets.Scripts.Core;
 using Assets.Scripts.Data.DTO;
+using Assets.Scripts.Features.Battle.Components;
 using Assets.Scripts.Features.Battle.Const;
 using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Logic;
@@ -29,6 +30,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         private BattleHudController _hudController;
         private BattleEventNoticeView _eventNoticeView;
         private bool _preferInteractiveTraceInput;
+        private bool _allowFallbackTurnExecution;
         private bool _viewBootstrapped;
         private CancellationTokenSource _awaitNodePathCts;
         private BattleSessionState _session;
@@ -56,6 +58,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             BattleTraceLineView traceLineView,
             BattleHudController hudController,
             bool preferInteractiveTraceInput,
+            bool allowFallbackTurnExecution,
             BattleEventNoticeView eventNoticeView = null)
         {
             _hostObject = hostObject;
@@ -66,6 +69,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             _hudController = hudController;
             _eventNoticeView = eventNoticeView;
             _preferInteractiveTraceInput = preferInteractiveTraceInput;
+            _allowFallbackTurnExecution = allowFallbackTurnExecution;
         }
 
         public void SetTurnContext(
@@ -100,14 +104,13 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 _traceInputHandler?.ResetState(clearConfirmedPath: true);
                 _boardController?.ClearTraceVisual();
                 _traceLineView?.Clear();
-                _hudController?.SetConfirmText(BattleTextFormatter.BuildTurnPrompt(_session, _preferInteractiveTraceInput, PreparedTurn?.Pattern));
+                _eventNoticeView?.Show(BattleUiText.BattleEnded);
                 return;
             }
 
             PreparedTurn = CreatePreparedTurn(_patterns, _lastPreparedPattern);
             if (PreparedTurn?.Pattern == null || PreparedTurn.Board == null)
             {
-                _hudController?.SetConfirmText(BattleUiText.NoValidPattern);
                 _eventNoticeView?.Show(BattleUiText.NoValidPattern);
                 _boardController?.ClearTraceVisual();
                 _traceLineView?.Clear();
@@ -115,7 +118,6 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             }
 
             _lastPreparedPattern = PreparedTurn.Pattern;
-            _hudController?.SetConfirmText(BattleTextFormatter.BuildTurnPrompt(_session, _preferInteractiveTraceInput, PreparedTurn.Pattern));
             Debug.Log(
                 $"[Battle] 次ターン準備 Turn={_session.TurnNumber} " +
                 $"Pattern={BattleTextFormatter.GetPatternLabel(PreparedTurn.Pattern)} Action={PreparedTurn.Pattern.EnemyAction} " +
@@ -144,27 +146,24 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         public void RefreshPreview()
         {
-            if (!_preferInteractiveTraceInput || _hudController == null || PreparedTurn?.Pattern == null)
+            if (!_preferInteractiveTraceInput || PreparedTurn?.Pattern == null)
             {
                 return;
             }
 
             if (_traceInputHandler == null || PreparedTurn.Board == null)
             {
-                _hudController.SetConfirmText(BattleTextFormatter.BuildTurnPrompt(_session, _preferInteractiveTraceInput, PreparedTurn.Pattern));
                 return;
             }
 
             var pathPositions = _traceInputHandler.CurrentTracePath;
             if (pathPositions == null || pathPositions.Count == 0)
             {
-                _hudController.SetConfirmText(BattleTextFormatter.BuildTurnPrompt(_session, _preferInteractiveTraceInput, PreparedTurn.Pattern));
                 return;
             }
 
             if (!_traceInputHandler.CanConfirmCurrentTrace && !_traceInputHandler.HasConfirmedPath)
             {
-                _hudController.SetConfirmText(BattleUiText.ConnectGoalToConfirm);
                 return;
             }
 
@@ -179,12 +178,11 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
             if (preview == null)
             {
-                _hudController.SetConfirmText(BattleUiText.PreviewUnavailable);
+                _eventNoticeView?.ShowInputRejected(BattleUiText.PreviewUnavailable);
                 return;
             }
 
             var previewMessage = BattleTextFormatter.BuildTurnPreviewMessage(PreparedTurn, preview);
-            _hudController.SetConfirmText(previewMessage);
             Debug.Log(
                 $"[Battle] PlayerTurn preview Path={BattleTextFormatter.FormatPath(pathPositions)} " +
                 $"Summary={previewMessage}");
@@ -199,11 +197,19 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             }
 
             var selectedSkill = ResolveSelectedSkill();
-            if (_preferInteractiveTraceInput && _traceInputHandler != null)
+            if (_preferInteractiveTraceInput)
             {
+                if (_traceInputHandler == null)
+                {
+                    _eventNoticeView?.ShowInputRejected(BattleUiText.DrawFromStartToGoal);
+                    Debug.LogWarning("[Battle] Interactive path input が有効ですが TraceInputHandler が未接続です。");
+                    return null;
+                }
+
                 if (!_traceInputHandler.HasConfirmedPath)
                 {
                     RefreshPreview();
+                    _eventNoticeView?.ShowInputRejected(BattleUiText.ConnectGoalToConfirm);
                     Debug.LogWarning(
                         $"[Battle] ExecuteTurn を保留 Interactive={_preferInteractiveTraceInput} " +
                         $"TraceHandler={(_traceInputHandler != null)} BoardReady={(PreparedTurn.Board != null)} " +
@@ -218,6 +224,14 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                     _playerSnapshot,
                     _activeEnemyData,
                     selectedSkill);
+            }
+
+            if (!_allowFallbackTurnExecution)
+            {
+                _eventNoticeView?.ShowInputRejected(BattleUiText.DrawFromStartToGoal);
+                Debug.LogWarning(
+                    $"[Battle] Fallback turn execution は無効です。Pattern={BattleTextFormatter.GetPatternLabel(PreparedTurn.Pattern)}");
+                return null;
             }
 
             var fallbackResult = _turnExecutor.ExecuteFallback(
@@ -248,50 +262,412 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             }
         }
 
-        public async UniTask PlayPlayerActionAnimationsAsync(
+        public async UniTask PlayResolvedActionAnimationsAsync(
             PartsManager playerInstance,
+            PartsManager enemyInstance,
             BattleTurnResolutionReport result,
             CancellationToken cancellationToken)
         {
-            if (playerInstance == null || result == null)
+            if (result == null || (playerInstance == null && enemyInstance == null))
             {
                 return;
             }
 
             var summary = result.Summary;
-            var cues = summary.AnimationSequence;
-            if (cues.Count == 0)
+            var beats = BattleTurnAnimationPlanner.Build(result.ResolvedActions);
+            for (var i = 0; i < beats.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await PlayAnimationBeatAsync(beats[i], playerInstance, enemyInstance, cancellationToken);
+            }
+
+            if (summary.PlayerDefeated)
+            {
+                await PlayAnimationCueAsync(playerInstance, BattlePlayerAnimationCue.Defeat, "Player", cancellationToken);
+                return;
+            }
+
+            if (summary.EnemyDefeated)
+            {
+                await PlayAnimationCueAsync(enemyInstance, BattlePlayerAnimationCue.Defeat, "Enemy", cancellationToken);
+                await PlayAnimationCueAsync(playerInstance, BattlePlayerAnimationCue.Victory, "Player", cancellationToken);
+                return;
+            }
+
+            PlayIdleIfAvailable(playerInstance);
+            PlayIdleIfAvailable(enemyInstance);
+        }
+
+        private static async UniTask PlayAnimationBeatAsync(
+            BattleTurnAnimationBeat beat,
+            PartsManager playerInstance,
+            PartsManager enemyInstance,
+            CancellationToken cancellationToken)
+        {
+            var events = beat.Events;
+            if (events == null || events.Count == 0)
             {
                 return;
             }
 
-            for (var i = 0; i < cues.Count; i++)
+            var tasks = new List<UniTask>(events.Count);
+            for (var i = 0; i < events.Count; i++)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var clipName = BattleAnimationCatalog.GetClipName(cues[i]);
-                if (string.IsNullOrWhiteSpace(clipName) || !playerInstance.HasAnimation(clipName))
+                if (!TryResolveAnimationActor(
+                        events[i].Actor,
+                        playerInstance,
+                        enemyInstance,
+                        out var target,
+                        out var actorLabel))
                 {
                     continue;
                 }
 
-                playerInstance.PlayAnimation(clipName);
-                Debug.Log($"[Battle] Player animation {clipName} を再生します。");
-
-                var durationSeconds = Mathf.Max(
-                    BattleUiValues.MinimumAnimationDurationSeconds,
-                    playerInstance.GetAnimationLength(clipName));
-
-                await UniTask.Delay(
-                    TimeSpan.FromSeconds(durationSeconds),
-                    cancellationToken: cancellationToken);
+                tasks.Add(PlayAnimationEventAsync(
+                    target,
+                    events[i],
+                    actorLabel,
+                    playerInstance,
+                    enemyInstance,
+                    cancellationToken));
             }
 
-            if (!summary.EnemyDefeated &&
-                !summary.PlayerDefeated &&
-                playerInstance.HasAnimation(BattleAnimationCatalog.Idle))
+            if (tasks.Count == 0)
             {
-                playerInstance.PlayAnimation(BattleAnimationCatalog.Idle);
+                return;
+            }
+
+            await UniTask.WhenAll(tasks);
+        }
+
+        private static async UniTask PlayAnimationEventAsync(
+            PartsManager target,
+            BattleTurnAnimationEvent animationEvent,
+            string actorLabel,
+            PartsManager playerInstance,
+            PartsManager enemyInstance,
+            CancellationToken cancellationToken)
+        {
+            await WaitForAnimationStartAsync(
+                animationEvent.StartTrigger,
+                playerInstance,
+                enemyInstance,
+                cancellationToken);
+
+            if (!TryPlayAnimationCue(target, animationEvent.Cue, actorLabel, out var durationSeconds))
+            {
+                return;
+            }
+
+            await WaitForAnimationEventOrDelayAsync(
+                target,
+                BattleAnimationEventKeys.RecoverEnd,
+                durationSeconds,
+                cancellationToken,
+                animationEvent.Cue);
+
+            if (animationEvent.ReturnToIdle)
+            {
+                PlayIdleIfAvailable(target);
+            }
+        }
+
+        private static async UniTask<bool> PlayAnimationCueAsync(
+            PartsManager target,
+            BattlePlayerAnimationCue cue,
+            string actorLabel,
+            CancellationToken cancellationToken)
+        {
+            if (!TryPlayAnimationCue(target, cue, actorLabel, out var durationSeconds))
+            {
+                return false;
+            }
+
+            await UniTask.Delay(
+                TimeSpan.FromSeconds(durationSeconds),
+                cancellationToken: cancellationToken);
+            return true;
+        }
+
+        private static async UniTask WaitForAnimationStartAsync(
+            BattleTurnAnimationStartTrigger trigger,
+            PartsManager playerInstance,
+            PartsManager enemyInstance,
+            CancellationToken cancellationToken)
+        {
+            if (!trigger.WaitsForAnimationEvent)
+            {
+                await DelayIfNeededAsync(trigger.DelaySeconds, cancellationToken);
+                return;
+            }
+
+            if (!TryResolveAnimationActor(
+                    trigger.TriggerActor,
+                    playerInstance,
+                    enemyInstance,
+                    out var triggerTarget,
+                    out _))
+            {
+                await DelayIfNeededAsync(trigger.FallbackDelaySeconds, cancellationToken);
+                return;
+            }
+
+            await WaitForAnimationEventOrDelayAsync(
+                triggerTarget,
+                trigger.EventKey,
+                trigger.FallbackDelaySeconds,
+                cancellationToken,
+                trigger.TriggerCue);
+        }
+
+        private static async UniTask<bool> WaitForAnimationEventOrDelayAsync(
+            PartsManager target,
+            string eventKey,
+            float fallbackDelaySeconds,
+            CancellationToken cancellationToken,
+            BattlePlayerAnimationCue? cue = null)
+        {
+            if (!TryGetAnimationEventReceiver(target, out var receiver) ||
+                string.IsNullOrWhiteSpace(eventKey))
+            {
+                await DelayIfNeededAsync(fallbackDelaySeconds, cancellationToken);
+                return false;
+            }
+
+            var timeoutSeconds = ResolveAnimationEventTimeoutSeconds(
+                target,
+                eventKey,
+                fallbackDelaySeconds,
+                cue);
+            var received = false;
+            void OnBattleAnimationEventRaised(AnimationEventReceiver source, string raisedEventKey)
+            {
+                if (source == receiver &&
+                    string.Equals(raisedEventKey, eventKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    received = true;
+                }
+            }
+
+            receiver.BattleAnimationEventRaised += OnBattleAnimationEventRaised;
+            try
+            {
+                if (timeoutSeconds <= 0f)
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
+                    return received;
+                }
+
+                var elapsedSeconds = 0f;
+                while (!received && elapsedSeconds < timeoutSeconds)
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
+                    elapsedSeconds += Time.deltaTime;
+                }
+
+                return received;
+            }
+            finally
+            {
+                receiver.BattleAnimationEventRaised -= OnBattleAnimationEventRaised;
+            }
+        }
+
+        private static float ResolveAnimationEventTimeoutSeconds(
+            PartsManager target,
+            string eventKey,
+            float fallbackDelaySeconds,
+            BattlePlayerAnimationCue? cue)
+        {
+            if (string.Equals(eventKey, BattleAnimationEventKeys.AttackStart, StringComparison.OrdinalIgnoreCase))
+            {
+                return fallbackDelaySeconds;
+            }
+
+            if (!TryFindAnimationClip(target, cue, out var clip) ||
+                !CanClipRaiseBattleAnimationEvent(clip, eventKey))
+            {
+                return fallbackDelaySeconds;
+            }
+
+            var frameSeconds = clip.frameRate > 0f
+                ? 1f / clip.frameRate
+                : 0.05f;
+            return Mathf.Max(fallbackDelaySeconds, clip.length + frameSeconds);
+        }
+
+        private static bool TryFindAnimationClip(
+            PartsManager target,
+            BattlePlayerAnimationCue? cue,
+            out AnimationClip clip)
+        {
+            clip = null;
+            if (target == null)
+            {
+                return false;
+            }
+
+            var clipName = cue.HasValue
+                ? BattleAnimationCatalog.GetClipName(cue.Value)
+                : target.GetCurrentAnimation();
+            if (string.IsNullOrWhiteSpace(clipName))
+            {
+                return false;
+            }
+
+            var animator = target.GetComponentInChildren<Animator>(true);
+            var controller = animator != null ? animator.runtimeAnimatorController : null;
+            var clips = controller != null ? controller.animationClips : null;
+            if (clips == null)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < clips.Length; i++)
+            {
+                var candidate = clips[i];
+                if (candidate != null &&
+                    string.Equals(candidate.name, clipName, StringComparison.OrdinalIgnoreCase))
+                {
+                    clip = candidate;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool CanClipRaiseBattleAnimationEvent(AnimationClip clip, string eventKey)
+        {
+            var animationEvents = clip != null ? clip.events : null;
+            if (animationEvents == null || animationEvents.Length == 0)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < animationEvents.Length; i++)
+            {
+                if (AnimationEventMatchesKey(animationEvents[i], eventKey))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool AnimationEventMatchesKey(
+            UnityEngine.AnimationEvent animationEvent,
+            string eventKey)
+        {
+            if (animationEvent == null || string.IsNullOrWhiteSpace(eventKey))
+            {
+                return false;
+            }
+
+            var functionName = animationEvent.functionName;
+            if (string.Equals(functionName, nameof(AnimationEventReceiver.OnBattleAnimationEvent), StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Equals(animationEvent.stringParameter, eventKey, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (string.Equals(eventKey, BattleAnimationEventKeys.AttackStart, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Equals(functionName, nameof(AnimationEventReceiver.OnAttackStart), StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (string.Equals(eventKey, BattleAnimationEventKeys.Hit, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Equals(functionName, nameof(AnimationEventReceiver.OnHit), StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(functionName, nameof(AnimationEventReceiver.OnAttackHit), StringComparison.OrdinalIgnoreCase) ||
+                       string.Equals(functionName, nameof(AnimationEventReceiver.OnSkillHit), StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (string.Equals(eventKey, BattleAnimationEventKeys.RecoverEnd, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Equals(functionName, nameof(AnimationEventReceiver.OnRecoverEnd), StringComparison.OrdinalIgnoreCase);
+            }
+
+            return false;
+        }
+
+        private static async UniTask DelayIfNeededAsync(
+            float delaySeconds,
+            CancellationToken cancellationToken)
+        {
+            if (delaySeconds <= 0f)
+            {
+                return;
+            }
+
+            await UniTask.Delay(
+                TimeSpan.FromSeconds(delaySeconds),
+                cancellationToken: cancellationToken);
+        }
+
+        private static bool TryResolveAnimationActor(
+            BattleTurnAnimationActor actor,
+            PartsManager playerInstance,
+            PartsManager enemyInstance,
+            out PartsManager target,
+            out string actorLabel)
+        {
+            switch (actor)
+            {
+                case BattleTurnAnimationActor.Enemy:
+                    target = enemyInstance;
+                    actorLabel = "Enemy";
+                    return target != null;
+                case BattleTurnAnimationActor.Player:
+                default:
+                    target = playerInstance;
+                    actorLabel = "Player";
+                    return target != null;
+            }
+        }
+
+        private static bool TryGetAnimationEventReceiver(
+            PartsManager target,
+            out AnimationEventReceiver receiver)
+        {
+            receiver = target != null
+                ? target.GetComponentInChildren<AnimationEventReceiver>(true)
+                : null;
+            return receiver != null;
+        }
+
+        private static bool TryPlayAnimationCue(
+            PartsManager target,
+            BattlePlayerAnimationCue cue,
+            string actorLabel,
+            out float durationSeconds)
+        {
+            durationSeconds = 0f;
+            if (target == null)
+            {
+                return false;
+            }
+
+            var clipName = BattleAnimationCatalog.GetClipName(cue);
+            if (string.IsNullOrWhiteSpace(clipName) || !target.HasAnimation(clipName))
+            {
+                return false;
+            }
+
+            target.PlayAnimation(clipName);
+            Debug.Log($"[Battle] {actorLabel} animation {clipName} を再生します。");
+
+            durationSeconds = Mathf.Max(
+                BattleUiValues.MinimumAnimationDurationSeconds,
+                target.GetAnimationLength(clipName));
+            return true;
+        }
+
+        private static void PlayIdleIfAvailable(PartsManager target)
+        {
+            if (target != null && target.HasAnimation(BattleAnimationCatalog.Idle))
+            {
+                target.PlayAnimation(BattleAnimationCatalog.Idle);
             }
         }
 
@@ -332,8 +708,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 _boardController.ConfigureGeneratedCells(
                     _panelsRoot as RectTransform,
                     _panelsRoot.GetComponent<GridLayoutGroup>());
-                _preferInteractiveTraceInput = true;
-                Debug.Log($"[Battle] panelsRoot を生成式盤面 root として接続しました ChildCount={_panelsRoot.childCount} Interactive={_preferInteractiveTraceInput}");
+                Debug.Log(
+                    $"[Battle] panelsRoot を生成式盤面 root として接続しました ChildCount={_panelsRoot.childCount} " +
+                    $"Interactive={_preferInteractiveTraceInput} Fallback={_allowFallbackTurnExecution}");
             }
 
             if (_traceInputHandler == null && _hostObject != null)
@@ -361,7 +738,10 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             }
 
             _viewBootstrapped = true;
-            Debug.Log($"[Battle] View bootstrap 完了 BoardController={(_boardController != null)} TraceInputHandler={(_traceInputHandler != null)} HudController={(_hudController != null)} Interactive={_preferInteractiveTraceInput}");
+            Debug.Log(
+                $"[Battle] View bootstrap 完了 BoardController={(_boardController != null)} " +
+                $"TraceInputHandler={(_traceInputHandler != null)} HudController={(_hudController != null)} " +
+                $"Interactive={_preferInteractiveTraceInput} Fallback={_allowFallbackTurnExecution}");
         }
 
         private void OnTraceUpdated(BattlePathTraceResult result)
@@ -395,14 +775,12 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 return;
             }
 
-            _hudController?.SetConfirmText(BattleTextFormatter.BuildTurnPrompt(_session, _preferInteractiveTraceInput, PreparedTurn.Pattern));
         }
 
         private void OnTraceRejected(BattlePathTraceResult result)
         {
             var errorMessage = BattleTextFormatter.BuildTraceValidationErrorMessage(result.ValidationError);
             _eventNoticeView?.ShowInputRejected(errorMessage);
-            _hudController?.SetConfirmText(errorMessage);
         }
 
         private void OnPathConfirmed(IReadOnlyList<BattleGridPosition> _)

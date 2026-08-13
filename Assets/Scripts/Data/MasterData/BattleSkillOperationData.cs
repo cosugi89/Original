@@ -51,8 +51,29 @@ namespace Assets.Scripts.Data.MasterData
         {
             durationTurns = Mathf.Max(0, durationTurns);
             successRate = Mathf.Clamp01(successRate);
+            targetType = ResolveSupportedTargetType(effectType, targetType);
             damageFormula ??= new BattleDamageFormulaDefinition();
             damageFormula.Normalize();
+        }
+
+        private static BattleSkillTargetType ResolveSupportedTargetType(
+            BattleSkillOperationType operationType,
+            BattleSkillTargetType currentTargetType)
+        {
+            return operationType switch
+            {
+                BattleSkillOperationType.Damage => currentTargetType == BattleSkillTargetType.AllEnemies
+                    ? BattleSkillTargetType.AllEnemies
+                    : BattleSkillTargetType.Enemy,
+                BattleSkillOperationType.Debuff => currentTargetType == BattleSkillTargetType.AllEnemies
+                    ? BattleSkillTargetType.AllEnemies
+                    : BattleSkillTargetType.Enemy,
+                BattleSkillOperationType.ChargeGain => BattleSkillTargetType.Self,
+                BattleSkillOperationType.Heal => BattleSkillTargetType.Self,
+                BattleSkillOperationType.GuardGain => BattleSkillTargetType.Self,
+                BattleSkillOperationType.Buff => BattleSkillTargetType.Self,
+                _ => currentTargetType,
+            };
         }
     }
 }

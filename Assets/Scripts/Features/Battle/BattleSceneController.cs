@@ -60,7 +60,8 @@ namespace Assets.Scripts.Features.Battle
         [SerializeField] private BattleEnemyBattleTypeView enemyBattleTypeView;
         [SerializeField] private BattleNarrativeView narrativeView;
         [SerializeField] private BattleResultView resultView;
-        [SerializeField] private bool preferInteractiveTraceInput;
+        [SerializeField] private bool preferInteractiveTraceInput = true;
+        [SerializeField] private bool allowFallbackTurnExecution;
 
         [Header("Skill Button Visuals")]
         [SerializeField] private Color normalSkillButtonColor = BattleUiColors.NormalSkillButton;
@@ -74,6 +75,7 @@ namespace Assets.Scripts.Features.Battle
         private readonly List<string> _playerActionHistoryEntries = new();
         private readonly List<string> _enemyActionHistoryEntries = new();
         private PartsManager _playerInstance;
+        private PartsManager _enemyInstance;
         private readonly BattleSessionState _session = new();
         private StageBattleEnemyData _activeEnemyData;
         private BattlePlayerSnapshot _playerSnapshot;
@@ -138,6 +140,7 @@ namespace Assets.Scripts.Features.Battle
                 traceLineView,
                 hudController,
                 preferInteractiveTraceInput,
+                allowFallbackTurnExecution,
                 ResolveEventNoticeView());
             _turnViewCoordinator.SetTurnContext(
                 _session,
@@ -204,8 +207,9 @@ namespace Assets.Scripts.Features.Battle
                     return;
                 }
 
-                await _turnViewCoordinator.PlayPlayerActionAnimationsAsync(
+                await _turnViewCoordinator.PlayResolvedActionAnimationsAsync(
                     _playerInstance,
+                    _enemyInstance,
                     result,
                     _turnExecutionCts.Token);
 
@@ -402,9 +406,9 @@ namespace Assets.Scripts.Features.Battle
             var playerObject = Instantiate(playerPrefab, playerRoot);
             var enemyObject = Instantiate(playerPrefab, enemyRoot);
             _playerInstance = playerObject.GetComponent<PartsManager>();
-            var enemyInstance = enemyObject.GetComponent<PartsManager>();
+            _enemyInstance = enemyObject.GetComponent<PartsManager>();
             _playerInstance.Init();
-            enemyInstance.Init();
+            _enemyInstance.Init();
 
             var avatarRender = AvatarRenderService.EnsureInitialized();
             avatarRender.SyncSessionFromRendererIfNeeded(_playerInstance, saveAfterSync: true);
@@ -412,7 +416,7 @@ namespace Assets.Scripts.Features.Battle
 
             if (_activeEnemyData?.Appearance != null)
             {
-                enemyInstance.ApplyAppearanceData(_activeEnemyData.Appearance);
+                _enemyInstance.ApplyAppearanceData(_activeEnemyData.Appearance);
             }
         }
         #endregion init

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "specs/戦闘画面仕様書.md",
+                "file": "specs/ユーザーデータ構造.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "戦闘画面仕様書"
+              "title": "ユーザーデータ構造"
             }
           }
         ]
@@ -185,12 +185,12 @@
   },
   "active": "c2bd0eb158035e67",
   "lastOpenFiles": [
-    "specs/タグ仕様書.md",
-    "specs/戦闘画面仕様書.md",
-    "specs/スキル仕様書.md",
-    "specs/装備仕様書.md",
-    "specs/ユーザーデータ構造.md",
     "specs/戦闘システム仕様書.md",
+    "specs/戦闘画面仕様書.md",
+    "specs/装備仕様書.md",
+    "specs/タグ仕様書.md",
+    "specs/スキル仕様書.md",
+    "specs/ユーザーデータ構造.md",
     "AGENTS.md",
     "specs/属性仕様書.md",
     "codex-notes/Cシャープメソッド棚卸し.md",

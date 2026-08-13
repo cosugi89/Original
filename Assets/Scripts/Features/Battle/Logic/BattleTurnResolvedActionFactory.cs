@@ -87,6 +87,13 @@ namespace Assets.Scripts.Features.Battle.Logic
                 semantics: BattleResolvedActionSemantics.ResolvedHazard);
         }
 
+        public BattleResolvedAction CreateHazardEnemyIntentAction(BattleNodeType nodeType)
+        {
+            return CreateSimpleAction(
+                BattleResolvedActionType.EnemyIntent,
+                animationCue: ResolveHazardEnemyAnimationCue(nodeType));
+        }
+
         public BattleResolvedAction CreateHazardHitAction(int hazardGroupKey)
         {
             return CreateDamageAction(
@@ -176,6 +183,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                 BattleResolvedActionType.EnemyAction,
                 BattleDamageKind.EnemyAction,
                 targetIsEnemy: false,
+                animationCue: isSkill ? BattlePlayerAnimationCue.Skill : BattlePlayerAnimationCue.Attack,
                 logMessage: isSkill ? "Enemy skill resolved" : "Enemy normal attack resolved",
                 logWhenZeroBaseDamage: false,
                 skipIfZeroBaseDamage: true,
@@ -187,6 +195,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         {
             return CreateSimpleAction(
                 BattleResolvedActionType.HazardBoostReserved,
+                animationCue: BattlePlayerAnimationCue.Dance,
                 logMessage: "Enemy dance reserved the next turn hazard boost.",
                 semantics: BattleResolvedActionSemantics.NextTurnHazardBoostReserved);
         }
@@ -416,6 +425,13 @@ namespace Assets.Scripts.Features.Battle.Logic
                     ? Array.Empty<string>()
                     : new[] { logMessage },
             };
+        }
+
+        private static BattlePlayerAnimationCue ResolveHazardEnemyAnimationCue(BattleNodeType nodeType)
+        {
+            return nodeType == BattleNodeType.HazardSkill
+                ? BattlePlayerAnimationCue.Skill
+                : BattlePlayerAnimationCue.Attack;
         }
 
         private bool IsTargetDefeatedAfterResolution(

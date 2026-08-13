@@ -25,7 +25,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                 BattleSkillValueType.Multiplier => baseValue * formula.Value,
                 BattleSkillValueType.Percentage => baseValue * formula.Value,
                 BattleSkillValueType.FixedValue => formula.Value,
-                BattleSkillValueType.None => formula.Value,
+                BattleSkillValueType.None => 0f,
                 _ => 0f,
             };
 

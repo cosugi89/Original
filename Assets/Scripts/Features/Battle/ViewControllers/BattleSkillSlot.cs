@@ -1,6 +1,7 @@
 using System;
 using Assets.Scripts.Features.Battle.Const;
 using Assets.Scripts.Features.Battle.Runtime;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -17,6 +18,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         [SerializeField] private Image image;
         [SerializeField] private Image filled;
         [SerializeField] private GameObject unavailable;
+        [SerializeField] private TMP_Text nameText;
+        [SerializeField] private TMP_Text stateText;
+        [SerializeField] private TMP_Text chargeText;
 
         public SkillSlotRuntime Runtime { get; private set; }
 
@@ -62,11 +66,13 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             if (Runtime == null)
             {
                 ApplyRuntimeIcon(null);
+                SetSlotText("Empty", "EMPTY", "-/-");
                 SetUnavailable();
                 return;
             }
 
             ApplyRuntimeIcon(Runtime.Icon);
+            SetSlotText(Runtime.DisplayName, BuildStateLabel(Runtime), Runtime.GetChargeLabel());
 
             switch (Runtime.State)
             {
@@ -172,6 +178,41 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             {
                 filled.sprite = icon != null ? icon : _defaultFilledSprite;
             }
+        }
+
+        private void SetSlotText(string name, string state, string charge)
+        {
+            SetText(nameText, name);
+            SetText(stateText, state);
+            SetText(chargeText, charge);
+        }
+
+        private static void SetText(TMP_Text target, string value)
+        {
+            if (target != null)
+            {
+                target.text = value ?? string.Empty;
+            }
+        }
+
+        private static string BuildStateLabel(SkillSlotRuntime runtime)
+        {
+            if (runtime == null)
+            {
+                return "EMPTY";
+            }
+
+            if (!runtime.IsUnlocked)
+            {
+                return "LOCKED";
+            }
+
+            if (!runtime.IsConfigured)
+            {
+                return "EMPTY";
+            }
+
+            return runtime.GetStateLabel();
         }
     }
 }

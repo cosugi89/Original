@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.StageMasterDatabase
   stages:
   - {fileID: 11400000, guid: 08e5d212cd414f99a2e244f345e703e3, type: 2}
+  - {fileID: 11400000, guid: 1186b3e1254e5e64ba0802160e7f5e39, type: 2}

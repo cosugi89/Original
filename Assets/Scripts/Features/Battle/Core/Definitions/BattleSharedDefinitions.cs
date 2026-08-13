@@ -38,6 +38,16 @@ namespace Assets.Scripts.Features.Battle.Core
     }
 
     /// <summary>
+    /// AnimationEvent から戦闘タイムラインへ中継するイベントキー。
+    /// </summary>
+    public static class BattleAnimationEventKeys
+    {
+        public const string AttackStart = "AttackStart";
+        public const string Hit = "Hit";
+        public const string RecoverEnd = "RecoverEnd";
+    }
+
+    /// <summary>
     /// 敵ターンの行動カテゴリ。
     /// デモ専用 enum から切り離し、盤面生成や敵 AI の共通キーとして使う。
     /// </summary>
@@ -82,8 +92,8 @@ namespace Assets.Scripts.Features.Battle.Core
     }
 
     /// <summary>
-    /// 戦闘解決から表示層へ渡すプレイヤー行動アニメーションの手掛かり。
-    /// BattleScene はこの列を順番に再生する。
+    /// 戦闘解決から表示層へ渡すキャラクター行動アニメーションの手掛かり。
+    /// 型名は既存互換のため Player を残すが、敵側の PartsManager 再生にも使う。
     /// </summary>
     public enum BattlePlayerAnimationCue
     {
