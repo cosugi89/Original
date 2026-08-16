@@ -15,7 +15,7 @@ MonoBehaviour:
   stageId: 9001
   stageName: Animation Timing Test
   description: "Roll \u3068\u6575 Attack \u306E\u540C\u6642\u518D\u751F\u78BA\u8A8D\u7528\u30B9\u30C6\u30FC\u30B8\u3002"
-  backgroundImage: {fileID: 21300000, guid: 6e1048b56273a4122aaaf7d89d6e519e, type: 3}
+  backgroundImage: {fileID: 21300000, guid: 12657bef1d3fb4dc3ad788b2bd0e8012, type: 3}
   previewImage: {fileID: 21300000, guid: 5546e2c9d34934340bd80bb4e408d1a2, type: 3}
   sortOrder: 9001
   isInitiallyUnlocked: 1

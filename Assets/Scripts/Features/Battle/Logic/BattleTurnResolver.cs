@@ -11,6 +11,14 @@ namespace Assets.Scripts.Features.Battle.Logic
     /// </summary>
     public static class BattleTurnResolver
     {
+        private static readonly IBattleTurnNodeAction NoOpNodeAction = new NoOpBattleTurnNodeAction();
+        private static readonly IBattleTurnNodeAction JumpNodeAction = new JumpBattleTurnNodeAction();
+        private static readonly IBattleTurnNodeAction RollNodeAction = new RollBattleTurnNodeAction();
+        private static readonly IBattleTurnNodeAction DanceNodeAction = new DanceBattleTurnNodeAction();
+        private static readonly IBattleTurnNodeAction AttackNodeAction = new AttackBattleTurnNodeAction();
+        private static readonly IBattleTurnNodeAction HazardNodeAction = new HazardBattleTurnNodeAction();
+        private static readonly IBattleTurnNodeAction GoalNodeAction = new GoalBattleTurnNodeAction();
+
         /// <summary>
         /// 確定パスを先頭から順に解釈し、攻撃・回避・被弾・Goal 到達を 1 ターン結果へ解決する。
         /// </summary>
@@ -41,48 +49,28 @@ namespace Assets.Scripts.Features.Battle.Logic
             {
                 var cell = path[i];
                 var nodeType = cell?.NodeType ?? BattleNodeType.Empty;
+                var nodeAction = ResolveNodeAction(nodeType);
+                var actionContext = new BattleTurnNodeActionContext(
+                    cell,
+                    i,
+                    selectedSkill,
+                    report,
+                    traversalState,
+                    resolutionState,
+                    actionFactory);
+                var actionResult = nodeAction.Execute(actionContext);
 
-                switch (nodeType)
+                if (!actionResult.ShouldReturnReport)
                 {
-                    case BattleNodeType.Start:
-                    case BattleNodeType.Empty:
-                        break;
-
-                    case BattleNodeType.Jump:
-                        traversalState.PrepareJump();
-                        ApplyResolvedAction(report, resolutionState, actionFactory.CreateJumpPreparedAction());
-                        break;
-
-                    case BattleNodeType.Roll:
-                        traversalState.PrepareRoll();
-                        ApplyResolvedAction(report, resolutionState, actionFactory.CreateRollPreparedAction());
-                        break;
-
-                    case BattleNodeType.Dance:
-                        traversalState.ResolveDance();
-                        ApplyResolvedAction(report, resolutionState, actionFactory.CreateDanceAction());
-                        break;
-
-                    case BattleNodeType.Attack:
-                        if (HandleAttackNode(report, selectedSkill, traversalState, resolutionState, actionFactory))
-                        {
-                            FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
-                            return report;
-                        }
-                        break;
-
-                    case BattleNodeType.HazardNormal:
-                    case BattleNodeType.HazardSkill:
-                        if (HandleHazardNode(cell, i, nodeType, report, traversalState, resolutionState, actionFactory))
-                        {
-                            FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
-                            return report;
-                        }
-                        break;
-
-                    case BattleNodeType.Goal:
-                        return CompleteGoalNode(report, selectedSkill, resolutionState, actionFactory);
+                    continue;
                 }
+
+                if (actionResult.FinalizeBeforeReturn)
+                {
+                    FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
+                }
+
+                return report;
             }
 
             FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
@@ -204,17 +192,6 @@ namespace Assets.Scripts.Features.Battle.Logic
             return true;
         }
 
-        private static BattleTurnResolutionReport CompleteGoalNode(
-            BattleTurnResolutionReport report,
-            SkillSlotRuntime selectedSkill,
-            BattleTurnResolutionState resolutionState,
-            BattleTurnResolvedActionFactory actionFactory)
-        {
-            ApplyResolvedAction(report, resolutionState, actionFactory.CreateGoalReachedAction());
-            FinalizeOutcomeFlags(report, selectedSkill, resolutionState, actionFactory);
-            return report;
-        }
-
         private static void FinalizeOutcomeFlags(
             BattleTurnResolutionReport report,
             SkillSlotRuntime selectedSkill,
@@ -270,6 +247,172 @@ namespace Assets.Scripts.Features.Battle.Logic
         {
             return resolutionState != null &&
                    (resolutionState.EnemyDefeated || resolutionState.PlayerDefeated);
+        }
+
+        private static IBattleTurnNodeAction ResolveNodeAction(BattleNodeType nodeType)
+        {
+            return nodeType switch
+            {
+                BattleNodeType.Jump => JumpNodeAction,
+                BattleNodeType.Roll => RollNodeAction,
+                BattleNodeType.Dance => DanceNodeAction,
+                BattleNodeType.Attack => AttackNodeAction,
+                BattleNodeType.HazardNormal => HazardNodeAction,
+                BattleNodeType.HazardSkill => HazardNodeAction,
+                BattleNodeType.Goal => GoalNodeAction,
+                _ => NoOpNodeAction,
+            };
+        }
+
+        private interface IBattleTurnNodeAction
+        {
+            BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context);
+        }
+
+        private readonly struct BattleTurnNodeActionResult
+        {
+            private BattleTurnNodeActionResult(bool shouldReturnReport, bool finalizeBeforeReturn)
+            {
+                ShouldReturnReport = shouldReturnReport;
+                FinalizeBeforeReturn = finalizeBeforeReturn;
+            }
+
+            public bool ShouldReturnReport { get; }
+
+            public bool FinalizeBeforeReturn { get; }
+
+            public static BattleTurnNodeActionResult Continue()
+            {
+                return new BattleTurnNodeActionResult(false, false);
+            }
+
+            public static BattleTurnNodeActionResult ReturnAfterFinalization()
+            {
+                return new BattleTurnNodeActionResult(true, true);
+            }
+        }
+
+        private sealed class BattleTurnNodeActionContext
+        {
+            public BattleTurnNodeActionContext(
+                BattleCellState cell,
+                int stepIndex,
+                SkillSlotRuntime selectedSkill,
+                BattleTurnResolutionReport report,
+                BattleTurnTraversalState traversalState,
+                BattleTurnResolutionState resolutionState,
+                BattleTurnResolvedActionFactory actionFactory)
+            {
+                Cell = cell;
+                StepIndex = stepIndex;
+                SelectedSkill = selectedSkill;
+                Report = report;
+                TraversalState = traversalState;
+                ResolutionState = resolutionState;
+                ActionFactory = actionFactory;
+            }
+
+            public BattleCellState Cell { get; }
+
+            public int StepIndex { get; }
+
+            public SkillSlotRuntime SelectedSkill { get; }
+
+            public BattleTurnResolutionReport Report { get; }
+
+            public BattleTurnTraversalState TraversalState { get; }
+
+            public BattleTurnResolutionState ResolutionState { get; }
+
+            public BattleTurnResolvedActionFactory ActionFactory { get; }
+
+            public BattleNodeType NodeType => Cell?.NodeType ?? BattleNodeType.Empty;
+
+            public void Apply(BattleResolvedAction action)
+            {
+                ApplyResolvedAction(Report, ResolutionState, action);
+            }
+        }
+
+        private sealed class NoOpBattleTurnNodeAction : IBattleTurnNodeAction
+        {
+            public BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context)
+            {
+                return BattleTurnNodeActionResult.Continue();
+            }
+        }
+
+        private sealed class JumpBattleTurnNodeAction : IBattleTurnNodeAction
+        {
+            public BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context)
+            {
+                context.TraversalState.PrepareJump();
+                context.Apply(context.ActionFactory.CreateJumpPreparedAction());
+                return BattleTurnNodeActionResult.Continue();
+            }
+        }
+
+        private sealed class RollBattleTurnNodeAction : IBattleTurnNodeAction
+        {
+            public BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context)
+            {
+                context.TraversalState.PrepareRoll();
+                context.Apply(context.ActionFactory.CreateRollPreparedAction());
+                return BattleTurnNodeActionResult.Continue();
+            }
+        }
+
+        private sealed class DanceBattleTurnNodeAction : IBattleTurnNodeAction
+        {
+            public BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context)
+            {
+                context.TraversalState.ResolveDance();
+                context.Apply(context.ActionFactory.CreateDanceAction());
+                return BattleTurnNodeActionResult.Continue();
+            }
+        }
+
+        private sealed class AttackBattleTurnNodeAction : IBattleTurnNodeAction
+        {
+            public BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context)
+            {
+                var stopped = HandleAttackNode(
+                    context.Report,
+                    context.SelectedSkill,
+                    context.TraversalState,
+                    context.ResolutionState,
+                    context.ActionFactory);
+                return stopped
+                    ? BattleTurnNodeActionResult.ReturnAfterFinalization()
+                    : BattleTurnNodeActionResult.Continue();
+            }
+        }
+
+        private sealed class HazardBattleTurnNodeAction : IBattleTurnNodeAction
+        {
+            public BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context)
+            {
+                var stopped = HandleHazardNode(
+                    context.Cell,
+                    context.StepIndex,
+                    context.NodeType,
+                    context.Report,
+                    context.TraversalState,
+                    context.ResolutionState,
+                    context.ActionFactory);
+                return stopped
+                    ? BattleTurnNodeActionResult.ReturnAfterFinalization()
+                    : BattleTurnNodeActionResult.Continue();
+            }
+        }
+
+        private sealed class GoalBattleTurnNodeAction : IBattleTurnNodeAction
+        {
+            public BattleTurnNodeActionResult Execute(BattleTurnNodeActionContext context)
+            {
+                context.Apply(context.ActionFactory.CreateGoalReachedAction());
+                return BattleTurnNodeActionResult.ReturnAfterFinalization();
+            }
         }
 
         private static int Max(int left, int right)

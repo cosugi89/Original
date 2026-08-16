@@ -1,8 +1,8 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-08-11
-- 主な参照元: `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
-- 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 関連タスクが中心。
+- 最終更新: 2026-08-16
+- 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
+- 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と MainScene / Status タブ拡充タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
 - 状態見直し: 2026-07-12 に属性採用方針を撤回し、タグ仕様書と属性撤去 TODO を追加
 
@@ -11,7 +11,7 @@
 - `[x]` は現状 repo 上で概ね存在するもの
 - `[ ]` は未着手、未接続、または仕様/UX が未確定のもの
 - 優先度は `P0 > P1 > P2 > P3`
-- ゲーム改善アイデアは `8. ゲーム改善アイデア TODO` に置き、採用方針が固まったら該当する実装 TODO や仕様書へ昇格する
+- ゲーム改善アイデアは `9. ゲーム改善アイデア TODO` に置き、採用方針が固まったら該当する実装 TODO や仕様書へ昇格する
 
 ## 1. P0: 基盤とデータ整合
 
@@ -34,6 +34,7 @@
 - [x] Goal 未到達で離した場合の引き直しフローを実装する
 - [x] 同ターン中の引き直しで盤面と Skill 選択を維持する
 - [x] `BattleTurnResolver` を追加し、Attack、Jump、Roll、Dance、Goal、危険の最小解決ルールを切り出す
+- [x] `BattleTurnResolver` の処理入口を node type ごとの action class へ分け、行動単位で拡張しやすい形へ段階移行する
 - [x] Skill 選択時に Attack を Skill に変換する
 - [x] Skill 選択時は Jump Attack や Double Attack より Skill を優先する
 - [x] `SkillSlotRuntime` で Skill パレットの Ready、Charge、消費状態を扱う
@@ -43,6 +44,7 @@
 - [x] 危険グループを runtime で上下左右連結から自動付与し、同一グループは被弾 1 回として扱う
 - [x] 敵行動種別として `NormalAttack`、`Skill`、`Dance` を持つ
 - [x] 敵 Dance 後の次ターン危険強化を、現行仕様どおり危険ダメージ 1.5 倍として扱う
+- [x] `ResolvedActions` から演出 beat と action 成立タイミングを作り、攻撃/被弾/Skill 効果を演出 event に合わせて逐次反映する
 - [ ] ドラッグ入力中はパス以外の操作を受け付けない入力ロックを実装する
 - [ ] 不正入力時の UX を整理する。現状の「不正マスだけ拒否して継続」と、全リセット/失敗累積の扱いを仕様として確定する
 - [ ] 実際に解決された Attack 回数に応じて `AttackChargeGain` を反映する
@@ -95,7 +97,23 @@
 - [ ] 勝利時に実際の `score`、`rank`、`clearTimeSeconds` を `RecordStageClear()` へ渡す
 - [ ] 戦闘終了時に `GameSaveService.SaveSession()` を呼ぶ導線を整える
 
-## 5. P2: 敵行動、戦型、特殊敗北
+## 5. P1: MainScene / Status タブ
+
+- [x] Status タブに現在の装備枠一覧を表示する
+- [x] Status タブで所持済み / 解放済み装備から装備を選択できるようにする
+- [x] 装備変更を `UserData.Profile.Avatar.Parts` と MainScene 上のプレイヤープレビューへ反映する
+- [x] `Button_Skin` から髪、肌、目、ひげなどの見た目変更ダイアログを開く
+- [x] 見た目変更ダイアログの保存を `UserData.Profile.Avatar` と MainScene 上の各プレイヤープレビューへ反映する
+- [x] Status タブの変更保存タイミングを確定し、`GameSaveService.SaveSession()` へ接続する
+- [x] 装備変更により使用不可になった Skill ロードアウトを自動で外す
+- [x] Status タブで実戦用 Skill ロードアウト4枠を表示し、Skill 設定ダイアログから変更できるようにする
+- [x] Dialog 基盤を `DialogService` / 専用 `DialogCanvas` / `DialogAddressAttribute` ベースへ移行し、呼び出し側の prefab 参照と parent 指定を外す
+- [x] 汎用 `GameButton` を `Button` 継承 + 単体 Prefab ベースで追加し、見た目 enum / SE enum / Badge を切り替えられるようにする
+- [ ] `Dialog-StatusEquipmentDetail` 以外の Dialog と主要 UI の既存 `Button` を、触るタイミングで `GameButton` へ段階的に置き換える
+- [ ] 見た目変更ダイアログの最終レイアウトを `Settings.prefab` 基準で調整する
+- [ ] 装備変更による戦闘ステータス、候補スキル、タグ一致ボーナスのプレビュー表示方針を決める
+
+## 6. P2: 敵行動、戦型、特殊敗北
 
 - [ ] 敵の行動選択を pattern ランダムから AI / 重み / 難度ルールへ拡張するか決める
 - [ ] 敵行動選択ルールを `StageBattleEnemyMasterData` などの実データへ追加する
@@ -110,7 +128,7 @@
 - [ ] `StageBattleEnemyMasterData` にタイミング別フレーバーテキスト群を追加する
 - [ ] フレーバーテキスト群は `Dictionary` ではなく `TriggerType + List<string>` の serializable entry list で持つ
 
-## 6. P2: マスターデータ、ロードアウト、演出
+## 7. P2: マスターデータ、ロードアウト、演出
 
 - [x] `EquipmentMasterData.AssignableSkills` で装備ごとの候補スキルを持てる
 - [x] `EquipmentMasterData.AssignableSkills` は DTO 経由で runtime へ渡せる
@@ -135,12 +153,13 @@
 - [x] `ChargeGain` / `Heal` / `GuardGain` の初期スキル効果を実装する
 - [x] `Buff` / `Debuff` を Parameter 対象の一時補正として扱うランタイムを実装する
 - [x] `EquipmentMasterData.CategoryTags` をタグ一致ボーナス判定へ接続する
+- [x] `EffectAnimationData.CharacterAnimationName` / `WaitSeconds` を Skill 効果ごとの Timeline へ接続する
 - [ ] 実際に使用する Effect / VFX / SE 資産を作成する
-- [ ] `EffectAnimationData` の実再生処理を `BattleScene` / runtime に接続する
+- [ ] `EffectAnimationData.VisualEffectKey` / `SoundEffectKey` の VFX / SE 実再生処理を `BattleScene` / runtime に接続する
 - [ ] 盤面テンプレートや危険配置テンプレートを、単発 pattern 以外で再利用できるデータとして整理する
 - [ ] 旧属性 field / asset の完全削除可否と既存 serialized data の移行方針を決める
 
-## 7. P3: 将来拡張
+## 8. P3: 将来拡張
 
 - [ ] Goal 効果の固有化
 - [ ] Dance Goal の持ち越し効果
@@ -154,25 +173,24 @@
 - [ ] 複数敵
 - [ ] ランダム盤面生成
 
-## 8. ゲーム改善アイデア TODO
+## 9. ゲーム改善アイデア TODO
 
 このセクションは、仕様化前の「ゲームをもっと良くする案」を置く場所。
 実装する方針が固まったものは、P0〜P3 の該当セクション、仕様書、または個別設計へ移す。
 採用しない案、重複した案、古くなった案は残し続けずに削除する。
 
-### 8.1 体験・手触り
+### 9.1 体験・手触り
 
-### 8.2 戦闘の深み
+### 9.2 戦闘の深み
 
-### 8.3 成長・収集
+### 9.3 成長・収集
 
-### 8.4 演出・世界観
+### 9.4 演出・世界観
 
-## 9. まず着手する順番
+## 10. まず着手する順番
 
 1. ドラッグ入力中の操作ロックを実装する
 2. Skill 消費条件の UI 明示とテストを追加する
 3. `AttackChargeGain` を解決済み Attack 数に応じて反映する
 4. 勝敗演出、再挑戦導線、戦闘終了時 save を接続する
 5. ステージ選択画面と未解放ステージ制御を実装する
-6. ロードアウト保存と Skill スロット初期化を正式接続する

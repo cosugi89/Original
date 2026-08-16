@@ -1,4 +1,5 @@
 using System.Collections;
+using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Runtime;
 using TMPro;
 using UnityEngine;
@@ -46,6 +47,15 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         public void ShowTurnResult(BattleResolvedActionSummary summary)
         {
             Show(BuildTurnResultNotice(summary));
+        }
+
+        public void ShowResolvedAction(BattleResolvedAction action)
+        {
+            var message = BuildResolvedActionNotice(action);
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                Show(message);
+            }
         }
 
         public void ShowInputRejected(string message)
@@ -137,6 +147,69 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             if (summary.ResolvedAttackCount > 0)
             {
                 return "Attack";
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildResolvedActionNotice(BattleResolvedAction action)
+        {
+            if (action == null)
+            {
+                return string.Empty;
+            }
+
+            if (action.HasSemantic(BattleResolvedActionSemantics.EnemyDefeated))
+            {
+                return "撃破";
+            }
+
+            if (action.HasSemantic(BattleResolvedActionSemantics.PlayerDefeated))
+            {
+                return "敗北";
+            }
+
+            if (action.ActionType == BattleResolvedActionType.HazardHit ||
+                action.HasSemantic(BattleResolvedActionSemantics.TookHit))
+            {
+                return "被弾";
+            }
+
+            if (action.ActionType == BattleResolvedActionType.HazardEvaded)
+            {
+                return "回避";
+            }
+
+            if (action.HasSemantic(BattleResolvedActionSemantics.ResolvedSkill) &&
+                !string.IsNullOrWhiteSpace(action.DisplayName))
+            {
+                return $"{action.DisplayName}!";
+            }
+
+            if (action.ActionType == BattleResolvedActionType.HazardBoostReserved ||
+                action.HasSemantic(BattleResolvedActionSemantics.NextTurnHazardBoostReserved))
+            {
+                return "危険が増した";
+            }
+
+            if (action.ActionType == BattleResolvedActionType.GoalReached)
+            {
+                return "Goal";
+            }
+
+            if (action.ActionType == BattleResolvedActionType.PlayerAttack)
+            {
+                return "Attack";
+            }
+
+            if (action.ActionType == BattleResolvedActionType.Dance)
+            {
+                return "Dance";
+            }
+
+            if (action.PlayerHealing > 0)
+            {
+                return "回復";
             }
 
             return string.Empty;

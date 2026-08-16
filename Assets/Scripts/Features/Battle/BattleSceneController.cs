@@ -211,9 +211,10 @@ namespace Assets.Scripts.Features.Battle
                     _playerInstance,
                     _enemyInstance,
                     result,
-                    _turnExecutionCts.Token);
+                    _turnExecutionCts.Token,
+                    action => ApplyResolvedActionDuringTurn(action, preparedTurn.Pattern));
 
-                _turnResultApplier.Apply(_session, _playerSnapshot, result, preparedTurn.Pattern, HandleBattleClear);
+                _turnResultApplier.ApplyFinalization(_session, _playerSnapshot, result, preparedTurn.Pattern, HandleBattleClear);
                 ApplyTurnUi(preparedTurn.Pattern, result.Summary);
                 if (!_session.BattleEnded)
                 {
@@ -430,6 +431,25 @@ namespace Assets.Scripts.Features.Battle
             ResolveEnemyUnitView()?.ApplySession(_session);
             ResolvePlayerAreaView()?.ApplySession(_session);
             RefreshBattleTypeUi();
+        }
+
+        private void ApplyResolvedActionDuringTurn(
+            BattleResolvedAction action,
+            StageBattlePatternData pattern)
+        {
+            if (action == null)
+            {
+                return;
+            }
+
+            var changedSession = _turnResultApplier.ApplyAction(_session, action, pattern);
+            if (changedSession)
+            {
+                RefreshHud();
+                ResolveDamageFeedbackView()?.Apply(action);
+            }
+
+            ResolveEventNoticeView()?.ShowResolvedAction(action);
         }
 
         private void HandleBattleClear()

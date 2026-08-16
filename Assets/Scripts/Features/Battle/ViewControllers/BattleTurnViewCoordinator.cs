@@ -266,20 +266,35 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             PartsManager playerInstance,
             PartsManager enemyInstance,
             BattleTurnResolutionReport result,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            Action<BattleResolvedAction> onResolvedAction = null)
         {
-            if (result == null || (playerInstance == null && enemyInstance == null))
+            if (result == null)
             {
                 return;
             }
 
             var summary = result.Summary;
+            var notifiedActions = onResolvedAction != null
+                ? new HashSet<BattleResolvedAction>()
+                : null;
             var beats = BattleTurnAnimationPlanner.Build(result.ResolvedActions);
             for (var i = 0; i < beats.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await PlayAnimationBeatAsync(beats[i], playerInstance, enemyInstance, cancellationToken);
+                await PlayAnimationBeatAsync(
+                    beats[i],
+                    playerInstance,
+                    enemyInstance,
+                    cancellationToken,
+                    onResolvedAction,
+                    notifiedActions);
             }
+
+            NotifyRemainingResolvedActions(
+                result.ResolvedActions,
+                onResolvedAction,
+                notifiedActions);
 
             if (summary.PlayerDefeated)
             {
@@ -302,7 +317,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             BattleTurnAnimationBeat beat,
             PartsManager playerInstance,
             PartsManager enemyInstance,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            Action<BattleResolvedAction> onResolvedAction,
+            HashSet<BattleResolvedAction> notifiedActions)
         {
             var events = beat.Events;
             if (events == null || events.Count == 0)
@@ -329,7 +346,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                     actorLabel,
                     playerInstance,
                     enemyInstance,
-                    cancellationToken));
+                    cancellationToken,
+                    onResolvedAction,
+                    notifiedActions));
             }
 
             if (tasks.Count == 0)
@@ -346,7 +365,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             string actorLabel,
             PartsManager playerInstance,
             PartsManager enemyInstance,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            Action<BattleResolvedAction> onResolvedAction,
+            HashSet<BattleResolvedAction> notifiedActions)
         {
             await WaitForAnimationStartAsync(
                 animationEvent.StartTrigger,
@@ -354,21 +375,121 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
                 enemyInstance,
                 cancellationToken);
 
-            if (!TryPlayAnimationCue(target, animationEvent.Cue, actorLabel, out var durationSeconds))
+            LogEffectTimelineEvent(animationEvent, actorLabel);
+
+            var playedAnimation = false;
+            var durationSeconds = 0f;
+            if (animationEvent.Cue.HasValue)
             {
-                return;
+                playedAnimation = TryPlayAnimationCue(
+                    target,
+                    animationEvent.Cue.Value,
+                    actorLabel,
+                    out durationSeconds);
             }
 
-            await WaitForAnimationEventOrDelayAsync(
-                target,
-                BattleAnimationEventKeys.RecoverEnd,
-                durationSeconds,
-                cancellationToken,
-                animationEvent.Cue);
+            if (animationEvent.Cue.HasValue && !playedAnimation)
+            {
+                Debug.Log(
+                    $"[Battle] {actorLabel} animation {BattleAnimationCatalog.GetClipName(animationEvent.Cue.Value)} が無いため effect fallback で進行します。");
+            }
+
+            if (animationEvent.ResolveTiming == BattleTurnAnimationResolveTiming.OnHit)
+            {
+                if (playedAnimation)
+                {
+                    await WaitForAnimationEventOrDelayAsync(
+                        target,
+                        BattleAnimationEventKeys.Hit,
+                        animationEvent.ResolveDelaySeconds,
+                        cancellationToken,
+                        animationEvent.Cue);
+                }
+                else
+                {
+                    await DelayIfNeededAsync(animationEvent.ResolveDelaySeconds, cancellationToken);
+                }
+
+                NotifyResolvedActions(
+                    animationEvent.ResolvedActions,
+                    onResolvedAction,
+                    notifiedActions);
+            }
+            else
+            {
+                await DelayIfNeededAsync(animationEvent.ResolveDelaySeconds, cancellationToken);
+                NotifyResolvedActions(
+                    animationEvent.ResolvedActions,
+                    onResolvedAction,
+                    notifiedActions);
+            }
+
+            if (playedAnimation && animationEvent.WaitForRecoverEnd)
+            {
+                await WaitForAnimationEventOrDelayAsync(
+                    target,
+                    BattleAnimationEventKeys.RecoverEnd,
+                    durationSeconds,
+                    cancellationToken,
+                    animationEvent.Cue);
+            }
 
             if (animationEvent.ReturnToIdle)
             {
                 PlayIdleIfAvailable(target);
+            }
+        }
+
+        private static void LogEffectTimelineEvent(
+            BattleTurnAnimationEvent animationEvent,
+            string actorLabel)
+        {
+            var effectAnimation = animationEvent.EffectAnimation;
+            if (effectAnimation == null)
+            {
+                return;
+            }
+
+            Debug.Log(
+                $"[Battle] {actorLabel} effect timeline {effectAnimation.EffectAnimationKey} " +
+                $"VFX={effectAnimation.VisualEffectKey} SE={effectAnimation.SoundEffectKey} Wait={effectAnimation.WaitSeconds:0.###}");
+        }
+
+        private static void NotifyRemainingResolvedActions(
+            IReadOnlyList<BattleResolvedAction> resolvedActions,
+            Action<BattleResolvedAction> onResolvedAction,
+            HashSet<BattleResolvedAction> notifiedActions)
+        {
+            NotifyResolvedActions(
+                resolvedActions,
+                onResolvedAction,
+                notifiedActions);
+        }
+
+        private static void NotifyResolvedActions(
+            IReadOnlyList<BattleResolvedAction> resolvedActions,
+            Action<BattleResolvedAction> onResolvedAction,
+            HashSet<BattleResolvedAction> notifiedActions)
+        {
+            if (resolvedActions == null || onResolvedAction == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < resolvedActions.Count; i++)
+            {
+                var action = resolvedActions[i];
+                if (action == null)
+                {
+                    continue;
+                }
+
+                if (notifiedActions != null && !notifiedActions.Add(action))
+                {
+                    continue;
+                }
+
+                onResolvedAction.Invoke(action);
             }
         }
 

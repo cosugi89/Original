@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Features.Battle.Core;
 
 namespace Assets.Scripts.Features.Battle.Runtime
@@ -43,6 +44,12 @@ namespace Assets.Scripts.Features.Battle.Runtime
         public BattleResolvedActionSemantics Semantics { get; init; } = BattleResolvedActionSemantics.None;
 
         public BattleSkillEffectSuccessResult SkillEffectSuccess { get; init; }
+
+        public BattleSkillEffectEntryData SkillEffect { get; init; }
+
+        public int SkillEffectIndex { get; init; } = -1;
+
+        public EffectAnimationData EffectAnimation { get; init; }
 
         public int PlayerHealing { get; init; }
 

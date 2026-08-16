@@ -23,8 +23,62 @@ namespace Assets.Scripts.Features.Battle.Logic
                 return;
             }
 
-            var summary = result.Summary;
             ApplyResolvedActionsToSession(session, result, pattern);
+            ApplyFinalization(session, playerSnapshot, result, pattern, onBattleClear);
+        }
+
+        public bool ApplyAction(
+            BattleSessionState session,
+            BattleResolvedAction action,
+            StageBattlePatternData pattern)
+        {
+            if (session == null || action == null)
+            {
+                return false;
+            }
+
+            var changedSession = false;
+            var patternLabel = GetPatternLabel(pattern);
+            var resolution = action.DamageResolution;
+            if (resolution != null && resolution.Damage > 0)
+            {
+                if (action.TargetsEnemy)
+                {
+                    session.ApplyEnemyDamage(resolution.Damage);
+                    Debug.Log($"[Battle] {patternLabel} EnemyDamage={resolution.Damage}");
+                }
+                else
+                {
+                    session.ApplyPlayerDamage(resolution.Damage);
+                    Debug.Log($"[Battle] {patternLabel} PlayerDamage={resolution.Damage}");
+                }
+
+                changedSession = true;
+            }
+
+            if (action.PlayerHealing > 0)
+            {
+                session.ApplyPlayerHealing(action.PlayerHealing);
+                Debug.Log($"[Battle] {patternLabel} PlayerHealing={action.PlayerHealing}");
+                changedSession = true;
+            }
+
+            return changedSession;
+        }
+
+        public void ApplyFinalization(
+            BattleSessionState session,
+            BattlePlayerSnapshot playerSnapshot,
+            BattleTurnResolutionReport result,
+            StageBattlePatternData pattern,
+            Action onBattleClear = null)
+        {
+            if (session == null || result == null)
+            {
+                return;
+            }
+
+            var summary = result.Summary;
 
             var selectedSkill = ResolveSelectedSkill(session, playerSnapshot);
             if (selectedSkill != null && summary.SelectedSkillConsumed)

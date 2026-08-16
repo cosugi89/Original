@@ -132,26 +132,28 @@ namespace Assets.Scripts.Features.Battle.Logic
             var success = ResolveSkillEffectSuccess(selectedSkill, effect, effectIndex);
             if (success != null && !success.Succeeded)
             {
-                return CreateSkillEffectFailedAction(selectedSkill, success);
+                return CreateSkillEffectFailedAction(selectedSkill, effect, effectIndex, success);
             }
 
             return effect.EffectType switch
             {
-                BattleSkillOperationType.Damage => CreateSkillDamageEffectAction(selectedSkill, effect, success),
-                BattleSkillOperationType.ChargeGain => CreateSkillChargeGainEffectAction(selectedSkill, effect, success),
-                BattleSkillOperationType.Heal => CreateSkillHealEffectAction(selectedSkill, effect, success),
-                BattleSkillOperationType.GuardGain => CreateSkillGuardGainEffectAction(selectedSkill, effect, success),
+                BattleSkillOperationType.Damage => CreateSkillDamageEffectAction(selectedSkill, effect, effectIndex, success),
+                BattleSkillOperationType.ChargeGain => CreateSkillChargeGainEffectAction(selectedSkill, effect, effectIndex, success),
+                BattleSkillOperationType.Heal => CreateSkillHealEffectAction(selectedSkill, effect, effectIndex, success),
+                BattleSkillOperationType.GuardGain => CreateSkillGuardGainEffectAction(selectedSkill, effect, effectIndex, success),
                 BattleSkillOperationType.Buff => CreateSkillTemporaryStatModifierEffectAction(
                     selectedSkill,
                     effect,
+                    effectIndex,
                     success,
                     targetsPlayer: true),
                 BattleSkillOperationType.Debuff => CreateSkillTemporaryStatModifierEffectAction(
                     selectedSkill,
                     effect,
+                    effectIndex,
                     success,
                     targetsPlayer: false),
-                _ => CreateSkillNoOpEffectAction(selectedSkill, success),
+                _ => CreateSkillNoOpEffectAction(selectedSkill, effect, effectIndex, success),
             };
         }
 
@@ -224,6 +226,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private BattleResolvedAction CreateSkillDamageEffectAction(
             SkillSlotRuntime selectedSkill,
             BattleSkillEffectEntryData effect,
+            int effectIndex,
             BattleSkillEffectSuccessResult success)
         {
             return CreateDamageAction(
@@ -232,7 +235,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                 targetIsEnemy: true,
                 selectedSkill: selectedSkill,
                 skillEffect: effect,
+                skillEffectIndex: effectIndex,
                 skillEffectSuccess: success,
+                effectAnimation: selectedSkill?.EffectAnimation,
                 logWhenZeroBaseDamage: false,
                 semantics: BattleResolvedActionSemantics.None,
                 defeatLogMessage: "Enemy defeated.");
@@ -240,17 +245,23 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private BattleResolvedAction CreateSkillNoOpEffectAction(
             SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            int effectIndex,
             BattleSkillEffectSuccessResult success)
         {
             return CreateSimpleAction(
                 BattleResolvedActionType.Skill,
                 displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffect: effect,
+                skillEffectIndex: effectIndex,
+                effectAnimation: selectedSkill?.EffectAnimation,
                 skillEffectSuccess: success);
         }
 
         private BattleResolvedAction CreateSkillChargeGainEffectAction(
             SkillSlotRuntime selectedSkill,
             BattleSkillEffectEntryData effect,
+            int effectIndex,
             BattleSkillEffectSuccessResult success)
         {
             var amount = ResolveSkillEffectAmount(selectedSkill, effect);
@@ -258,6 +269,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                 BattleResolvedActionType.Skill,
                 logMessage: amount > 0 ? $"Skill charge +{amount}." : string.Empty,
                 displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffect: effect,
+                skillEffectIndex: effectIndex,
+                effectAnimation: selectedSkill?.EffectAnimation,
                 skillEffectSuccess: success,
                 skillChargeGain: amount);
         }
@@ -265,6 +279,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private BattleResolvedAction CreateSkillHealEffectAction(
             SkillSlotRuntime selectedSkill,
             BattleSkillEffectEntryData effect,
+            int effectIndex,
             BattleSkillEffectSuccessResult success)
         {
             var amount = ResolveActualPlayerHealing(ResolveSkillEffectAmount(selectedSkill, effect));
@@ -272,6 +287,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                 BattleResolvedActionType.Skill,
                 logMessage: amount > 0 ? $"Player healed +{amount}." : string.Empty,
                 displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffect: effect,
+                skillEffectIndex: effectIndex,
+                effectAnimation: selectedSkill?.EffectAnimation,
                 skillEffectSuccess: success,
                 playerHealing: amount);
         }
@@ -279,6 +297,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private BattleResolvedAction CreateSkillGuardGainEffectAction(
             SkillSlotRuntime selectedSkill,
             BattleSkillEffectEntryData effect,
+            int effectIndex,
             BattleSkillEffectSuccessResult success)
         {
             var amount = ResolveSkillEffectAmount(selectedSkill, effect);
@@ -286,6 +305,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                 BattleResolvedActionType.Skill,
                 logMessage: amount > 0 ? $"Guard +{amount}." : string.Empty,
                 displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffect: effect,
+                skillEffectIndex: effectIndex,
+                effectAnimation: selectedSkill?.EffectAnimation,
                 skillEffectSuccess: success,
                 playerGuardGain: amount);
         }
@@ -293,6 +315,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private BattleResolvedAction CreateSkillTemporaryStatModifierEffectAction(
             SkillSlotRuntime selectedSkill,
             BattleSkillEffectEntryData effect,
+            int effectIndex,
             BattleSkillEffectSuccessResult success,
             bool targetsPlayer)
         {
@@ -303,6 +326,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                 BattleResolvedActionType.Skill,
                 logMessage: hasModifier ? $"{label} reserved for {temporaryModifier.RemainingTurns} turn(s)." : string.Empty,
                 displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffect: effect,
+                skillEffectIndex: effectIndex,
+                effectAnimation: selectedSkill?.EffectAnimation,
                 skillEffectSuccess: success,
                 temporaryStatModifiers: hasModifier
                     ? new[] { temporaryModifier }
@@ -311,11 +337,16 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private BattleResolvedAction CreateSkillEffectFailedAction(
             SkillSlotRuntime selectedSkill,
+            BattleSkillEffectEntryData effect,
+            int effectIndex,
             BattleSkillEffectSuccessResult success)
         {
             return CreateSimpleAction(
                 BattleResolvedActionType.Skill,
                 displayName: selectedSkill?.DisplayName ?? string.Empty,
+                skillEffect: effect,
+                skillEffectIndex: effectIndex,
+                effectAnimation: selectedSkill?.EffectAnimation,
                 skillEffectSuccess: success);
         }
 
@@ -340,9 +371,11 @@ namespace Assets.Scripts.Features.Battle.Logic
             bool targetIsEnemy,
             SkillSlotRuntime selectedSkill = null,
             BattleSkillEffectEntryData skillEffect = null,
+            int skillEffectIndex = -1,
             BattleSkillEffectSuccessResult skillEffectSuccess = null,
             bool hazardBoosted = false,
             BattlePlayerAnimationCue? animationCue = null,
+            EffectAnimationData effectAnimation = null,
             string logMessage = "",
             bool appendPeriod = true,
             bool logWhenZeroBaseDamage = true,
@@ -387,6 +420,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                 TargetsEnemy = targetIsEnemy,
                 Semantics = resolvedSemantics,
                 SkillEffectSuccess = skillEffectSuccess,
+                SkillEffect = skillEffect,
+                SkillEffectIndex = skillEffectIndex,
+                EffectAnimation = effectAnimation,
                 PlayerGuardAbsorbed = playerGuardAbsorbed,
                 AnimationCue = animationCue,
                 LogMessages = BuildDamageActionLogMessages(
@@ -404,6 +440,9 @@ namespace Assets.Scripts.Features.Battle.Logic
             string logMessage = "",
             string displayName = "",
             BattleResolvedActionSemantics semantics = BattleResolvedActionSemantics.None,
+            BattleSkillEffectEntryData skillEffect = null,
+            int skillEffectIndex = -1,
+            EffectAnimationData effectAnimation = null,
             BattleSkillEffectSuccessResult skillEffectSuccess = null,
             int playerHealing = 0,
             int playerGuardGain = 0,
@@ -415,6 +454,9 @@ namespace Assets.Scripts.Features.Battle.Logic
                 ActionType = actionType,
                 DisplayName = displayName ?? string.Empty,
                 Semantics = semantics,
+                SkillEffect = skillEffect,
+                SkillEffectIndex = skillEffectIndex,
+                EffectAnimation = effectAnimation,
                 SkillEffectSuccess = skillEffectSuccess,
                 PlayerHealing = Max(0, playerHealing),
                 PlayerGuardGain = Max(0, playerGuardGain),
