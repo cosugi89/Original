@@ -78,14 +78,15 @@ namespace Assets.Scripts.UI.Dialog
         public bool Despawn(PreviewHandle handle)
         {
             if (handle == null) return false;
-            if (!_spawned.Remove(handle)) return false;
+            var wasTracked = _spawned.Remove(handle);
 
             if (handle.Instance != null)
             {
+                handle.Instance.SetActive(false);
                 Destroy(handle.Instance);
             }
             handle.Instance = null;
-            return true;
+            return wasTracked;
         }
 
         /// <summary>
@@ -97,6 +98,7 @@ namespace Assets.Scripts.UI.Dialog
             {
                 if (handle.Instance != null)
                 {
+                    handle.Instance.SetActive(false);
                     Destroy(handle.Instance);
                 }
                 handle.Instance = null;

@@ -1,5 +1,8 @@
-﻿using Cysharp.Threading.Tasks;
+using System;
+using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.Dialog
 {
@@ -13,28 +16,82 @@ namespace Assets.Scripts.UI.Dialog
         public PreviewStage AvatarPreviewRenderer { get; }
     }
 
+    public enum DialogCloseReason
+    {
+        CloseButton,
+        Backdrop,
+        Programmatic
+    }
+
     public interface IDialogRequestHandler<in TRequest>
     {
         void Setup(TRequest request, DialogContext context);
     }
 
-    public abstract class DialogBase<TResult> : MonoBehaviour, IDialogBackgroundHandler
+    internal interface IDialogHostEntry
     {
-        [Header("Background")]
-        [SerializeField] private bool useBackground = true;
-        [SerializeField] private bool closeOnBackgroundClick = true;
+        Transform DialogTransform { get; }
+        bool BackdropVisible { get; }
+        bool BackdropInteractable { get; }
+        bool BackdropCloseEnabled { get; }
+        void OnBackdropClickedFromHost();
+    }
+
+    public abstract class DialogBase<TResult> : MonoBehaviour, IDialogHostEntry
+    {
+        [Header("Dialog")]
+        [SerializeField] private Graphic dialogTitleGraphic;
 
         protected UniTaskCompletionSource<TResult> _tcs;
+        private DialogHost _host;
         private bool _isClosing;
-        private DialogBackgroundManager _backgroundManager;
+        private bool _backdropVisible = true;
+        private bool _backdropInteractable = true;
+        private bool _backdropCloseEnabled = true;
 
-        public Transform CachedTransform => transform;
-        public bool UseBackground => useBackground;
-        public bool CloseOnBackgroundClick => closeOnBackgroundClick;
+        Transform IDialogHostEntry.DialogTransform => transform;
+        bool IDialogHostEntry.BackdropVisible => _backdropVisible;
+        bool IDialogHostEntry.BackdropInteractable => _backdropInteractable;
+        bool IDialogHostEntry.BackdropCloseEnabled => _backdropCloseEnabled;
 
-        public void SetBackgroundManager(DialogBackgroundManager backgroundManager)
+        public void SetTitle(string title)
         {
-            _backgroundManager = backgroundManager;
+            switch (dialogTitleGraphic)
+            {
+                case TMP_Text tmpText:
+                    tmpText.text = title;
+                    break;
+                case Text text:
+                    text.text = title;
+                    break;
+                default:
+                    throw new InvalidOperationException($"{GetType().Name} title reference must be TextMeshProUGUI or Text.");
+            }
+        }
+
+        public void SetBackdrop(bool visible, bool interactable = true, bool closeEnabled = true)
+        {
+            _backdropVisible = visible;
+            _backdropInteractable = interactable;
+            _backdropCloseEnabled = closeEnabled;
+            _host?.RefreshBackdropState();
+        }
+
+        public void SetBackdropVisible(bool visible)
+        {
+            _backdropVisible = visible;
+            _host?.RefreshBackdropState();
+        }
+
+        public void SetBackdropInteractable(bool interactable)
+        {
+            _backdropInteractable = interactable;
+            _host?.RefreshBackdropState();
+        }
+
+        public void SetBackdropCloseEnabled(bool closeEnabled)
+        {
+            _backdropCloseEnabled = closeEnabled;
         }
 
         public UniTask<TResult> OpenAsync()
@@ -43,17 +100,23 @@ namespace Assets.Scripts.UI.Dialog
             _isClosing = false;
 
             gameObject.SetActive(true);
-
-            if (useBackground)
-            {
-                _backgroundManager ??= GetComponentInParent<DialogBackgroundManager>();
-                if (_backgroundManager != null)
-                {
-                    _backgroundManager.Push(this);
-                }
-            }
+            _host = DialogHost.Resolve();
+            _host.Push(this);
 
             return _tcs.Task;
+        }
+
+        public void RequestClose(DialogCloseReason reason)
+        {
+            if (_isClosing)
+                return;
+
+            OnCloseRequested(reason);
+        }
+
+        protected virtual void OnCloseRequested(DialogCloseReason reason)
+        {
+            OnClickClose();
         }
 
         protected virtual void OnClickClose()
@@ -61,11 +124,11 @@ namespace Assets.Scripts.UI.Dialog
             Close(default);
         }
 
-        public void OnBackgroundClickedFromManager()
+        void IDialogHostEntry.OnBackdropClickedFromHost()
         {
-            if (closeOnBackgroundClick)
+            if (_backdropCloseEnabled)
             {
-                OnClickClose();
+                RequestClose(DialogCloseReason.Backdrop);
             }
         }
 
@@ -81,10 +144,7 @@ namespace Assets.Scripts.UI.Dialog
             if (animator != null && animator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
                 animator.Play("Close");
 
-            if (useBackground && _backgroundManager != null)
-            {
-                _backgroundManager.Remove(this);
-            }
+            _host?.Remove(this);
 
             RunPopupDestroyAsync(animator).Forget();
         }
@@ -93,14 +153,40 @@ namespace Assets.Scripts.UI.Dialog
         {
             if (animator != null)
             {
-                await UniTask.WaitUntil(() =>
-                    animator.GetCurrentAnimatorStateInfo(0).IsName("Close"));
+                var closeStarted = false;
+                for (var i = 0; i < 30; i++)
+                {
+                    if (animator == null)
+                    {
+                        break;
+                    }
 
-                await UniTask.WaitUntil(() =>
-                    animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1f);
+                    if (animator.GetCurrentAnimatorStateInfo(0).IsName("Close"))
+                    {
+                        closeStarted = true;
+                        break;
+                    }
+
+                    await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
+                }
+
+                if (closeStarted)
+                {
+                    await UniTask.WaitUntil(() =>
+                        animator == null ||
+                        animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1f);
+                }
             }
 
-            Destroy(gameObject);
+            if (this != null)
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            _host?.Remove(this);
         }
     }
 }

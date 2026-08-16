@@ -5,6 +5,8 @@ using Cysharp.Threading.Tasks;
 using Assets.Scripts.Core;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Assets.Scripts.UI.Dialog
 {
@@ -12,10 +14,18 @@ namespace Assets.Scripts.UI.Dialog
     {
         public AvatarDialogRequest(Player player)
         {
-            Player = player;
+            SourcePartsManager = player != null ? player.PartsManager : null;
+            SaveTargets = null;
         }
 
-        public Player Player { get; }
+        public AvatarDialogRequest(PartsManager sourcePartsManager, IReadOnlyList<PartsManager> saveTargets = null)
+        {
+            SourcePartsManager = sourcePartsManager;
+            SaveTargets = saveTargets;
+        }
+
+        public PartsManager SourcePartsManager { get; }
+        public IReadOnlyList<PartsManager> SaveTargets { get; }
     }
 
     public readonly struct AvatarDialogResult
@@ -31,6 +41,7 @@ namespace Assets.Scripts.UI.Dialog
         public static AvatarDialogResult Cancelled => new(false);
     }
 
+    [DialogAddress("Dialog/AvatarController")]
     public class AvatarDialog : DialogBase<AvatarDialogResult>, IDialogRequestHandler<AvatarDialogRequest>
     {
         [Header("UI")]
@@ -42,6 +53,10 @@ namespace Assets.Scripts.UI.Dialog
         [Header("Prefab")]
         [SerializeField] private PartsManager characterPrefab;
 
+        [Header("Preview Placement")]
+        [SerializeField] private Vector3 previewLocalPosition = Vector3.zero;
+        [SerializeField] private Vector3 previewLocalScale = Vector3.one;
+
         [Header("Scripts")]
         [SerializeField] private PanelPartsControl panelPartsControl;
         [SerializeField] private PanelPartsListControl panelPartsListControl;
@@ -49,24 +64,34 @@ namespace Assets.Scripts.UI.Dialog
 
         private PartsManager dialogPlayer;
         private PreviewHandle dialogPreviewHandle;
-        private Player currentPlayer;
+        private PartsManager sourcePartsManager;
+        private IReadOnlyList<PartsManager> saveTargets;
         private PreviewStage previewRenderer;
         private AvatarEditorPresenter avatarEditorPresenter;
 
         public void Setup(AvatarDialogRequest request, DialogContext context)
         {
-            currentPlayer = request.Player;
+            sourcePartsManager = request.SourcePartsManager;
+            saveTargets = request.SaveTargets;
             previewRenderer = context.AvatarPreviewRenderer;
 
             // PreviewCamera からの出力を反映
             previewImage.texture = previewTexture;
 
             // Player の生成・反映
-            dialogPreviewHandle = previewRenderer.Spawn(characterPrefab);
+            var placement = new PreviewPlacement(previewLocalPosition, Quaternion.identity, previewLocalScale);
+            dialogPreviewHandle = previewRenderer.Spawn(characterPrefab, placement);
             dialogPlayer = dialogPreviewHandle?.Get<PartsManager>();
-            dialogPlayer.Init();
-            avatarEditorPresenter = AvatarEditorPresenter.CreateDefault(currentPlayer?.PartsManager);
-            avatarEditorPresenter.BindPreview(dialogPlayer);
+            if (dialogPlayer != null)
+            {
+                dialogPlayer.Init();
+            }
+
+            avatarEditorPresenter = AvatarEditorPresenter.CreateDefault(sourcePartsManager);
+            if (dialogPlayer != null)
+            {
+                avatarEditorPresenter.BindPreview(dialogPlayer);
+            }
 
             colorPicker.Init(dialogPlayer, avatarEditorPresenter);
             panelPartsListControl.Init(dialogPlayer, avatarEditorPresenter);
@@ -88,11 +113,35 @@ namespace Assets.Scripts.UI.Dialog
         private void OnClickSave()
         {
             avatarEditorPresenter?.Commit();
-            AvatarRenderService.EnsureInitialized().ApplyTo(currentPlayer.PartsManager);
+            ApplyCurrentAppearanceToSaveTargets();
             GameSaveService.EnsureInitialized().SaveSession();
             DespawnDialogPreview();
 
             Close(AvatarDialogResult.Saved);
+        }
+
+        private void ApplyCurrentAppearanceToSaveTargets()
+        {
+            var renderService = AvatarRenderService.EnsureInitialized();
+            foreach (var target in ResolveSaveTargets())
+            {
+                renderService.ApplyTo(target);
+            }
+        }
+
+        private IReadOnlyList<PartsManager> ResolveSaveTargets()
+        {
+            if (saveTargets != null && saveTargets.Count > 0)
+            {
+                return saveTargets
+                    .Where(target => target != null)
+                    .Distinct()
+                    .ToArray();
+            }
+
+            return sourcePartsManager != null
+                ? new[] { sourcePartsManager }
+                : System.Array.Empty<PartsManager>();
         }
 
         private void DespawnDialogPreview()

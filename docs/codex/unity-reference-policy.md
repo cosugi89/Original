@@ -7,7 +7,9 @@
 
 - 必須の `[SerializeField]` 参照は、Scene / prefab / ScriptableObject の作成時設定で配線済みである前提にする。
 - 必須の serialized field に対して、実行時 null ガード、遅延代替代入、警告だけ出して return する処理を追加しない。
+- 必須の serialized field が未配線だった場合は、使用箇所で `NullReferenceException` などとして素直に失敗させる。開発時に原因箇所を追いやすくするため、個別の null チェックで回避したり別エラーへ包み替えたりしない。
 - 本当に任意参照の serialized field が必要な場合は、フィールド名、Tooltip、周辺コードのいずれかで「任意である」ことを明示してから optional 扱いにする。
+- optional 参照、配列の要素欠け、外部データ、ユーザー入力、破棄済み object など、実行時に自然に欠けうる値はこの限りではない。必須 Inspector 配線と runtime data の防御は分けて考える。
 
 ## 参照の取り方
 
@@ -21,6 +23,7 @@
   - 作成時の配線ミスを隠しやすい
   - asset のディレクトリ変更に弱い
 - 既存の `Resources.Load<T>()` 代替処理に触る場合は、代替処理を維持するより serialized reference へ移行することを優先する。
+- Dialog prefab のように呼び出し側が個別 prefab 参照を持つとかえって保守しづらい runtime 依存は、Addressables とカスタム属性 `DialogAddressAttribute` による解決へ寄せる。
 - Editor 専用の生成ツールや移行ツールでは、そのツールの明示的な作成フローの一部として asset path を使ってよい。ただし実行時コードはその path に依存しない。
 
 ## 作成時の前提
