@@ -16,5 +16,14 @@ MonoBehaviour:
   displayName: June Hair 010
   partType: 1
   partsIndex: 10
-  icon: {fileID: 0}
-  isDefaultOwned: 0
+  icon: {fileID: 21300000, guid: 0f8c0df92318f4a29a3f2845b1f378c8, type: 3}
+  sortOrder: 10
+  isDefaultOwned: 1
+  assignableSkills:
+  - {fileID: 11400000, guid: 94bcbe68cf50fb24d8923a5d3a050946, type: 2}
+  - {fileID: 11400000, guid: fea5bb822a3a84c449a83a1be2c2deb7, type: 2}
+  danceSkill: {fileID: 0}
+  normalAttackAttribute: {fileID: 0}
+  attributeModifiers: []
+  categoryTags: []
+  battleStatModifiers: []

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52e7d8f0bca45944a8c10ccc44a6a1e5, type: 3}
+  m_Name: Blunt_006
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EquipmentMasterData
+  equipmentId: 13006
+  displayName: Blunt 006
+  partType: 12
+  partsIndex: 6
+  icon: {fileID: 21300000, guid: da899540eeb404fa59b13af80c7be6c6, type: 3}
+  sortOrder: 6
+  isDefaultOwned: 1
+  assignableSkills:
+  - {fileID: 11400000, guid: 50e2ebdbf02740240aa4c1f49d4ee54c, type: 2}
+  - {fileID: 11400000, guid: 0cab2cfb54939d143995da76150e6806, type: 2}
+  danceSkill: {fileID: 0}
+  normalAttackAttribute: {fileID: 0}
+  attributeModifiers: []
+  categoryTags: []
+  battleStatModifiers: []

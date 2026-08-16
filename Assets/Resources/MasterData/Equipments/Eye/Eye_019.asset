@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52e7d8f0bca45944a8c10ccc44a6a1e5, type: 3}
+  m_Name: Eye_019
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EquipmentMasterData
+  equipmentId: 1019
+  displayName: Eye 019
+  partType: 0
+  partsIndex: 19
+  icon: {fileID: 21300000, guid: cd7d7ca32abe845369206687ea8ebc2f, type: 3}
+  sortOrder: 19
+  isDefaultOwned: 1
+  assignableSkills:
+  - {fileID: 11400000, guid: 8331ea0b3e0464c49b82b1b27aa7d83d, type: 2}
+  - {fileID: 11400000, guid: e34ff523feb63964b84456b034d1b2d4, type: 2}
+  danceSkill: {fileID: 0}
+  normalAttackAttribute: {fileID: 0}
+  attributeModifiers: []
+  categoryTags: []
+  battleStatModifiers: []

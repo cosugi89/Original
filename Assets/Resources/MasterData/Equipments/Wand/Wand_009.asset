@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52e7d8f0bca45944a8c10ccc44a6a1e5, type: 3}
+  m_Name: Wand_009
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EquipmentMasterData
+  equipmentId: 10009
+  displayName: Wand 009
+  partType: 9
+  partsIndex: 9
+  icon: {fileID: 21300000, guid: b31f7dc8ded3e4a42a2d89626519f854, type: 3}
+  sortOrder: 9
+  isDefaultOwned: 1
+  assignableSkills:
+  - {fileID: 11400000, guid: ab902ed9427f4e04ebba162ca4a69d6e, type: 2}
+  - {fileID: 11400000, guid: 671ca903be8cece4880540983dd0af3b, type: 2}
+  danceSkill: {fileID: 0}
+  normalAttackAttribute: {fileID: 0}
+  attributeModifiers: []
+  categoryTags: []
+  battleStatModifiers: []

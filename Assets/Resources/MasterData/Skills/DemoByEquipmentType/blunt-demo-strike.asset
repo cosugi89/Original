@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d52d48bf21c4b62ac4b4fd3a0e08dfa, type: 3}
+  m_Name: Blunt Demo Strike
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillMasterData
+  skillId: 2105
+  skillKey: blunt-demo-strike
+  displayName: Blunt Demo Strike
+  description: "Blunt \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u30C7\u30E2\u706B\u529B\u30B9\u30AD\u30EB\u3002"
+  icon: {fileID: 21300000, guid: 39cccd9fbc70cc5498b2984d8ef32b87, type: 3}
+  attribute: []
+  operationData:
+  - {fileID: 11400000, guid: 03b2064779da172498bdd71b230dc89a, type: 2}
+  effectAnimation: {fileID: 11400000, guid: d705b056c5a070d40b1c2d4b154776a5, type: 2}
+  requiredCharge: 2
+  startingCharge: 0
+  turnChargeGain: 1
+  attackChargeGain: 1

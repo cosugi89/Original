@@ -15,13 +15,14 @@ MonoBehaviour:
   skillId: 2002
   skillKey: pierce-volley
   displayName: Pierce Volley
-  description: 高密度の魔力弾を一点へ集中させる単体高火力スキル。
+  description: "\u9AD8\u5BC6\u5EA6\u306E\u9B54\u529B\u5F3E\u3092\u4E00\u70B9\u3078\u96C6\u4E2D\u3055\u305B\u308B\u5358\u4F53\u9AD8\u706B\u529B\u30B9\u30AD\u30EB\u3002"
   icon: {fileID: 0}
+  attribute:
+  - {fileID: 11400000, guid: a8a34fb24e8b444bb9d2f7b721ef79d5, type: 2}
+  operationData:
+  - {fileID: 11400000, guid: 2c5826c1e8e1454e9aaaf78d4163498f, type: 2}
+  effectAnimation: {fileID: 11400000, guid: 326c94b5bc0e4a49a91bfae8fae495e0, type: 2}
   requiredCharge: 5
   startingCharge: 2
   turnChargeGain: 1
-  attribute:
-  - {fileID: 11400000, guid: a8a34fb24e8b444bb9d2f7b721ef79d5, type: 2}
-  effectData:
-  - {fileID: 11400000, guid: 2c5826c1e8e1454e9aaaf78d4163498f, type: 2}
-  effectAnimation: {fileID: 11400000, guid: 326c94b5bc0e4a49a91bfae8fae495e0, type: 2}
+  attackChargeGain: 1

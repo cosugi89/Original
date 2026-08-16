@@ -16,10 +16,13 @@ MonoBehaviour:
   displayName: June Chest 012
   partType: 4
   partsIndex: 12
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: e0ff994aa5123484e94f8ac8dd519d16, type: 3}
   sortOrder: 12
-  isDefaultOwned: 0
-  assignableSkills: []
+  isDefaultOwned: 1
+  assignableSkills:
+  - {fileID: 11400000, guid: 53f3fb9178e094547b59019fc762f646, type: 2}
+  - {fileID: 11400000, guid: d96c9292f37c1cb4e8059f6cffd4911b, type: 2}
+  danceSkill: {fileID: 0}
   normalAttackAttribute: {fileID: 0}
   attributeModifiers:
   - attribute: {fileID: 11400000, guid: 337e2699b39f4548bc58ee1a3ba8f610, type: 2}
@@ -29,3 +32,4 @@ MonoBehaviour:
   categoryTags:
   - mage
   - robe
+  battleStatModifiers: []

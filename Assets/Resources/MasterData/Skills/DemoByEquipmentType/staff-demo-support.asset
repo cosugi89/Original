@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d52d48bf21c4b62ac4b4fd3a0e08dfa, type: 3}
+  m_Name: Staff Demo Focus
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.BattleSkillMasterData
+  skillId: 2124
+  skillKey: staff-demo-support
+  displayName: Staff Demo Focus
+  description: "Staff \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u30C7\u30E2
+    Charge \u88DC\u52A9\u30B9\u30AD\u30EB\u3002"
+  icon: {fileID: 21300000, guid: cc019d9a5c9acf24782a7da092586356, type: 3}
+  attribute: []
+  operationData:
+  - {fileID: 11400000, guid: 0a37f5d11d8a56943bc3f6dc354b61ef, type: 2}
+  effectAnimation: {fileID: 11400000, guid: cff83f62fa8318c4c9bc5fe4236a554d, type: 2}
+  requiredCharge: 3
+  startingCharge: 0
+  turnChargeGain: 1
+  attackChargeGain: 1
