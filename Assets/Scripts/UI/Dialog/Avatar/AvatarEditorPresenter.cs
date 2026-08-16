@@ -414,6 +414,7 @@ namespace Assets.Scripts.UI.Dialog
             {
                 PartsType.Skin => Assign(ColorTargetType.Skin, out target),
                 PartsType.Hair => Assign(ColorTargetType.Hair, out target),
+                PartsType.Eye => Assign(ColorTargetType.Eye, out target),
                 PartsType.Beard => Assign(ColorTargetType.Beard, out target),
                 _ => false
             };
