@@ -1,0 +1,13 @@
+{
+  "name": "com.dailydaily.object-bookmark",
+  "version": "1.0.0",
+  "displayName": "Object Bookmark",
+  "description": "複数の GameObject・アセットをブックマークし、クリックまたはショートカット（Alt+1〜9）でインスペクタの表示先を瞬時に切り替えられる Unity Editor ツール。",
+  "unity": "2022.3",
+  "author": {
+    "name": "DailyDaily"
+  },
+  "license": "MIT",
+  "keywords": ["inspector", "bookmark", "selection", "shortcut", "VRChat", "editor-tool"],
+  "type": "tool"
+}
