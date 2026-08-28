@@ -19,11 +19,11 @@ namespace LayerLab.ArtMakerUnity
 
         public static Player Instance { get; private set; }
 
-        [SerializeField] private PartsManager partsManager;
+        [SerializeField] private AppearanceController partsManager;
         [SerializeField] private Rigidbody2D rb;
         [SerializeField] private float moveSpeed = 3f;
 
-        public PartsManager PartsManager => partsManager;   // �L�����N�^�[�J�X�^�}�C�Y�p
+        public AppearanceController AppearanceController => partsManager;   // �L�����N�^�[�J�X�^�}�C�Y�p
         public event Action<GameMode> OnModeChanged;        // �Q�[�����[�h�̕ύX
 
         private GameMode currentMode = GameMode.Home;
@@ -45,7 +45,7 @@ namespace LayerLab.ArtMakerUnity
 
         public void Init()
         {
-            // PartsManager �̃Z�b�g�A�b�v
+            // AppearanceController �̃Z�b�g�A�b�v
             if (partsManager != null)
                 partsManager.Init();
 

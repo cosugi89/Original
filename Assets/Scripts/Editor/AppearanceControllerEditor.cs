@@ -10,14 +10,14 @@ using LayerLab.ArtMakerUnity;
 namespace Assets.Scripts.Editor
 {
     /// <summary>
-    /// Custom inspector for PartsManager that provides auto-setup, sprite loading,
+    /// Custom inspector for AppearanceController that provides auto-setup, sprite loading,
     /// theme selection, color mapping, and preview functionality in the Unity Editor.
     /// </summary>
-    [CustomEditor(typeof(PartsManager))]
-    public class PartsManagerEditor : UnityEditor.Editor
+    [CustomEditor(typeof(AppearanceController))]
+    public class AppearanceControllerEditor : UnityEditor.Editor
     {
         private const string DEFAULT_SPRITE_FOLDER = "Assets/Layer Lab/2D Art Maker Unity/AMMinimalGame Character/Sprites/Character";
-        private const string PREFS_KEY_SPRITE_FOLDER = "PartsManagerEditor_SpriteFolderPath";
+        private const string PREFS_KEY_SPRITE_FOLDER = "AppearanceControllerEditor_SpriteFolderPath";
 
         private SerializedProperty categoriesProp;
         private SerializedProperty animatorProp;
@@ -111,7 +111,7 @@ namespace Assets.Scripts.Editor
         }
 
         /// <summary>
-        /// Draws the custom inspector GUI for PartsManager.
+        /// Draws the custom inspector GUI for AppearanceController.
         /// </summary>
         public override void OnInspectorGUI()
         {
@@ -425,7 +425,7 @@ namespace Assets.Scripts.Editor
 
         private void AutoSetupRenderers()
         {
-            PartsManager pm = (PartsManager)target;
+            AppearanceController pm = (AppearanceController)target;
             Transform root = pm.transform;
             Undo.RecordObject(pm, "Auto Setup Renderers");
 
@@ -589,7 +589,7 @@ namespace Assets.Scripts.Editor
 
         private void AutoMapColors()
         {
-            PartsManager pm = (PartsManager)target;
+            AppearanceController pm = (AppearanceController)target;
             Transform root = pm.transform;
             Undo.RecordObject(pm, "Auto Map Colors");
 
@@ -637,7 +637,7 @@ namespace Assets.Scripts.Editor
                 return;
             }
 
-            PartsManager pm = (PartsManager)target;
+            AppearanceController pm = (AppearanceController)target;
             Undo.RecordObject(pm, "Load Sprites");
 
             // 1. Load Common sprites (Eye, Hair, Beard)
@@ -864,7 +864,7 @@ namespace Assets.Scripts.Editor
                 return;
             }
 
-            PartsManager pm = (PartsManager)target;
+            AppearanceController pm = (AppearanceController)target;
             Undo.RecordObject(pm, "Load Thumbnails");
 
             for (int i = 0; i < categoriesProp.arraySize; i++)

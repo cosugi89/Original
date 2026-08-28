@@ -15,7 +15,7 @@ namespace LayerLab.ArtMakerUnity
 
         public UICategory UICategory => uiCategory;
 
-        private PartsManager _partsManager;
+        private AppearanceController _partsManager;
         private AvatarEditorPresenter _presenter;
         private Sprite[] _bgSprites;
         private bool _hasItem;
@@ -27,7 +27,7 @@ namespace LayerLab.ArtMakerUnity
             imageItem ??= transform.Find("Item")?.GetComponent<Image>();
         }
 
-        public void Init(PartsManager pm, Sprite[] bgSprites, AvatarEditorPresenter presenter = null)
+        public void Init(AppearanceController pm, Sprite[] bgSprites, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
             _presenter = presenter;

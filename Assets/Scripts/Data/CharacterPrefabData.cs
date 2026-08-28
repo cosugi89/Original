@@ -6,7 +6,7 @@ namespace Assets.Scripts.Data
 {
     /// <summary>
     /// Stores character customization data (parts, colors, visibility) on a prefab.
-    /// On Start, applies the stored configuration to the associated PartsManager.
+    /// On Start, applies the stored configuration to the associated AppearanceController.
     /// </summary>
     public class CharacterPrefabData : MonoBehaviour
     {
@@ -23,8 +23,8 @@ namespace Assets.Scripts.Data
 
         private void Start()
         {
-            var pm = GetComponent<PartsManager>();
-            if (pm == null) pm = GetComponentInChildren<PartsManager>();
+            var pm = GetComponent<AppearanceController>();
+            if (pm == null) pm = GetComponentInChildren<AppearanceController>();
             if (pm == null) return;
 
             pm.Init();

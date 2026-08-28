@@ -26,7 +26,7 @@ namespace LayerLab.ArtMakerUnity
         private PartsType _activeType;
         private UICategory _activeCategory;
         private PartsType[] _currentSubTypes;
-        private PartsManager _partsManager;
+        private AppearanceController _partsManager;
         private AvatarEditorPresenter _presenter;
         private AvatarPartSectionViewData _activeSection;
         private readonly List<AvatarPartOptionViewData> _currentOptions = new();
@@ -35,11 +35,11 @@ namespace LayerLab.ArtMakerUnity
         public PartsType? ActiveType => _activeType;
 
         /// <summary>
-        /// 指定された <see cref="PartsManager"/> を使ってパーツ一覧パネルを初期化します。
+        /// 指定された <see cref="AppearanceController"/> を使ってパーツ一覧パネルを初期化します。
         /// パーツ変更イベントと色変更イベントを購読します。
         /// </summary>
-        /// <param name="pm">パーツデータを提供する PartsManager。</param>
-        public void Init(PartsManager pm, AvatarEditorPresenter presenter = null)
+        /// <param name="pm">パーツデータを提供する AppearanceController。</param>
+        public void Init(AppearanceController pm, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
             _presenter = presenter;

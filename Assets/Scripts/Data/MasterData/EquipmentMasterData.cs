@@ -21,13 +21,13 @@ namespace Assets.Scripts.Data.MasterData
         private string displayName = "";
 
         [SerializeField]
-        [Tooltip("この装備が属する見た目枠です。設定した PartType と PartsIndex の組み合わせが PartsManager 解決に使われます。")]
+        [Tooltip("この装備が属する見た目枠です。設定した PartType と PartsIndex の組み合わせが AppearanceController 解決に使われます。")]
         [Description("どの見た目枠に属する定義か。Hair、Sword、Shield など。")]
         private PartsType partType;
 
         [SerializeField]
-        [Tooltip("PartsManager 上の見た目 index です。実際の sprite 切り替えに使われるため、Character.prefab の定義と揃えてください。")]
-        [Description("現在の PartsManager が見た目を切り替えるために使う index。partsIndex 依存はここに閉じ込める。")]
+        [Tooltip("AppearanceController 上の見た目 index です。実際の sprite 切り替えに使われるため、Character.prefab の定義と揃えてください。")]
+        [Description("現在の AppearanceController が見た目を切り替えるために使う index。partsIndex 依存はここに閉じ込める。")]
         private int partsIndex = -1;
 
         [SerializeField]
@@ -148,7 +148,7 @@ namespace Assets.Scripts.Data.MasterData
                 AddIssue(
                     issues,
                     "invalid_parts_index",
-                    "PartsIndex が未設定です。PartsManager で見た目を解決できません。",
+                    "PartsIndex が未設定です。AppearanceController で見た目を解決できません。",
                     ValidationSeverity.Error);
             }
 

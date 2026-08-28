@@ -37,7 +37,7 @@ namespace LayerLab.ArtMakerUnity
         private readonly List<Button> _presetButtons = new();
         private readonly List<UnityAction> _presetButtonHandlers = new();
 
-        private PartsManager _partsManager;
+        private AppearanceController _partsManager;
         private AvatarEditorPresenter _presenter;
         private ColorTargetType _currentTarget;
         private bool _hasCurrentTarget;
@@ -56,10 +56,10 @@ namespace LayerLab.ArtMakerUnity
         }
 
         /// <summary>
-        /// Initializes the color picker with the given PartsManager.
+        /// Initializes the color picker with the given AppearanceController.
         /// </summary>
-        /// <param name="pm">The PartsManager used to apply color changes to character parts.</param>
-        public void Init(PartsManager pm, AvatarEditorPresenter presenter = null)
+        /// <param name="pm">The AppearanceController used to apply color changes to character parts.</param>
+        public void Init(AppearanceController pm, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
             _presenter = presenter;

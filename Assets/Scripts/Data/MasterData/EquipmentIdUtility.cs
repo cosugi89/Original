@@ -33,43 +33,5 @@ namespace Assets.Scripts.Data.MasterData
             return true;
         }
 
-        public static bool TryConvertLegacyStringToId(string legacyEquipmentId, out int equipmentId)
-        {
-            equipmentId = 0;
-            if (string.IsNullOrWhiteSpace(legacyEquipmentId))
-                return false;
-
-            if (int.TryParse(legacyEquipmentId, out var parsedId) &&
-                parsedId > 0)
-            {
-                equipmentId = parsedId;
-                return true;
-            }
-
-            if (!TryParseLegacyString(legacyEquipmentId, out var partType, out var partsIndex))
-                return false;
-
-            equipmentId = Build(partType, partsIndex);
-            return equipmentId > 0;
-        }
-
-        public static bool TryParseLegacyString(string legacyEquipmentId, out PartsType partType, out int partsIndex)
-        {
-            partType = default;
-            partsIndex = -1;
-
-            if (string.IsNullOrWhiteSpace(legacyEquipmentId))
-                return false;
-
-            var separatorIndex = legacyEquipmentId.LastIndexOf(':');
-            if (separatorIndex <= 0 || separatorIndex >= legacyEquipmentId.Length - 1)
-                return false;
-
-            var partTypeText = legacyEquipmentId.Substring(0, separatorIndex);
-            var indexText = legacyEquipmentId.Substring(separatorIndex + 1);
-
-            return Enum.TryParse(partTypeText, true, out partType) &&
-                   int.TryParse(indexText, out partsIndex);
-        }
     }
 }

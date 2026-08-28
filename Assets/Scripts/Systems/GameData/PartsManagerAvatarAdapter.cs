@@ -11,7 +11,7 @@ namespace Assets.Scripts.Systems.GameData
 {
     public static class PartsManagerAvatarAdapter
     {
-        public static AvatarAppearanceData CaptureAppearance(PartsManager partsManager, InventoryService inventoryService)
+        public static AvatarAppearanceData CaptureAppearance(AppearanceController partsManager, InventoryManager inventoryManager)
         {
             var appearance = new AvatarAppearanceData();
             if (partsManager == null)
@@ -26,8 +26,8 @@ namespace Assets.Scripts.Systems.GameData
                 if (partsManager.IsEquipped(partType))
                 {
                     var activeIndex = partsManager.GetActiveIndex(partType);
-                    if (inventoryService != null &&
-                        inventoryService.TryGetByPartsIndex(partType, activeIndex, out var data) &&
+                    if (inventoryManager != null &&
+                        inventoryManager.TryGetByPartsIndex(partType, activeIndex, out var data) &&
                         data != null &&
                         data.EquipmentId > 0)
                     {
@@ -55,7 +55,7 @@ namespace Assets.Scripts.Systems.GameData
             return appearance;
         }
 
-        public static void ApplyAppearance(PartsManager partsManager, AvatarAppearanceData appearance, InventoryService inventoryService)
+        public static void ApplyAppearance(AppearanceController partsManager, AvatarAppearanceData appearance, InventoryManager inventoryManager)
         {
             if (partsManager == null || appearance == null)
                 return;
@@ -70,7 +70,7 @@ namespace Assets.Scripts.Systems.GameData
                 if (IsDerivedPart(partType) || !partStates.TryGetValue(partType, out var state))
                     continue;
 
-                ApplyPartState(partsManager, state, inventoryService);
+                ApplyPartState(partsManager, state, inventoryManager);
             }
 
             foreach (var colorState in appearance.Colors ?? Enumerable.Empty<AvatarColorData>())
@@ -85,12 +85,12 @@ namespace Assets.Scripts.Systems.GameData
             }
         }
 
-        private static void ApplyPartState(PartsManager partsManager, AvatarPartStateData state, InventoryService inventoryService)
+        private static void ApplyPartState(AppearanceController partsManager, AvatarPartStateData state, InventoryManager inventoryManager)
         {
             if (state == null)
                 return;
 
-            if (!TryResolvePartsIndex(state, inventoryService, out var partsIndex))
+            if (!TryResolvePartsIndex(state, inventoryManager, out var partsIndex))
             {
                 if (state.IsVisible)
                 {
@@ -115,15 +115,15 @@ namespace Assets.Scripts.Systems.GameData
 
         private static bool TryResolvePartsIndex(
             AvatarPartStateData state,
-            InventoryService inventoryService,
+            InventoryManager inventoryManager,
             out int partsIndex)
         {
             partsIndex = -1;
             if (state == null || state.EquipmentId <= 0)
                 return false;
 
-            if (inventoryService != null &&
-                inventoryService.TryGetDefinition(state.EquipmentId, out var data) &&
+            if (inventoryManager != null &&
+                inventoryManager.TryGetDefinition(state.EquipmentId, out var data) &&
                 data != null &&
                 data.PartType == state.PartType &&
                 data.PartsIndex >= 0)

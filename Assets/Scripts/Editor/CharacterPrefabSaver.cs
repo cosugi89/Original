@@ -17,14 +17,14 @@ namespace Assets.Scripts.Editor
         /// <summary>
         /// Saves the current character state as a prefab asset with an optional thumbnail.
         /// </summary>
-        /// <param name="partsManager">The PartsManager to capture state from.</param>
+        /// <param name="partsManager">The AppearanceController to capture state from.</param>
         /// <param name="thumbnailCameraSize">Orthographic camera size for thumbnail capture.</param>
         /// <param name="thumbnailCameraOffset">Camera offset from character position.</param>
-        public static void Save(PartsManager partsManager, float thumbnailCameraSize, Vector3 thumbnailCameraOffset)
+        public static void Save(AppearanceController partsManager, float thumbnailCameraSize, Vector3 thumbnailCameraOffset)
         {
             if (partsManager == null || partsManager.gameObject == null)
             {
-                Debug.LogError("[SavePrefab] PartsManager not found.");
+                Debug.LogError("[SavePrefab] AppearanceController not found.");
                 return;
             }
 

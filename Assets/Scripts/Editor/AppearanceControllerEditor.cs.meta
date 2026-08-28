@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 363620
   packageName: 2D Minimal - Character Maker
   packageVersion: 1.0.0
-  assetPath: Assets/Layer Lab/2D Minimal-CharacterMaker/Scripts/Editor/PartsManagerEditor.cs
+  assetPath: Assets/Scripts/Editor/AppearanceControllerEditor.cs
   uploadId: 872804

@@ -13,7 +13,7 @@ namespace Assets.Scripts.Core
     /// UIからの表示トグルは削除されていますが、
     /// 内部的な表示状態は関連パーツとの同期のために保持されています。
     /// </summary>
-    public class PartsManager : MonoBehaviour
+    public class AppearanceController : MonoBehaviour
     {
         [SerializeField] private PartsCategory[] categories;
         [SerializeField] private Animator animator;
@@ -692,10 +692,10 @@ namespace Assets.Scripts.Core
         }
 
         /// <summary>
-        /// 別の PartsManager から、すべてのパーツインデックス、表示状態、色をコピーします。
+        /// 別の AppearanceController から、すべてのパーツインデックス、表示状態、色をコピーします。
         /// </summary>
-        /// <param name="other">コピー元の PartsManager。</param>
-        public void CopyFrom(PartsManager other)
+        /// <param name="other">コピー元の AppearanceController。</param>
+        public void CopyFrom(AppearanceController other)
         {
             if (other == null) return;
 

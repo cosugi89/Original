@@ -14,16 +14,16 @@ namespace LayerLab.ArtMakerUnity
         [SerializeField] private Button[] buttonAnimations;
         [SerializeField] private Sprite[] spriteBgs;
         [SerializeField] private string defaultAnimationName = "Idle";
-        private PartsManager _partsManager;
+        private AppearanceController _partsManager;
         private string[] _animNames;
         private int _selectedIndex = -1;
 
         /// <summary>
-        /// Initializes the animation panel with the given <see cref="PartsManager"/>.
+        /// Initializes the animation panel with the given <see cref="AppearanceController"/>.
         /// Populates button labels from available animation names and auto-selects the default animation.
         /// </summary>
-        /// <param name="pm">The PartsManager that provides animation data and playback control.</param>
-        public void Init(PartsManager pm)
+        /// <param name="pm">The AppearanceController that provides animation data and playback control.</param>
+        public void Init(AppearanceController pm)
         {
             _partsManager = pm;
             _animNames = pm.GetAnimationNames();

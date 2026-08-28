@@ -24,11 +24,11 @@ namespace Assets.Scripts.Editor
             try
             {
                 var partsManager = prefabRoot != null
-                    ? prefabRoot.GetComponentInChildren<PartsManager>(true)
+                    ? prefabRoot.GetComponentInChildren<AppearanceController>(true)
                     : null;
                 if (partsManager == null)
                 {
-                    Debug.LogError($"[EquipmentMasterDatabaseBuilder] PartsManager was not found in {CharacterPrefabPath}.");
+                    Debug.LogError($"[EquipmentMasterDatabaseBuilder] AppearanceController was not found in {CharacterPrefabPath}.");
                     return;
                 }
 
