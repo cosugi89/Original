@@ -5,53 +5,25 @@ using UnityEngine;
 
 namespace Assets.Scripts.Systems.Save
 {
-    public class GameSaveService
+    public class UserDataJsonStore
     {
-        public static GameSaveService Instance { get; private set; }
-
         [Description("現在の共有セッション。ロード結果の反映先であり保存対象でもある。")]
-        public GameSession Session { get; }
+        public UserDataManager Session { get; }
 
         [Description("JSONファイルとの入出力を担当するリポジトリ。")]
-        public IGameSaveRepository Repository { get; }
+        public IUserDataStore Repository { get; }
 
         [Description("新規セーブデータの初期値生成を担当するファクトリ。")]
-        public DefaultGameSaveFactory DefaultFactory { get; }
+        public DefaultUserDataFactory DefaultFactory { get; }
 
-        [Description("旧アバター専用保存から新形式への移行処理を担当する。")]
-        public LegacyAvatarSaveMigration LegacyMigration { get; }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Bootstrap()
-        {
-            EnsureInitialized();
-        }
-
-        public static GameSaveService EnsureInitialized()
-        {
-            if (Instance != null)
-                return Instance;
-
-            Instance = new GameSaveService(
-                GameSession.Instance,
-                new JsonGameSaveRepository(),
-                new DefaultGameSaveFactory(),
-                new LegacyAvatarSaveMigration());
-
-            Instance.ReloadSession();
-            return Instance;
-        }
-
-        public GameSaveService(
-            GameSession session,
-            IGameSaveRepository repository,
-            DefaultGameSaveFactory defaultFactory,
-            LegacyAvatarSaveMigration legacyMigration)
+        public UserDataJsonStore(
+            UserDataManager session,
+            IUserDataStore repository,
+            DefaultUserDataFactory defaultFactory)
         {
             Session = session;
             Repository = repository;
             DefaultFactory = defaultFactory;
-            LegacyMigration = legacyMigration;
         }
 
         public void ReloadSession()
@@ -63,7 +35,6 @@ namespace Assets.Scripts.Systems.Save
         public UserData LoadOrCreateDefault()
         {
             UserData userData;
-            var shouldPersistImmediately = false;
             if (Repository.Exists())
             {
                 userData = Repository.Load();
@@ -71,21 +42,11 @@ namespace Assets.Scripts.Systems.Save
             else
             {
                 userData = DefaultFactory.Create();
-                if (LegacyMigration.TryApply(userData))
-                {
-                    shouldPersistImmediately = true;
-                }
-                else
-                {
-                    shouldPersistImmediately = true;
-                }
+                Repository.Save(userData);
             }
 
             Normalize(userData);
             userData.Profile.LastPlayedAtUtc = DefaultFactory.CreateTimestamp();
-
-            if (shouldPersistImmediately)
-                Repository.Save(userData);
 
             return userData;
         }
@@ -134,24 +95,11 @@ namespace Assets.Scripts.Systems.Save
             if (string.IsNullOrWhiteSpace(userData.Profile.PlayerId))
                 userData.Profile.PlayerId = System.Guid.NewGuid().ToString("N");
 
-            var demoProfile = new UserProfileDemoData();
             userData.Profile.MaxHp = Mathf.Max(1, userData.Profile.MaxHp);
             userData.Profile.SkillLoadout ??= new BattleSkillLoadoutData();
             userData.Profile.SkillLoadout.SkillIds ??= new List<int>();
-            userData.Profile.SkillSlotSkillIds ??= new List<int>(demoProfile.SkillSlotSkillIds);
-
-            if (userData.Profile.SkillSlotSkillIds.Count == 0)
-            {
-                userData.Profile.SkillSlotSkillIds = new List<int>(demoProfile.SkillSlotSkillIds);
-            }
-
-            if (userData.Profile.SkillLoadout.SkillIds.Count == 0)
-            {
-                userData.Profile.SkillLoadout.SkillIds = new List<int>(userData.Profile.SkillSlotSkillIds);
-            }
 
             NormalizeSkillIdList(userData.Profile.SkillLoadout.SkillIds);
-            userData.Profile.SkillSlotSkillIds = new List<int>(userData.Profile.SkillLoadout.SkillIds);
         }
 
         private static void NormalizeSkillIdList(List<int> skillIds)

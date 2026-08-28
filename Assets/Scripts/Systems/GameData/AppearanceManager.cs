@@ -10,42 +10,23 @@ using UnityEngine;
 
 namespace Assets.Scripts.Systems.GameData
 {
-    public class AvatarService
+    public class AppearanceManager
     {
-        public static AvatarService Instance { get; private set; }
-
         [Description("現在の共有セッション。アバター見た目の読み書き先。")]
-        public GameSession Session { get; }
+        public UserDataManager Session { get; }
 
         [Description("保存のdirty管理と永続化を担当する保存サービス。")]
-        public GameSaveService SaveService { get; }
+        public UserDataJsonStore UserDataStore { get; }
 
         [Description("装備の所持判定・定義検索・装備履歴更新を担当するインベントリサービス。")]
-        public InventoryService InventoryService { get; }
+        public InventoryManager InventoryManager { get; }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Bootstrap()
+        public AppearanceManager(UserDataJsonStore userDataStore, InventoryManager inventoryManager)
         {
-            EnsureInitialized();
-        }
-
-        public static AvatarService EnsureInitialized()
-        {
-            if (Instance != null)
-                return Instance;
-
-            Instance = new AvatarService(
-                GameSaveService.EnsureInitialized(),
-                InventoryService.EnsureInitialized());
-            Instance.Initialize();
-            return Instance;
-        }
-
-        public AvatarService(GameSaveService saveService, InventoryService inventoryService)
-        {
-            SaveService = saveService;
-            Session = saveService.Session;
-            InventoryService = inventoryService;
+            UserDataStore = userDataStore;
+            Session = userDataStore.Session;
+            InventoryManager = inventoryManager;
+            Initialize();
         }
 
         public AvatarAppearanceData GetCurrentAppearance()
@@ -68,7 +49,7 @@ namespace Assets.Scripts.Systems.GameData
             EnsureDefaultColor(normalized, ColorTargetType.Beard, markDirty);
 
             if (markDirty)
-                SaveService.MarkDirty();
+                UserDataStore.MarkDirty();
         }
 
         public IReadOnlyList<AvatarPartStateData> GetAllPartStates()
@@ -93,15 +74,15 @@ namespace Assets.Scripts.Systems.GameData
                 IsVisible = true
             };
             appearance.Parts.Add(partState);
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
             return partState;
         }
 
         public bool TryEquip(int equipmentId, bool isVisible = true)
         {
             if (equipmentId <= 0 ||
-                !InventoryService.TryGetDefinition(equipmentId, out var definition) ||
-                !InventoryService.HasEquipment(equipmentId))
+                !InventoryManager.TryGetDefinition(equipmentId, out var definition) ||
+                !InventoryManager.HasEquipment(equipmentId))
             {
                 return false;
             }
@@ -112,9 +93,9 @@ namespace Assets.Scripts.Systems.GameData
         public bool TryEquip(PartsType partType, int equipmentId, bool isVisible = true)
         {
             if (equipmentId <= 0 ||
-                !InventoryService.TryGetDefinition(equipmentId, out var definition) ||
+                !InventoryManager.TryGetDefinition(equipmentId, out var definition) ||
                 definition.PartType != partType ||
-                !InventoryService.HasEquipment(equipmentId))
+                !InventoryManager.HasEquipment(equipmentId))
             {
                 return false;
             }
@@ -125,8 +106,8 @@ namespace Assets.Scripts.Systems.GameData
 
             state.EquipmentId = equipmentId;
             state.IsVisible = isVisible;
-            InventoryService.MarkEquipped(equipmentId);
-            SaveService.MarkDirty();
+            InventoryManager.MarkEquipped(equipmentId);
+            UserDataStore.MarkDirty();
             return true;
         }
 
@@ -138,7 +119,7 @@ namespace Assets.Scripts.Systems.GameData
 
             state.EquipmentId = 0;
             state.IsVisible = false;
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
         }
 
         public void SetVisibility(PartsType partType, bool isVisible)
@@ -148,7 +129,7 @@ namespace Assets.Scripts.Systems.GameData
                 return;
 
             state.IsVisible = isVisible;
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
         }
 
         public bool IsEquipped(int equipmentId)
@@ -165,7 +146,7 @@ namespace Assets.Scripts.Systems.GameData
 
         public IReadOnlyList<EquipmentData> GetSelectableEquipments(PartsType partType, bool ownedOnly = true)
         {
-            return InventoryService.GetDefinitionsByPartType(partType, ownedOnly);
+            return InventoryManager.GetDefinitionsByPartType(partType, ownedOnly);
         }
 
         public string GetColorHtml(ColorTargetType target)
@@ -193,7 +174,7 @@ namespace Assets.Scripts.Systems.GameData
                     HtmlColor = normalized
                 };
                 appearance.Colors.Add(colorState);
-                SaveService.MarkDirty();
+                UserDataStore.MarkDirty();
                 return;
             }
 
@@ -201,7 +182,7 @@ namespace Assets.Scripts.Systems.GameData
                 return;
 
             colorState.HtmlColor = normalized;
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
         }
 
         private void Initialize()
@@ -234,7 +215,7 @@ namespace Assets.Scripts.Systems.GameData
             });
 
             if (markDirty)
-                SaveService.MarkDirty();
+                UserDataStore.MarkDirty();
         }
 
         private static string NormalizeHtmlColor(string htmlColor)

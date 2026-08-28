@@ -37,8 +37,6 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("戦闘で使用するスキルロードアウト。装備候補スキル群から選んだ実戦用4枠。")]
         public BattleSkillLoadoutData SkillLoadout { get; set; } = new();
 
-        [Description("スキルスロット順に保持する SkillId。0 なら未設定スロット。")]
-        public List<int> SkillSlotSkillIds { get; set; } = new();
     }
 
     public class BattleSkillLoadoutData
@@ -57,17 +55,9 @@ namespace Assets.Scripts.Systems.Save.Models
         {
             MaxHp = 450;
 
-            SkillSlotSkillIds = new List<int>
-            {
-                2001,
-                2002,
-                0,
-                0,
-            };
-
             SkillLoadout = new BattleSkillLoadoutData
             {
-                SkillIds = new List<int>(SkillSlotSkillIds),
+                SkillIds = new List<int> { 2001, 2002, 0, 0 },
             };
         }
     }

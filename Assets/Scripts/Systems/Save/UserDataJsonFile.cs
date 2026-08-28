@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Systems.Save
 {
-    public class JsonGameSaveRepository : IGameSaveRepository
+    public class UserDataJsonFile : IUserDataStore
     {
         [Description("保存ファイル名。")]
         public string SaveFileName => SaveFileNames.MainSaveFileName;
@@ -34,7 +34,7 @@ namespace Assets.Scripts.Systems.Save
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[JsonGameSaveRepository] Failed to load save data. Path: {SavePath}\n{ex}");
+                Debug.LogWarning($"[UserDataJsonFile] Failed to load save data. Path: {SavePath}\n{ex}");
                 return new UserData();
             }
         }
@@ -49,7 +49,7 @@ namespace Assets.Scripts.Systems.Save
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[JsonGameSaveRepository] Failed to save data. Path: {SavePath}\n{ex}");
+                Debug.LogError($"[UserDataJsonFile] Failed to save data. Path: {SavePath}\n{ex}");
             }
         }
     }

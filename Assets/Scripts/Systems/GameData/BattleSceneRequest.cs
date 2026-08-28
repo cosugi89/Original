@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace Assets.Scripts.Systems.GameData
 {
-    public static class BattleSceneTransitionState
+    public static class BattleSceneRequest
     {
         [Description("選択されたステージID")]
         public static int SelectedStageId { get; set; } = -1;

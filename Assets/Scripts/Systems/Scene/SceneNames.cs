@@ -9,7 +9,7 @@ namespace Assets.Scripts.Systems.Scene
         /// <summary>エントリポイント。アバター生成・HomeScreen 表示を担う。</summary>
         public const string Main = "MainScene";
 
-        /// <summary>バトル画面。BattleSceneTransitionState 経由で StageId を受け取る。</summary>
+        /// <summary>バトル画面。BattleSceneRequest 経由で StageId を受け取る。</summary>
         public const string Battle = "BattleScene";
     }
 }

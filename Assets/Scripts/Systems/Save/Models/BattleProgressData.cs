@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.ComponentModel;
-using Assets.Scripts.Systems.Save;
-using Newtonsoft.Json;
 
 namespace Assets.Scripts.Systems.Save.Models
 {
@@ -11,14 +9,12 @@ namespace Assets.Scripts.Systems.Save.Models
         public List<StageProgressData> Stages { get; set; } = new();
 
         [Description("最後に選択していたステージID。ステージ選択画面の初期選択に使える。")]
-        [JsonConverter(typeof(StageIdJsonConverter))]
         public int LastSelectedStageId { get; set; } = -1;
     }
 
     public class StageProgressData
     {
         [Description("進捗対象のステージID。ステージマスタと対応する。")]
-        [JsonConverter(typeof(StageIdJsonConverter))]
         public int StageId { get; set; } = -1;
 
         [Description("そのステージが挑戦可能な状態かどうか。")]

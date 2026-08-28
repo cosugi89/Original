@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.ComponentModel;
-using Assets.Scripts.Systems.Save;
-using Newtonsoft.Json;
 
 namespace Assets.Scripts.Systems.Save.Models
 {
@@ -13,7 +11,6 @@ namespace Assets.Scripts.Systems.Save.Models
 
     public class InventoryEntryData
     {
-        [JsonConverter(typeof(EquipmentIdJsonConverter))]
         [Description("所持している装備のID。装備マスタと対応する。未設定は0。")]
         public int EquipmentId { get; set; } = 0;
 

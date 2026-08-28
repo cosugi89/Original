@@ -10,40 +10,21 @@ using UnityEngine;
 
 namespace Assets.Scripts.Systems.GameData
 {
-    public class BattleProgressService
+    public class ProgressManager
     {
-        public static BattleProgressService Instance { get; private set; }
-
         [Description("現在の共有セッション。ステージ進捗の読み書き先。")]
-        public GameSession Session { get; }
+        public UserDataManager Session { get; }
 
         [Description("保存のdirty管理と永続化を担当する保存サービス。")]
-        public GameSaveService SaveService { get; }
+        public UserDataJsonStore UserDataStore { get; }
 
         private IReadOnlyList<BattleStageData> _allStageData;
         private Dictionary<int, BattleStageData> _byId;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Bootstrap()
+        public ProgressManager(UserDataJsonStore userDataStore, IReadOnlyList<BattleStageData> battleStageData)
         {
-            EnsureInitialized();
-        }
-
-        public static BattleProgressService EnsureInitialized()
-        {
-            if (Instance != null)
-                return Instance;
-
-            Instance = new BattleProgressService(
-                GameSaveService.EnsureInitialized(),
-                MasterDataResourceLoader.LoadBattleStageData());
-            return Instance;
-        }
-
-        public BattleProgressService(GameSaveService saveService, IReadOnlyList<BattleStageData> battleStageData)
-        {
-            SaveService = saveService;
-            Session = saveService.Session;
+            UserDataStore = userDataStore;
+            Session = userDataStore.Session;
             RefreshDefinitions(battleStageData);
         }
 
@@ -75,7 +56,7 @@ namespace Assets.Scripts.Systems.GameData
                 IsUnlocked = _byId.TryGetValue(stageId, out var data) && data.IsInitiallyUnlocked
             };
             battleProgress.Stages.Add(progress);
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
             return progress;
         }
 
@@ -96,7 +77,7 @@ namespace Assets.Scripts.Systems.GameData
                 return;
 
             progress.IsUnlocked = true;
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
         }
 
         public void SetLastSelectedStage(int stageId)
@@ -106,7 +87,7 @@ namespace Assets.Scripts.Systems.GameData
                 return;
 
             battleProgress.LastSelectedStageId = stageId;
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
         }
 
         public void SetCurrentStage(int stageId)
@@ -140,7 +121,7 @@ namespace Assets.Scripts.Systems.GameData
             }
 
             progress.LastClearedAtUtc = System.DateTime.UtcNow.ToString("O");
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
         }
 
         public IReadOnlyList<BattleStageData> GetOrderedStageDefinitions()
@@ -235,7 +216,7 @@ namespace Assets.Scripts.Systems.GameData
 
                 if (!_byId.TryAdd(data.StageId, data))
                 {
-                    Debug.LogWarning($"[BattleProgressService] Duplicate stageId: {data.StageId}");
+                    Debug.LogWarning($"[ProgressManager] Duplicate stageId: {data.StageId}");
                 }
             }
         }
@@ -268,7 +249,7 @@ namespace Assets.Scripts.Systems.GameData
             }
 
             if (hasChanges)
-                SaveService.MarkDirty();
+                UserDataStore.MarkDirty();
         }
 
         private void PruneInvalidStageProgress()
@@ -280,7 +261,7 @@ namespace Assets.Scripts.Systems.GameData
             var removedCount = stages.RemoveAll(stage => stage == null || stage.StageId < 0);
             if (removedCount > 0)
             {
-                SaveService.MarkDirty();
+                UserDataStore.MarkDirty();
             }
         }
 

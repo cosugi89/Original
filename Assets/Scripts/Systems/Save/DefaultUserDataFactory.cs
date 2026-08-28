@@ -3,7 +3,7 @@ using Assets.Scripts.Systems.Save.Models;
 
 namespace Assets.Scripts.Systems.Save
 {
-    public class DefaultGameSaveFactory
+    public class DefaultUserDataFactory
     {
         public UserData Create()
         {

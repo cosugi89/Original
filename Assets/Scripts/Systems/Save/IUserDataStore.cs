@@ -2,7 +2,7 @@ using Assets.Scripts.Systems.Save.Models;
 
 namespace Assets.Scripts.Systems.Save
 {
-    public interface IGameSaveRepository
+    public interface IUserDataStore
     {
         string SavePath { get; }
 

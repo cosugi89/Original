@@ -11,42 +11,23 @@ using UnityEngine;
 
 namespace Assets.Scripts.Systems.GameData
 {
-    public class InventoryService
+    public class InventoryManager
     {
-        public static InventoryService Instance { get; private set; }
-
         [Description("現在の共有セッション。所持装備データの読み書き先。")]
-        public GameSession Session { get; }
+        public UserDataManager Session { get; }
 
         [Description("保存のdirty管理と永続化を担当する保存サービス。")]
-        public GameSaveService SaveService { get; }
+        public UserDataJsonStore UserDataStore { get; }
 
         private IReadOnlyList<EquipmentData> _allEquipmentData;
         private Dictionary<int, EquipmentData> _byId;
         private Dictionary<int, EquipmentData> _byPartIndexKey;
         private Dictionary<PartsType, List<EquipmentData>> _byPartType;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Bootstrap()
+        public InventoryManager(UserDataJsonStore userDataStore, IReadOnlyList<EquipmentData> equipmentData)
         {
-            EnsureInitialized();
-        }
-
-        public static InventoryService EnsureInitialized()
-        {
-            if (Instance != null)
-                return Instance;
-
-            Instance = new InventoryService(
-                GameSaveService.EnsureInitialized(),
-                MasterDataResourceLoader.LoadEquipmentData());
-            return Instance;
-        }
-
-        public InventoryService(GameSaveService saveService, IReadOnlyList<EquipmentData> equipmentData)
-        {
-            SaveService = saveService;
-            Session = saveService.Session;
+            UserDataStore = userDataStore;
+            Session = userDataStore.Session;
             RefreshDefinitions(equipmentData);
         }
 
@@ -136,7 +117,7 @@ namespace Assets.Scripts.Systems.GameData
             if (string.IsNullOrWhiteSpace(entry.ObtainedAtUtc))
                 entry.ObtainedAtUtc = DateTime.UtcNow.ToString("O");
 
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
             return entry;
         }
 
@@ -149,7 +130,7 @@ namespace Assets.Scripts.Systems.GameData
             if (entry.Quantity == 0)
                 entry.IsUnlocked = false;
 
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
             return true;
         }
 
@@ -159,7 +140,7 @@ namespace Assets.Scripts.Systems.GameData
                 return;
 
             entry.LastEquippedAtUtc = DateTime.UtcNow.ToString("O");
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
         }
 
         private void Initialize()
@@ -188,7 +169,7 @@ namespace Assets.Scripts.Systems.GameData
 
                 if (data.EquipmentId > 0 && !_byId.TryAdd(data.EquipmentId, data))
                 {
-                    Debug.LogWarning($"[InventoryService] Duplicate equipmentId: {data.EquipmentId}");
+                    Debug.LogWarning($"[InventoryManager] Duplicate equipmentId: {data.EquipmentId}");
                 }
 
                 var legacyKey = EquipmentIdUtility.Build(data.PartType, data.PartsIndex);
@@ -247,52 +228,39 @@ namespace Assets.Scripts.Systems.GameData
             }
 
             if (hasChanges)
-                SaveService.MarkDirty();
+                UserDataStore.MarkDirty();
         }
     }
 
-    public class BattleSkillLoadoutService
+    public class SkillLoadoutManager
     {
-        public static BattleSkillLoadoutService Instance { get; private set; }
+        public UserDataJsonStore UserDataStore { get; }
+        public AppearanceManager AppearanceManager { get; }
+        public InventoryManager InventoryManager { get; }
 
-        public GameSaveService SaveService { get; }
-        public AvatarService AvatarService { get; }
-        public InventoryService InventoryService { get; }
-
-        public static BattleSkillLoadoutService EnsureInitialized()
+        public SkillLoadoutManager(
+            UserDataJsonStore userDataStore,
+            AppearanceManager appearanceManager,
+            InventoryManager inventoryManager)
         {
-            if (Instance != null)
-                return Instance;
-
-            Instance = new BattleSkillLoadoutService(
-                GameSaveService.EnsureInitialized(),
-                AvatarService.EnsureInitialized(),
-                InventoryService.EnsureInitialized());
-            return Instance;
-        }
-
-        public BattleSkillLoadoutService(
-            GameSaveService saveService,
-            AvatarService avatarService,
-            InventoryService inventoryService)
-        {
-            SaveService = saveService;
-            AvatarService = avatarService;
-            InventoryService = inventoryService;
+            UserDataStore = userDataStore;
+            AppearanceManager = appearanceManager;
+            InventoryManager = inventoryManager;
         }
 
         public IReadOnlyList<BattleSkillData> GetCandidateSkillsFromEquippedEquipment()
         {
             var result = new List<BattleSkillData>();
             var seenSkillIds = new HashSet<int>();
-            var equippedParts = AvatarService.GetAllPartStates();
+            var equippedParts = AppearanceManager.GetAllPartStates();
             for (var i = 0; i < equippedParts.Count; i++)
             {
                 var state = equippedParts[i];
                 if (state == null ||
                     state.EquipmentId <= 0 ||
-                    !InventoryService.TryGetDefinition(state.EquipmentId, out var equipment) ||
-                    equipment == null)
+                    !InventoryManager.TryGetDefinition(state.EquipmentId, out var equipment) ||
+                    equipment == null ||
+                    !IsBattleLoadoutSkillSource(equipment))
                 {
                     continue;
                 }
@@ -301,6 +269,14 @@ namespace Assets.Scripts.Systems.GameData
             }
 
             return result;
+        }
+
+        private static bool IsBattleLoadoutSkillSource(EquipmentData equipment)
+        {
+            return equipment.PartType == PartsType.Helmet ||
+                   equipment.PartType == PartsType.Chest ||
+                   equipment.ExclusiveGroup == PartsExclusiveGroup.HandRight ||
+                   equipment.ExclusiveGroup == PartsExclusiveGroup.HandLeft;
         }
 
         public IReadOnlyList<int> GetCurrentSkillIds()
@@ -321,13 +297,12 @@ namespace Assets.Scripts.Systems.GameData
 
             if (loadout.SkillIds.Any(skillId => skillId > 0))
             {
-                MirrorLegacySkillSlots(loadout.SkillIds);
                 if (hasChanges)
                 {
-                    SaveService.MarkDirty();
+                    UserDataStore.MarkDirty();
                     if (persistImmediately)
                     {
-                        SaveService.SaveSession();
+                        UserDataStore.SaveSession();
                     }
                 }
 
@@ -337,13 +312,12 @@ namespace Assets.Scripts.Systems.GameData
             var defaultSkillIds = BuildDefaultSkillIdsFromCandidates();
             if (defaultSkillIds.Count == 0)
             {
-                MirrorLegacySkillSlots(loadout.SkillIds);
                 if (hasChanges)
                 {
-                    SaveService.MarkDirty();
+                    UserDataStore.MarkDirty();
                     if (persistImmediately)
                     {
-                        SaveService.SaveSession();
+                        UserDataStore.SaveSession();
                     }
                 }
 
@@ -355,11 +329,10 @@ namespace Assets.Scripts.Systems.GameData
                 loadout.SkillIds[i] = i < defaultSkillIds.Count ? defaultSkillIds[i] : 0;
             }
 
-            MirrorLegacySkillSlots(loadout.SkillIds);
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
             if (persistImmediately)
             {
-                SaveService.SaveSession();
+                UserDataStore.SaveSession();
             }
 
             return loadout.SkillIds.ToArray();
@@ -382,30 +355,20 @@ namespace Assets.Scripts.Systems.GameData
                 loadout.SkillIds.Add(skillId > 0 && allowedSkillIds.Contains(skillId) ? skillId : 0);
             }
 
-            MirrorLegacySkillSlots(loadout.SkillIds);
-            SaveService.MarkDirty();
+            UserDataStore.MarkDirty();
             if (persistImmediately)
             {
-                SaveService.SaveSession();
+                UserDataStore.SaveSession();
             }
         }
 
         private BattleSkillLoadoutData EnsureLoadout()
         {
-            SaveService.Session.UserData.Profile ??= new UserProfileDemoData();
-            var profile = SaveService.Session.UserData.Profile;
+            UserDataStore.Session.UserData.Profile ??= new UserProfileDemoData();
+            var profile = UserDataStore.Session.UserData.Profile;
             profile.SkillLoadout ??= new BattleSkillLoadoutData();
             profile.SkillLoadout.SkillIds ??= new List<int>();
-            if (profile.SkillLoadout.SkillIds.Count == 0)
-            {
-                if (profile.SkillSlotSkillIds != null)
-                {
-                    profile.SkillLoadout.SkillIds.AddRange(profile.SkillSlotSkillIds);
-                }
-            }
-
             NormalizeLoadout(profile.SkillLoadout.SkillIds);
-            MirrorLegacySkillSlots(profile.SkillLoadout.SkillIds);
             return profile.SkillLoadout;
         }
 
@@ -416,14 +379,6 @@ namespace Assets.Scripts.Systems.GameData
                 .Select(skill => skill.SkillId)
                 .Take(UserProfileData.BattleSkillLoadoutSlotCount)
                 .ToArray();
-        }
-
-        private void MirrorLegacySkillSlots(IReadOnlyList<int> skillIds)
-        {
-            SaveService.Session.UserData.Profile.SkillSlotSkillIds =
-                skillIds != null
-                    ? skillIds.Select(skillId => Mathf.Max(0, skillId)).ToList()
-                    : new List<int>();
         }
 
         private static bool RemoveUnavailableSkills(
