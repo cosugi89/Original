@@ -12,7 +12,6 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private StatusEquipmentCategory category;
         [SerializeField] private GameObject frameRoot;
         [SerializeField] private GameObject normalState;
-        [SerializeField] private Transform normalFrame;
         [SerializeField] private Image itemImage;
         [SerializeField] private TextMeshProUGUI label;
         [SerializeField] private GameObject focusState;
@@ -26,42 +25,33 @@ namespace Assets.Scripts.Features.Main
 
         public StatusEquipmentCategory Category => category;
 
-        public void BindCategory(StatusEquipmentCategory value, Action<StatusEquipmentCategory> onClicked)
+        public void Bind(Action<StatusEquipmentCategory> onClicked)
         {
-            category = value;
             _onClicked = onClicked;
         }
 
         public void Refresh(AvatarPartSectionViewData section, bool selected)
         {
-            ResolveReferences();
             var hasSelection = section != null && section.HasSelection;
 
-            SetActive(frameRoot, true);
-            SetActive(normalState, true);
-            SetActive(typeIconRoot, true);
-            EnsureNormalFrame();
+            frameRoot.SetActive(true);
+            normalState.SetActive(true);
+            typeIconRoot.SetActive(true);
 
-            if (itemImage != null)
-            {
-                var icon = hasSelection && section.SelectedIcon != null ? section.SelectedIcon : fallbackIcon;
-                itemImage.gameObject.SetActive(true);
-                itemImage.sprite = icon;
-                itemImage.enabled = icon != null;
-                itemImage.color = Color.white;
-                itemImage.preserveAspect = true;
-            }
+            var icon = hasSelection && section.SelectedIcon != null ? section.SelectedIcon : fallbackIcon;
+            itemImage.gameObject.SetActive(true);
+            itemImage.sprite = icon;
+            itemImage.enabled = icon != null;
+            itemImage.color = Color.white;
+            itemImage.preserveAspect = true;
 
-            if (label != null)
-            {
-                label.gameObject.SetActive(true);
-                label.text = BuildDisplayName(section, hasSelection, category);
-            }
+            label.gameObject.SetActive(true);
+            label.text = BuildDisplayName(section, hasSelection, category);
 
-            SetActive(focusState, selected);
-            SetActive(lockState, false);
-            SetActive(addOneState, !hasSelection);
-            SetActive(addTwoState, false);
+            focusState.SetActive(selected);
+            lockState.SetActive(false);
+            addOneState.SetActive(!hasSelection);
+            addTwoState.SetActive(false);
         }
 
         public void SetVisible(bool visible)
@@ -102,128 +92,6 @@ namespace Assets.Scripts.Features.Main
                 StatusEquipmentCategory.Headgear => "Head",
                 _ => string.Empty
             };
-        }
-
-        private static void SetActive(GameObject target, bool active)
-        {
-            if (target != null)
-            {
-                target.SetActive(active);
-            }
-        }
-
-        private void Reset()
-        {
-            ResolveReferences();
-        }
-
-        private void OnValidate()
-        {
-            ResolveReferences();
-        }
-
-        private void ResolveReferences()
-        {
-            frameRoot ??= transform.Find("ItemFrame_01")?.gameObject;
-            normalState ??= transform.Find("ItemFrame_01/NormalArea")?.gameObject;
-            normalFrame ??= FindNormalFrame(normalState != null ? normalState.transform : null);
-            itemImage ??= transform.Find("ItemFrame_01/Item")?.GetComponent<Image>();
-            label ??= transform.Find("Text_Level")?.GetComponent<TextMeshProUGUI>();
-            focusState ??= transform.Find("ItemFrame_01/Focus")?.gameObject;
-            lockState ??= transform.Find("ItemFrame_01/Lock")?.gameObject;
-            addOneState ??= transform.Find("ItemFrame_01/Add_1")?.gameObject;
-            addTwoState ??= transform.Find("ItemFrame_01/Add_2")?.gameObject;
-            typeIconRoot ??= transform.Find("BasicFrame_Diamond_H48_NoBorder_Plum")?.gameObject;
-            CaptureFallbackIcon();
-        }
-
-        private void EnsureNormalFrame()
-        {
-            if (normalState == null)
-            {
-                return;
-            }
-
-            normalFrame ??= FindNormalFrame(normalState.transform);
-            if (normalFrame == null)
-            {
-                var template = FindSiblingNormalFrameTemplate();
-                if (template != null)
-                {
-                    normalFrame = Instantiate(template.gameObject, normalState.transform, false).transform;
-                    normalFrame.gameObject.name = template.gameObject.name;
-                }
-            }
-
-            if (normalFrame == null)
-            {
-                return;
-            }
-
-            normalFrame.gameObject.SetActive(true);
-            var images = normalFrame.GetComponentsInChildren<Image>(true);
-            for (var i = 0; i < images.Length; i++)
-            {
-                images[i].enabled = true;
-            }
-        }
-
-        private Transform FindSiblingNormalFrameTemplate()
-        {
-            var parent = transform.parent;
-            if (parent == null)
-            {
-                return null;
-            }
-
-            foreach (Transform sibling in parent)
-            {
-                if (sibling == transform)
-                {
-                    continue;
-                }
-
-                var siblingNormalArea = sibling.Find("ItemFrame_01/NormalArea");
-                var candidate = FindNormalFrame(siblingNormalArea);
-                if (candidate != null)
-                {
-                    return candidate;
-                }
-            }
-
-            return null;
-        }
-
-        private static Transform FindNormalFrame(Transform root)
-        {
-            if (root == null)
-            {
-                return null;
-            }
-
-            foreach (Transform child in root)
-            {
-                if (child.name.StartsWith("ItemFrame_01_Normal", StringComparison.Ordinal))
-                {
-                    return child;
-                }
-            }
-
-            return null;
-        }
-
-        private void CaptureFallbackIcon()
-        {
-            if (fallbackIcon != null)
-            {
-                return;
-            }
-
-            fallbackIcon = transform.Find("BasicFrame_Diamond_H48_NoBorder_Plum/Icon")?.GetComponent<Image>()?.sprite;
-            if (fallbackIcon == null && itemImage != null && itemImage.sprite != null)
-            {
-                fallbackIcon = itemImage.sprite;
-            }
         }
     }
 }

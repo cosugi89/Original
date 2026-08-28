@@ -4,6 +4,7 @@ using System.Linq;
 using Assets.Scripts.Core;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Systems.GameData;
+using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using LayerLab.ArtMakerUnity;
 using UnityEngine;
@@ -24,39 +25,40 @@ namespace Assets.Scripts.UI.Dialog
             UICategory.HandLeft
         };
 
-        private readonly AvatarService _avatarService;
-        private readonly InventoryService _inventoryService;
-        private readonly AvatarRenderService _avatarRenderService;
+        private readonly AppearanceManager _appearanceManager;
+        private readonly InventoryManager _inventoryManager;
+        private readonly AppearanceAdapter _avatarRenderService;
         private AvatarAppearanceData _draftAppearance;
-        private PartsManager _previewPartsManager;
+        private AppearanceController _previewPartsManager;
 
         public AvatarEditorPresenter(
-            AvatarService avatarService,
-            InventoryService inventoryService,
-            AvatarRenderService avatarRenderService,
+            AppearanceManager appearanceManager,
+            InventoryManager inventoryManager,
+            AppearanceAdapter avatarRenderService,
             AvatarAppearanceData initialAppearance)
         {
-            _avatarService = avatarService;
-            _inventoryService = inventoryService;
+            _appearanceManager = appearanceManager;
+            _inventoryManager = inventoryManager;
             _avatarRenderService = avatarRenderService;
             _draftAppearance = CloneAppearance(initialAppearance);
             EnsureDefaultColors(_draftAppearance);
         }
 
-        public static AvatarEditorPresenter CreateDefault(PartsManager sourcePartsManager = null)
+        public static AvatarEditorPresenter CreateDefault(AppearanceController sourcePartsManager = null)
         {
-            var inventoryService = InventoryService.EnsureInitialized();
-            var avatarService = AvatarService.EnsureInitialized();
-            var avatarRenderService = AvatarRenderService.EnsureInitialized();
+            var userDataManager = UserDataManager.EnsureInitialized();
+            var inventoryManager = userDataManager.Inventory;
+            var appearanceManager = userDataManager.Appearance;
+            var avatarRenderService = AppearanceAdapter.EnsureInitialized();
 
             AvatarAppearanceData initialAppearance = sourcePartsManager != null
-                ? PartsManagerAvatarAdapter.CaptureAppearance(sourcePartsManager, inventoryService)
-                : avatarService.GetCurrentAppearance();
+                ? PartsManagerAvatarAdapter.CaptureAppearance(sourcePartsManager, inventoryManager)
+                : appearanceManager.GetCurrentAppearance();
 
-            return new AvatarEditorPresenter(avatarService, inventoryService, avatarRenderService, initialAppearance);
+            return new AvatarEditorPresenter(appearanceManager, inventoryManager, avatarRenderService, initialAppearance);
         }
 
-        public void BindPreview(PartsManager previewPartsManager)
+        public void BindPreview(AppearanceController previewPartsManager)
         {
             _previewPartsManager = previewPartsManager;
             ApplyDraftToPreview();
@@ -107,9 +109,9 @@ namespace Assets.Scripts.UI.Dialog
         public bool TrySelectEquipment(int equipmentId)
         {
             if (equipmentId <= 0 ||
-                !_inventoryService.TryGetDefinition(equipmentId, out var definition) ||
+                !_inventoryManager.TryGetDefinition(equipmentId, out var definition) ||
                 definition == null ||
-                !_inventoryService.HasEquipment(equipmentId))
+                !_inventoryManager.HasEquipment(equipmentId))
             {
                 return false;
             }
@@ -192,14 +194,14 @@ namespace Assets.Scripts.UI.Dialog
         public void Commit()
         {
             var committedAppearance = CloneAppearance(_draftAppearance);
-            _avatarService.SetCurrentAppearance(committedAppearance);
+            _appearanceManager.SetCurrentAppearance(committedAppearance);
 
             foreach (var equipmentId in committedAppearance.Parts
                          .Where(state => state != null && state.EquipmentId > 0)
                          .Select(state => state.EquipmentId)
                          .Distinct())
             {
-                _inventoryService.MarkEquipped(equipmentId);
+                _inventoryManager.MarkEquipped(equipmentId);
             }
 
             if (_previewPartsManager != null)
@@ -208,13 +210,13 @@ namespace Assets.Scripts.UI.Dialog
             }
         }
 
-        public void ApplyDraftTo(PartsManager partsManager)
+        public void ApplyDraftTo(AppearanceController partsManager)
         {
             if (partsManager == null)
                 return;
 
             EnsurePartsManagerInitialized(partsManager);
-            PartsManagerAvatarAdapter.ApplyAppearance(partsManager, _draftAppearance, _inventoryService);
+            PartsManagerAvatarAdapter.ApplyAppearance(partsManager, _draftAppearance, _inventoryManager);
         }
 
         private IReadOnlyList<AvatarPartOptionViewData> BuildOptions(
@@ -228,14 +230,14 @@ namespace Assets.Scripts.UI.Dialog
             {
                 var partType = partTypes[groupIndex];
                 var partState = GetPartState(partType);
-                var definitions = _inventoryService.GetDefinitionsByPartType(partType, ownedOnly: false);
+                var definitions = _inventoryManager.GetDefinitionsByPartType(partType, ownedOnly: false);
 
                 foreach (var definition in definitions)
                 {
                     if (definition == null || definition.EquipmentId <= 0)
                         continue;
 
-                    var isOwned = _inventoryService.HasEquipment(definition.EquipmentId);
+                    var isOwned = _inventoryManager.HasEquipment(definition.EquipmentId);
                     if (!includeLocked && !isOwned)
                         continue;
 
@@ -440,7 +442,7 @@ namespace Assets.Scripts.UI.Dialog
                 if (state == null ||
                     !state.IsVisible ||
                     state.EquipmentId <= 0 ||
-                    !_inventoryService.TryGetDefinition(state.EquipmentId, out var definition) ||
+                    !_inventoryManager.TryGetDefinition(state.EquipmentId, out var definition) ||
                     definition == null)
                 {
                     continue;
@@ -504,7 +506,7 @@ namespace Assets.Scripts.UI.Dialog
                 names.Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim()));
         }
 
-        private static void EnsurePartsManagerInitialized(PartsManager partsManager)
+        private static void EnsurePartsManagerInitialized(AppearanceController partsManager)
         {
             if (partsManager.ActiveIndices.Count == 0)
             {

@@ -25,7 +25,7 @@ namespace Assets.Scripts.UI.Dialog
 
         /// <summary>
         /// スポーンしたインスタンスから型付きで Component を取得する。
-        /// 代表例: handle.Get&lt;PartsManager&gt;()
+        /// 代表例: handle.Get&lt;AppearanceController&gt;()
         /// </summary>
         public T Get<T>() where T : Component
         {

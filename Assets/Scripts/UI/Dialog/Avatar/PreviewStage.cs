@@ -60,7 +60,7 @@ namespace Assets.Scripts.UI.Dialog
 
         /// <summary>
         /// Component 派生のプレハブを型を保ったまま生成するための糖衣。
-        /// 代表例: var h = renderer.Spawn(partsManagerPrefab); var pm = h.Get&lt;PartsManager&gt;();
+        /// 代表例: var h = renderer.Spawn(partsManagerPrefab); var pm = h.Get&lt;AppearanceController&gt;();
         /// </summary>
         public PreviewHandle Spawn<T>(T prefab, PreviewPlacement? placement = null) where T : Component
         {

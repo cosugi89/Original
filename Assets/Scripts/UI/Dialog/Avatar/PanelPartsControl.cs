@@ -20,7 +20,7 @@ namespace Assets.Scripts.UI.Dialog
         private PartsSlot[] _partsSlots;
         private PartsSlot _selectedSlot;
         private PartsSlot _focusedSlot;
-        private PartsManager _partsManager;
+        private AppearanceController _partsManager;
 
         private void Awake()
         {
@@ -28,10 +28,10 @@ namespace Assets.Scripts.UI.Dialog
         }
 
         /// <summary>
-        /// PartsManager と連動する PanelPartsList を使って、PanelParts を初期化する
+        /// AppearanceController と連動する PanelPartsList を使って、PanelParts を初期化する
         /// 子要素の PartsSlot をセットアップし、最初のスロットを選択する
         /// </summary>
-        public void Init(PartsManager pm, PanelPartsListControl panelPartsList, AvatarEditorPresenter presenter = null)
+        public void Init(AppearanceController pm, PanelPartsListControl panelPartsList, AvatarEditorPresenter presenter = null)
         {
             _partsManager = pm;
             _panelPartsList = panelPartsList;
@@ -68,8 +68,8 @@ namespace Assets.Scripts.UI.Dialog
             if (_partsManager == null)
                 return;
 
-            AvatarRenderService.EnsureInitialized().CaptureFrom(_partsManager);
-            GameSaveService.EnsureInitialized().SaveSession();
+            AppearanceAdapter.EnsureInitialized().CaptureFrom(_partsManager);
+            UserDataManager.EnsureInitialized().UserDataStore.SaveSession();
         }
 
         private void DoSelectSlot(PartsSlot slot)

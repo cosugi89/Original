@@ -1,12 +1,10 @@
 using UnityEngine;
 using Assets.Scripts.Systems.GameData;
-using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Features.Main;
 using Assets.Scripts.Core;
 
 /// <summary>
 /// MainScene のエントリポイント。
-/// - セーブ / アバター系サービスのブートストラップ
 /// - PreviewStage へのプレイヤー生成とアピアランス適用
 /// - HomeScreen UI の初期化
 ///
@@ -20,26 +18,21 @@ public class MainScene : MonoBehaviour
     [Header("Player")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private Transform playerRoot;
-    [SerializeField] private PartsManager sceneCharacterPreview;
+    [SerializeField] private AppearanceController sceneCharacterPreview;
 
     [Header("Screens")]
     [SerializeField] private HomeScreen homeScreen;
     [SerializeField] private StatusScreen statusScreen;
 
-    private PartsManager _homeCharacterPreview;
+    private AppearanceController _homeCharacterPreview;
     private GameObject _homeCharacterRoot;
-    private PartsManager _statusCharacterPreview;
+    private AppearanceController _statusCharacterPreview;
     private GameObject _statusCharacterRoot;
 
 
-    private void Awake()
-    {
-        BootstrapServices();
-    }
-
     private void Start()
     {
-        var avatarRenderService = AvatarRenderService.EnsureInitialized();
+        var avatarRenderService = AppearanceAdapter.EnsureInitialized();
 
         _homeCharacterPreview = ResolveHomeCharacterPreview();
         ApplyAvatarTo(_homeCharacterPreview, avatarRenderService);
@@ -60,26 +53,14 @@ public class MainScene : MonoBehaviour
         SetPreviewVisibility(screen);
     }
 
-    /// <summary>
-    /// 静的サービスの初期化。各 EnsureInitialized() は冪等なので
-    /// ここで一度呼んでおくだけで後続のアクセスが安全になる。
-    /// </summary>
-    private static void BootstrapServices()
-    {
-        GameSaveService.EnsureInitialized();
-        AvatarService.EnsureInitialized();
-        InventoryService.EnsureInitialized();
-        AvatarRenderService.EnsureInitialized();
-    }
-
-    private PartsManager ResolveSceneCharacterPreview()
+    private AppearanceController ResolveSceneCharacterPreview()
     {
         if (sceneCharacterPreview != null)
         {
             return sceneCharacterPreview;
         }
 
-        var partsManagers = FindObjectsByType<PartsManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        var partsManagers = FindObjectsByType<AppearanceController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         for (var i = 0; i < partsManagers.Length; i++)
         {
             var candidate = partsManagers[i];
@@ -95,9 +76,9 @@ public class MainScene : MonoBehaviour
         return null;
     }
 
-    private PartsManager ResolveHomeCharacterPreview()
+    private AppearanceController ResolveHomeCharacterPreview()
     {
-        var existing = playerRoot != null ? playerRoot.GetComponentInChildren<PartsManager>(true) : null;
+        var existing = playerRoot != null ? playerRoot.GetComponentInChildren<AppearanceController>(true) : null;
         if (existing != null)
         {
             return existing;
@@ -106,10 +87,10 @@ public class MainScene : MonoBehaviour
         var playerObject = playerRoot != null
             ? Instantiate(playerPrefab, playerRoot)
             : Instantiate(playerPrefab);
-        return playerObject.GetComponent<PartsManager>();
+        return playerObject.GetComponent<AppearanceController>();
     }
 
-    private PartsManager ResolveStatusCharacterPreview()
+    private AppearanceController ResolveStatusCharacterPreview()
     {
         var candidate = ResolveSceneCharacterPreview();
         if (candidate != null && ResolvePreviewRoot(candidate) != _homeCharacterRoot)
@@ -126,7 +107,7 @@ public class MainScene : MonoBehaviour
 
         var statusObject = Instantiate(playerPrefab, statusRoot.transform);
         MatchPreviewLocalTransform(statusObject.transform);
-        var statusPreview = statusObject.GetComponent<PartsManager>();
+        var statusPreview = statusObject.GetComponent<AppearanceController>();
         statusRoot.SetActive(false);
         return statusPreview;
     }
@@ -143,7 +124,7 @@ public class MainScene : MonoBehaviour
         previewTransform.localScale = _homeCharacterPreview.transform.localScale;
     }
 
-    private static void ApplyAvatarTo(PartsManager partsManager, AvatarRenderService avatarRenderService)
+    private static void ApplyAvatarTo(AppearanceController partsManager, AppearanceAdapter avatarRenderService)
     {
         if (partsManager == null)
         {
@@ -154,7 +135,7 @@ public class MainScene : MonoBehaviour
         avatarRenderService.ApplyTo(partsManager);
     }
 
-    private static GameObject ResolvePreviewRoot(PartsManager partsManager)
+    private static GameObject ResolvePreviewRoot(AppearanceController partsManager)
     {
         if (partsManager == null)
         {

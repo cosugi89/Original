@@ -1,4 +1,5 @@
 using Assets.Scripts.Systems.GameData;
+using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Scene;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -53,13 +54,13 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            BattleSceneTransitionState.SelectedStageId = _battleStageId;
+            BattleSceneRequest.SelectedStageId = _battleStageId;
             SceneManager.LoadScene(SceneNames.Battle);
         }
 
         private int GetNextStageId()
         {
-            return BattleProgressService.EnsureInitialized().GetRecommendedStageId();
+            return UserDataManager.EnsureInitialized().Progress.GetRecommendedStageId();
         }
     }
 }

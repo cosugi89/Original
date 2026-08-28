@@ -7,94 +7,46 @@ namespace Assets.Scripts.Features.Main
 {
     public sealed class StatusEquipmentListView : MonoBehaviour
     {
-        [SerializeField] private Transform contentParent;
-        [SerializeField] private StatusEquipmentListItemView itemTemplate;
+        [SerializeField] private StatusEquipmentCategory category;
+        [SerializeField] private StatusEquipmentListItemView[] itemViews;
 
-        private readonly List<StatusEquipmentListItemView> _items = new();
+        private readonly List<StatusEquipmentListItemView> _generatedItemViews = new();
+        private bool _isInitialized;
+
+        public StatusEquipmentCategory Category => category;
 
         public void Refresh(
             IReadOnlyList<AvatarPartOptionViewData> options,
             Action<AvatarPartOptionViewData> onItemClicked)
         {
-            EnsurePool(options?.Count ?? 0);
-
-            for (var i = 0; i < _items.Count; i++)
+            if (!_isInitialized)
             {
-                var option = options != null && i < options.Count ? options[i] : null;
-                _items[i].Bind(option, onItemClicked);
-            }
-        }
+                var template = itemViews[0];
+                var content = template.transform.parent;
+                template.gameObject.SetActive(false);
 
-        private void EnsurePool(int count)
-        {
-            ResolveReferences(allowComponentCreation: true);
-            if (contentParent == null || itemTemplate == null)
-            {
-                return;
-            }
-
-            CollectExistingItems();
-
-            while (_items.Count < count)
-            {
-                var created = Instantiate(itemTemplate, contentParent);
-                created.gameObject.name = itemTemplate.gameObject.name;
-                _items.Add(created);
-            }
-        }
-
-        private void CollectExistingItems()
-        {
-            if (_items.Count > 0 || contentParent == null || itemTemplate == null)
-            {
-                return;
-            }
-
-            foreach (Transform child in contentParent)
-            {
-                if (child == itemTemplate.transform)
+                for (var i = 1; i < itemViews.Length; i++)
                 {
-                    _items.Add(itemTemplate);
-                    continue;
+                    itemViews[i].gameObject.SetActive(false);
                 }
 
-                if (IsSceneSampleItem(child))
+                for (var i = 0; i < options.Count; i++)
                 {
-                    child.gameObject.SetActive(false);
+                    _generatedItemViews.Add(Instantiate(template, content));
                 }
-            }
-        }
 
-        private static bool IsSceneSampleItem(Transform child)
-        {
-            return child.GetComponent<StatusEquipmentListItemView>() != null ||
-                   child.name.StartsWith("ListItem_EquipMent", StringComparison.Ordinal);
-        }
-
-        private void Reset()
-        {
-            ResolveReferences();
-        }
-
-        private void OnValidate()
-        {
-            ResolveReferences();
-        }
-
-        private void ResolveReferences(bool allowComponentCreation = false)
-        {
-            if (contentParent == null)
-            {
-                contentParent = transform.Find("Viewport/Content");
+                _isInitialized = true;
             }
 
-            if (itemTemplate == null && contentParent != null && contentParent.childCount > 0)
+            while (_generatedItemViews.Count < options.Count)
             {
-                itemTemplate = contentParent.GetChild(0).GetComponent<StatusEquipmentListItemView>();
-                if (itemTemplate == null && allowComponentCreation)
-                {
-                    itemTemplate = contentParent.GetChild(0).gameObject.AddComponent<StatusEquipmentListItemView>();
-                }
+                _generatedItemViews.Add(Instantiate(itemViews[0], itemViews[0].transform.parent));
+            }
+
+            for (var i = 0; i < _generatedItemViews.Count; i++)
+            {
+                var option = i < options.Count ? options[i] : null;
+                _generatedItemViews[i].Bind(option, onItemClicked);
             }
         }
     }

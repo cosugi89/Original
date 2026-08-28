@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Systems.GameData;
+using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,12 +25,12 @@ namespace Assets.Scripts.UI.Dialog
 
         private readonly List<BattleSkillData> _candidates = new();
         private readonly List<int> _draftSkillIds = new();
-        private BattleSkillLoadoutService _loadoutService;
+        private SkillLoadoutManager _loadoutService;
         private int _selectedSlotIndex;
 
         private void Awake()
         {
-            _loadoutService = BattleSkillLoadoutService.EnsureInitialized();
+            _loadoutService = UserDataManager.EnsureInitialized().SkillLoadout;
             BindButtons();
         }
 
@@ -40,7 +41,7 @@ namespace Assets.Scripts.UI.Dialog
 
         public void Refresh()
         {
-            _loadoutService ??= BattleSkillLoadoutService.EnsureInitialized();
+            _loadoutService ??= UserDataManager.EnsureInitialized().SkillLoadout;
             _candidates.Clear();
             _candidates.AddRange(_loadoutService.GetCandidateSkillsFromEquippedEquipment());
 

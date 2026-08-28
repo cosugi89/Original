@@ -1,4 +1,4 @@
-﻿using LayerLab.ArtMakerUnity;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
@@ -14,18 +14,18 @@ namespace Assets.Scripts.UI.Dialog
     {
         public AvatarDialogRequest(Player player)
         {
-            SourcePartsManager = player != null ? player.PartsManager : null;
+            SourcePartsManager = player != null ? player.AppearanceController : null;
             SaveTargets = null;
         }
 
-        public AvatarDialogRequest(PartsManager sourcePartsManager, IReadOnlyList<PartsManager> saveTargets = null)
+        public AvatarDialogRequest(AppearanceController sourcePartsManager, IReadOnlyList<AppearanceController> saveTargets = null)
         {
             SourcePartsManager = sourcePartsManager;
             SaveTargets = saveTargets;
         }
 
-        public PartsManager SourcePartsManager { get; }
-        public IReadOnlyList<PartsManager> SaveTargets { get; }
+        public AppearanceController SourcePartsManager { get; }
+        public IReadOnlyList<AppearanceController> SaveTargets { get; }
     }
 
     public readonly struct AvatarDialogResult
@@ -51,7 +51,7 @@ namespace Assets.Scripts.UI.Dialog
         [SerializeField] private Button saveButton;
 
         [Header("Prefab")]
-        [SerializeField] private PartsManager characterPrefab;
+        [SerializeField] private AppearanceController characterPrefab;
 
         [Header("Preview Placement")]
         [SerializeField] private Vector3 previewLocalPosition = Vector3.zero;
@@ -62,10 +62,10 @@ namespace Assets.Scripts.UI.Dialog
         [SerializeField] private PanelPartsListControl panelPartsListControl;
         [SerializeField] private ColorSelectScrollUIScript colorPicker;
 
-        private PartsManager dialogPlayer;
+        private AppearanceController dialogPlayer;
         private PreviewHandle dialogPreviewHandle;
-        private PartsManager sourcePartsManager;
-        private IReadOnlyList<PartsManager> saveTargets;
+        private AppearanceController sourcePartsManager;
+        private IReadOnlyList<AppearanceController> saveTargets;
         private PreviewStage previewRenderer;
         private AvatarEditorPresenter avatarEditorPresenter;
 
@@ -81,7 +81,7 @@ namespace Assets.Scripts.UI.Dialog
             // Player の生成・反映
             var placement = new PreviewPlacement(previewLocalPosition, Quaternion.identity, previewLocalScale);
             dialogPreviewHandle = previewRenderer.Spawn(characterPrefab, placement);
-            dialogPlayer = dialogPreviewHandle?.Get<PartsManager>();
+            dialogPlayer = dialogPreviewHandle?.Get<AppearanceController>();
             if (dialogPlayer != null)
             {
                 dialogPlayer.Init();
@@ -114,7 +114,7 @@ namespace Assets.Scripts.UI.Dialog
         {
             avatarEditorPresenter?.Commit();
             ApplyCurrentAppearanceToSaveTargets();
-            GameSaveService.EnsureInitialized().SaveSession();
+            UserDataManager.EnsureInitialized().UserDataStore.SaveSession();
             DespawnDialogPreview();
 
             Close(AvatarDialogResult.Saved);
@@ -122,14 +122,14 @@ namespace Assets.Scripts.UI.Dialog
 
         private void ApplyCurrentAppearanceToSaveTargets()
         {
-            var renderService = AvatarRenderService.EnsureInitialized();
+            var renderService = AppearanceAdapter.EnsureInitialized();
             foreach (var target in ResolveSaveTargets())
             {
                 renderService.ApplyTo(target);
             }
         }
 
-        private IReadOnlyList<PartsManager> ResolveSaveTargets()
+        private IReadOnlyList<AppearanceController> ResolveSaveTargets()
         {
             if (saveTargets != null && saveTargets.Count > 0)
             {
@@ -141,7 +141,7 @@ namespace Assets.Scripts.UI.Dialog
 
             return sourcePartsManager != null
                 ? new[] { sourcePartsManager }
-                : System.Array.Empty<PartsManager>();
+                : System.Array.Empty<AppearanceController>();
         }
 
         private void DespawnDialogPreview()
