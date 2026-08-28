@@ -8,6 +8,7 @@ using Assets.Scripts.Features.Battle.Runtime;
 using Assets.Scripts.Features.Battle.Util;
 using Assets.Scripts.Features.Battle.ViewControllers;
 using Assets.Scripts.Systems.GameData;
+using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Scene;
 using Cysharp.Threading.Tasks;
 using System;
@@ -68,14 +69,14 @@ namespace Assets.Scripts.Features.Battle
         [SerializeField] private Color selectedSkillButtonColor = BattleUiColors.SelectedSkillButton;
         
         private IReadOnlyList<StageBattlePatternData> _patterns = Array.Empty<StageBattlePatternData>();
-        private BattleSceneSetupFactory _sceneSetupFactory;
+        private BattleSceneInitializer _sceneInitializer;
         private readonly BattleTurnViewCoordinator _turnViewCoordinator = new();
         private readonly BattleTurnResultApplier _turnResultApplier = new();
         private readonly List<string> _actionLogEntries = new();
         private readonly List<string> _playerActionHistoryEntries = new();
         private readonly List<string> _enemyActionHistoryEntries = new();
-        private PartsManager _playerInstance;
-        private PartsManager _enemyInstance;
+        private AppearanceController _playerInstance;
+        private AppearanceController _enemyInstance;
         private readonly BattleSessionState _session = new();
         private StageBattleEnemyData _activeEnemyData;
         private BattlePlayerSnapshot _playerSnapshot;
@@ -88,7 +89,7 @@ namespace Assets.Scripts.Features.Battle
 
         private void Awake()
         {
-            _sceneSetupFactory ??= new BattleSceneSetupFactory();
+            _sceneInitializer ??= new BattleSceneInitializer();
             ResolveScreenReferences();
             BindSkillInput();
 
@@ -122,9 +123,9 @@ namespace Assets.Scripts.Features.Battle
         public void Initialize()
         {
             if (_isInitialized) return;
-            _sceneSetupFactory ??= new BattleSceneSetupFactory();
+            _sceneInitializer ??= new BattleSceneInitializer();
             ResolveScreenReferences();
-            if (!_sceneSetupFactory.TryCreate(GetSkillSlotCount(), unlockedSkillSlotCount, out var setup))
+            if (!_sceneInitializer.TryCreate(GetSkillSlotCount(), unlockedSkillSlotCount, out var setup))
             {
                 Debug.LogWarning("[Battle] 戦闘セットアップを構築できなかったため、バトル初期化を中断しました。");
                 return;
@@ -357,7 +358,7 @@ namespace Assets.Scripts.Features.Battle
         {
             if (stageData == null) return;
 
-            BattleProgressService.EnsureInitialized().SetCurrentStage(stageData.StageId);
+            UserDataManager.EnsureInitialized().Progress.SetCurrentStage(stageData.StageId);
 
             if (background != null)
             {
@@ -385,7 +386,7 @@ namespace Assets.Scripts.Features.Battle
             _patterns = setup.Patterns;
             _currentStageId = setup.StageData?.StageId ?? -1;
             _nextStageId = _currentStageId >= 0
-                ? BattleProgressService.EnsureInitialized().GetNextStageId(_currentStageId)
+                ? UserDataManager.EnsureInitialized().Progress.GetNextStageId(_currentStageId)
                 : -1;
 
             _session.ResetForBattle(setup.EnemyName, setup.InitialPlayerHp, setup.InitialEnemyHp);
@@ -406,12 +407,12 @@ namespace Assets.Scripts.Features.Battle
 
             var playerObject = Instantiate(playerPrefab, playerRoot);
             var enemyObject = Instantiate(playerPrefab, enemyRoot);
-            _playerInstance = playerObject.GetComponent<PartsManager>();
-            _enemyInstance = enemyObject.GetComponent<PartsManager>();
+            _playerInstance = playerObject.GetComponent<AppearanceController>();
+            _enemyInstance = enemyObject.GetComponent<AppearanceController>();
             _playerInstance.Init();
             _enemyInstance.Init();
 
-            var avatarRender = AvatarRenderService.EnsureInitialized();
+            var avatarRender = AppearanceAdapter.EnsureInitialized();
             avatarRender.SyncSessionFromRendererIfNeeded(_playerInstance, saveAfterSync: true);
             avatarRender.ApplyTo(_playerInstance);
 
@@ -456,7 +457,7 @@ namespace Assets.Scripts.Features.Battle
         {
             _session.BattleEnded = true;
 
-            var battleProgress = BattleProgressService.EnsureInitialized();
+            var battleProgress = UserDataManager.EnsureInitialized().Progress;
             var clearedStageId = battleProgress.Session.CurrentStageId;
             if (clearedStageId < 0)
             {
@@ -792,7 +793,7 @@ namespace Assets.Scripts.Features.Battle
 
         private void HandleRetryButtonClicked()
         {
-            BattleSceneTransitionState.SelectedStageId = _currentStageId;
+            BattleSceneRequest.SelectedStageId = _currentStageId;
             SceneManager.LoadScene(SceneNames.Battle);
         }
 
@@ -804,7 +805,7 @@ namespace Assets.Scripts.Features.Battle
                 return;
             }
 
-            BattleSceneTransitionState.SelectedStageId = _nextStageId;
+            BattleSceneRequest.SelectedStageId = _nextStageId;
             SceneManager.LoadScene(SceneNames.Battle);
         }
 

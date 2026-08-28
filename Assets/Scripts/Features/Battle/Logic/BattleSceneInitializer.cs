@@ -12,28 +12,29 @@ namespace Assets.Scripts.Features.Battle.Logic
     /// <summary>
     /// BattleScene 初期化に必要なステージ・敵・プレイヤー情報をまとめて構築する。
     /// </summary>
-    public sealed class BattleSceneSetupFactory
+    public sealed class BattleSceneInitializer
     {
-        private readonly GameSaveService _saveService;
-        private readonly AvatarService _avatarService;
-        private readonly InventoryService _inventoryService;
-        private readonly BattleSkillLoadoutService _skillLoadoutService;
-        private readonly BattleProgressService _battleProgressService;
+        private readonly UserDataJsonStore _userDataStore;
+        private readonly AppearanceManager _appearanceManager;
+        private readonly InventoryManager _inventoryManager;
+        private readonly SkillLoadoutManager _skillLoadoutManager;
+        private readonly ProgressManager _progressManager;
         private readonly BattlePlayerSnapshotFactory _playerSnapshotFactory;
 
-        public BattleSceneSetupFactory(
-            GameSaveService saveService = null,
-            AvatarService avatarService = null,
-            InventoryService inventoryService = null,
-            BattleSkillLoadoutService skillLoadoutService = null,
-            BattleProgressService battleProgressService = null,
+        public BattleSceneInitializer(
+            UserDataJsonStore userDataStore = null,
+            AppearanceManager appearanceManager = null,
+            InventoryManager inventoryManager = null,
+            SkillLoadoutManager skillLoadoutManager = null,
+            ProgressManager progressManager = null,
             BattlePlayerSnapshotFactory playerSnapshotFactory = null)
         {
-            _saveService = saveService ?? GameSaveService.EnsureInitialized();
-            _avatarService = avatarService ?? AvatarService.EnsureInitialized();
-            _inventoryService = inventoryService ?? InventoryService.EnsureInitialized();
-            _skillLoadoutService = skillLoadoutService ?? BattleSkillLoadoutService.EnsureInitialized();
-            _battleProgressService = battleProgressService ?? BattleProgressService.EnsureInitialized();
+            var userDataManager = UserDataManager.EnsureInitialized();
+            _userDataStore = userDataStore ?? userDataManager.UserDataStore;
+            _appearanceManager = appearanceManager ?? userDataManager.Appearance;
+            _inventoryManager = inventoryManager ?? userDataManager.Inventory;
+            _skillLoadoutManager = skillLoadoutManager ?? userDataManager.SkillLoadout;
+            _progressManager = progressManager ?? userDataManager.Progress;
             _playerSnapshotFactory = playerSnapshotFactory ?? new BattlePlayerSnapshotFactory();
         }
 
@@ -77,10 +78,10 @@ namespace Assets.Scripts.Features.Battle.Logic
         private bool TryResolveStageData(out StageData stageData)
         {
             stageData = null;
-            var stageId = BattleSceneTransitionState.ConsumeSelectedStageId();
+            var stageId = BattleSceneRequest.ConsumeSelectedStageId();
             if (stageId < 0)
             {
-                stageId = _battleProgressService.GetCurrentOrRecommendedStageId();
+                stageId = _progressManager.GetCurrentOrRecommendedStageId();
                 if (stageId < 0)
                 {
                     return false;
@@ -92,15 +93,15 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private BattlePlayerSnapshotSource ResolvePlayerSnapshotSource()
         {
-            var profile = _saveService.Session.UserData?.Profile ?? new UserProfileDemoData();
-            _skillLoadoutService.EnsureUsableLoadout();
+            var profile = _userDataStore.Session.UserData?.Profile ?? new UserProfileDemoData();
+            _skillLoadoutManager.EnsureUsableLoadout();
             var equipmentDerivedData = ResolveEquippedEquipmentDerivedData();
             return new BattlePlayerSnapshotSource(profile, equipmentDerivedData);
         }
 
         private BattleEquipmentDerivedData ResolveEquippedEquipmentDerivedData()
         {
-            var equippedParts = _avatarService.GetAllPartStates();
+            var equippedParts = _appearanceManager.GetAllPartStates();
             if (equippedParts == null || equippedParts.Count == 0)
             {
                 return new BattleEquipmentDerivedData();
@@ -112,7 +113,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                 var partState = equippedParts[i];
                 if (partState == null ||
                     partState.EquipmentId <= 0 ||
-                    !_inventoryService.TryGetDefinition(partState.EquipmentId, out var definition) ||
+                    !_inventoryManager.TryGetDefinition(partState.EquipmentId, out var definition) ||
                     definition == null)
                 {
                     continue;

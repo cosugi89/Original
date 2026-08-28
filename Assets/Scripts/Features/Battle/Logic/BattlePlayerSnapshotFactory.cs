@@ -82,12 +82,7 @@ namespace Assets.Scripts.Features.Battle.Logic
                 return profile.SkillLoadout.SkillIds;
             }
 
-            if (profile?.SkillSlotSkillIds != null && profile.SkillSlotSkillIds.Count > 0)
-            {
-                return profile.SkillSlotSkillIds;
-            }
-
-            return new UserProfileDemoData().SkillSlotSkillIds;
+            return new UserProfileDemoData().SkillLoadout.SkillIds;
         }
 
         private static BattleSkillData ResolveSkillDefinition(int skillId)

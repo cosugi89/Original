@@ -263,8 +263,8 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         public async UniTask PlayResolvedActionAnimationsAsync(
-            PartsManager playerInstance,
-            PartsManager enemyInstance,
+            AppearanceController playerInstance,
+            AppearanceController enemyInstance,
             BattleTurnResolutionReport result,
             CancellationToken cancellationToken,
             Action<BattleResolvedAction> onResolvedAction = null)
@@ -315,8 +315,8 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         private static async UniTask PlayAnimationBeatAsync(
             BattleTurnAnimationBeat beat,
-            PartsManager playerInstance,
-            PartsManager enemyInstance,
+            AppearanceController playerInstance,
+            AppearanceController enemyInstance,
             CancellationToken cancellationToken,
             Action<BattleResolvedAction> onResolvedAction,
             HashSet<BattleResolvedAction> notifiedActions)
@@ -360,11 +360,11 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         private static async UniTask PlayAnimationEventAsync(
-            PartsManager target,
+            AppearanceController target,
             BattleTurnAnimationEvent animationEvent,
             string actorLabel,
-            PartsManager playerInstance,
-            PartsManager enemyInstance,
+            AppearanceController playerInstance,
+            AppearanceController enemyInstance,
             CancellationToken cancellationToken,
             Action<BattleResolvedAction> onResolvedAction,
             HashSet<BattleResolvedAction> notifiedActions)
@@ -494,7 +494,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         private static async UniTask<bool> PlayAnimationCueAsync(
-            PartsManager target,
+            AppearanceController target,
             BattlePlayerAnimationCue cue,
             string actorLabel,
             CancellationToken cancellationToken)
@@ -512,8 +512,8 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         private static async UniTask WaitForAnimationStartAsync(
             BattleTurnAnimationStartTrigger trigger,
-            PartsManager playerInstance,
-            PartsManager enemyInstance,
+            AppearanceController playerInstance,
+            AppearanceController enemyInstance,
             CancellationToken cancellationToken)
         {
             if (!trigger.WaitsForAnimationEvent)
@@ -542,7 +542,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         private static async UniTask<bool> WaitForAnimationEventOrDelayAsync(
-            PartsManager target,
+            AppearanceController target,
             string eventKey,
             float fallbackDelaySeconds,
             CancellationToken cancellationToken,
@@ -595,7 +595,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         private static float ResolveAnimationEventTimeoutSeconds(
-            PartsManager target,
+            AppearanceController target,
             string eventKey,
             float fallbackDelaySeconds,
             BattlePlayerAnimationCue? cue)
@@ -618,7 +618,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         private static bool TryFindAnimationClip(
-            PartsManager target,
+            AppearanceController target,
             BattlePlayerAnimationCue? cue,
             out AnimationClip clip)
         {
@@ -728,9 +728,9 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         private static bool TryResolveAnimationActor(
             BattleTurnAnimationActor actor,
-            PartsManager playerInstance,
-            PartsManager enemyInstance,
-            out PartsManager target,
+            AppearanceController playerInstance,
+            AppearanceController enemyInstance,
+            out AppearanceController target,
             out string actorLabel)
         {
             switch (actor)
@@ -748,7 +748,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         private static bool TryGetAnimationEventReceiver(
-            PartsManager target,
+            AppearanceController target,
             out AnimationEventReceiver receiver)
         {
             receiver = target != null
@@ -758,7 +758,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
         }
 
         private static bool TryPlayAnimationCue(
-            PartsManager target,
+            AppearanceController target,
             BattlePlayerAnimationCue cue,
             string actorLabel,
             out float durationSeconds)
@@ -784,7 +784,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             return true;
         }
 
-        private static void PlayIdleIfAvailable(PartsManager target)
+        private static void PlayIdleIfAvailable(AppearanceController target)
         {
             if (target != null && target.HasAnimation(BattleAnimationCatalog.Idle))
             {

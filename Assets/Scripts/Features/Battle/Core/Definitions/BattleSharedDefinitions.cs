@@ -93,7 +93,7 @@ namespace Assets.Scripts.Features.Battle.Core
 
     /// <summary>
     /// 戦闘解決から表示層へ渡すキャラクター行動アニメーションの手掛かり。
-    /// 型名は既存互換のため Player を残すが、敵側の PartsManager 再生にも使う。
+    /// 型名は既存互換のため Player を残すが、敵側の AppearanceController 再生にも使う。
     /// </summary>
     public enum BattlePlayerAnimationCue
     {
