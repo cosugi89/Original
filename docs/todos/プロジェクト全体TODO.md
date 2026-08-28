@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-08-16
+- 最終更新: 2026-08-26
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と MainScene / Status タブ拡充タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -15,8 +15,9 @@
 
 ## 1. P0: 基盤とデータ整合
 
+- [ ] `TitleScene` を追加し、現行 `MainScene` の `GameInitializer` を移動して Build Settings の起点を切り替える
 - [x] ステージ ID を `int` と `string` の混在から数値 `StageId` に統一する
-- [x] `BattleSceneTransitionState`、`StageData`、`StageMasterData`、`BattleProgressService` のキー設計を揃える
+- [x] `BattleSceneRequest`、`StageData`、`StageMasterData`、`ProgressManager` のキー設計を揃える
 - [x] `StageDatabase` / `StageMasterDatabase` / `StageMasterData` の命名を repo 全体で統一する
 - [x] `MasterDataResourceLoader` のステージ一覧読込を `StageMasterDatabase` ベースへ統一する
 - [x] `StageMasterData`、`StageBattleEnemyMasterData`、`StageBattlePatternMasterData` の master 構造を追加する
@@ -84,10 +85,10 @@
 
 - [x] `HomeScreen` からバトルシーンへ遷移できる
 - [x] `HomeScreen.GetNextStageId()` と debug stage 指定を持つ
-- [x] 戦闘開始時に `BattleProgressService` の現在ステージ/最終選択ステージを更新する
+- [x] 戦闘開始時に `ProgressManager` の現在ステージ/最終選択ステージを更新する
 - [x] 勝利時に `RecordStageClear()` を呼ぶ
 - [x] 勝利時に次ステージを `UnlockStage()` する
-- [x] `BattleProgressService` が初期解放ステージを進捗データへ反映する
+- [x] `ProgressManager` が初期解放ステージを進捗データへ反映する
 - [x] バトル進捗保存用のモデルは存在する
 - [x] `RecordStageClear()` は `BestScore`、`BestRank`、`BestClearTimeSeconds` を更新できる
 - [ ] ステージ選択画面を追加し、`StageMasterDatabase` と進捗を接続する
@@ -95,7 +96,7 @@
 - [ ] 戦闘失敗時の再挑戦導線を実装する
 - [ ] スコア、ランク、クリアタイムの算出ルールを定義する
 - [ ] 勝利時に実際の `score`、`rank`、`clearTimeSeconds` を `RecordStageClear()` へ渡す
-- [ ] 戦闘終了時に `GameSaveService.SaveSession()` を呼ぶ導線を整える
+- [ ] 戦闘終了時に `UserDataJsonStore.SaveSession()` を呼ぶ導線を整える
 
 ## 5. P1: MainScene / Status タブ
 
@@ -104,7 +105,7 @@
 - [x] 装備変更を `UserData.Profile.Avatar.Parts` と MainScene 上のプレイヤープレビューへ反映する
 - [x] `Button_Skin` から髪、肌、目、ひげなどの見た目変更ダイアログを開く
 - [x] 見た目変更ダイアログの保存を `UserData.Profile.Avatar` と MainScene 上の各プレイヤープレビューへ反映する
-- [x] Status タブの変更保存タイミングを確定し、`GameSaveService.SaveSession()` へ接続する
+- [x] Status タブの変更保存タイミングを確定し、`UserDataJsonStore.SaveSession()` へ接続する
 - [x] 装備変更により使用不可になった Skill ロードアウトを自動で外す
 - [x] Status タブで実戦用 Skill ロードアウト4枠を表示し、Skill 設定ダイアログから変更できるようにする
 - [x] Dialog 基盤を `DialogService` / 専用 `DialogCanvas` / `DialogAddressAttribute` ベースへ移行し、呼び出し側の prefab 参照と parent 指定を外す

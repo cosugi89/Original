@@ -22,6 +22,24 @@
 - 定数や enum が本当に共有基盤である場合は、似た定義を複数箇所に置かず、共通定義を一つ用意して呼び出し側から再利用する。
 - 共有 enum や定数は管理コストを低く保つ。専用の共通置き場にまとめ、呼び出し側から再利用することを優先する。
 
+## 命名方針
+
+- 型名は「対象 + 役割」の順にし、末尾で責務が分かる名前を選ぶ。曖昧な `Service` は新規コードで使わない。
+- `Manager` は、ゲーム内の状態を正本として保持・更新する窓口に使う。例: `InventoryManager`、`AppearanceManager`、`ProgressManager`。
+- `Store` は、永続データの読み書きをまとめる窓口に使う。保存形式や媒体を表す具体実装は `JsonFile` のように末尾へ置く。例: `UserDataJsonStore`、`UserDataJsonFile`。
+- シーンやダイアログをまたぐ入力と結果は `Request` / `Response` とする。入口で必要な準備を行う型は `Initializer` とする。
+- 異なる表現・層の変換は `Adapter`、Unity 上の見た目部品を直接制御する `MonoBehaviour` は `Controller` とする。これらは状態の正本を持たない。
+- 変数名・プロパティ名も型の責務に合わせる。たとえば保存窓口は `userDataStore`、見た目の正本は `appearanceManager`、シーン遷移入力は `battleSceneRequest` のように、旧名称を引き継がない。
+
+## UIViewController の公開API
+
+- 新規の UIViewController は、表示状態を切り替えるためだけの enum や内部状態を原則 private にする。
+- 呼び出し側には `SetState(state, ...)` のような表示実装に依存するAPIではなく、`ShowSkill(icon)`、`ShowEmpty()`、`ShowLocked(reason)` のように、表示したい意図を表すメソッドを公開する。
+- 状態別の公開メソッドが共通の切替処理を持つ場合は、`private SetState(...)` に集約する。`SetState` は UIViewController 内部の実装詳細として扱い、public にはしない。
+- 複数の画面や機能で共有するゲーム上の判断を呼び出し側に委ねる必要がある場合だけ、共有 enum や表示モデルを public にしてよい。単一 UIViewController 内の見た目切り替えはその理由にならない。
+- optional 引数を組み合わせて無意味な呼び出しを許すAPIは避ける。状態ごとに必要な値が違う場合は、用途別の公開メソッドへ分ける。
+- UIViewController は表示の正本を持たず、受け取った値を描画する。ゲーム状態の判断や保存は Manager など呼び出し側の責務に置く。
+
 ## 分割してよい理由
 
 - 新しい型が複数の機能やシーンから再利用される。

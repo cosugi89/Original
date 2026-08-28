@@ -1,6 +1,6 @@
 # UI 共通部品仕様書
 
-- 最終更新: 2026-08-15
+- 最終更新: 2026-08-28
 - 文書状態: 運用中
 - 位置づけ: プロジェクト内で共通利用する UI 部品の責務と運用方針を定義する。
 
@@ -42,7 +42,18 @@
 Hierarchy 上では `GameObject/UI/Game Button` から新規作成できる。
 このメニューは `GameButton.prefab` が存在する場合は Prefab インスタンスを生成し、Prefab がない場合のみ同等構成の GameObject を作る。
 
-## 2. Button Transition
+## 2. FeedbackButton
+
+`FeedbackButton` は、既存の UI レイアウトを維持したままクリックSEと追加アニメーションだけを加える軽量コンポーネントである。
+
+- 実体は `Assets/Scripts/UI/Components/Button/FeedbackButton.cs` に置く。
+- `UnityEngine.UI.Button` を継承する。通常の `Button` と同じ GameObject に併置せず、必要な場合は通常 `Button` を `FeedbackButton` へ手動で置き換える。
+- 見た目、サイズ、ラベル、ゲーム固有のクリック処理は持たない。既存の `Button.onClick` はそのまま利用できる。
+- C# 用の追加クリック処理は `SetAction(...)` で設定できる。クリックSE、Animator Trigger、追加クリック処理は有効な click / submit 時だけ実行する。
+- `Animator`、`AudioSource`、`AudioClip` は任意参照である。専用Inspectorの `フィードバックをセットアップ` は、必要に応じて `Animator` と `AudioSource` を追加して参照を自動配線し、`Assets/Resources/Animations/Button/Button.controller`、`Assets/Resources/Sounds/Button-1.wav`、2D再生設定を適用する。
+- セットアップは Unity 標準の Button Animation Transition を使うよう切り替え、`Normal` / `Highlighted` / `Pressed` / `Selected` / `Disabled` trigger を設定する。追加のクリックTriggerは任意で個別に設定できる。
+
+## 3. Button Transition
 
 `GameButton` は `Button` を継承しているため、Unity 標準の Transition をそのまま使う。
 
@@ -53,8 +64,8 @@ Hierarchy 上では `GameObject/UI/Game Button` から新規作成できる。
 
 `GameButton.SetSelected(...)` の選択表示は、Unity 標準の `Selected` Transition とは別に、任意の `selectedRoot` 表示を切り替えるための補助状態である。
 
-## 3. 移行方針
+## 4. 移行方針
 
 既存 UI の `Button` 参照は一括置換しない。
-新規 UI から `GameButton` を優先して使い、既存 Dialog と主要 UI は触るタイミングで段階的に置き換える。
+新規 UI からは、見た目も含めて新規作成する場合に `GameButton` を優先して使う。既存レイアウトへクリックSEとアニメーションだけを加える場合は `FeedbackButton` を使う。既存 Dialog と主要 UI は触るタイミングで段階的に置き換える。
 `Dialog-StatusEquipmentDetail.prefab` の `Button_Equip` と `Button_Close` は `GameButton` へ移行済みである。
