@@ -59,6 +59,7 @@
 - [x] `BattleCellView` prefab 生成方式で盤面セルを描画できる
 - [x] Skill ボタンの選択ハイライトがある
 - [x] Skill ボタンにアイコン、チャージ fill、使用不可 overlay を反映する
+- [ ] `Parts-SkillItem` と `BattleSkillSlotView` を BattleScene の Skill パレット用Prefabへ配線する
 - [x] `turnNumberText` と `waveNumberText` を毎ターン更新する
 - [x] `background` と `previewImage` にステージ画像を反映する
 - [x] `playerHPText` を `BattleHudController` 経由で更新する

@@ -31,6 +31,10 @@
 - 異なる表現・層の変換は `Adapter`、Unity 上の見た目部品を直接制御する `MonoBehaviour` は `Controller` とする。これらは状態の正本を持たない。
 - 変数名・プロパティ名も型の責務に合わせる。たとえば保存窓口は `userDataStore`、見た目の正本は `appearanceManager`、シーン遷移入力は `battleSceneRequest` のように、旧名称を引き継がない。
 
+## アクセス修飾子
+
+- 新規に作る型やAPIでは `internal` を使わない。外部から呼び出す型、enum、メソッドは `public`、実装詳細は `private` とする。
+
 ## UIViewController の公開API
 
 - 新規の UIViewController は、表示状態を切り替えるためだけの enum や内部状態を原則 private にする。
@@ -39,6 +43,13 @@
 - 複数の画面や機能で共有するゲーム上の判断を呼び出し側に委ねる必要がある場合だけ、共有 enum や表示モデルを public にしてよい。単一 UIViewController 内の見た目切り替えはその理由にならない。
 - optional 引数を組み合わせて無意味な呼び出しを許すAPIは避ける。状態ごとに必要な値が違う場合は、用途別の公開メソッドへ分ける。
 - UIViewController は表示の正本を持たず、受け取った値を描画する。ゲーム状態の判断や保存は Manager など呼び出し側の責務に置く。
+
+## Prefab UI の責務
+
+- 再利用する Prefab の MonoBehaviour は、Prefab 内の画像、テキスト、表示状態、配色を一箇所で管理する。
+- Screen 固有の View は、ゲームデータをPrefab用の表示意図へ変換し、クリックなど画面固有の入力を扱う中間アダプタとして保つ。
+- 見た目が同じでもクリック後の意味が異なるViewを、抽象化だけを理由に一つのクラスへ統合しない。
+- Prefab の公開APIは `Init`、`Setup`、意図を表すランタイム更新メソッドを優先し、呼び出し側が個々の GameObject を直接切り替えないようにする。
 
 ## 分割してよい理由
 

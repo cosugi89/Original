@@ -1,24 +1,16 @@
 using System;
+using Assets.Scripts.Core.Const;
 using Assets.Scripts.UI.Dialog;
-using TMPro;
+using LayerLab.ArtMakerUnity;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
     public sealed class StatusEquipmentSlotView : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private StatusEquipmentCategory category;
-        [SerializeField] private GameObject frameRoot;
-        [SerializeField] private GameObject normalState;
-        [SerializeField] private Image itemImage;
-        [SerializeField] private TextMeshProUGUI label;
-        [SerializeField] private GameObject focusState;
-        [SerializeField] private GameObject lockState;
-        [SerializeField] private GameObject addOneState;
-        [SerializeField] private GameObject addTwoState;
-        [SerializeField] private GameObject typeIconRoot;
+        [SerializeField] private PartsEquipmentItem equipmentItem;
         [SerializeField] private Sprite fallbackIcon;
 
         private Action<StatusEquipmentCategory> _onClicked;
@@ -33,25 +25,17 @@ namespace Assets.Scripts.Features.Main
         public void Refresh(AvatarPartSectionViewData section, bool selected)
         {
             var hasSelection = section != null && section.HasSelection;
-
-            frameRoot.SetActive(true);
-            normalState.SetActive(true);
-            typeIconRoot.SetActive(true);
-
             var icon = hasSelection && section.SelectedIcon != null ? section.SelectedIcon : fallbackIcon;
-            itemImage.gameObject.SetActive(true);
-            itemImage.sprite = icon;
-            itemImage.enabled = icon != null;
-            itemImage.color = Color.white;
-            itemImage.preserveAspect = true;
 
-            label.gameObject.SetActive(true);
-            label.text = BuildDisplayName(section, hasSelection, category);
-
-            focusState.SetActive(selected);
-            lockState.SetActive(false);
-            addOneState.SetActive(!hasSelection);
-            addTwoState.SetActive(false);
+            equipmentItem.ShowNormal();
+            equipmentItem.Setup(
+                ToUiCategory(category),
+                icon,
+                BuildDisplayName(section, hasSelection, category),
+                false,
+                new UIColors.PlumColorSet());
+            equipmentItem.SetFocused(selected);
+            equipmentItem.SetChecked(false);
         }
 
         public void SetVisible(bool visible)
@@ -62,6 +46,18 @@ namespace Assets.Scripts.Features.Main
         public void OnPointerClick(PointerEventData eventData)
         {
             _onClicked?.Invoke(category);
+        }
+
+        private static UICategory ToUiCategory(StatusEquipmentCategory category)
+        {
+            return category switch
+            {
+                StatusEquipmentCategory.Weapon => UICategory.HandRight,
+                StatusEquipmentCategory.Shield => UICategory.HandLeft,
+                StatusEquipmentCategory.Armor => UICategory.Chest,
+                StatusEquipmentCategory.Headgear => UICategory.Helmet,
+                _ => throw new ArgumentOutOfRangeException(nameof(category), category, "Unsupported equipment slot category.")
+            };
         }
 
         private static string BuildDisplayName(

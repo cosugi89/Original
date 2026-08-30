@@ -1,10 +1,11 @@
 using System;
+using Assets.Scripts.Core.Interfaces;
 using Assets.Scripts.UI.Components;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SkillFrame : MonoBehaviour
+public class SkillFrame : MonoBehaviour, IItemStateView
 {
     private enum SkillFrameState
     {
@@ -34,9 +35,14 @@ public class SkillFrame : MonoBehaviour
 
     public void ShowNormal(Sprite icon)
     {
+        ShowNormal();
+        SetIcon(_normalImage, icon);
+    }
+
+    public void ShowNormal()
+    {
         _presentationMode = SkillFramePresentationMode.Standard;
         SetState(SkillFrameState.Normal);
-        SetIcon(_normalImage, icon);
     }
 
     public void ShowBattleNormal(Sprite icon)
@@ -59,9 +65,14 @@ public class SkillFrame : MonoBehaviour
 
     public void ShowDisabled(Sprite icon)
     {
+        ShowDisabled();
+        SetIcon(_disabledImage, icon);
+    }
+
+    public void ShowDisabled()
+    {
         _presentationMode = SkillFramePresentationMode.Standard;
         SetState(SkillFrameState.Disabled);
-        SetIcon(_disabledImage, icon);
     }
 
     public void ShowEmpty()
@@ -72,9 +83,14 @@ public class SkillFrame : MonoBehaviour
 
     public void ShowLocked(string lockText)
     {
+        ShowLocked();
+        _lockText.text = lockText ?? string.Empty;
+    }
+
+    public void ShowLocked()
+    {
         _presentationMode = SkillFramePresentationMode.Standard;
         SetState(SkillFrameState.Locked);
-        _lockText.text = lockText ?? string.Empty;
     }
 
     private void SetState(SkillFrameState state)
@@ -83,9 +99,11 @@ public class SkillFrame : MonoBehaviour
         _disabled.SetActive(state == SkillFrameState.Disabled);
         _empty.SetActive(state == SkillFrameState.Empty);
         _lock.SetActive(state == SkillFrameState.Locked);
-        if (_presentationMode == SkillFramePresentationMode.Battle)
+        if (_normalFillImage != null)
         {
-            _normalFillImage.gameObject.SetActive(state == SkillFrameState.Normal);
+            _normalFillImage.gameObject.SetActive(
+                _presentationMode == SkillFramePresentationMode.Battle &&
+                state == SkillFrameState.Normal);
         }
     }
 

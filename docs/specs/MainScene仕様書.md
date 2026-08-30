@@ -1,6 +1,6 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-08-29
+- 最終更新: 2026-08-30
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Status タブ拡充方針を定義する。
 - 関連文書: `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
@@ -98,6 +98,13 @@ Status タブは、プレイヤーの装備変更、実戦用 Skill ロードア
 - `StatusScreen` は画面全体の状態遷移とデータ更新を担当し、タブ、装備一覧、装備枠、Skill 枠は各 View に分離する。
 - 各 View の必須 UI 参照とカテゴリ、スロット番号は Inspector で明示的に設定する。名前検索、子階層走査、実行時の既定 UI 生成による補完は行わない。
 - 装備一覧はカテゴリごとのテンプレート行を元に、候補数に応じて行を生成する。ScrollRect の Content は全候補を収め、固定20件で表示を打ち切らない。
+- 装備一覧の `ListItem_Template` ルートは Raycast を受ける透明な `Image` を持つ。候補行のクリックはこのルートの `StatusEquipmentListItemView` へ届け、装備詳細ダイアログを開く。
+- 装備カテゴリTabのNormal表示とFocus表示は同じカテゴリSpriteを使う。選択状態は枠や強調だけを変え、HeadgearとArmorなどのカテゴリSpriteを入れ替えない。
+- `Parts-EquipmentItem` は、装備枠と一覧行で共有する見た目専用Prefabとする。Prefabに付く `PartsEquipmentItem` は画像、テキスト、状態、種別アイコン、枠色だけを管理する。
+- `PartsEquipmentItem`、`PartsSkillItem`、`SkillFrame` は `IItemStateView` を実装し、外部へは `ShowNormal` / `ShowDisabled` / `ShowEmpty` / `ShowLocked` の4状態だけを公開する。旧 `Add1` は `Empty` に統合し、`Add2` は状態APIとして扱わない。状態enumは各Viewのprivate実装とする。
+- `StatusEquipmentSlotView` はMainScene上の各装備スロットに付く中間View、`StatusEquipmentListItemView` は各 ScrollRect の Content に置く非表示の `ListItem_Template` に付く中間Viewとする。実行時はこのテンプレートを複製して候補数分の一覧行を生成する。両Viewは装備データを `PartsEquipmentItem` の公開APIへ渡し、用途固有のクリック操作だけを扱う。
+- `Parts-SkillItem` は Skill 枠の見た目専用Prefabとする。Prefabに付く `PartsSkillItem` は、Skillアイコン、名前、`Icon-Attack` / `Icon-Shield` / `Icon-Armor` / `Icon-HeadGear` の種別アイコンObject、Normal / Locked / Disabled / Empty の表示状態、Focusだけを管理する。種別表示はSpriteの差替えではなく、該当するPrefab内Objectの有効状態を切り替える。保存、候補選択、バトルの Runtime は扱わない。
+- `StatusSkillSlotView` はMainScene上の各 Skill スロットに付く中間Viewとし、ロードアウトデータを `PartsSkillItem` の公開APIへ渡し、Skill設定ダイアログを開くクリックだけを扱う。
 - 装備枠と Skill 枠の通常フレームは各スロットの Prefab/Scene構成として常時配置する。表示データの有無でフレーム自体を生成、複製しない。
 - Status 用アバタープレビューの表示、RenderTexture 接続、見た目反映、ダイアログ中の一時非表示は `StatusAvatarPreviewView` が担当する。`StatusScreen` はこの View を通じてプレビューを操作する。
 
@@ -139,6 +146,8 @@ Status タブは以下のデータを参照、更新する。
 
 Status タブ内のカテゴリは以下のとおりである。
 
+Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor`、`Item` とする。
+
 | カテゴリ | 対応する `UICategory` | 備考 |
 | --- | --- | --- |
 | `All` | `HandRight`, `HandLeft`, `Chest`, `Helmet` | 装備変更対象をまとめて表示する。 |
@@ -160,15 +169,19 @@ Status タブ内のカテゴリは以下のとおりである。
 
 Status タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が担当し、`SkillLoadoutManager.EnsureUsableLoadout(...)` で得た現在の実戦用 Skill を表示する。
 
+各 `StatusSkillSlotView` は `PartsSkillItem` を Inspector 参照し、表示状態の直接切替や画像・テキストへの直接代入は行わない。
+
 - スロット数は `UserProfileData.BattleSkillLoadoutSlotCount` の 4 枠を正とする。
 - スロットに Skill が設定されている場合は、候補 Skill の `DisplayName` と `Icon` を表示する。
 - Skill の `Icon` は背景つきの正方画像でもスロット背景フレームを隠さないよう、枠内側に余白を取って表示する。
+- Skill枠の種別アイコンは、右手、左手、胴、兜の4種を用いる。各Skillは、そのSkillを提供している現在装備中の枠に対応する種別アイコンを表示する。
+- 初回表示ではCanvasレイアウト確定後にアイコンサイズを計算する。保存や再選択などの後続操作を行わなくても、すべてのSlotSkillでIconを表示する。
 - 未設定または現在の装備から使用できない Skill は `Empty` として表示する。
 - スロットを押下すると `SkillLoadoutDialog` を開き、押下したスロットを選択状態にする。
 - ダイアログ内では、`SelectedSkill` に現在のドラフト上の Skill ロードアウトを表示し、現在選択中のスロットを切り替えられるようにする。
 - 候補 Skill は、現在装備中の `EquipmentData.AssignableSkills` から `SkillLoadoutManager.GetCandidateSkillsFromEquippedEquipment()` で取得する。対象は Status タブで扱う右手、左手、胴、兜の4装備枠に限定し、Hair、Eye、Beard、Skin などの見た目専用パーツは候補元に含めない。
 - 候補 Skill は `SkillInfoArea` のスクロール領域に、候補数に応じて候補行テンプレートから動的に生成して表示する。候補数を8件に固定せず、装備枠や候補数の拡張に追従できるようにする。
-- 候補行の `SkillFrame` は `ShowNormal` / `ShowDisabled` / `ShowEmpty` / `ShowLocked` で表示を切り替える表示専用ViewControllerとする。状態enumは内部実装に留める。`ShowNormal(icon)` はセット可能かつSkillがセット済みの平時表示を表す。バトル用には `ShowBattleNormal(icon)` と `SetBattleChargeProgress(chargeProgress01)` を使い、Normal表示内の黒い `Image` を使用可能に近づくほど減らす。候補行ではゲージを表示しない。候補行のクリック操作は `StatusSkillInfoView` が持ち、`SkillFrame` がInspector参照で持つ `FeedbackButton` のクリック操作とは分ける。
+- 候補行の `SkillFrame` は `ShowNormal` / `ShowDisabled` / `ShowEmpty` / `ShowLocked` で表示を切り替える表示専用ViewControllerとする。状態enumは内部実装に留める。`ShowNormal(icon)` はセット可能かつSkillがセット済みの平時表示を表し、黒い `Image` を必ず非表示にする。バトル用には `ShowBattleNormal(icon)` と `SetBattleChargeProgress(chargeProgress01)` を使い、Normal表示内の黒い `Image` を使用可能に近づくほど減らす。候補行ではゲージを表示しない。候補行のクリック操作は `StatusSkillInfoView` が持ち、`SkillFrame` がInspector参照で持つ `FeedbackButton` のクリック操作とは分ける。
 - 各候補 Skill は名前と説明を表示し、現在選択中スロットへ割り当てられている候補だけ Skill frame を表示する。
 - 候補 Skill を押すとダイアログ内のドラフトと `SelectedSkill` 表示が即時に切り替わり、同時に `SkillLoadoutManager.SaveLoadout(...)` で保存する。
 - Skill ロードアウトは `UserData.Profile.SkillLoadout.SkillIds` に反映し、他のユーザーデータと同じメインセーブJSONへ保存する。

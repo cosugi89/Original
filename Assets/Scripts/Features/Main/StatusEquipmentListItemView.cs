@@ -1,25 +1,14 @@
 using System;
+using Assets.Scripts.Core.Const;
 using Assets.Scripts.UI.Dialog;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
     public sealed class StatusEquipmentListItemView : MonoBehaviour, IPointerClickHandler
     {
-        [SerializeField] private GameObject frameRoot;
-        [SerializeField] private GameObject normalState;
-        [SerializeField] private Image itemImage;
-        [SerializeField] private TextMeshProUGUI label;
-        [SerializeField] private GameObject focusState;
-        [SerializeField] private GameObject checkState;
-        [SerializeField] private GameObject lockState;
-        [SerializeField] private GameObject disableState;
-        [SerializeField] private GameObject addOneState;
-        [SerializeField] private GameObject addTwoState;
-        [SerializeField] private GameObject typeAreaRoot;
+        [SerializeField] private PartsEquipmentItem equipmentItem;
         [SerializeField] private Sprite fallbackIcon;
 
         private AvatarPartOptionViewData _option;
@@ -36,26 +25,15 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            frameRoot.SetActive(true);
-            normalState.SetActive(true);
-            typeAreaRoot.SetActive(true);
-
-            var icon = option.Icon != null ? option.Icon : fallbackIcon;
-            itemImage.gameObject.SetActive(true);
-            itemImage.sprite = icon;
-            itemImage.enabled = icon != null;
-            itemImage.color = Color.white;
-            itemImage.preserveAspect = true;
-
-            label.gameObject.SetActive(true);
-            label.text = BuildDisplayName(option);
-
-            focusState.SetActive(option.IsSelected);
-            checkState.SetActive(option.IsSelected);
-            lockState.SetActive(!option.CanSelect);
-            disableState.SetActive(!option.CanSelect);
-            addOneState.SetActive(false);
-            addTwoState.SetActive(false);
+            equipmentItem.ShowNormal();
+            equipmentItem.Setup(
+                option.Category,
+                option.Icon != null ? option.Icon : fallbackIcon,
+                BuildDisplayName(option),
+                false,
+                new UIColors.PlumColorSet());
+            equipmentItem.SetFocused(option.IsSelected);
+            equipmentItem.SetChecked(option.IsSelected);
         }
 
         public void OnPointerClick(PointerEventData eventData)

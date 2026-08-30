@@ -8,9 +8,10 @@ namespace Assets.Scripts.Features.Main
     public sealed class StatusEquipmentListView : MonoBehaviour
     {
         [SerializeField] private StatusEquipmentCategory category;
-        [SerializeField] private StatusEquipmentListItemView[] itemViews;
+        [SerializeField] private Transform content;
+        [SerializeField] private StatusEquipmentListItemView itemTemplate;
 
-        private readonly List<StatusEquipmentListItemView> _generatedItemViews = new();
+        private readonly List<StatusEquipmentListItemView> _itemViews = new();
         private bool _isInitialized;
 
         public StatusEquipmentCategory Category => category;
@@ -21,32 +22,18 @@ namespace Assets.Scripts.Features.Main
         {
             if (!_isInitialized)
             {
-                var template = itemViews[0];
-                var content = template.transform.parent;
-                template.gameObject.SetActive(false);
-
-                for (var i = 1; i < itemViews.Length; i++)
-                {
-                    itemViews[i].gameObject.SetActive(false);
-                }
-
-                for (var i = 0; i < options.Count; i++)
-                {
-                    _generatedItemViews.Add(Instantiate(template, content));
-                }
-
+                itemTemplate.gameObject.SetActive(false);
                 _isInitialized = true;
             }
 
-            while (_generatedItemViews.Count < options.Count)
+            while (_itemViews.Count < options.Count)
             {
-                _generatedItemViews.Add(Instantiate(itemViews[0], itemViews[0].transform.parent));
+                _itemViews.Add(Instantiate(itemTemplate, content));
             }
 
-            for (var i = 0; i < _generatedItemViews.Count; i++)
+            for (var i = 0; i < _itemViews.Count; i++)
             {
-                var option = i < options.Count ? options[i] : null;
-                _generatedItemViews[i].Bind(option, onItemClicked);
+                _itemViews[i].Bind(i < options.Count ? options[i] : null, onItemClicked);
             }
         }
     }

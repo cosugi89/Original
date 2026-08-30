@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Core;
 using Assets.Scripts.Data.DTO;
-using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using Assets.Scripts.UI.Dialog;
@@ -26,10 +25,10 @@ namespace Assets.Scripts.Features.Main
             StatusEquipmentCategory.Headgear
         };
 
-        [SerializeField] private StatusEquipmentTabView[] tabViews = Array.Empty<StatusEquipmentTabView>();
-        [SerializeField] private StatusEquipmentListView[] listViews = Array.Empty<StatusEquipmentListView>();
-        [SerializeField] private StatusEquipmentSlotView[] slotEquipmentViews = Array.Empty<StatusEquipmentSlotView>();
-        [SerializeField] private StatusSkillSlotView[] slotSkillViews = Array.Empty<StatusSkillSlotView>();
+        [SerializeField] private StatusEquipmentTabView[] tabViews;
+        [SerializeField] private StatusEquipmentListView[] listViews;
+        [SerializeField] private StatusEquipmentSlotView[] slotEquipmentViews;
+        [SerializeField] private StatusSkillSlotView[] slotSkillViews;
         [SerializeField] private TextMeshProUGUI playerLevelText;
         [SerializeField] private TextMeshProUGUI titleText;
         [SerializeField] private StatusAvatarPreviewView avatarPreview;
@@ -49,62 +48,46 @@ namespace Assets.Scripts.Features.Main
             avatarPreview.Initialize(previewPartsManager, additionalPreviewTargets, avatarPreviewRenderer);
             _presenter = AvatarEditorPresenter.CreateDefault();
             _presenter.BindPreview(previewPartsManager);
-            BindTabs();
-            BindSlots();
-            BindSkillSlots();
-            BindAppearanceDialog();
+            Setup();
             SelectCategory(StatusEquipmentCategory.All);
             _initialized = true;
         }
 
-        private void OnEnable()
+        private void Setup()
         {
-            if (_initialized)
-            {
-                Refresh();
-            }
-        }
-
-        private void OnDestroy()
-        {
-            skinButton.onClick.RemoveListener(OnClickSkinButton);
-        }
-
-        private void BindTabs()
-        {
+            // Tabs
             for (var i = 0; i < tabViews.Length; i++)
             {
                 var tabView = tabViews[i];
                 tabView.Bind(IsActiveCategory(tabView.Category), SelectCategory);
             }
-        }
 
-        private void BindSlots()
-        {
+            // equipment slots
             for (var i = 0; i < slotEquipmentViews.Length; i++)
             {
                 slotEquipmentViews[i].SetVisible(true);
                 slotEquipmentViews[i].Bind(SelectCategory);
             }
-        }
 
-        private void BindSkillSlots()
-        {
-            if (slotSkillViews.Length < UserProfileData.BattleSkillLoadoutSlotCount)
+            // skill slots
+            var battleSkillLoadoutSlotCount = UserProfileData.BattleSkillLoadoutSlotCount;
+            if (slotSkillViews.Length < battleSkillLoadoutSlotCount)
             {
-                throw new InvalidOperationException(
-                    $"{nameof(StatusScreen)} requires {UserProfileData.BattleSkillLoadoutSlotCount} skill slot views.");
+                throw new InvalidOperationException($"{nameof(StatusScreen)} requires {battleSkillLoadoutSlotCount} skill slot views.");
             }
-
             for (var i = 0; i < slotSkillViews.Length; i++)
             {
-                var visible = i < UserProfileData.BattleSkillLoadoutSlotCount;
+                var visible = i < battleSkillLoadoutSlotCount;
                 slotSkillViews[i].SetVisible(visible);
                 if (visible)
                 {
                     slotSkillViews[i].Bind(OnSkillSlotClicked);
                 }
             }
+
+            // Appearance Dialog
+            skinButton.onClick.RemoveListener(OnClickSkinButton);
+            skinButton.onClick.AddListener(OnClickSkinButton);
         }
 
         private void SelectCategory(StatusEquipmentCategory category)
@@ -120,22 +103,13 @@ namespace Assets.Scripts.Features.Main
 
         private void Refresh()
         {
-            RefreshHeader();
-            RefreshTabs();
-            RefreshSlots();
-            RefreshSkillSlots();
-            RefreshLists();
-        }
-
-        private void RefreshHeader()
-        {
-            var profile = UserDataManager.EnsureInitialized().UserData.Profile;
+            // header
+            var userDataManager = UserDataManager.EnsureInitialized();
+            var profile = userDataManager.UserData.Profile;
             playerLevelText.text = $"Lv.{Mathf.Max(1, profile.Level)}";
             titleText.text = string.IsNullOrWhiteSpace(profile.PlayerName) ? "Name" : profile.PlayerName;
-        }
 
-        private void RefreshTabs()
-        {
+            // tabs
             for (var i = 0; i < tabViews.Length; i++)
             {
                 var tabView = tabViews[i];
@@ -148,22 +122,19 @@ namespace Assets.Scripts.Features.Main
                 listView.gameObject.SetActive(
                     IsActiveCategory(listView.Category) && listView.Category == _currentCategory);
             }
-        }
 
-        private void RefreshSlots()
-        {
+            // equipment slots
             for (var i = 0; i < slotEquipmentViews.Length; i++)
             {
                 var section = GetSectionForCategory(slotEquipmentViews[i].Category);
                 slotEquipmentViews[i].Refresh(section, slotEquipmentViews[i].Category == _currentCategory);
             }
-        }
 
-        private void RefreshSkillSlots()
-        {
-            var loadoutService = UserDataManager.EnsureInitialized().SkillLoadout;
+            // skill slots
+            var loadoutService = userDataManager.SkillLoadout;
             var candidates = loadoutService.GetCandidateSkillsFromEquippedEquipment();
             var skillMap = BuildSkillMap(candidates);
+            var skillSourceCategoryMap = BuildSkillSourceCategoryMap(userDataManager);
             var skillIds = loadoutService.EnsureUsableLoadout();
 
             for (var i = 0; i < slotSkillViews.Length; i++)
@@ -177,12 +148,11 @@ namespace Assets.Scripts.Features.Main
 
                 var skillId = i < skillIds.Count ? skillIds[i] : 0;
                 skillMap.TryGetValue(skillId, out var skill);
-                slotSkillViews[i].Refresh(skill, false);
+                skillSourceCategoryMap.TryGetValue(skillId, out var sourceCategory);
+                slotSkillViews[i].Refresh(skill, sourceCategory, false);
             }
-        }
 
-        private void RefreshLists()
-        {
+            // lists
             var options = BuildOptionsForCategory(_currentCategory);
             for (var i = 0; i < listViews.Length; i++)
             {
@@ -192,6 +162,7 @@ namespace Assets.Scripts.Features.Main
                     OnEquipmentClicked);
             }
         }
+
 
         private void OnEquipmentClicked(AvatarPartOptionViewData option)
         {
@@ -226,7 +197,17 @@ namespace Assets.Scripts.Features.Main
                         new DialogContext(avatarPreviewRenderer));
                 if (result.IsEquipRequested)
                 {
-                    EquipOption(option);
+                    if (option == null || !_presenter.TrySelectEquipment(option.EquipmentId))
+                    {
+                        return;
+                    }
+
+                    _presenter.Commit();
+                    avatarPreview.ApplySavedAppearance();
+                    var userDataManager = UserDataManager.EnsureInitialized();
+                    userDataManager.SkillLoadout.EnsureUsableLoadout(persistImmediately: true);
+                    userDataManager.UserDataStore.SaveSession();
+                    Refresh();
                 }
             }
             finally
@@ -262,27 +243,6 @@ namespace Assets.Scripts.Features.Main
             }
         }
 
-        private void EquipOption(AvatarPartOptionViewData option)
-        {
-            if (option == null || !_presenter.TrySelectEquipment(option.EquipmentId))
-            {
-                return;
-            }
-
-            _presenter.Commit();
-            avatarPreview.ApplySavedAppearance();
-            var userDataManager = UserDataManager.EnsureInitialized();
-            userDataManager.SkillLoadout.EnsureUsableLoadout(persistImmediately: true);
-            userDataManager.UserDataStore.SaveSession();
-            Refresh();
-        }
-
-        private void BindAppearanceDialog()
-        {
-            skinButton.onClick.RemoveListener(OnClickSkinButton);
-            skinButton.onClick.AddListener(OnClickSkinButton);
-        }
-
         private void OnClickSkinButton()
         {
             OpenAppearanceDialogAsync().Forget();
@@ -299,7 +259,8 @@ namespace Assets.Scripts.Features.Main
                     new DialogContext(avatarPreviewRenderer));
                 if (result.IsSaved)
                 {
-                    RebuildPresenterFromSavedAppearance();
+                    _presenter = AvatarEditorPresenter.CreateDefault();
+                    _presenter.BindPreview(avatarPreview.PrimaryTarget);
                     avatarPreview.ApplySavedAppearance();
                     Refresh();
                 }
@@ -308,12 +269,6 @@ namespace Assets.Scripts.Features.Main
             {
                 avatarPreview.SetPrimaryVisible(isActiveAndEnabled);
             }
-        }
-
-        private void RebuildPresenterFromSavedAppearance()
-        {
-            _presenter = AvatarEditorPresenter.CreateDefault();
-            _presenter.BindPreview(avatarPreview.PrimaryTarget);
         }
 
         private IReadOnlyList<AvatarPartOptionViewData> BuildOptionsForCategory(StatusEquipmentCategory category)
@@ -369,6 +324,60 @@ namespace Assets.Scripts.Features.Main
             return result;
         }
 
+        private static Dictionary<int, StatusEquipmentCategory> BuildSkillSourceCategoryMap(
+            UserDataManager userDataManager)
+        {
+            var result = new Dictionary<int, StatusEquipmentCategory>();
+            var equippedParts = userDataManager.Appearance.GetAllPartStates();
+            for (var i = 0; i < equippedParts.Count; i++)
+            {
+                var state = equippedParts[i];
+                if (state == null ||
+                    state.EquipmentId <= 0 ||
+                    !userDataManager.Inventory.TryGetDefinition(state.EquipmentId, out var equipment) ||
+                    !TryGetSkillSourceCategory(equipment, out var sourceCategory))
+                {
+                    continue;
+                }
+
+                var skills = equipment.AssignableSkills;
+                for (var skillIndex = 0; skillIndex < skills.Count; skillIndex++)
+                {
+                    var skill = skills[skillIndex];
+                    if (skill != null && skill.SkillId > 0)
+                    {
+                        result.TryAdd(skill.SkillId, sourceCategory);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static bool TryGetSkillSourceCategory(
+            EquipmentData equipment,
+            out StatusEquipmentCategory category)
+        {
+            category = StatusEquipmentCategory.All;
+            if (equipment == null)
+            {
+                return false;
+            }
+
+            category = equipment.ExclusiveGroup switch
+            {
+                PartsExclusiveGroup.HandRight => StatusEquipmentCategory.Weapon,
+                PartsExclusiveGroup.HandLeft => StatusEquipmentCategory.Shield,
+                _ => equipment.PartType switch
+                {
+                    PartsType.Chest => StatusEquipmentCategory.Armor,
+                    PartsType.Helmet => StatusEquipmentCategory.Headgear,
+                    _ => StatusEquipmentCategory.All
+                }
+            };
+            return category != StatusEquipmentCategory.All;
+        }
+
         private static int CategorySort(UICategory category)
         {
             return category switch
@@ -386,5 +395,17 @@ namespace Assets.Scripts.Features.Main
             return ActiveCategories.Contains(category);
         }
 
+        private void OnEnable()
+        {
+            if (_initialized)
+            {
+                Refresh();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            skinButton.onClick.RemoveListener(OnClickSkinButton);
+        }
     }
 }
