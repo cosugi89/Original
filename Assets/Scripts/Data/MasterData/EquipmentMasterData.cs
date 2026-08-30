@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using Assets.Scripts.Data.DTO;
 using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
@@ -19,6 +20,11 @@ namespace Assets.Scripts.Data.MasterData
         [Tooltip("UI上で見せる名前です。自動生成後に意味のある名称へ直しておくと管理しやすくなります。")]
         [Description("画面表示用の装備名・見た目名。")]
         private string displayName = "";
+
+        [SerializeField, TextArea(2, 4)]
+        [Tooltip("装備詳細ダイアログに表示する説明文です。")]
+        [Description("装備のフレーバーや特徴を説明するUI表示用テキスト。")]
+        private string description = "";
 
         [SerializeField]
         [Tooltip("この装備が属する見た目枠です。設定した PartType と PartsIndex の組み合わせが AppearanceController 解決に使われます。")]
@@ -44,6 +50,11 @@ namespace Assets.Scripts.Data.MasterData
         [Tooltip("新規セーブ時に自動で所持済みとして配るかどうかです。初期装備や初期見た目に使います。")]
         [Description("新規セーブ時に最初から所持している装備かどうか。")]
         private bool isDefaultOwned;
+
+        [SerializeField]
+        [Tooltip("装備詳細と一覧で表示するレアリティです。未設定の既存データは Common として扱います。")]
+        [Description("装備の希少度。UIのラベルと色セットに使用する。")]
+        private EquipmentRarity rarity = EquipmentRarity.Common;
 
         [SerializeField]
         [Tooltip("この装備に紐づく候補スキル一覧です。最大2件までを想定します。ここに登録した候補群の中から、将来は実戦用4枠を別途選びます。")]
@@ -77,6 +88,7 @@ namespace Assets.Scripts.Data.MasterData
 
         public int EquipmentId => equipmentId;
         public string DisplayName => displayName;
+        public string Description => description;
         public PartsType PartType => partType;
         public PartsExclusiveGroup ExclusiveGroup => ResolveExclusiveGroup(partType);
         public bool IsRightHandEquipment => ExclusiveGroup == PartsExclusiveGroup.HandRight;
@@ -85,6 +97,7 @@ namespace Assets.Scripts.Data.MasterData
         public Sprite Icon => icon;
         public int SortOrder => sortOrder;
         public bool IsDefaultOwned => isDefaultOwned;
+        public EquipmentRarity Rarity => rarity;
         public IReadOnlyList<BattleSkillMasterData> AssignableSkills => assignableSkills ??= new List<BattleSkillMasterData>();
         public BattleSkillMasterData DanceSkill => danceSkill;
         public IReadOnlyList<string> CategoryTags => categoryTags ??= new List<string>();

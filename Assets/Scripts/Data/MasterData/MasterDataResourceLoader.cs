@@ -531,12 +531,14 @@ namespace Assets.Scripts.Data.MasterData
             {
                 EquipmentId = master.EquipmentId,
                 DisplayName = master.DisplayName,
+                Description = master.Description,
                 PartType = master.PartType,
                 ExclusiveGroup = master.ExclusiveGroup,
                 PartsIndex = master.PartsIndex,
                 Icon = master.Icon,
                 SortOrder = master.SortOrder > 0 ? master.SortOrder : Mathf.Max(master.PartsIndex, 0),
                 IsDefaultOwned = master.IsDefaultOwned,
+                Rarity = master.Rarity,
                 AssignableSkills = BuildBattleSkillData(
                     master.AssignableSkills,
                     EquipmentMasterData.MaxAssignableSkillCount),

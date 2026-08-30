@@ -212,10 +212,10 @@ namespace Assets.Scripts.Features.Main
             try
             {
                 var result = await DialogService.OpenAsync<
-                    StatusEquipmentDetailDialog,
-                    StatusEquipmentDetailDialogRequest,
-                    StatusEquipmentDetailDialogResult>(
-                        new StatusEquipmentDetailDialogRequest(option),
+                    DialogEquipmentDetail,
+                    DialogEquipmentDetailRequest,
+                    DialogEquipmentDetailResult>(
+                        new DialogEquipmentDetailRequest(option),
                         new DialogContext(avatarPreviewRenderer));
                 if (result.IsEquipRequested)
                 {

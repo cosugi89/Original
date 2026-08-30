@@ -68,4 +68,4 @@ Hierarchy 上では `GameObject/UI/Game Button` から新規作成できる。
 
 既存 UI の `Button` 参照は一括置換しない。
 新規 UI からは、見た目も含めて新規作成する場合に `GameButton` を優先して使う。既存レイアウトへクリックSEとアニメーションだけを加える場合は `FeedbackButton` を使う。既存 Dialog と主要 UI は触るタイミングで段階的に置き換える。
-`Dialog-StatusEquipmentDetail.prefab` の `Button_Equip` と `Button_Close` は `GameButton` へ移行済みである。
+`Dialog-EquipmentDetail.prefab` の `Button_Equip` と `Button_Close` は `GameButton` へ移行済みである。

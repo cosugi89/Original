@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Data.DTO;
 using LayerLab.ArtMakerUnity;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace Assets.Scripts.UI.Dialog
     {
         public int EquipmentId { get; set; } = 0;
         public string DisplayName { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public UICategory Category { get; set; }
         public PartsType PartType { get; set; }
         public Sprite Icon { get; set; }
@@ -17,7 +19,10 @@ namespace Assets.Scripts.UI.Dialog
         public bool IsVisible { get; set; }
         public bool CanSelect { get; set; }
         public int SortOrder { get; set; }
+        public EquipmentRarity Rarity { get; set; } = EquipmentRarity.Common;
         public IReadOnlyList<string> CategoryTags { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<BattleSkillData> AssignableSkills { get; set; } = Array.Empty<BattleSkillData>();
+        public IReadOnlyList<BattleStatModifierData> BattleStatModifiers { get; set; } = Array.Empty<BattleStatModifierData>();
         public IReadOnlyList<string> AssignableSkillNames { get; set; } = Array.Empty<string>();
         public string DanceSkillName { get; set; } = string.Empty;
     }

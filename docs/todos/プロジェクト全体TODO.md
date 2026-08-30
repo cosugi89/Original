@@ -111,7 +111,7 @@
 - [x] Status タブで実戦用 Skill ロードアウト4枠を表示し、Skill 設定ダイアログから変更できるようにする
 - [x] Dialog 基盤を `DialogService` / 専用 `DialogCanvas` / `DialogAddressAttribute` ベースへ移行し、呼び出し側の prefab 参照と parent 指定を外す
 - [x] 汎用 `GameButton` を `Button` 継承 + 単体 Prefab ベースで追加し、見た目 enum / SE enum / Badge を切り替えられるようにする
-- [ ] `Dialog-StatusEquipmentDetail` 以外の Dialog と主要 UI の既存 `Button` を、触るタイミングで `GameButton` へ段階的に置き換える
+- [ ] `Dialog-EquipmentDetail` 以外の Dialog と主要 UI の既存 `Button` を、触るタイミングで `GameButton` へ段階的に置き換える
 - [ ] 見た目変更ダイアログの最終レイアウトを `Settings.prefab` 基準で調整する
 - [ ] 装備変更による戦闘ステータス、候補スキル、タグ一致ボーナスのプレビュー表示方針を決める
 

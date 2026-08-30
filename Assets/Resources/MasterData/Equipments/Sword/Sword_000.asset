@@ -13,17 +13,31 @@ MonoBehaviour:
   m_Name: Sword_000
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EquipmentMasterData
   equipmentId: 6000
-  displayName: Sword 000
+  displayName: "\u521D\u5FC3\u8005\u306E\u5263"
+  description: "\u6271\u3044\u3084\u3059\u3055\u3092\u91CD\u8996\u3057\u3066\u935B\u3048\u3089\u308C\u305F\u7247\u624B\u5263\u3002\u5805\u5B9F\u306A\u4E00\u6483\u3067\u3001\u5263\u58EB\u3068\u3057\u3066\u306E\u57FA\u790E\u3092\u652F\u3048\u308B\u3002"
   partType: 5
   partsIndex: 0
   icon: {fileID: 21300000, guid: 5546e2c9d34934340bd80bb4e408d1a2, type: 3}
   sortOrder: 0
   isDefaultOwned: 1
+  rarity: 1
   assignableSkills:
   - {fileID: 11400000, guid: 18cf7965496bd7144a45cc9a03e8cbf0, type: 2}
   - {fileID: 11400000, guid: 7613a246fd374da4db950a2b8ef6221b, type: 2}
   danceSkill: {fileID: 0}
   normalAttackAttribute: {fileID: 0}
   attributeModifiers: []
-  categoryTags: []
-  battleStatModifiers: []
+  categoryTags:
+  - "\u7247\u624B\u5263"
+  - "\u8A13\u7DF4\u7528"
+  battleStatModifiers:
+  - targetType: 0
+    parameterType: 2
+    namedValueKey: 
+    operationType: 1
+    value: 5
+  - targetType: 0
+    parameterType: 3
+    namedValueKey: 
+    operationType: 1
+    value: 2

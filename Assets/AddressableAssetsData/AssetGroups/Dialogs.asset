@@ -26,7 +26,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2a43cbdd04a4a57b7df8a694c2f1a64
-    m_Address: Dialog/StatusEquipmentDetail
+    m_Address: Dialog/EquipmentDetail
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

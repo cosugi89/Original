@@ -245,6 +245,7 @@ namespace Assets.Scripts.UI.Dialog
                     {
                         EquipmentId = definition.EquipmentId,
                         DisplayName = string.IsNullOrWhiteSpace(definition.DisplayName) ? definition.EquipmentId.ToString() : definition.DisplayName,
+                        Description = definition.Description ?? string.Empty,
                         Category = category,
                         PartType = definition.PartType,
                         Icon = definition.Icon,
@@ -255,7 +256,10 @@ namespace Assets.Scripts.UI.Dialog
                         IsVisible = partState?.IsVisible ?? false,
                         CanSelect = isOwned,
                         SortOrder = (groupIndex * 10000) + Mathf.Max(definition.SortOrder, 0),
+                        Rarity = definition.Rarity,
                         CategoryTags = definition.CategoryTags ?? Array.Empty<string>(),
+                        AssignableSkills = definition.AssignableSkills ?? Array.Empty<BattleSkillData>(),
+                        BattleStatModifiers = definition.BattleStatModifiers ?? Array.Empty<BattleStatModifierData>(),
                         AssignableSkillNames = BuildSkillNames(definition.AssignableSkills),
                         DanceSkillName = definition.DanceSkill?.DisplayName ?? string.Empty
                     });

@@ -6,6 +6,15 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.DTO
 {
+    public enum EquipmentRarity
+    {
+        Common,
+        Uncommon,
+        Rare,
+        Epic,
+        Legendary
+    }
+
     /// <summary>
     /// 装備1件の転送用データ。ロジック層が参照する装備情報。
     /// マスターデータ（EquipmentMasterData）から生成され、読み取り専用で使用する。
@@ -14,6 +23,7 @@ namespace Assets.Scripts.Data.DTO
     {
         public int EquipmentId { get; init; } = 0;
         public string DisplayName { get; init; } = "";
+        public string Description { get; init; } = "";
         public PartsType PartType { get; init; }
         public PartsExclusiveGroup ExclusiveGroup { get; init; } = PartsExclusiveGroup.None;
         public bool IsRightHandEquipment => ExclusiveGroup == PartsExclusiveGroup.HandRight;
@@ -22,6 +32,7 @@ namespace Assets.Scripts.Data.DTO
         public Sprite Icon { get; init; }
         public int SortOrder { get; init; } = 0;
         public bool IsDefaultOwned { get; init; }
+        public EquipmentRarity Rarity { get; init; } = EquipmentRarity.Common;
         public IReadOnlyList<BattleSkillData> AssignableSkills { get; init; } = Array.Empty<BattleSkillData>();
         public BattleSkillData DanceSkill { get; init; }
         public IReadOnlyList<BattleStatModifierData> BattleStatModifiers { get; init; } = Array.Empty<BattleStatModifierData>();
