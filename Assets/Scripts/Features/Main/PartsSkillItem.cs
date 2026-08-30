@@ -36,6 +36,7 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private GameObject disableState;
         [FormerlySerializedAs("addOneState")]
         [SerializeField] private GameObject emptyState;
+        [SerializeField] private GameObject typeArea;
         [SerializeField] private GameObject attackTypeIcon;
         [SerializeField] private GameObject shieldTypeIcon;
         [SerializeField] private GameObject armorTypeIcon;
@@ -58,14 +59,6 @@ namespace Assets.Scripts.Features.Main
             ShowNormal();
             HideTypeIcons();
             SetSkill(icon);
-            label.text = displayName ?? string.Empty;
-        }
-
-        public void ShowEmpty(SkillItemType type, string displayName)
-        {
-            ShowEmpty();
-            SetTypeIcon(type);
-            SetSkill(fallbackIcon);
             label.text = displayName ?? string.Empty;
         }
 
@@ -127,6 +120,7 @@ namespace Assets.Scripts.Features.Main
         private void SetTypeIcon(SkillItemType type)
         {
             HideTypeIcons();
+            typeArea.SetActive(true);
 
             switch (type)
             {
@@ -147,6 +141,7 @@ namespace Assets.Scripts.Features.Main
 
         private void HideTypeIcons()
         {
+            typeArea.SetActive(false);
             attackTypeIcon.SetActive(false);
             shieldTypeIcon.SetActive(false);
             armorTypeIcon.SetActive(false);

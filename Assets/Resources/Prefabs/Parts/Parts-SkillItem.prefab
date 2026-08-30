@@ -422,6 +422,7 @@ MonoBehaviour:
   lockState: {fileID: 7147460533343344993}
   disableState: {fileID: 3883527962581580305}
   emptyState: {fileID: 1916946780789654658}
+  typeArea: {fileID: 2068540329401726565}
   attackTypeIcon: {fileID: 5476917041877515065}
   shieldTypeIcon: {fileID: 9173138782596073160}
   armorTypeIcon: {fileID: 280202966119159556}

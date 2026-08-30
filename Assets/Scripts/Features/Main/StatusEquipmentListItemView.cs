@@ -13,11 +13,13 @@ namespace Assets.Scripts.Features.Main
 
         private AvatarPartOptionViewData _option;
         private Action<AvatarPartOptionViewData> _onClicked;
+        private Action _onEmptyClicked;
 
         public void Bind(AvatarPartOptionViewData option, Action<AvatarPartOptionViewData> onClicked)
         {
             _option = option;
             _onClicked = onClicked;
+            _onEmptyClicked = null;
             gameObject.SetActive(option != null);
 
             if (option == null)
@@ -36,12 +38,24 @@ namespace Assets.Scripts.Features.Main
             equipmentItem.SetChecked(option.IsSelected);
         }
 
+        public void BindEmpty(Action onEmptyClicked)
+        {
+            _option = null;
+            _onClicked = null;
+            _onEmptyClicked = onEmptyClicked;
+            gameObject.SetActive(true);
+            equipmentItem.ShowEmpty();
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
             if (_option != null)
             {
                 _onClicked?.Invoke(_option);
+                return;
             }
+
+            _onEmptyClicked?.Invoke();
         }
 
         private static string BuildDisplayName(AvatarPartOptionViewData option)

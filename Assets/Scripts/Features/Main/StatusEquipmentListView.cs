@@ -18,7 +18,8 @@ namespace Assets.Scripts.Features.Main
 
         public void Refresh(
             IReadOnlyList<AvatarPartOptionViewData> options,
-            Action<AvatarPartOptionViewData> onItemClicked)
+            Action<AvatarPartOptionViewData> onItemClicked,
+            Action onEmptyClicked)
         {
             if (!_isInitialized)
             {
@@ -26,14 +27,22 @@ namespace Assets.Scripts.Features.Main
                 _isInitialized = true;
             }
 
-            while (_itemViews.Count < options.Count)
+            var itemCount = options.Count + (onEmptyClicked != null ? 1 : 0);
+            while (_itemViews.Count < itemCount)
             {
                 _itemViews.Add(Instantiate(itemTemplate, content));
             }
 
             for (var i = 0; i < _itemViews.Count; i++)
             {
-                _itemViews[i].Bind(i < options.Count ? options[i] : null, onItemClicked);
+                if (onEmptyClicked != null && i == 0)
+                {
+                    _itemViews[i].BindEmpty(onEmptyClicked);
+                    continue;
+                }
+
+                var optionIndex = i - (onEmptyClicked != null ? 1 : 0);
+                _itemViews[i].Bind(optionIndex < options.Count ? options[optionIndex] : null, onItemClicked);
             }
         }
     }

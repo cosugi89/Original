@@ -157,9 +157,13 @@ namespace Assets.Scripts.Features.Main
             for (var i = 0; i < listViews.Length; i++)
             {
                 var listView = listViews[i];
+                var isCurrentCategory = listView.Category == _currentCategory;
                 listView.Refresh(
-                    listView.Category == _currentCategory ? options : Array.Empty<AvatarPartOptionViewData>(),
-                    OnEquipmentClicked);
+                    isCurrentCategory ? options : Array.Empty<AvatarPartOptionViewData>(),
+                    OnEquipmentClicked,
+                    isCurrentCategory && _currentCategory != StatusEquipmentCategory.All
+                        ? OnEmptyEquipmentClicked
+                        : null);
             }
         }
 
@@ -172,6 +176,24 @@ namespace Assets.Scripts.Features.Main
             }
 
             OpenEquipmentDetailDialogAsync(option).Forget();
+        }
+
+        private void OnEmptyEquipmentClicked()
+        {
+            var categories = ToUiCategories(_currentCategory);
+            if (categories.Length != 1)
+            {
+                return;
+            }
+
+            _presenter.ResetCategory(categories[0]);
+            _presenter.Commit();
+            avatarPreview.ApplySavedAppearance();
+
+            var userDataManager = UserDataManager.EnsureInitialized();
+            userDataManager.SkillLoadout.EnsureUsableLoadout(persistImmediately: true);
+            userDataManager.UserDataStore.SaveSession();
+            Refresh();
         }
 
         private void OnSkillSlotClicked(int slotIndex)

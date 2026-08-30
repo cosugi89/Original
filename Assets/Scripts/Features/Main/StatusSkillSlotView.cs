@@ -32,7 +32,7 @@ namespace Assets.Scripts.Features.Main
             }
             else
             {
-                skillItem.ShowEmpty(type, "Empty");
+                skillItem.ShowEmpty("Empty");
             }
 
             skillItem.SetFocused(selected);

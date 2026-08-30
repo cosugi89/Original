@@ -29,6 +29,7 @@ namespace Assets.Scripts.Features.Main
         [FormerlySerializedAs("addOneState")]
         [SerializeField] private GameObject emptyState;
         [SerializeField] private GameObject specialBorder;
+        [SerializeField] private GameObject typeArea;
 
         [Header("Type Icons")]
         [SerializeField] private GameObject weaponIcon;
@@ -73,6 +74,18 @@ namespace Assets.Scripts.Features.Main
             emptyState.SetActive(state == State.Empty);
             checkState.SetActive(false);
             focusState.SetActive(false);
+
+            if (state == State.Empty)
+            {
+                itemImage.gameObject.SetActive(false);
+                label.gameObject.SetActive(false);
+                specialBorder.SetActive(false);
+                typeArea.SetActive(false);
+                weaponIcon.SetActive(false);
+                shieldIcon.SetActive(false);
+                armorIcon.SetActive(false);
+                headgearIcon.SetActive(false);
+            }
         }
 
         public void Setup(
@@ -88,6 +101,7 @@ namespace Assets.Scripts.Features.Main
             }
 
             ApplyNormalFrameColors(colorSet);
+            typeArea.SetActive(true);
             SetTypeIcon(category);
 
             itemImage.gameObject.SetActive(true);

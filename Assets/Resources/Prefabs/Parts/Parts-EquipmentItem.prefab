@@ -2108,6 +2108,7 @@ MonoBehaviour:
   disableState: {fileID: 1652517163694301800}
   emptyState: {fileID: 8790740330474901199}
   specialBorder: {fileID: 2808392409063058771}
+  typeArea: {fileID: 3907462695971244003}
   weaponIcon: {fileID: 3034692164885334818}
   shieldIcon: {fileID: 1558879671662820591}
   armorIcon: {fileID: 4882371687265352588}

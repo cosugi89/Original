@@ -25,13 +25,17 @@ namespace Assets.Scripts.Features.Main
         public void Refresh(AvatarPartSectionViewData section, bool selected)
         {
             var hasSelection = section != null && section.HasSelection;
-            var icon = hasSelection && section.SelectedIcon != null ? section.SelectedIcon : fallbackIcon;
+            if (!hasSelection)
+            {
+                equipmentItem.ShowEmpty();
+                return;
+            }
 
             equipmentItem.ShowNormal();
             equipmentItem.Setup(
                 ToUiCategory(category),
-                icon,
-                BuildDisplayName(section, hasSelection, category),
+                section.SelectedIcon != null ? section.SelectedIcon : fallbackIcon,
+                BuildDisplayName(section, category),
                 false,
                 new UIColors.PlumColorSet());
             equipmentItem.SetFocused(selected);
@@ -62,32 +66,14 @@ namespace Assets.Scripts.Features.Main
 
         private static string BuildDisplayName(
             AvatarPartSectionViewData section,
-            bool hasSelection,
             StatusEquipmentCategory category)
         {
-            if (!hasSelection)
-            {
-                return BuildEmptyLabel(category);
-            }
-
             if (!string.IsNullOrWhiteSpace(section.SelectedDisplayName))
             {
                 return section.SelectedDisplayName;
             }
 
-            return section.SelectedEquipmentId > 0 ? $"Equipment {section.SelectedEquipmentId}" : BuildEmptyLabel(category);
-        }
-
-        private static string BuildEmptyLabel(StatusEquipmentCategory category)
-        {
-            return category switch
-            {
-                StatusEquipmentCategory.Weapon => "Weapon",
-                StatusEquipmentCategory.Shield => "Shield",
-                StatusEquipmentCategory.Armor => "Armor",
-                StatusEquipmentCategory.Headgear => "Head",
-                _ => string.Empty
-            };
+            return section.SelectedEquipmentId > 0 ? $"Equipment {section.SelectedEquipmentId}" : category.ToString();
         }
     }
 }

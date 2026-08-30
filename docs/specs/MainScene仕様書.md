@@ -97,13 +97,13 @@ Status タブは、プレイヤーの装備変更、実戦用 Skill ロードア
 
 - `StatusScreen` は画面全体の状態遷移とデータ更新を担当し、タブ、装備一覧、装備枠、Skill 枠は各 View に分離する。
 - 各 View の必須 UI 参照とカテゴリ、スロット番号は Inspector で明示的に設定する。名前検索、子階層走査、実行時の既定 UI 生成による補完は行わない。
-- 装備一覧はカテゴリごとのテンプレート行を元に、候補数に応じて行を生成する。ScrollRect の Content は全候補を収め、固定20件で表示を打ち切らない。
+- 装備一覧はカテゴリごとのテンプレート行を元に、候補数に応じて行を生成する。ScrollRect の Content は全候補を収め、固定20件で表示を打ち切らない。`All` 以外のカテゴリでは先頭に `Empty` 状態の解除行を置き、押下するとそのカテゴリの装備を即時に外す。
 - 装備一覧の `ListItem_Template` ルートは Raycast を受ける透明な `Image` を持つ。候補行のクリックはこのルートの `StatusEquipmentListItemView` へ届け、装備詳細ダイアログを開く。
 - 装備カテゴリTabのNormal表示とFocus表示は同じカテゴリSpriteを使う。選択状態は枠や強調だけを変え、HeadgearとArmorなどのカテゴリSpriteを入れ替えない。
-- `Parts-EquipmentItem` は、装備枠と一覧行で共有する見た目専用Prefabとする。Prefabに付く `PartsEquipmentItem` は画像、テキスト、状態、種別アイコン、枠色だけを管理する。
+- `Parts-EquipmentItem` は、装備枠と一覧行で共有する見た目専用Prefabとする。Prefabに付く `PartsEquipmentItem` は画像、テキスト、状態、種別アイコン、枠色だけを管理する。`Empty` ではNormal用の画像、名称、SpecialBorder、種別アイコンと親の `TypeArea` を明示的に非表示にし、Empty状態の表示だけを残す。
 - `PartsEquipmentItem`、`PartsSkillItem`、`SkillFrame` は `IItemStateView` を実装し、外部へは `ShowNormal` / `ShowDisabled` / `ShowEmpty` / `ShowLocked` の4状態だけを公開する。旧 `Add1` は `Empty` に統合し、`Add2` は状態APIとして扱わない。状態enumは各Viewのprivate実装とする。
 - `StatusEquipmentSlotView` はMainScene上の各装備スロットに付く中間View、`StatusEquipmentListItemView` は各 ScrollRect の Content に置く非表示の `ListItem_Template` に付く中間Viewとする。実行時はこのテンプレートを複製して候補数分の一覧行を生成する。両Viewは装備データを `PartsEquipmentItem` の公開APIへ渡し、用途固有のクリック操作だけを扱う。
-- `Parts-SkillItem` は Skill 枠の見た目専用Prefabとする。Prefabに付く `PartsSkillItem` は、Skillアイコン、名前、`Icon-Attack` / `Icon-Shield` / `Icon-Armor` / `Icon-HeadGear` の種別アイコンObject、Normal / Locked / Disabled / Empty の表示状態、Focusだけを管理する。種別表示はSpriteの差替えではなく、該当するPrefab内Objectの有効状態を切り替える。保存、候補選択、バトルの Runtime は扱わない。
+- `Parts-SkillItem` は Skill 枠の見た目専用Prefabとする。Prefabに付く `PartsSkillItem` は、Skillアイコン、名前、`Icon-Attack` / `Icon-Shield` / `Icon-Armor` / `Icon-HeadGear` の種別アイコンObject、Normal / Locked / Disabled / Empty の表示状態、Focusだけを管理する。種別表示はSpriteの差替えではなく、該当するPrefab内Objectの有効状態を切り替える。`Empty` と種別なしSkillでは種別アイコンの親 `TypeArea` ごと非表示にする。保存、候補選択、バトルの Runtime は扱わない。
 - `StatusSkillSlotView` はMainScene上の各 Skill スロットに付く中間Viewとし、ロードアウトデータを `PartsSkillItem` の公開APIへ渡し、Skill設定ダイアログを開くクリックだけを扱う。
 - 装備枠と Skill 枠の通常フレームは各スロットの Prefab/Scene構成として常時配置する。表示データの有無でフレーム自体を生成、複製しない。
 - Status 用アバタープレビューの表示、RenderTexture 接続、見た目反映、ダイアログ中の一時非表示は `StatusAvatarPreviewView` が担当する。`StatusScreen` はこの View を通じてプレビューを操作する。
@@ -159,6 +159,7 @@ Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor`、`Item` �
 
 装備一覧の項目をクリックすると装備詳細ダイアログを開き、ダイアログ内の `Equip` ボタンで装備変更を確定する。
 装備確定時は、所持済みかつ解放済みの装備だけを選択可能にする。
+カテゴリ別一覧の解除行は確認ダイアログを開かず、対象カテゴリを未装備にして保存する。装備解除で使用不能になったSkillは、装備変更時と同様に実戦用ロードアウトから外す。
 装備スロットと装備一覧の各行は、背景フレーム、アイコン領域、名称を常に表示し、装備データやプール再利用状態によって表示有無が揺れないようにする。
 装備アイコンが未設定の場合はスロットまたは一覧テンプレートの代替アイコン、表示名が空の場合は `EquipmentId` 由来の表示名にフォールバックする。
 変更後は `UserData.Profile.Avatar.Parts` に反映し、`MainScene` 上のプレイヤープレビューと、非表示の `GameObject/Character` にも即時反映する。
