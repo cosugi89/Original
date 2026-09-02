@@ -14,12 +14,14 @@ namespace Assets.Scripts.Features.Main
 {
     public readonly struct DialogEquipmentDetailRequest
     {
-        public DialogEquipmentDetailRequest(AvatarPartOptionViewData option)
+        public DialogEquipmentDetailRequest(AvatarPartOptionViewData option, bool isOpenedFromEquipmentSlot)
         {
             Option = option;
+            IsOpenedFromEquipmentSlot = isOpenedFromEquipmentSlot;
         }
 
         public AvatarPartOptionViewData Option { get; }
+        public bool IsOpenedFromEquipmentSlot { get; }
     }
 
     public readonly struct DialogEquipmentDetailResult
@@ -54,6 +56,7 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private Image rarityBackgroundImage;
         [SerializeField] private Image rarityInnerColorImage;
         [SerializeField] private Image rarityDecoImage;
+        [SerializeField] private GameObject buttonArea;
         [SerializeField] private GameButton equipButton;
         [SerializeField] private GameButton closeButton;
 
@@ -71,6 +74,7 @@ namespace Assets.Scripts.Features.Main
             closeButton.onClick.RemoveListener(OnClickClose);
             closeButton.onClick.AddListener(OnClickClose);
 
+            buttonArea.SetActive(!request.IsOpenedFromEquipmentSlot);
             equipButton.onClick.RemoveListener(OnClickEquip);
             equipButton.onClick.AddListener(OnClickEquip);
         }
@@ -124,7 +128,7 @@ namespace Assets.Scripts.Features.Main
         {
             if (!string.IsNullOrWhiteSpace(option.DisplayName))
             {
-                return option.DisplayName;
+                return TextLocalization.Get(option.DisplayName);
             }
 
             return option.EquipmentId > 0 ? $"Equipment {option.EquipmentId}" : option.PartType.ToString();
@@ -132,14 +136,14 @@ namespace Assets.Scripts.Features.Main
 
         private static string BuildDetailText(AvatarPartOptionViewData option)
         {
-            return option.Description ?? string.Empty;
+            return TextLocalization.Get(option.Description);
         }
 
         private void ShowRarity(EquipmentRarity rarity)
         {
             rarityText.text = rarity.ToString();
             var colorSet = GetRarityColorSet(rarity);
-            rarityText.color = colorSet.InnerColor1;
+            rarityText.color = UIColors.White;
             rarityBackgroundImage.color = colorSet.Background;
             rarityInnerColorImage.color = colorSet.InnerColor1;
             rarityDecoImage.color = colorSet.Glow;

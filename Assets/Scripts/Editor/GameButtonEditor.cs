@@ -9,6 +9,7 @@ namespace Assets.Scripts.Editor
     public sealed class GameButtonEditor : ButtonEditor
     {
         private SerializedProperty _frameType;
+        private SerializedProperty _buttonType;
         private SerializedProperty _colorType;
         private SerializedProperty _sizeType;
         private SerializedProperty _contentType;
@@ -46,6 +47,7 @@ namespace Assets.Scripts.Editor
             base.OnEnable();
 
             _frameType = serializedObject.FindProperty("frameType");
+            _buttonType = serializedObject.FindProperty("buttonType");
             _colorType = serializedObject.FindProperty("colorType");
             _sizeType = serializedObject.FindProperty("sizeType");
             _contentType = serializedObject.FindProperty("contentType");
@@ -88,20 +90,26 @@ namespace Assets.Scripts.Editor
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Game Button", EditorStyles.boldLabel);
 
-            EditorGUILayout.PropertyField(_frameType);
-            EditorGUILayout.PropertyField(_colorType);
-            EditorGUILayout.PropertyField(_sizeType);
-            EditorGUILayout.PropertyField(_contentType);
-            EditorGUILayout.PropertyField(_label);
-            EditorGUILayout.PropertyField(_title);
-            EditorGUILayout.PropertyField(_value);
-            EditorGUILayout.PropertyField(_iconSprite);
-            EditorGUILayout.PropertyField(_badgeVisible);
-            if (_badgeVisible.boolValue)
+            EditorGUILayout.PropertyField(_buttonType);
+            var isNormal = _buttonType.hasMultipleDifferentValues ||
+                _buttonType.enumValueIndex == (int)GameButton.ButtonType.Normal;
+            if (isNormal)
             {
-                EditorGUILayout.PropertyField(_badgeLabel);
+                EditorGUILayout.PropertyField(_frameType);
+                EditorGUILayout.PropertyField(_colorType);
+                EditorGUILayout.PropertyField(_sizeType);
+                EditorGUILayout.PropertyField(_contentType);
+                EditorGUILayout.PropertyField(_label);
+                EditorGUILayout.PropertyField(_title);
+                EditorGUILayout.PropertyField(_value);
+                EditorGUILayout.PropertyField(_iconSprite);
+                EditorGUILayout.PropertyField(_badgeVisible);
+                if (_badgeVisible.boolValue)
+                {
+                    EditorGUILayout.PropertyField(_badgeLabel);
+                }
+                EditorGUILayout.PropertyField(_badgeSprite);
             }
-            EditorGUILayout.PropertyField(_badgeSprite);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Wiring", EditorStyles.boldLabel);

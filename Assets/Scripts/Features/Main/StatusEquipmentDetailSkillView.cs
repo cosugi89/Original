@@ -1,22 +1,26 @@
 using Assets.Scripts.Data.DTO;
+using Assets.Scripts.Core.Const;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
     public sealed class StatusEquipmentDetailSkillView : MonoBehaviour
     {
-        [SerializeField] private Image iconImage;
+        [SerializeField] private RectTransform skillItemRoot;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI descriptionText;
 
         public void Setup(BattleSkillData skill)
         {
-            iconImage.sprite = skill.Icon;
-            iconImage.enabled = skill.Icon != null;
-            nameText.text = skill.DisplayName ?? string.Empty;
-            descriptionText.text = skill.Description ?? string.Empty;
+            skillItemRoot.GetComponent<PartsSkillItem>().ShowSkillIconOnly(skill.Icon);
+            nameText.text = TextLocalization.Get(skill.DisplayName);
+            descriptionText.text = TextLocalization.Get(skill.Description);
+        }
+
+        public void ShowLocked()
+        {
+            skillItemRoot.GetComponent<PartsSkillItem>().ShowLockedIconOnly();
         }
     }
 }

@@ -15,8 +15,7 @@ MonoBehaviour:
   skillId: 2110
   skillKey: chest-demo-support
   displayName: Chest Demo Ward
-  description: "Chest \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u30C7\u30E2
-    Guard \u30B9\u30AD\u30EB\u3002"
+  description: A demo support skill granted by chest equipment.
   icon: {fileID: 21300000, guid: 87c5adc1cc281ea4cac24755d88bcaad, type: 3}
   attribute: []
   operationData:

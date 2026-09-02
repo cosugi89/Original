@@ -15,8 +15,7 @@ MonoBehaviour:
   skillId: 2124
   skillKey: staff-demo-support
   displayName: Staff Demo Focus
-  description: "Staff \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u30C7\u30E2
-    Charge \u88DC\u52A9\u30B9\u30AD\u30EB\u3002"
+  description: A demo support skill granted by staff equipment.
   icon: {fileID: 21300000, guid: cc019d9a5c9acf24782a7da092586356, type: 3}
   attribute: []
   operationData:

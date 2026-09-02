@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Sword_000
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.EquipmentMasterData
   equipmentId: 6000
-  displayName: "\u521D\u5FC3\u8005\u306E\u5263"
-  description: "\u6271\u3044\u3084\u3059\u3055\u3092\u91CD\u8996\u3057\u3066\u935B\u3048\u3089\u308C\u305F\u7247\u624B\u5263\u3002\u5805\u5B9F\u306A\u4E00\u6483\u3067\u3001\u5263\u58EB\u3068\u3057\u3066\u306E\u57FA\u790E\u3092\u652F\u3048\u308B\u3002"
+  displayName: Beginner's Sword
+  description: A one-handed sword forged for ease of use. Its dependable edge supports
+    the fundamentals of swordplay.
   partType: 5
   partsIndex: 0
   icon: {fileID: 21300000, guid: 5546e2c9d34934340bd80bb4e408d1a2, type: 3}
@@ -28,8 +29,8 @@ MonoBehaviour:
   normalAttackAttribute: {fileID: 0}
   attributeModifiers: []
   categoryTags:
-  - "\u7247\u624B\u5263"
-  - "\u8A13\u7DF4\u7528"
+  - One-Handed Sword
+  - Training
   battleStatModifiers:
   - targetType: 0
     parameterType: 2

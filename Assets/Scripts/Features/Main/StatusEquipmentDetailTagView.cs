@@ -1,4 +1,5 @@
 using TMPro;
+using Assets.Scripts.Core.Const;
 using UnityEngine;
 
 namespace Assets.Scripts.Features.Main
@@ -9,7 +10,7 @@ namespace Assets.Scripts.Features.Main
 
         public void Setup(string tag)
         {
-            labelText.text = tag;
+            labelText.text = TextLocalization.Get(tag);
         }
     }
 }

@@ -70,7 +70,7 @@ namespace Assets.Scripts.Features.Main
         {
             if (!string.IsNullOrWhiteSpace(section.SelectedDisplayName))
             {
-                return section.SelectedDisplayName;
+                return TextLocalization.Get(section.SelectedDisplayName);
             }
 
             return section.SelectedEquipmentId > 0 ? $"Equipment {section.SelectedEquipmentId}" : category.ToString();

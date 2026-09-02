@@ -59,7 +59,23 @@ namespace Assets.Scripts.Features.Main
             ShowNormal();
             HideTypeIcons();
             SetSkill(icon);
+            label.gameObject.SetActive(true);
             label.text = displayName ?? string.Empty;
+        }
+
+        public void ShowSkillIconOnly(Sprite icon)
+        {
+            ShowNormal();
+            HideTypeIcons();
+            SetSkill(icon);
+            label.gameObject.SetActive(false);
+        }
+
+        public void ShowLockedIconOnly()
+        {
+            ShowLocked();
+            HideTypeIcons();
+            label.gameObject.SetActive(false);
         }
 
         public void ShowEmpty(string displayName)

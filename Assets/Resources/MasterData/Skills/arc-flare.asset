@@ -15,7 +15,8 @@ MonoBehaviour:
   skillId: 2001
   skillKey: arc-flare
   displayName: Arc Flare
-  description: "Wand \u304B\u3089\u653E\u3064\u5E83\u7BC4\u56F2\u306E\u9B54\u529B\u6CE2\u3002\u6271\u3044\u3084\u3059\u3044\u6A19\u6E96\u706B\u529B\u30B9\u30AD\u30EB\u3002"
+  description: A wide-area magical wave released from a wand. A dependable standard
+    damage skill.
   icon: {fileID: 0}
   attribute:
   - {fileID: 11400000, guid: 337e2699b39f4548bc58ee1a3ba8f610, type: 2}

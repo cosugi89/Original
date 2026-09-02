@@ -1,4 +1,5 @@
 using System.Collections;
+using Assets.Scripts.Core.Const;
 using Assets.Scripts.Features.Battle.Core;
 using Assets.Scripts.Features.Battle.Runtime;
 using TMPro;
@@ -111,12 +112,12 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
             if (summary.EnemyDefeated)
             {
-                return "撃破";
+                return TextLocalization.Get("Defeated");
             }
 
             if (summary.PlayerDefeated)
             {
-                return "敗北";
+                return TextLocalization.Get("Defeat");
             }
 
             if (summary.ResolvedSkillCount > 0 && !string.IsNullOrWhiteSpace(summary.SkillDisplayName))
@@ -126,17 +127,17 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
             if (summary.NextTurnHazardBoostReserved)
             {
-                return "危険が増した";
+                return TextLocalization.Get("Hazard increased");
             }
 
             if (summary.StoppedByHazardHit || summary.TookHit || summary.PlayerDamageTaken > 0)
             {
-                return "被弾";
+                return TextLocalization.Get("Hit");
             }
 
             if (summary.ResolvedHazardCount > 0)
             {
-                return "回避";
+                return TextLocalization.Get("Evaded");
             }
 
             if (summary.GoalReached)
@@ -161,23 +162,23 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
             if (action.HasSemantic(BattleResolvedActionSemantics.EnemyDefeated))
             {
-                return "撃破";
+                return TextLocalization.Get("Defeated");
             }
 
             if (action.HasSemantic(BattleResolvedActionSemantics.PlayerDefeated))
             {
-                return "敗北";
+                return TextLocalization.Get("Defeat");
             }
 
             if (action.ActionType == BattleResolvedActionType.HazardHit ||
                 action.HasSemantic(BattleResolvedActionSemantics.TookHit))
             {
-                return "被弾";
+                return TextLocalization.Get("Hit");
             }
 
             if (action.ActionType == BattleResolvedActionType.HazardEvaded)
             {
-                return "回避";
+                return TextLocalization.Get("Evaded");
             }
 
             if (action.HasSemantic(BattleResolvedActionSemantics.ResolvedSkill) &&
@@ -189,7 +190,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             if (action.ActionType == BattleResolvedActionType.HazardBoostReserved ||
                 action.HasSemantic(BattleResolvedActionSemantics.NextTurnHazardBoostReserved))
             {
-                return "危険が増した";
+                return TextLocalization.Get("Hazard increased");
             }
 
             if (action.ActionType == BattleResolvedActionType.GoalReached)
@@ -209,7 +210,7 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
             if (action.PlayerHealing > 0)
             {
-                return "回復";
+                return TextLocalization.Get("Recovered");
             }
 
             return string.Empty;

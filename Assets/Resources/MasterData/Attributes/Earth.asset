@@ -15,7 +15,7 @@ MonoBehaviour:
   attributeId: 3004
   attributeKey: earth
   displayName: Earth
-  description: 土属性。防御や支援寄りの効果に使う基本属性。
+  description: An earth attribute for defensive and supportive effects.
   isVisibleInUI: 1
-  icon: {fileID: 0}
   sortOrder: 4
+  icon: {fileID: 0}

@@ -10,6 +10,12 @@ namespace Assets.Scripts.UI.Components
     [AddComponentMenu("UI/Game Button")]
     public sealed class GameButton : Button
     {
+        public enum ButtonType
+        {
+            Normal,
+            Close
+        }
+
         public enum FrameType
         {
             Button01,
@@ -71,6 +77,7 @@ namespace Assets.Scripts.UI.Components
         }
 
         [Header("Appearance")]
+        [SerializeField] private ButtonType buttonType = ButtonType.Normal;
         [SerializeField] private FrameType frameType = FrameType.Button02;
         [SerializeField] private ColorType colorType = ColorType.Red;
         [SerializeField] private SizeType sizeType = SizeType.Medium;
@@ -115,6 +122,9 @@ namespace Assets.Scripts.UI.Components
         [SerializeField, HideInInspector] private Sprite button03HighLightSprite;
         [SerializeField, HideInInspector] private Sprite button03GradientSprite;
         [SerializeField, HideInInspector] private Sprite button03ShadowSprite;
+        [SerializeField, HideInInspector] private Sprite closeBackgroundSprite;
+        [SerializeField, HideInInspector] private Sprite closeLightSprite;
+        [SerializeField, HideInInspector] private Sprite closeIconSprite;
 
         [Header("Optional Feedback")]
         [SerializeField] private AudioSource audioSource;
@@ -307,6 +317,12 @@ namespace Assets.Scripts.UI.Components
 
         public void ApplyVisual()
         {
+            if (buttonType == ButtonType.Close)
+            {
+                ApplyCloseVisual();
+                return;
+            }
+
             var size = GetButtonSize(sizeType);
             ((RectTransform)transform).sizeDelta = size;
             Stretch(visualRoot, 0f, 0f, 0f, 0f);
@@ -315,6 +331,34 @@ namespace Assets.Scripts.UI.Components
             ApplyFrame(frameType, colors);
             ApplyContent(size);
             ApplyBadge(size);
+        }
+
+        private void ApplyCloseVisual()
+        {
+            var size = new Vector2(103.2025f, 106.23987f);
+            ((RectTransform)transform).sizeDelta = size;
+            Stretch(visualRoot, 0f, 0f, 0f, 0f);
+
+            SetImage(backgroundImage, closeBackgroundSprite, new Color32(90, 43, 44, 255), true, Image.Type.Sliced);
+            SetImage(lightImage, closeLightSprite, new Color32(110, 41, 42, 255), true, Image.Type.Sliced);
+            SetImage(highLightImage, null, Color.clear, false, Image.Type.Simple);
+            SetImage(gradientImage, null, Color.clear, false, Image.Type.Sliced);
+            SetImage(shadowImage, null, Color.clear, false, Image.Type.Sliced);
+            Stretch(backgroundImage.rectTransform, 0f, 0f, 0f, 0f);
+            Stretch(lightImage.rectTransform, 4f, 4f, 4f, 7f);
+
+            SetOptionalActive(labelText.gameObject, false);
+            SetOptionalActive(titleText.gameObject, false);
+            SetOptionalActive(valueText.gameObject, false);
+            SetOptionalActive(iconImage.gameObject, true);
+            iconImage.sprite = closeIconSprite;
+            iconImage.color = new Color32(189, 163, 137, 255);
+            iconImage.type = Image.Type.Simple;
+            iconImage.preserveAspect = false;
+            iconImage.raycastTarget = false;
+            Center(iconImage.rectTransform, 60.2025f, 61.23987f, 0f, 1.6000061f);
+
+            SetOptionalActive(badgeRoot, false);
         }
 
         private void RefreshOptionalVisuals()

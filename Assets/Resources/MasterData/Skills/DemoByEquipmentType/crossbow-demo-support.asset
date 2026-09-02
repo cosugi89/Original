@@ -15,7 +15,7 @@ MonoBehaviour:
   skillId: 2112
   skillKey: crossbow-demo-support
   displayName: Crossbow Demo Burst
-  description: "Crossbow \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u9AD8\u30C1\u30E3\u30FC\u30B8\u306E\u30C7\u30E2\u706B\u529B\u30B9\u30AD\u30EB\u3002"
+  description: A demo support skill granted by crossbow equipment.
   icon: {fileID: 21300000, guid: cc019d9a5c9acf24782a7da092586356, type: 3}
   attribute: []
   operationData:

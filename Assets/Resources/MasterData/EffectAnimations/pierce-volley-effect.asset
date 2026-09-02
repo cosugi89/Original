@@ -15,7 +15,7 @@ MonoBehaviour:
   effectAnimationId: 3002
   effectAnimationKey: pierce-volley-effect
   displayName: Pierce Volley Effect
-  description: Pierce Volley 用の収束魔弾演出。
+  description: Focused magic-bolt effect for Pierce Volley.
   characterAnimationName: Attack
   visualEffectKey: fx_pierce_volley
   soundEffectKey: se_pierce_volley

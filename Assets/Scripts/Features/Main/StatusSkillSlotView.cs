@@ -1,5 +1,6 @@
 using System;
 using Assets.Scripts.Data.DTO;
+using Assets.Scripts.Core.Const;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -64,7 +65,7 @@ namespace Assets.Scripts.Features.Main
         {
             if (!string.IsNullOrWhiteSpace(skill.DisplayName))
             {
-                return skill.DisplayName;
+                return TextLocalization.Get(skill.DisplayName);
             }
 
             return skill.SkillId > 0 ? $"Skill {skill.SkillId}" : "Empty";

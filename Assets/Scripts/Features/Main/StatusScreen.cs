@@ -66,7 +66,7 @@ namespace Assets.Scripts.Features.Main
             for (var i = 0; i < slotEquipmentViews.Length; i++)
             {
                 slotEquipmentViews[i].SetVisible(true);
-                slotEquipmentViews[i].Bind(SelectCategory);
+                slotEquipmentViews[i].Bind(OnEquipmentSlotClicked);
             }
 
             // skill slots
@@ -175,7 +175,19 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            OpenEquipmentDetailDialogAsync(option).Forget();
+            OpenEquipmentDetailDialogAsync(option, isOpenedFromEquipmentSlot: false).Forget();
+        }
+
+        private void OnEquipmentSlotClicked(StatusEquipmentCategory category)
+        {
+            SelectCategory(category);
+
+            var selectedOption = BuildOptionsForCategory(category)
+                .FirstOrDefault(option => option.IsSelected);
+            if (selectedOption != null)
+            {
+                OpenEquipmentDetailDialogAsync(selectedOption, isOpenedFromEquipmentSlot: true).Forget();
+            }
         }
 
         private void OnEmptyEquipmentClicked()
@@ -201,7 +213,9 @@ namespace Assets.Scripts.Features.Main
             OpenSkillLoadoutDialogAsync(slotIndex).Forget();
         }
 
-        private async UniTaskVoid OpenEquipmentDetailDialogAsync(AvatarPartOptionViewData option)
+        private async UniTaskVoid OpenEquipmentDetailDialogAsync(
+            AvatarPartOptionViewData option,
+            bool isOpenedFromEquipmentSlot)
         {
             if (_equipmentDetailDialogOpen)
             {

@@ -15,7 +15,7 @@ MonoBehaviour:
   attributeId: 3001
   attributeKey: fire
   displayName: Fire
-  description: 炎属性。燃焼や高火力寄りの攻撃に使う基本属性。
+  description: A basic fire attribute for burning effects and high-damage attacks.
   isVisibleInUI: 1
-  icon: {fileID: 0}
   sortOrder: 1
+  icon: {fileID: 0}

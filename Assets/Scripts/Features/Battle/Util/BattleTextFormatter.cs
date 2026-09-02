@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Scripts.Core.Const;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Features.Battle.Const;
 using Assets.Scripts.Features.Battle.Core;
@@ -138,7 +139,7 @@ namespace Assets.Scripts.Features.Battle.Util
         {
             if (summary.PlayerDefeated)
             {
-                return "追い詰めた";
+                return TextLocalization.Get("Cornered you");
             }
 
             if (summary.EnemyDefeated)
@@ -148,12 +149,12 @@ namespace Assets.Scripts.Features.Battle.Util
 
             if (summary.NextTurnHazardBoostReserved)
             {
-                return "次は危ない";
+                return TextLocalization.Get("The next turn will be dangerous");
             }
 
             if (summary.PlayerDamageTaken > 0)
             {
-                return "まだ終わらない";
+                return TextLocalization.Get("This is not over yet");
             }
 
             return pattern?.ConfirmText ?? string.Empty;
@@ -163,17 +164,17 @@ namespace Assets.Scripts.Features.Battle.Util
         {
             if (summary.EnemyDefeated)
             {
-                return "戦意が崩れた";
+                return TextLocalization.Get("Their fighting spirit has faltered");
             }
 
             if (summary.PlayerDefeated)
             {
-                return "圧に呑まれた";
+                return TextLocalization.Get("Overwhelmed by pressure");
             }
 
             if (summary.NextTurnHazardBoostReserved)
             {
-                return "Dance 後の危険が高まっている";
+                return TextLocalization.Get("Hazards grow stronger after Dance");
             }
 
             return pattern?.Description ?? string.Empty;
@@ -181,7 +182,7 @@ namespace Assets.Scripts.Features.Battle.Util
 
         public static string BuildEnemyDefeatedMessage(string enemyName)
         {
-            return $"{enemyName} を撃破";
+            return string.Format(TextLocalization.Get("{0} defeated"), enemyName);
         }
 
         public static string BuildBattleTypeValueText(int guardValue)
@@ -220,19 +221,19 @@ namespace Assets.Scripts.Features.Battle.Util
             }
             else if (resolvedSummary.ResolvedAttackCount > 0)
             {
-                parts.Add($"攻撃{resolvedSummary.ResolvedAttackCount}回");
+                parts.Add(string.Format(TextLocalization.Get("Attack x{0}"), resolvedSummary.ResolvedAttackCount));
             }
 
             if (resolvedSummary.EnemyDamageTaken > 0 || !string.IsNullOrWhiteSpace(resolvedSummary.EnemyDamageAttributeSummary))
             {
                 parts.Add(string.IsNullOrWhiteSpace(resolvedSummary.EnemyDamageAttributeSummary)
-                    ? $"敵-{resolvedSummary.EnemyDamageTaken}"
-                    : $"敵-{resolvedSummary.EnemyDamageTaken} [{resolvedSummary.EnemyDamageAttributeSummary}]");
+                    ? $"Enemy -{resolvedSummary.EnemyDamageTaken}"
+                    : $"Enemy -{resolvedSummary.EnemyDamageTaken} [{resolvedSummary.EnemyDamageAttributeSummary}]");
             }
 
             if (resolvedSummary.PlayerHealing > 0)
             {
-                parts.Add($"自分+{resolvedSummary.PlayerHealing}");
+                parts.Add($"Player +{resolvedSummary.PlayerHealing}");
             }
 
             if (resolvedSummary.PlayerGuardGained > 0)
@@ -259,16 +260,16 @@ namespace Assets.Scripts.Features.Battle.Util
             {
                 parts.Add(resolvedSummary.PlayerDamageTaken > 0 || !string.IsNullOrWhiteSpace(resolvedSummary.PlayerDamageAttributeSummary)
                     ? string.IsNullOrWhiteSpace(resolvedSummary.PlayerDamageAttributeSummary)
-                        ? $"自分-{resolvedSummary.PlayerDamageTaken}"
-                        : $"自分-{resolvedSummary.PlayerDamageTaken} [{resolvedSummary.PlayerDamageAttributeSummary}]"
+                        ? $"Player -{resolvedSummary.PlayerDamageTaken}"
+                        : $"Player -{resolvedSummary.PlayerDamageTaken} [{resolvedSummary.PlayerDamageAttributeSummary}]"
                     : BattleUiText.NoDamageTaken);
             }
             else if (resolvedSummary.ResolvedEnemyActionCount > 0 &&
                      (resolvedSummary.PlayerDamageTaken > 0 || !string.IsNullOrWhiteSpace(resolvedSummary.PlayerDamageAttributeSummary)))
             {
                 parts.Add(string.IsNullOrWhiteSpace(resolvedSummary.PlayerDamageAttributeSummary)
-                    ? $"敵攻撃-{resolvedSummary.PlayerDamageTaken}"
-                    : $"敵攻撃-{resolvedSummary.PlayerDamageTaken} [{resolvedSummary.PlayerDamageAttributeSummary}]");
+                    ? $"Enemy attack -{resolvedSummary.PlayerDamageTaken}"
+                    : $"Enemy attack -{resolvedSummary.PlayerDamageTaken} [{resolvedSummary.PlayerDamageAttributeSummary}]");
             }
 
             if (resolvedSummary.StoppedByHazardHit)

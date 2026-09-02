@@ -15,7 +15,7 @@ MonoBehaviour:
   skillId: 2121
   skillKey: spear-demo-strike
   displayName: Spear Demo Strike
-  description: "Spear \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u30C7\u30E2\u706B\u529B\u30B9\u30AD\u30EB\u3002"
+  description: A demo damage skill granted by spear equipment.
   icon: {fileID: 21300000, guid: 06214999b5307684db24d827372afe7a, type: 3}
   attribute: []
   operationData:

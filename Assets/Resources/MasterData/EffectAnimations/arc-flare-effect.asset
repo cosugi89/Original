@@ -15,7 +15,7 @@ MonoBehaviour:
   effectAnimationId: 3001
   effectAnimationKey: arc-flare-effect
   displayName: Arc Flare Effect
-  description: Arc Flare 用の標準魔力波演出。
+  description: Standard arcane wave effect for Arc Flare.
   characterAnimationName: Attack
   visualEffectKey: fx_arc_flare
   soundEffectKey: se_arc_flare

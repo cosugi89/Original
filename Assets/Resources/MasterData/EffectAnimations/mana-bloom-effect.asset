@@ -15,7 +15,7 @@ MonoBehaviour:
   effectAnimationId: 3003
   effectAnimationKey: mana-bloom-effect
   displayName: Mana Bloom Effect
-  description: Mana Bloom 用の軽量開花演出。
+  description: Lightweight bloom effect for Mana Bloom.
   characterAnimationName: Dance
   visualEffectKey: fx_mana_bloom
   soundEffectKey: se_mana_bloom

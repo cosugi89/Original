@@ -15,7 +15,7 @@ MonoBehaviour:
   attributeId: 3003
   attributeKey: wind
   displayName: Wind
-  description: 風属性。貫通や速度感を伴う攻撃に使う基本属性。
+  description: A wind attribute for piercing attacks and swift movement.
   isVisibleInUI: 1
-  icon: {fileID: 0}
   sortOrder: 3
+  icon: {fileID: 0}

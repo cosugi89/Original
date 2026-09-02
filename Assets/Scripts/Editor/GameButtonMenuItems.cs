@@ -198,6 +198,12 @@ namespace Assets.Scripts.Editor
             serializedButton.FindProperty("button03HighLightSprite").objectReferenceValue = LoadSprite("Button_03_White_HighLight.Png");
             serializedButton.FindProperty("button03GradientSprite").objectReferenceValue = LoadSprite("Button_03_White_Gradient.Png");
             serializedButton.FindProperty("button03ShadowSprite").objectReferenceValue = LoadSprite("Button_03_White_Shadow.Png");
+            serializedButton.FindProperty("closeBackgroundSprite").objectReferenceValue =
+                LoadSprite("Button_01_White_Bg.Png");
+            serializedButton.FindProperty("closeLightSprite").objectReferenceValue =
+                LoadSprite("Button_01_White_InnerBorder2.png");
+            serializedButton.FindProperty("closeIconSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Assets/Sprite_Common/~Demo/Demo_Icon/Icon_Close.png");
             serializedButton.FindProperty("audioSource").objectReferenceValue = audioSource;
             serializedButton.FindProperty("clickSoundType").enumValueIndex = (int)GameButton.SoundType.Button1;
             serializedButton.FindProperty("disabledClickSoundType").enumValueIndex = (int)GameButton.SoundType.Error;

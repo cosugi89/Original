@@ -15,7 +15,7 @@ MonoBehaviour:
   skillId: 2101
   skillKey: axe-demo-strike
   displayName: Axe Demo Strike
-  description: "Axe \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u30C7\u30E2\u706B\u529B\u30B9\u30AD\u30EB\u3002"
+  description: A demo damage skill granted by axe equipment.
   icon: {fileID: 21300000, guid: 90e39da2bb246ac47af7691123fb0045, type: 3}
   attribute: []
   operationData:

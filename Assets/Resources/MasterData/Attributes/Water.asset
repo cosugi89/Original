@@ -15,7 +15,7 @@ MonoBehaviour:
   attributeId: 3002
   attributeKey: water
   displayName: Water
-  description: 水属性。冷却や安定した制御寄りの攻撃に使う基本属性。
+  description: A water attribute for cooling effects and steady control.
   isVisibleInUI: 1
-  icon: {fileID: 0}
   sortOrder: 2
+  icon: {fileID: 0}

@@ -1,6 +1,6 @@
 # UI 共通部品仕様書
 
-- 最終更新: 2026-08-28
+- 最終更新: 2026-09-02
 - 文書状態: 運用中
 - 位置づけ: プロジェクト内で共通利用する UI 部品の責務と運用方針を定義する。
 
@@ -16,13 +16,14 @@
 - Button 系 Sprite は `Assets/Assets/Sprite_Common/Button` 配下の project-owned asset を参照する。
 - Badge の既定 Sprite は `Assets/Assets/Sprite_Dark/HUD/Alert_Dot_01_Red.png` を参照する。
 - `GameButton.prefab` は Layer Lab の Prefab / Sprite へ依存しない。Layer Lab は見た目の参考元としてのみ扱う。
-- 見た目は `FrameType`、`ColorType`、`SizeType`、`ContentType` の enum で切り替える。
+- 見た目は `ButtonType`、`FrameType`、`ColorType`、`SizeType`、`ContentType` の enum で切り替える。`ButtonType` は通常の `Normal` と、閉じる操作用の `Close` を持つ。
 - `FrameType` は `Button01`、`Button02`、`Button03` を持つ。
 - `ColorType` は `Blue`、`Brown`、`Dark`、`Gray`、`Green`、`Mint`、`OffWhite`、`Orange`、`Pink`、`Plum`、`Red`、`Yellow` を持つ。
 - `SizeType` は `Small`、`Medium`、`Large`、`IconSmall`、`IconMedium`、`Wide`、`TitleWide` を持つ。
 - `ContentType` は `None`、`Label`、`Icon`、`IconLabel`、`TitleIconLabel` を持つ。
 - Icon は `iconSprite` が未設定なら表示しない。
 - Label / Title / Value は対応文字列が空なら表示しない。
+- `Close` は `FrameType.Button01` 相当の小型ボタンとして BG / Light / Icon のみを表示し、Label / Title / Value / Badge を表示しない。サイズ、配色、閉じるIconは `Dialog-EquipmentDetail` の `Button_Close_02` を基準にする。
 - `GameButton` 専用 Inspector は標準 `Button` 設定の下に独自項目を表示する。これは Unity の `ButtonEditor` が `Button` 継承先にも適用されるため、専用 `CustomEditor` で補う。
 - Badge、選択表示、無効表示、Loading 表示は任意参照として扱う。
 - C# からは `SetAction(...)`、`AddAction(...)`、`RemoveAction(...)`、`ClearAction()` で、ユーザー操作による click / submit 時の追加処理を扱える。

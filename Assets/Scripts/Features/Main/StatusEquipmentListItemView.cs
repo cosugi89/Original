@@ -62,7 +62,7 @@ namespace Assets.Scripts.Features.Main
         {
             if (!string.IsNullOrWhiteSpace(option.DisplayName))
             {
-                return option.DisplayName;
+                return TextLocalization.Get(option.DisplayName);
             }
 
             return option.EquipmentId > 0 ? $"Equipment {option.EquipmentId}" : option.PartType.ToString();

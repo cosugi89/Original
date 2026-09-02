@@ -1195,6 +1195,9 @@ MonoBehaviour:
   button03HighLightSprite: {fileID: 21300000, guid: 654f20efa4625a142b7a07a312149bf3, type: 3}
   button03GradientSprite: {fileID: 21300000, guid: af080b5e978e68d4d83a30de8d9985a4, type: 3}
   button03ShadowSprite: {fileID: 21300000, guid: f7f7b07f8f8d93e4ca7710ff9e81086e, type: 3}
+  closeBackgroundSprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
+  closeLightSprite: {fileID: 21300000, guid: 84b6bc2e52a92d14a9ebe5a73a72d1c2, type: 3}
+  closeIconSprite: {fileID: 21300000, guid: 5665ab0eb99413542a1cc7a55e6bb2dd, type: 3}
   audioSource: {fileID: 5505367320992519725}
   clickSoundType: 1
   customClickSound: {fileID: 0}

@@ -15,7 +15,7 @@ MonoBehaviour:
   skillId: 2107
   skillKey: bow-demo-strike
   displayName: Bow Demo Strike
-  description: "Bow \u7A2E\u985E\u306E\u88C5\u5099\u304C\u63D0\u4F9B\u3059\u308B\u30C7\u30E2\u706B\u529B\u30B9\u30AD\u30EB\u3002"
+  description: A demo damage skill granted by bow equipment.
   icon: {fileID: 21300000, guid: cc019d9a5c9acf24782a7da092586356, type: 3}
   attribute: []
   operationData:

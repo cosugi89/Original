@@ -1,5 +1,6 @@
 using System;
 using Assets.Scripts.Data.DTO;
+using Assets.Scripts.Core.Const;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -36,7 +37,7 @@ namespace Assets.Scripts.Features.Main
         private static string BuildDisplayName(BattleSkillData skill)
         {
             return !string.IsNullOrWhiteSpace(skill.DisplayName)
-                ? skill.DisplayName
+                ? TextLocalization.Get(skill.DisplayName)
                 : $"Skill {skill.SkillId}";
         }
 

@@ -157,8 +157,8 @@ Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor`、`Item` �
 | `Headgear` | `Helmet` | 頭装備を表示する。 |
 | `Item` | なし | 現行実装では非表示、未接続。 |
 
-装備一覧の項目をクリックすると装備詳細ダイアログを開き、ダイアログ内の `Equip` ボタンで装備変更を確定する。
-装備確定時は、所持済みかつ解放済みの装備だけを選択可能にする。
+装備一覧の項目、または装備済みのSlotEquipmentをクリックすると装備詳細ダイアログを開く。SlotEquipment起点では `ButtonArea` ごと装備操作を非表示にして詳細表示だけを行う。装備一覧起点では `Button_Equip` を表示し、選択可能かつ未装備の項目を装備できる。
+装備一覧での選択と解除は、所持済みかつ解放済みの装備だけを対象にする。
 カテゴリ別一覧の解除行は確認ダイアログを開かず、対象カテゴリを未装備にして保存する。装備解除で使用不能になったSkillは、装備変更時と同様に実戦用ロードアウトから外す。
 装備スロットと装備一覧の各行は、背景フレーム、アイコン領域、名称を常に表示し、装備データやプール再利用状態によって表示有無が揺れないようにする。
 装備アイコンが未設定の場合はスロットまたは一覧テンプレートの代替アイコン、表示名が空の場合は `EquipmentId` 由来の表示名にフォールバックする。
@@ -215,14 +215,19 @@ Dialog 表示は `DialogService` / `DialogHost` / `DialogBase` を使う。`Dial
 見た目は `Assets/Layer Lab/GUI Pro-MinimalGame/Theme_Dark/Prefabs/Prefabs~DemoScenes/Settings.prefab` の中央 Popup と暗い背景を参考にしつつ、実体 Prefab / Script は `Layer Lab` 配下には作らない。
 ダイアログ prefab は Addressables で解決する。装備詳細ダイアログは `Assets/Resources/Prefabs/Dialog/Dialog-EquipmentDetail.prefab` を正本 Prefab とし、Addressables address は `Dialog/EquipmentDetail`、`StatusEquipmentDetailDialog` には `[DialogAddress("Dialog/EquipmentDetail")]` を付与する。Skill 設定ダイアログは `Assets/Resources/Prefabs/Dialog-SkillLoadout.prefab` を正本 Prefab とし、Addressables address は `Dialog/SkillLoadout`、`SkillLoadoutDialog` には `[DialogAddress("Dialog/SkillLoadout")]` を付与する。見た目変更ダイアログは `Assets/Resources/Prefabs/Dialog-AvatarController 1.prefab` を正本 Prefab とし、Addressables address は `Dialog/AvatarController`、`AvatarDialog` には `[DialogAddress("Dialog/AvatarController")]` を付与する。Prefab 内の必須 UI 参照が未設定の場合はセットアップ不備として使用箇所で失敗させ、個別の null ガードによる回避、ダイアログ本体 UI の実行時動的生成、`Resources.Load<T>()` による代替探索は行わない。
 
-`Dialog-EquipmentDetail` は `Parts-EquipmentItem` を装備表示に使用し、装備種別と `CategoryTags` をタグとして複数表示する。説明文は `EquipmentData.Description` を本文へ表示する。レアリティは `EquipmentData.Rarity` をラベルへ反映し、`Label_Tapered_01_Plum` の `Bg` / `InnerBorder` / `Deco` には対応する `UIColors.IColorSet` の `Background` / `InnerColor1` / `Glow` を適用する。スキル、戦闘補正、タグはそれぞれPrefab内の単一テンプレートを複製して表示し、`Scroll View/Viewport/Content` の `VerticalLayoutGroup` と `ContentSizeFitter` で表示件数に応じた高さにする。`Button_Equip` と `Button_Close` は `GameButton` とし、前者は選択可能かつ未装備の場合のみ操作可能、後者はダイアログをキャンセルして閉じる。
+`Dialog-EquipmentDetail` は `Parts-EquipmentItem` を装備表示に使用し、装備種別と `CategoryTags` をタグとして複数表示する。説明文は `EquipmentData.Description` を本文へ表示する。レアリティは `EquipmentData.Rarity` をラベルへ反映し、`Label_Tapered_01_Plum` の `Bg` / `InnerBorder` / `Deco` には対応する `UIColors.IColorSet` の `Background` / `InnerColor1` / `Glow` を適用する。スキル、戦闘補正、タグはそれぞれPrefab内の単一テンプレートを複製して表示し、`Scroll View/Viewport/Content` の `VerticalLayoutGroup` と `ContentSizeFitter` で表示件数に応じた高さにする。`Button_Close` は `GameButton` としてダイアログをキャンセルして閉じる。`Button_Equip` を含む `ButtonArea` はSlotEquipment起点だけ非表示にし、装備一覧起点では表示する。
+
+装備詳細のスキル行は `PartsSkillItem` をアイコン枠として使う。通常は `NormalState` のみを表示し、`TypeArea`、Prefab内ラベル、Focusは常に隠す。スキルの解放状態を導入した後は、未解放行だけ `LockState` にする。
+
+表示文言は英語のキー文字列を正本とし、表示直前に `TextLocalization.Get(key)` で解決する。現段階ではキーをそのまま返すが、日本語対応時は同APIの内部で選択言語の文字列へ変換する。Inspector固定文言のためのTMP継承は行わず、動的表示箇所からこの解決APIを呼ぶ。
+言語別の翻訳値は `LocalizationMasterData` で保持し、`Assets/Resources/MasterData/Localization/` 配下に言語ごとのassetを置く。現段階では `Japanese.asset` に試験用の1件だけを登録し、`TextLocalization` からの読み込みは次段階で接続する。
 
 ### 6.7 保存タイミングと Skill ロードアウト
 
-現行実装では、装備は詳細ダイアログ内の `Equip` ボタン押下時に保存する。
+現行実装では、装備一覧の項目を押して詳細ダイアログを開き、`Equip` ボタンで装備変更を確定する。SlotEquipmentから開いた詳細ダイアログは確認専用であり、装備操作を表示しない。
 
-- 装備リストの項目を選択し、装備詳細ダイアログを開く。
-- 装備詳細ダイアログ内の `Equip` ボタンを押す。
+- 装備リストの項目を選択、または解除行を押す。
+- 詳細ダイアログで `Equip` ボタンを押す。
 - `AvatarEditorPresenter.TrySelectEquipment(...)` で選択状態を更新する。
 - `AvatarEditorPresenter.Commit()` で `AppearanceManager` へ反映する。
 - `AppearanceAdapter.ApplyTo(...)` で Home 用プレビューと Status 用プレビューを更新する。
