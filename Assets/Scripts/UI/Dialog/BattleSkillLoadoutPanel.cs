@@ -25,12 +25,12 @@ namespace Assets.Scripts.UI.Dialog
 
         private readonly List<BattleSkillData> _candidates = new();
         private readonly List<int> _draftSkillIds = new();
-        private SkillLoadoutManager _loadoutService;
+        private DeckManager _loadoutService;
         private int _selectedSlotIndex;
 
         private void Awake()
         {
-            _loadoutService = UserDataManager.EnsureInitialized().SkillLoadout;
+            _loadoutService = UserDataManager.EnsureInitialized().Decks;
             BindButtons();
         }
 
@@ -41,7 +41,7 @@ namespace Assets.Scripts.UI.Dialog
 
         public void Refresh()
         {
-            _loadoutService ??= UserDataManager.EnsureInitialized().SkillLoadout;
+            _loadoutService ??= UserDataManager.EnsureInitialized().Decks;
             _candidates.Clear();
             _candidates.AddRange(_loadoutService.GetCandidateSkillsFromEquippedEquipment());
 

@@ -1,6 +1,6 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-08-30
+- 最終更新: 2026-09-03
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Status タブ拡充方針を定義する。
 - 関連文書: `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
@@ -125,10 +125,10 @@ Status タブは、プレイヤーの装備変更、実戦用 Skill ロードア
 Status タブは以下のデータを参照、更新する。
 
 - 所持装備: `UserData.Inventory.Equipments`
-- 現在の見た目状態: `UserData.Profile.Avatar`
+- 現在の見た目状態: `UserData.Profile.AvatarAppearance`
 - 装備マスター: `EquipmentMasterData`
 - 実行時装備データ: `EquipmentData`
-- 実戦用 Skill ロードアウト: `UserData.Profile.SkillLoadout.SkillIds`
+- 実戦用の戦闘構成: `UserData.Profile.Decks` と `CurrentDeckId`
 - 表示適用: `AppearanceController` と `AppearanceAdapter`
 
 未装備は現行方針どおり `EquipmentId = 0` として扱う。
@@ -162,13 +162,13 @@ Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor`、`Item` �
 カテゴリ別一覧の解除行は確認ダイアログを開かず、対象カテゴリを未装備にして保存する。装備解除で使用不能になったSkillは、装備変更時と同様に実戦用ロードアウトから外す。
 装備スロットと装備一覧の各行は、背景フレーム、アイコン領域、名称を常に表示し、装備データやプール再利用状態によって表示有無が揺れないようにする。
 装備アイコンが未設定の場合はスロットまたは一覧テンプレートの代替アイコン、表示名が空の場合は `EquipmentId` 由来の表示名にフォールバックする。
-変更後は `UserData.Profile.Avatar.Parts` に反映し、`MainScene` 上のプレイヤープレビューと、非表示の `GameObject/Character` にも即時反映する。
+戦闘装備は `CurrentDeckId` の `DeckData` に反映し、髪・目・ひげ・色などの見た目専用状態は `UserData.Profile.AvatarAppearance` に保存する。変更後は `MainScene` 上のプレイヤープレビューと、非表示の `GameObject/Character` にも即時反映する。
 同じ `UICategory` 内で複数の `PartsType` を持つ装備枠では、選択した装備以外の同カテゴリ内パーツを自動で未装備にする。
 例として、右手装備で `Sword` を選択した場合、`Axe`、`Bow`、`Wand`、`Staff`、`Spear`、`Blunt`、`Crossbow` など同じ右手カテゴリのパーツは外れる。
 
 ### 6.5 Skill ロードアウト
 
-Status タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が担当し、`SkillLoadoutManager.EnsureUsableLoadout(...)` で得た現在の実戦用 Skill を表示する。
+Status タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が担当し、`DeckManager.EnsureUsableLoadout(...)` で得た現在デッキの実戦用 Skill を表示する。
 
 各 `StatusSkillSlotView` は `PartsSkillItem` を Inspector 参照し、表示状態の直接切替や画像・テキストへの直接代入は行わない。
 
@@ -180,12 +180,12 @@ Status タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が
 - 未設定または現在の装備から使用できない Skill は `Empty` として表示する。
 - スロットを押下すると `SkillLoadoutDialog` を開き、押下したスロットを選択状態にする。
 - ダイアログ内では、`SelectedSkill` に現在のドラフト上の Skill ロードアウトを表示し、現在選択中のスロットを切り替えられるようにする。
-- 候補 Skill は、現在装備中の `EquipmentData.AssignableSkills` から `SkillLoadoutManager.GetCandidateSkillsFromEquippedEquipment()` で取得する。対象は Status タブで扱う右手、左手、胴、兜の4装備枠に限定し、Hair、Eye、Beard、Skin などの見た目専用パーツは候補元に含めない。
+- 候補 Skill は、現在デッキの `EquipmentData.AssignableSkills` から `DeckManager.GetCandidateSkillsFromEquippedEquipment()` で取得する。対象は右手、左手、胴、兜の4装備枠に限定し、Hair、Eye、Beard、Skin などの見た目専用パーツは候補元に含めない。
 - 候補 Skill は `SkillInfoArea` のスクロール領域に、候補数に応じて候補行テンプレートから動的に生成して表示する。候補数を8件に固定せず、装備枠や候補数の拡張に追従できるようにする。
 - 候補行の `SkillFrame` は `ShowNormal` / `ShowDisabled` / `ShowEmpty` / `ShowLocked` で表示を切り替える表示専用ViewControllerとする。状態enumは内部実装に留める。`ShowNormal(icon)` はセット可能かつSkillがセット済みの平時表示を表し、黒い `Image` を必ず非表示にする。バトル用には `ShowBattleNormal(icon)` と `SetBattleChargeProgress(chargeProgress01)` を使い、Normal表示内の黒い `Image` を使用可能に近づくほど減らす。候補行ではゲージを表示しない。候補行のクリック操作は `StatusSkillInfoView` が持ち、`SkillFrame` がInspector参照で持つ `FeedbackButton` のクリック操作とは分ける。
 - 各候補 Skill は名前と説明を表示し、現在選択中スロットへ割り当てられている候補だけ Skill frame を表示する。
-- 候補 Skill を押すとダイアログ内のドラフトと `SelectedSkill` 表示が即時に切り替わり、同時に `SkillLoadoutManager.SaveLoadout(...)` で保存する。
-- Skill ロードアウトは `UserData.Profile.SkillLoadout.SkillIds` に反映し、他のユーザーデータと同じメインセーブJSONへ保存する。
+- 候補 Skill を押すとダイアログ内のドラフトと `SelectedSkill` 表示が即時に切り替わり、同時に `DeckManager.SaveLoadout(...)` で現在デッキへ保存する。
+- Skill ロードアウトは現在デッキの `SkillIds` に反映し、他のユーザーデータと同じメインセーブJSONへ保存する。
 - `Close` または背景クリックで閉じた場合も、変更済みの Skill は戻さない。未変更で閉じた場合はStatus表示の再描画を行わない。
 
 ### 6.6 見た目変更ダイアログ
@@ -231,14 +231,14 @@ Dialog 表示は `DialogService` / `DialogHost` / `DialogBase` を使う。`Dial
 - `AvatarEditorPresenter.TrySelectEquipment(...)` で選択状態を更新する。
 - `AvatarEditorPresenter.Commit()` で `AppearanceManager` へ反映する。
 - `AppearanceAdapter.ApplyTo(...)` で Home 用プレビューと Status 用プレビューを更新する。
-- `SkillLoadoutManager.EnsureUsableLoadout(persistImmediately: true)` で、装備変更後に使えなくなった Skill を実戦用ロードアウトから自動で外す。
+- `DeckManager.EnsureUsableLoadout(persistImmediately: true)` で、装備変更後に使えなくなった Skill を現在デッキから自動で外す。
 - `UserDataJsonStore.SaveSession()` で即時保存する。
 
 Skill ロードアウトは、Skill 設定ダイアログ内で候補 Skill を選択した時点で自動保存する。
 
 - `SlotSkill_01` 〜 `SlotSkill_04` のいずれかを押し、Skill 設定ダイアログを開く。
 - ダイアログ内で対象スロットと候補 Skill を選ぶ。
-- 候補 Skill 選択または Clear 実行時に `SkillLoadoutManager.SaveLoadout(...)` を呼び、`UserData.Profile.SkillLoadout.SkillIds` を更新する。
+- 候補 Skill 選択または Clear 実行時に `DeckManager.SaveLoadout(...)` を呼び、現在デッキの `SkillIds` を更新する。
 - 保存後は Status タブの Skill スロット表示を更新する。
 - Unity Editor の Domain Reload 無効環境でも再生開始時に保存済み JSON を読み直せるよう、保存データに依存する static singleton は `RuntimeInitializeLoadType.SubsystemRegistration` でリセットする。
 
@@ -251,3 +251,7 @@ Skill ロードアウトは、Skill 設定ダイアログ内で候補 Skill を�
 - Status タブの Item 枠の正式対応。
 - 見た目変更ダイアログの最終レイアウトと、`Settings.prefab` を基準にした細部調整。
 - 装備変更による戦闘ステータス、候補スキル、タグ一致ボーナスのプレビュー表示方針。
+
+## 8. 次期実装: 戦闘デッキ
+
+戦闘用の右手・左手・兜・胴と、戦闘Skill4枠はデッキ3件として保存・切替する。見た目用の髪・目・ひげ・色は `AvatarAppearance` に分離し、デッキには含めない。StatusSceneのデッキ一覧ダイアログと、敗戦後の再挑戦導線からデッキを切り替えられるようにする。詳細は `docs/specs/デッキ仕様書.md` を正とする。

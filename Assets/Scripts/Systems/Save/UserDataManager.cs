@@ -21,7 +21,7 @@ namespace Assets.Scripts.Systems.Save
         public InventoryManager Inventory { get; private set; }
         public AppearanceManager Appearance { get; private set; }
         public ProgressManager Progress { get; private set; }
-        public SkillLoadoutManager SkillLoadout { get; private set; }
+        public DeckManager Decks { get; private set; }
 
         [Description("セッション初期化が完了しているかどうか。起動直後のガードに使う。")]
         public bool IsInitialized { get; private set; }
@@ -82,9 +82,9 @@ namespace Assets.Scripts.Systems.Save
             UserDataStore.ReloadSession();
 
             Inventory = new InventoryManager(UserDataStore, MasterDataResourceLoader.LoadEquipmentData());
-            Appearance = new AppearanceManager(UserDataStore, Inventory);
+            Decks = new DeckManager(UserDataStore, Inventory);
+            Appearance = new AppearanceManager(UserDataStore, Inventory, Decks);
             Progress = new ProgressManager(UserDataStore, MasterDataResourceLoader.LoadBattleStageData());
-            SkillLoadout = new SkillLoadoutManager(UserDataStore, Appearance, Inventory);
 
             if (IsDirty)
                 UserDataStore.SaveSession();

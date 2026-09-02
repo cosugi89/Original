@@ -52,7 +52,7 @@ namespace Assets.Scripts.Features.Main
         private readonly List<BattleSkillData> _candidates = new();
         private readonly List<StatusSkillInfoView> _candidateViews = new();
         private readonly List<int> _draftSkillIds = new();
-        private SkillLoadoutManager _loadoutService;
+        private DeckManager _loadoutService;
         private int _selectedSlotIndex;
         private bool _hasSavedChanges;
 
@@ -60,7 +60,7 @@ namespace Assets.Scripts.Features.Main
         {
             EnsurePrefabReferences();
 
-            _loadoutService = UserDataManager.EnsureInitialized().SkillLoadout;
+            _loadoutService = UserDataManager.EnsureInitialized().Decks;
             _selectedSlotIndex = Mathf.Clamp(
                 request.SlotIndex,
                 0,

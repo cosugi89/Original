@@ -6,6 +6,7 @@ namespace Assets.Scripts.Systems.Save.Models
     public class UserProfileData
     {
         public const int BattleSkillLoadoutSlotCount = 4;
+        public const int DeckCount = 3;
 
         [Description("プレイヤーを一意に識別するID。将来の連携や移行時に使う。")]
         public string PlayerId { get; set; } = "";
@@ -28,20 +29,38 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("現在の経験値。レベル制を採用しないなら削除してよい。")]
         public int Experience { get; set; } = 0;
 
-        [Description("現在のアバター見た目。シーンロード後はこの情報を全体で使い回す。")]
-        public AvatarAppearanceData Avatar { get; set; } = new();
+        [Description("髪・目・ひげ・色など、戦闘デッキと独立したアバター見た目。")]
+        public AvatarAppearanceData AvatarAppearance { get; set; } = new();
 
         [Description("プレイヤーの最大HP。現在の BattleScene では戦闘開始HPとして使う。")]
         public int MaxHp { get; set; } = 450; // TODO: メソッド化して装備や成長要素を反映させる
 
-        [Description("戦闘で使用するスキルロードアウト。装備候補スキル群から選んだ実戦用4枠。")]
-        public BattleSkillLoadoutData SkillLoadout { get; set; } = new();
+        [Description("現在適用している戦闘デッキID。1から始まる。")]
+        public int CurrentDeckId { get; set; } = 1;
+
+        [Description("戦闘用の装備4枠とSkill4枠を保持する固定デッキ一覧。")]
+        public List<DeckData> Decks { get; set; } = new();
 
     }
 
-    public class BattleSkillLoadoutData
+    public class DeckData
     {
-        [Description("戦闘で使用するスキルIDの並び。0 なら未設定スロット。")]
+        [Description("デッキを識別する1始まりのID。")]
+        public int DeckId { get; set; } = 1;
+
+        [Description("右手装備ID。未装備は0。")]
+        public int RightHandEquipmentId { get; set; }
+
+        [Description("左手装備ID。未装備は0。")]
+        public int LeftHandEquipmentId { get; set; }
+
+        [Description("ヘルメット装備ID。未装備は0。")]
+        public int HelmetEquipmentId { get; set; }
+
+        [Description("胴装備ID。未装備は0。")]
+        public int ChestEquipmentId { get; set; }
+
+        [Description("戦闘で使用するSkill IDの並び。0は未設定スロット。")]
         public List<int> SkillIds { get; set; } = new();
     }
 
@@ -55,9 +74,16 @@ namespace Assets.Scripts.Systems.Save.Models
         {
             MaxHp = 450;
 
-            SkillLoadout = new BattleSkillLoadoutData
+            AvatarAppearance = new AvatarAppearanceData();
+            Decks = new List<DeckData>
             {
-                SkillIds = new List<int> { 2001, 2002, 0, 0 },
+                new()
+                {
+                    DeckId = 1,
+                    SkillIds = new List<int> { 2001, 2002, 0, 0 },
+                },
+                new() { DeckId = 2 },
+                new() { DeckId = 3 },
             };
         }
     }

@@ -21,17 +21,40 @@ namespace Assets.Scripts.Systems.GameData
         [Description("装備の所持判定・定義検索・装備履歴更新を担当するインベントリサービス。")]
         public InventoryManager InventoryManager { get; }
 
-        public AppearanceManager(UserDataJsonStore userDataStore, InventoryManager inventoryManager)
+        [Description("戦闘用装備を保持する現在デッキの窓口。")]
+        public DeckManager DeckManager { get; }
+
+        public AppearanceManager(
+            UserDataJsonStore userDataStore,
+            InventoryManager inventoryManager,
+            DeckManager deckManager)
         {
             UserDataStore = userDataStore;
             Session = userDataStore.Session;
             InventoryManager = inventoryManager;
+            DeckManager = deckManager;
             Initialize();
         }
 
         public AvatarAppearanceData GetCurrentAppearance()
         {
-            return EnsureAppearance();
+            var storedAppearance = EnsureAppearance();
+            return new AvatarAppearanceData
+            {
+                Parts = storedAppearance.Parts
+                    .Where(part => part != null)
+                    .Select(ClonePartState)
+                    .Concat(DeckManager.GetCurrentPartStates())
+                    .ToList(),
+                Colors = storedAppearance.Colors
+                    .Where(color => color != null)
+                    .Select(color => new AvatarColorData
+                    {
+                        Target = color.Target,
+                        HtmlColor = color.HtmlColor,
+                    })
+                    .ToList(),
+            };
         }
 
         public void SetCurrentAppearance(AvatarAppearanceData appearance, bool markDirty = true)
@@ -42,11 +65,21 @@ namespace Assets.Scripts.Systems.GameData
             normalized.Parts ??= new List<AvatarPartStateData>();
             normalized.Colors ??= new List<AvatarColorData>();
 
-            Session.UserData.Profile.Avatar = normalized;
-            EnsureDefaultColor(normalized, ColorTargetType.Skin, markDirty);
-            EnsureDefaultColor(normalized, ColorTargetType.Hair, markDirty);
-            EnsureDefaultColor(normalized, ColorTargetType.Eye, markDirty);
-            EnsureDefaultColor(normalized, ColorTargetType.Beard, markDirty);
+            DeckManager.SaveEquipmentFromAppearance(normalized);
+            var cosmeticAppearance = new AvatarAppearanceData
+            {
+                Parts = normalized.Parts
+                    .Where(part => part != null && !IsDeckEquipment(part))
+                    .Select(ClonePartState)
+                    .ToList(),
+                Colors = normalized.Colors,
+            };
+
+            Session.UserData.Profile.AvatarAppearance = cosmeticAppearance;
+            EnsureDefaultColor(cosmeticAppearance, ColorTargetType.Skin, markDirty);
+            EnsureDefaultColor(cosmeticAppearance, ColorTargetType.Hair, markDirty);
+            EnsureDefaultColor(cosmeticAppearance, ColorTargetType.Eye, markDirty);
+            EnsureDefaultColor(cosmeticAppearance, ColorTargetType.Beard, markDirty);
 
             if (markDirty)
                 UserDataStore.MarkDirty();
@@ -54,7 +87,7 @@ namespace Assets.Scripts.Systems.GameData
 
         public IReadOnlyList<AvatarPartStateData> GetAllPartStates()
         {
-            return EnsureAppearance().Parts
+            return GetCurrentAppearance().Parts
                 .Where(part => part != null)
                 .OrderBy(part => part.PartType)
                 .ToArray();
@@ -87,6 +120,9 @@ namespace Assets.Scripts.Systems.GameData
                 return false;
             }
 
+            if (DeckLoadoutUtility.GetCategory(definition).HasValue)
+                return isVisible && DeckManager.TryEquip(equipmentId);
+
             return TryEquip(definition.PartType, equipmentId, isVisible);
         }
 
@@ -98,6 +134,17 @@ namespace Assets.Scripts.Systems.GameData
                 !InventoryManager.HasEquipment(equipmentId))
             {
                 return false;
+            }
+
+            if (DeckLoadoutUtility.GetCategory(definition).HasValue)
+            {
+                if (!isVisible)
+                {
+                    DeckManager.Unequip(DeckLoadoutUtility.GetCategory(definition).Value);
+                    return true;
+                }
+
+                return DeckManager.TryEquip(equipmentId);
             }
 
             var state = GetOrCreatePartState(partType);
@@ -113,6 +160,12 @@ namespace Assets.Scripts.Systems.GameData
 
         public void Unequip(PartsType partType)
         {
+            if (TryGetDeckCategory(partType, out var category))
+            {
+                DeckManager.Unequip(category);
+                return;
+            }
+
             var state = GetOrCreatePartState(partType);
             if (state.EquipmentId <= 0 && !state.IsVisible)
                 return;
@@ -124,6 +177,13 @@ namespace Assets.Scripts.Systems.GameData
 
         public void SetVisibility(PartsType partType, bool isVisible)
         {
+            if (TryGetDeckCategory(partType, out var category))
+            {
+                if (!isVisible)
+                    DeckManager.Unequip(category);
+                return;
+            }
+
             var state = GetOrCreatePartState(partType);
             if (state.IsVisible == isVisible)
                 return;
@@ -134,12 +194,12 @@ namespace Assets.Scripts.Systems.GameData
 
         public bool IsEquipped(int equipmentId)
         {
-            return equipmentId > 0 && EnsureAppearance().Parts.Any(part => part != null && part.EquipmentId == equipmentId);
+            return equipmentId > 0 && GetAllPartStates().Any(part => part.EquipmentId == equipmentId);
         }
 
         public bool TryGetEquippedEquipmentId(PartsType partType, out int equipmentId)
         {
-            var partState = EnsureAppearance().Parts.FirstOrDefault(candidate => candidate != null && candidate.PartType == partType);
+            var partState = GetAllPartStates().FirstOrDefault(candidate => candidate != null && candidate.PartType == partType);
             equipmentId = partState?.EquipmentId ?? 0;
             return equipmentId > 0;
         }
@@ -197,10 +257,54 @@ namespace Assets.Scripts.Systems.GameData
         private AvatarAppearanceData EnsureAppearance()
         {
             Session.UserData.Profile ??= new UserProfileDemoData();
-            Session.UserData.Profile.Avatar ??= new AvatarAppearanceData();
-            Session.UserData.Profile.Avatar.Parts ??= new List<AvatarPartStateData>();
-            Session.UserData.Profile.Avatar.Colors ??= new List<AvatarColorData>();
-            return Session.UserData.Profile.Avatar;
+            Session.UserData.Profile.AvatarAppearance ??= new AvatarAppearanceData();
+            Session.UserData.Profile.AvatarAppearance.Parts ??= new List<AvatarPartStateData>();
+            Session.UserData.Profile.AvatarAppearance.Colors ??= new List<AvatarColorData>();
+            return Session.UserData.Profile.AvatarAppearance;
+        }
+
+        private bool IsDeckEquipment(AvatarPartStateData part)
+        {
+            return part.EquipmentId > 0 &&
+                   InventoryManager.TryGetDefinition(part.EquipmentId, out var definition) &&
+                   DeckLoadoutUtility.GetCategory(definition).HasValue;
+        }
+
+        private bool TryGetDeckCategory(PartsType partType, out UICategory category)
+        {
+            category = default;
+            if (partType == PartsType.Helmet)
+            {
+                category = UICategory.Helmet;
+                return true;
+            }
+
+            if (partType == PartsType.Chest)
+            {
+                category = UICategory.Chest;
+                return true;
+            }
+
+            var definitions = InventoryManager.GetDefinitionsByPartType(partType);
+            if (definitions.Count == 0)
+                return false;
+
+            var resolvedCategory = DeckLoadoutUtility.GetCategory(definitions[0]);
+            if (!resolvedCategory.HasValue)
+                return false;
+
+            category = resolvedCategory.Value;
+            return true;
+        }
+
+        private static AvatarPartStateData ClonePartState(AvatarPartStateData part)
+        {
+            return new AvatarPartStateData
+            {
+                PartType = part.PartType,
+                EquipmentId = part.EquipmentId,
+                IsVisible = part.IsVisible,
+            };
         }
 
         private void EnsureDefaultColor(AvatarAppearanceData appearance, ColorTargetType target, bool markDirty)

@@ -17,7 +17,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private readonly UserDataJsonStore _userDataStore;
         private readonly AppearanceManager _appearanceManager;
         private readonly InventoryManager _inventoryManager;
-        private readonly SkillLoadoutManager _skillLoadoutManager;
+        private readonly DeckManager _deckManager;
         private readonly ProgressManager _progressManager;
         private readonly BattlePlayerSnapshotFactory _playerSnapshotFactory;
 
@@ -25,7 +25,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             UserDataJsonStore userDataStore = null,
             AppearanceManager appearanceManager = null,
             InventoryManager inventoryManager = null,
-            SkillLoadoutManager skillLoadoutManager = null,
+            DeckManager deckManager = null,
             ProgressManager progressManager = null,
             BattlePlayerSnapshotFactory playerSnapshotFactory = null)
         {
@@ -33,7 +33,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             _userDataStore = userDataStore ?? userDataManager.UserDataStore;
             _appearanceManager = appearanceManager ?? userDataManager.Appearance;
             _inventoryManager = inventoryManager ?? userDataManager.Inventory;
-            _skillLoadoutManager = skillLoadoutManager ?? userDataManager.SkillLoadout;
+            _deckManager = deckManager ?? userDataManager.Decks;
             _progressManager = progressManager ?? userDataManager.Progress;
             _playerSnapshotFactory = playerSnapshotFactory ?? new BattlePlayerSnapshotFactory();
         }
@@ -94,7 +94,7 @@ namespace Assets.Scripts.Features.Battle.Logic
         private BattlePlayerSnapshotSource ResolvePlayerSnapshotSource()
         {
             var profile = _userDataStore.Session.UserData?.Profile ?? new UserProfileDemoData();
-            _skillLoadoutManager.EnsureUsableLoadout();
+            _deckManager.EnsureUsableLoadout();
             var equipmentDerivedData = ResolveEquippedEquipmentDerivedData();
             return new BattlePlayerSnapshotSource(profile, equipmentDerivedData);
         }

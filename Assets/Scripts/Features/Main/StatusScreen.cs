@@ -35,6 +35,7 @@ namespace Assets.Scripts.Features.Main
 
         [Header("Appearance Dialog")]
         [SerializeField] private Button skinButton;
+        [SerializeField] private Button deckButton;
         [SerializeField] private PreviewStage avatarPreviewRenderer;
 
         private AvatarEditorPresenter _presenter;
@@ -131,7 +132,7 @@ namespace Assets.Scripts.Features.Main
             }
 
             // skill slots
-            var loadoutService = userDataManager.SkillLoadout;
+            var loadoutService = userDataManager.Decks;
             var candidates = loadoutService.GetCandidateSkillsFromEquippedEquipment();
             var skillMap = BuildSkillMap(candidates);
             var skillSourceCategoryMap = BuildSkillSourceCategoryMap(userDataManager);
@@ -203,7 +204,7 @@ namespace Assets.Scripts.Features.Main
             avatarPreview.ApplySavedAppearance();
 
             var userDataManager = UserDataManager.EnsureInitialized();
-            userDataManager.SkillLoadout.EnsureUsableLoadout(persistImmediately: true);
+            userDataManager.Decks.EnsureUsableLoadout(persistImmediately: true);
             userDataManager.UserDataStore.SaveSession();
             Refresh();
         }
@@ -229,7 +230,7 @@ namespace Assets.Scripts.Features.Main
                     DialogEquipmentDetail,
                     DialogEquipmentDetailRequest,
                     DialogEquipmentDetailResult>(
-                        new DialogEquipmentDetailRequest(option),
+                        new DialogEquipmentDetailRequest(option, isOpenedFromEquipmentSlot),
                         new DialogContext(avatarPreviewRenderer));
                 if (result.IsEquipRequested)
                 {
@@ -241,7 +242,7 @@ namespace Assets.Scripts.Features.Main
                     _presenter.Commit();
                     avatarPreview.ApplySavedAppearance();
                     var userDataManager = UserDataManager.EnsureInitialized();
-                    userDataManager.SkillLoadout.EnsureUsableLoadout(persistImmediately: true);
+                    userDataManager.Decks.EnsureUsableLoadout(persistImmediately: true);
                     userDataManager.UserDataStore.SaveSession();
                     Refresh();
                 }

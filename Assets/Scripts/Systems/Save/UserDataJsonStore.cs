@@ -77,12 +77,12 @@ namespace Assets.Scripts.Systems.Save
 
             userData.Meta ??= new UserMetaData();
             userData.Profile ??= new UserProfileDemoData();
-            userData.Profile.Avatar ??= new AvatarAppearanceData();
+            userData.Profile.AvatarAppearance ??= new AvatarAppearanceData();
             userData.Inventory ??= new InventoryData();
             userData.BattleProgress ??= new BattleProgressData();
 
-            userData.Profile.Avatar.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
-            userData.Profile.Avatar.Colors ??= new System.Collections.Generic.List<AvatarColorData>();
+            userData.Profile.AvatarAppearance.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
+            userData.Profile.AvatarAppearance.Colors ??= new System.Collections.Generic.List<AvatarColorData>();
             userData.Inventory.Equipments ??= new System.Collections.Generic.List<InventoryEntryData>();
             userData.BattleProgress.Stages ??= new System.Collections.Generic.List<StageProgressData>();
 
@@ -96,10 +96,36 @@ namespace Assets.Scripts.Systems.Save
                 userData.Profile.PlayerId = System.Guid.NewGuid().ToString("N");
 
             userData.Profile.MaxHp = Mathf.Max(1, userData.Profile.MaxHp);
-            userData.Profile.SkillLoadout ??= new BattleSkillLoadoutData();
-            userData.Profile.SkillLoadout.SkillIds ??= new List<int>();
+            userData.Profile.Decks ??= new List<DeckData>();
+            NormalizeDecks(userData.Profile);
+        }
 
-            NormalizeSkillIdList(userData.Profile.SkillLoadout.SkillIds);
+        private static void NormalizeDecks(UserProfileData profile)
+        {
+            profile.CurrentDeckId = Mathf.Clamp(profile.CurrentDeckId, 1, UserProfileData.DeckCount);
+
+            var decksById = new Dictionary<int, DeckData>();
+            for (var i = 0; i < profile.Decks.Count; i++)
+            {
+                var deck = profile.Decks[i];
+                if (deck == null || deck.DeckId < 1 || deck.DeckId > UserProfileData.DeckCount || decksById.ContainsKey(deck.DeckId))
+                    continue;
+
+                decksById.Add(deck.DeckId, deck);
+            }
+
+            profile.Decks.Clear();
+            for (var deckId = 1; deckId <= UserProfileData.DeckCount; deckId++)
+            {
+                var deck = decksById.TryGetValue(deckId, out var existing) ? existing : new DeckData { DeckId = deckId };
+                deck.RightHandEquipmentId = Mathf.Max(0, deck.RightHandEquipmentId);
+                deck.LeftHandEquipmentId = Mathf.Max(0, deck.LeftHandEquipmentId);
+                deck.HelmetEquipmentId = Mathf.Max(0, deck.HelmetEquipmentId);
+                deck.ChestEquipmentId = Mathf.Max(0, deck.ChestEquipmentId);
+                deck.SkillIds ??= new List<int>();
+                NormalizeSkillIdList(deck.SkillIds);
+                profile.Decks.Add(deck);
+            }
         }
 
         private static void NormalizeSkillIdList(List<int> skillIds)

@@ -77,12 +77,13 @@ namespace Assets.Scripts.Features.Battle.Logic
 
         private static IReadOnlyList<int> ResolveSkillIdList(UserProfileData profile)
         {
-            if (profile?.SkillLoadout?.SkillIds != null && profile.SkillLoadout.SkillIds.Count > 0)
+            var deck = profile?.Decks?.Find(candidate => candidate != null && candidate.DeckId == profile.CurrentDeckId);
+            if (deck?.SkillIds != null && deck.SkillIds.Count > 0)
             {
-                return profile.SkillLoadout.SkillIds;
+                return deck.SkillIds;
             }
 
-            return new UserProfileDemoData().SkillLoadout.SkillIds;
+            return new List<int> { 0, 0, 0, 0 };
         }
 
         private static BattleSkillData ResolveSkillDefinition(int skillId)

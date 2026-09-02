@@ -40,9 +40,7 @@ namespace Assets.Scripts.Systems.GameData
 
         public IReadOnlyList<InventoryEntryData> GetAllEntries()
         {
-            return EnsureInventory().Equipments
-                .Where(entry => entry != null)
-                .ToArray();
+            return EnsureInventory().Equipments.Where(entry => entry != null).ToArray();
         }
 
         public IReadOnlyList<EquipmentData> GetOwnedDefinitions()
@@ -58,39 +56,25 @@ namespace Assets.Scripts.Systems.GameData
         {
             if (!_byPartType.TryGetValue(partType, out var definitions))
                 return Array.Empty<EquipmentData>();
-
             if (!ownedOnly)
                 return definitions;
 
-            var ownedIds = new HashSet<int>(
-                GetAllEntries()
-                    .Where(entry => entry.IsUnlocked && entry.EquipmentId > 0)
-                    .Select(entry => entry.EquipmentId));
-
-            return definitions
-                .Where(data => data != null && ownedIds.Contains(data.EquipmentId))
-                .ToArray();
+            var ownedIds = new HashSet<int>(GetAllEntries().Where(entry => entry.IsUnlocked && entry.EquipmentId > 0).Select(entry => entry.EquipmentId));
+            return definitions.Where(data => data != null && ownedIds.Contains(data.EquipmentId)).ToArray();
         }
 
-        public bool TryGetDefinition(int equipmentId, out EquipmentData definition)
-        {
-            return _byId.TryGetValue(equipmentId, out definition);
-        }
+        public bool TryGetDefinition(int equipmentId, out EquipmentData definition) => _byId.TryGetValue(equipmentId, out definition);
 
-        internal bool TryGetByPartsIndex(PartsType partType, int partsIndex, out EquipmentData definition)
+        public bool TryGetByPartsIndex(PartsType partType, int partsIndex, out EquipmentData definition)
         {
             return _byPartIndexKey.TryGetValue(EquipmentIdUtility.Build(partType, partsIndex), out definition);
         }
 
-        public bool HasEquipment(int equipmentId)
-        {
-            return TryGetEntry(equipmentId, out var entry) && entry.IsUnlocked && entry.Quantity > 0;
-        }
+        public bool HasEquipment(int equipmentId) => TryGetEntry(equipmentId, out var entry) && entry.IsUnlocked && entry.Quantity > 0;
 
         public bool TryGetEntry(int equipmentId, out InventoryEntryData entry)
         {
-            entry = EnsureInventory().Equipments
-                .FirstOrDefault(candidate => candidate != null && candidate.EquipmentId == equipmentId);
+            entry = EnsureInventory().Equipments.FirstOrDefault(candidate => candidate != null && candidate.EquipmentId == equipmentId);
             return entry != null;
         }
 
@@ -103,12 +87,7 @@ namespace Assets.Scripts.Systems.GameData
             var entry = inventory.Equipments.FirstOrDefault(candidate => candidate != null && candidate.EquipmentId == equipmentId);
             if (entry == null)
             {
-                entry = new InventoryEntryData
-                {
-                    EquipmentId = equipmentId,
-                    Quantity = 0,
-                    IsUnlocked = false
-                };
+                entry = new InventoryEntryData { EquipmentId = equipmentId };
                 inventory.Equipments.Add(entry);
             }
 
@@ -116,7 +95,6 @@ namespace Assets.Scripts.Systems.GameData
             entry.IsUnlocked = entry.IsUnlocked || isUnlocked || entry.Quantity > 0;
             if (string.IsNullOrWhiteSpace(entry.ObtainedAtUtc))
                 entry.ObtainedAtUtc = DateTime.UtcNow.ToString("O");
-
             UserDataStore.MarkDirty();
             return entry;
         }
@@ -125,11 +103,9 @@ namespace Assets.Scripts.Systems.GameData
         {
             if (!TryGetEntry(equipmentId, out var entry))
                 return false;
-
             entry.Quantity = Mathf.Max(0, entry.Quantity - Mathf.Max(0, quantity));
             if (entry.Quantity == 0)
                 entry.IsUnlocked = false;
-
             UserDataStore.MarkDirty();
             return true;
         }
@@ -138,7 +114,6 @@ namespace Assets.Scripts.Systems.GameData
         {
             if (!TryGetEntry(equipmentId, out var entry))
                 return;
-
             entry.LastEquippedAtUtc = DateTime.UtcNow.ToString("O");
             UserDataStore.MarkDirty();
         }
@@ -161,21 +136,14 @@ namespace Assets.Scripts.Systems.GameData
             _byId = new Dictionary<int, EquipmentData>();
             _byPartIndexKey = new Dictionary<int, EquipmentData>();
             _byPartType = new Dictionary<PartsType, List<EquipmentData>>();
-
             foreach (var data in _allEquipmentData)
             {
                 if (data == null)
                     continue;
-
                 if (data.EquipmentId > 0 && !_byId.TryAdd(data.EquipmentId, data))
-                {
                     Debug.LogWarning($"[InventoryManager] Duplicate equipmentId: {data.EquipmentId}");
-                }
-
-                var legacyKey = EquipmentIdUtility.Build(data.PartType, data.PartsIndex);
                 if (data.PartsIndex >= 0)
-                    _byPartIndexKey.TryAdd(legacyKey, data);
-
+                    _byPartIndexKey.TryAdd(EquipmentIdUtility.Build(data.PartType, data.PartsIndex), data);
                 if (!_byPartType.TryGetValue(data.PartType, out var list))
                 {
                     list = new List<EquipmentData>();
@@ -183,20 +151,8 @@ namespace Assets.Scripts.Systems.GameData
                 }
                 list.Add(data);
             }
-
             foreach (var pair in _byPartType)
-            {
-                pair.Value.Sort((l, r) =>
-                {
-                    var compare = l.SortOrder.CompareTo(r.SortOrder);
-                    if (compare != 0)
-                    {
-                        return compare;
-                    }
-
-                    return l.PartsIndex.CompareTo(r.PartsIndex);
-                });
-            }
+                pair.Value.Sort((left, right) => left.SortOrder != right.SortOrder ? left.SortOrder.CompareTo(right.SortOrder) : left.PartsIndex.CompareTo(right.PartsIndex));
         }
 
         private void SyncDefaultOwnedEquipments()
@@ -206,7 +162,6 @@ namespace Assets.Scripts.Systems.GameData
             {
                 if (data == null || !data.IsDefaultOwned || data.EquipmentId <= 0)
                     continue;
-
                 if (TryGetEntry(data.EquipmentId, out var existing))
                 {
                     if (!existing.IsUnlocked || existing.Quantity <= 0)
@@ -217,237 +172,11 @@ namespace Assets.Scripts.Systems.GameData
                     }
                     continue;
                 }
-
-                EnsureInventory().Equipments.Add(new InventoryEntryData
-                {
-                    EquipmentId = data.EquipmentId,
-                    Quantity = 1,
-                    IsUnlocked = true,
-                });
+                EnsureInventory().Equipments.Add(new InventoryEntryData { EquipmentId = data.EquipmentId, Quantity = 1, IsUnlocked = true });
                 hasChanges = true;
             }
-
             if (hasChanges)
                 UserDataStore.MarkDirty();
-        }
-    }
-
-    public class SkillLoadoutManager
-    {
-        public UserDataJsonStore UserDataStore { get; }
-        public AppearanceManager AppearanceManager { get; }
-        public InventoryManager InventoryManager { get; }
-
-        public SkillLoadoutManager(
-            UserDataJsonStore userDataStore,
-            AppearanceManager appearanceManager,
-            InventoryManager inventoryManager)
-        {
-            UserDataStore = userDataStore;
-            AppearanceManager = appearanceManager;
-            InventoryManager = inventoryManager;
-        }
-
-        public IReadOnlyList<BattleSkillData> GetCandidateSkillsFromEquippedEquipment()
-        {
-            var result = new List<BattleSkillData>();
-            var seenSkillIds = new HashSet<int>();
-            var equippedParts = AppearanceManager.GetAllPartStates();
-            for (var i = 0; i < equippedParts.Count; i++)
-            {
-                var state = equippedParts[i];
-                if (state == null ||
-                    state.EquipmentId <= 0 ||
-                    !InventoryManager.TryGetDefinition(state.EquipmentId, out var equipment) ||
-                    equipment == null ||
-                    !IsBattleLoadoutSkillSource(equipment))
-                {
-                    continue;
-                }
-
-                AddSkills(equipment.AssignableSkills, result, seenSkillIds);
-            }
-
-            return result;
-        }
-
-        private static bool IsBattleLoadoutSkillSource(EquipmentData equipment)
-        {
-            return equipment.PartType == PartsType.Helmet ||
-                   equipment.PartType == PartsType.Chest ||
-                   equipment.ExclusiveGroup == PartsExclusiveGroup.HandRight ||
-                   equipment.ExclusiveGroup == PartsExclusiveGroup.HandLeft;
-        }
-
-        public IReadOnlyList<int> GetCurrentSkillIds()
-        {
-            var loadout = EnsureLoadout();
-            return loadout.SkillIds.ToArray();
-        }
-
-        public IReadOnlyList<int> EnsureUsableLoadout(bool persistImmediately = false)
-        {
-            var loadout = EnsureLoadout();
-            NormalizeLoadout(loadout.SkillIds);
-            var candidateSkillIds = new HashSet<int>(
-                GetCandidateSkillsFromEquippedEquipment()
-                    .Where(skill => skill != null && skill.SkillId > 0)
-                    .Select(skill => skill.SkillId));
-            var hasChanges = RemoveUnavailableSkills(loadout.SkillIds, candidateSkillIds);
-
-            if (loadout.SkillIds.Any(skillId => skillId > 0))
-            {
-                if (hasChanges)
-                {
-                    UserDataStore.MarkDirty();
-                    if (persistImmediately)
-                    {
-                        UserDataStore.SaveSession();
-                    }
-                }
-
-                return loadout.SkillIds.ToArray();
-            }
-
-            var defaultSkillIds = BuildDefaultSkillIdsFromCandidates();
-            if (defaultSkillIds.Count == 0)
-            {
-                if (hasChanges)
-                {
-                    UserDataStore.MarkDirty();
-                    if (persistImmediately)
-                    {
-                        UserDataStore.SaveSession();
-                    }
-                }
-
-                return loadout.SkillIds.ToArray();
-            }
-
-            for (var i = 0; i < loadout.SkillIds.Count; i++)
-            {
-                loadout.SkillIds[i] = i < defaultSkillIds.Count ? defaultSkillIds[i] : 0;
-            }
-
-            UserDataStore.MarkDirty();
-            if (persistImmediately)
-            {
-                UserDataStore.SaveSession();
-            }
-
-            return loadout.SkillIds.ToArray();
-        }
-
-        public void SaveLoadout(IReadOnlyList<int> requestedSkillIds, bool persistImmediately = true)
-        {
-            var loadout = EnsureLoadout();
-            var allowedSkillIds = new HashSet<int>(
-                GetCandidateSkillsFromEquippedEquipment()
-                    .Where(skill => skill != null && skill.SkillId > 0)
-                    .Select(skill => skill.SkillId));
-
-            loadout.SkillIds.Clear();
-            for (var i = 0; i < UserProfileData.BattleSkillLoadoutSlotCount; i++)
-            {
-                var skillId = requestedSkillIds != null && i < requestedSkillIds.Count
-                    ? Mathf.Max(0, requestedSkillIds[i])
-                    : 0;
-                loadout.SkillIds.Add(skillId > 0 && allowedSkillIds.Contains(skillId) ? skillId : 0);
-            }
-
-            UserDataStore.MarkDirty();
-            if (persistImmediately)
-            {
-                UserDataStore.SaveSession();
-            }
-        }
-
-        private BattleSkillLoadoutData EnsureLoadout()
-        {
-            UserDataStore.Session.UserData.Profile ??= new UserProfileDemoData();
-            var profile = UserDataStore.Session.UserData.Profile;
-            profile.SkillLoadout ??= new BattleSkillLoadoutData();
-            profile.SkillLoadout.SkillIds ??= new List<int>();
-            NormalizeLoadout(profile.SkillLoadout.SkillIds);
-            return profile.SkillLoadout;
-        }
-
-        private IReadOnlyList<int> BuildDefaultSkillIdsFromCandidates()
-        {
-            return GetCandidateSkillsFromEquippedEquipment()
-                .Where(skill => skill != null && skill.SkillId > 0)
-                .Select(skill => skill.SkillId)
-                .Take(UserProfileData.BattleSkillLoadoutSlotCount)
-                .ToArray();
-        }
-
-        private static bool RemoveUnavailableSkills(
-            List<int> skillIds,
-            HashSet<int> candidateSkillIds)
-        {
-            if (skillIds == null || candidateSkillIds == null)
-            {
-                return false;
-            }
-
-            var hasChanges = false;
-            for (var i = 0; i < skillIds.Count; i++)
-            {
-                if (skillIds[i] <= 0 || candidateSkillIds.Contains(skillIds[i]))
-                {
-                    continue;
-                }
-
-                skillIds[i] = 0;
-                hasChanges = true;
-            }
-
-            return hasChanges;
-        }
-
-        private static void NormalizeLoadout(List<int> skillIds)
-        {
-            if (skillIds == null)
-            {
-                return;
-            }
-
-            while (skillIds.Count < UserProfileData.BattleSkillLoadoutSlotCount)
-            {
-                skillIds.Add(0);
-            }
-
-            while (skillIds.Count > UserProfileData.BattleSkillLoadoutSlotCount)
-            {
-                skillIds.RemoveAt(skillIds.Count - 1);
-            }
-
-            for (var i = 0; i < skillIds.Count; i++)
-            {
-                skillIds[i] = Mathf.Max(0, skillIds[i]);
-            }
-        }
-
-        private static void AddSkills(
-            IReadOnlyList<BattleSkillData> source,
-            List<BattleSkillData> destination,
-            HashSet<int> seenSkillIds)
-        {
-            if (source == null || destination == null || seenSkillIds == null)
-            {
-                return;
-            }
-
-            for (var i = 0; i < source.Count; i++)
-            {
-                var skill = source[i];
-                if (skill == null || skill.SkillId <= 0 || !seenSkillIds.Add(skill.SkillId))
-                {
-                    continue;
-                }
-
-                destination.Add(skill);
-            }
         }
     }
 }
