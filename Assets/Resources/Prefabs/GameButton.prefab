@@ -1157,6 +1157,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+  buttonType: 0
   frameType: 0
   colorType: 0
   sizeType: 1
