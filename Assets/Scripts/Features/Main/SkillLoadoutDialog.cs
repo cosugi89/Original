@@ -54,7 +54,7 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private TextMeshProUGUI emptyCandidatesText;
         [SerializeField] private GameButton closeButton;
 
-        private readonly List<CandidateSkill> _candidates = new();
+        private readonly List<DeckSkillCandidate> _candidates = new();
         private readonly List<SkillLoadoutCandidateItemView> _candidateSkillItemViews = new();
         private readonly List<int> _draftSkillIds = new();
         private DeckManager _deckManager;
@@ -101,7 +101,7 @@ namespace Assets.Scripts.Features.Main
         private void LoadDraft()
         {
             _candidates.Clear();
-            _candidates.AddRange(BuildCandidateSources());
+            _candidates.AddRange(_deckManager.GetCurrentSkillCandidates());
 
             _draftSkillIds.Clear();
             _draftSkillIds.AddRange(_deckManager.EnsureUsableLoadout(persistImmediately: true));
@@ -164,7 +164,9 @@ namespace Assets.Scripts.Features.Main
                     continue;
                 }
 
-                selectedSkillSlotItems[i].ShowSkillIconOnly(ToSkillItemType(candidate.Category), candidate.Skill.Icon);
+                selectedSkillSlotItems[i].ShowSkillIconOnly(
+                    ToSkillItemType(candidate.Value.SourceCategory),
+                    candidate.Value.Skill.Icon);
                 selectedSkillSlotItems[i].SetFocused(i == _selectedSlotIndex);
             }
         }
@@ -181,7 +183,7 @@ namespace Assets.Scripts.Features.Main
                 var assignedSlotIndex = FindAssignedSlot(candidate.Skill.SkillId);
                 _candidateSkillItemViews[i].Refresh(
                     candidate.Skill,
-                    candidate.Equipment,
+                    candidate.SourceEquipment,
                     selected,
                     assignedSlotIndex >= 0,
                     assignedSlotIndex);
@@ -206,14 +208,22 @@ namespace Assets.Scripts.Features.Main
             return -1;
         }
 
-        private CandidateSkill ResolveSkill(int skillId)
+        private DeckSkillCandidate? ResolveSkill(int skillId)
         {
             if (skillId <= 0)
             {
                 return null;
             }
 
-            return _candidates.FirstOrDefault(candidate => candidate.Skill.SkillId == skillId);
+            foreach (var candidate in _candidates)
+            {
+                if (candidate.Skill.SkillId == skillId)
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         private void NormalizeDraft()
@@ -266,37 +276,6 @@ namespace Assets.Scripts.Features.Main
             }
         }
 
-        private IEnumerable<CandidateSkill> BuildCandidateSources()
-        {
-            var seenSkillIds = new HashSet<int>();
-            var deck = _deckManager.GetCurrentDeck();
-            foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(deck))
-            {
-                if (equipmentId <= 0 ||
-                    !_deckManager.InventoryManager.TryGetDefinition(equipmentId, out var equipment) ||
-                    equipment == null)
-                {
-                    continue;
-                }
-
-                var category = DeckLoadoutUtility.GetCategory(equipment);
-                if (!category.HasValue)
-                {
-                    continue;
-                }
-
-                foreach (var skill in equipment.AssignableSkills)
-                {
-                    if (skill == null || skill.SkillId <= 0 || !seenSkillIds.Add(skill.SkillId))
-                    {
-                        continue;
-                    }
-
-                    yield return new CandidateSkill(skill, equipment, category.Value);
-                }
-            }
-        }
-
         private static SkillItemType ToSkillItemType(UICategory category)
         {
             return category switch
@@ -307,20 +286,6 @@ namespace Assets.Scripts.Features.Main
                 UICategory.Helmet => SkillItemType.Headgear,
                 _ => throw new InvalidOperationException($"Unsupported equipped skill category: {category}"),
             };
-        }
-
-        private sealed class CandidateSkill
-        {
-            public CandidateSkill(BattleSkillData skill, EquipmentData equipment, UICategory category)
-            {
-                Skill = skill;
-                Equipment = equipment;
-                Category = category;
-            }
-
-            public BattleSkillData Skill { get; }
-            public EquipmentData Equipment { get; }
-            public UICategory Category { get; }
         }
 
     }

@@ -10,6 +10,23 @@ using UnityEngine;
 namespace Assets.Scripts.Systems.GameData
 {
     /// <summary>
+    /// デッキ装備から得られる設定可能なSkillと、その出典装備を表す読み取り用データ。
+    /// </summary>
+    public readonly struct DeckSkillCandidate
+    {
+        public DeckSkillCandidate(BattleSkillData skill, EquipmentData sourceEquipment, UICategory sourceCategory)
+        {
+            Skill = skill;
+            SourceEquipment = sourceEquipment;
+            SourceCategory = sourceCategory;
+        }
+
+        public BattleSkillData Skill { get; }
+        public EquipmentData SourceEquipment { get; }
+        public UICategory SourceCategory { get; }
+    }
+
+    /// <summary>
     /// 現在選択中の戦闘デッキを正本として、装備4枠とSkill4枠を更新する窓口。
     /// </summary>
     public class DeckManager
@@ -161,13 +178,29 @@ namespace Assets.Scripts.Systems.GameData
             return GetCandidateSkills(GetCurrentDeck());
         }
 
+        public IReadOnlyList<DeckSkillCandidate> GetCurrentSkillCandidates()
+        {
+            return GetSkillCandidates(GetCurrentDeck());
+        }
+
         /// <summary>
         /// 指定デッキの装備から、設定可能なSkill候補を取得する。
         /// デッキの選択や保存は行わない。
         /// </summary>
         public IReadOnlyList<BattleSkillData> GetCandidateSkills(DeckData deck)
         {
-            var result = new List<BattleSkillData>();
+            return GetSkillCandidates(deck)
+                .Select(candidate => candidate.Skill)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// 指定デッキの装備から、設定可能なSkillとその出典装備を取得する。
+        /// 同一Skillはデッキ装備順で最初に見つかった1件だけを返す。
+        /// </summary>
+        public IReadOnlyList<DeckSkillCandidate> GetSkillCandidates(DeckData deck)
+        {
+            var result = new List<DeckSkillCandidate>();
             var seenSkillIds = new HashSet<int>();
             foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(deck))
             {
@@ -178,12 +211,18 @@ namespace Assets.Scripts.Systems.GameData
                     continue;
                 }
 
+                var category = DeckLoadoutUtility.GetCategory(equipment);
+                if (!category.HasValue)
+                {
+                    continue;
+                }
+
                 foreach (var skill in equipment.AssignableSkills ?? Array.Empty<BattleSkillData>())
                 {
                     if (skill == null || skill.SkillId <= 0 || !seenSkillIds.Add(skill.SkillId))
                         continue;
 
-                    result.Add(skill);
+                    result.Add(new DeckSkillCandidate(skill, equipment, category.Value));
                 }
             }
 

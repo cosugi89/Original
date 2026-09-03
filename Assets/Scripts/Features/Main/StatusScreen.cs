@@ -139,11 +139,10 @@ namespace Assets.Scripts.Features.Main
             }
 
             // skill slots
-            var loadoutService = userDataManager.Decks;
-            var candidates = loadoutService.GetCandidateSkillsFromEquippedEquipment();
-            var skillMap = BuildSkillMap(candidates);
-            var skillSourceCategoryMap = BuildSkillSourceCategoryMap(userDataManager);
-            var skillIds = loadoutService.EnsureUsableLoadout();
+            var deckManager = userDataManager.Decks;
+            var skillCandidatesById = deckManager.GetCurrentSkillCandidates()
+                .ToDictionary(candidate => candidate.Skill.SkillId);
+            var skillIds = deckManager.EnsureUsableLoadout();
 
             for (var i = 0; i < slotSkillViews.Length; i++)
             {
@@ -155,9 +154,17 @@ namespace Assets.Scripts.Features.Main
                 }
 
                 var skillId = i < skillIds.Count ? skillIds[i] : 0;
-                skillMap.TryGetValue(skillId, out var skill);
-                skillSourceCategoryMap.TryGetValue(skillId, out var sourceCategory);
-                slotSkillViews[i].Refresh(skill, sourceCategory, false);
+                if (skillCandidatesById.TryGetValue(skillId, out var candidate))
+                {
+                    slotSkillViews[i].Refresh(
+                        candidate.Skill,
+                        ToStatusEquipmentCategory(candidate.SourceCategory),
+                        false);
+                }
+                else
+                {
+                    slotSkillViews[i].Refresh(null, StatusEquipmentCategory.All, false);
+                }
             }
 
             // lists
@@ -386,73 +393,16 @@ namespace Assets.Scripts.Features.Main
             };
         }
 
-        private static Dictionary<int, BattleSkillData> BuildSkillMap(IReadOnlyList<BattleSkillData> skills)
+        private static StatusEquipmentCategory ToStatusEquipmentCategory(UICategory category)
         {
-            var result = new Dictionary<int, BattleSkillData>();
-            for (var i = 0; i < skills.Count; i++)
+            return category switch
             {
-                var skill = skills[i];
-                if (skill != null && skill.SkillId > 0 && !result.ContainsKey(skill.SkillId))
-                {
-                    result.Add(skill.SkillId, skill);
-                }
-            }
-
-            return result;
-        }
-
-        private static Dictionary<int, StatusEquipmentCategory> BuildSkillSourceCategoryMap(
-            UserDataManager userDataManager)
-        {
-            var result = new Dictionary<int, StatusEquipmentCategory>();
-            var equippedParts = userDataManager.Appearance.GetAllPartStates();
-            for (var i = 0; i < equippedParts.Count; i++)
-            {
-                var state = equippedParts[i];
-                if (state == null ||
-                    state.EquipmentId <= 0 ||
-                    !userDataManager.Inventory.TryGetDefinition(state.EquipmentId, out var equipment) ||
-                    !TryGetSkillSourceCategory(equipment, out var sourceCategory))
-                {
-                    continue;
-                }
-
-                var skills = equipment.AssignableSkills;
-                for (var skillIndex = 0; skillIndex < skills.Count; skillIndex++)
-                {
-                    var skill = skills[skillIndex];
-                    if (skill != null && skill.SkillId > 0)
-                    {
-                        result.TryAdd(skill.SkillId, sourceCategory);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        private static bool TryGetSkillSourceCategory(
-            EquipmentData equipment,
-            out StatusEquipmentCategory category)
-        {
-            category = StatusEquipmentCategory.All;
-            if (equipment == null)
-            {
-                return false;
-            }
-
-            category = equipment.ExclusiveGroup switch
-            {
-                PartsExclusiveGroup.HandRight => StatusEquipmentCategory.Weapon,
-                PartsExclusiveGroup.HandLeft => StatusEquipmentCategory.Shield,
-                _ => equipment.PartType switch
-                {
-                    PartsType.Chest => StatusEquipmentCategory.Armor,
-                    PartsType.Helmet => StatusEquipmentCategory.Headgear,
-                    _ => StatusEquipmentCategory.All
-                }
+                UICategory.HandRight => StatusEquipmentCategory.Weapon,
+                UICategory.HandLeft => StatusEquipmentCategory.Shield,
+                UICategory.Chest => StatusEquipmentCategory.Armor,
+                UICategory.Helmet => StatusEquipmentCategory.Headgear,
+                _ => StatusEquipmentCategory.All
             };
-            return category != StatusEquipmentCategory.All;
         }
 
         private static int CategorySort(UICategory category)
