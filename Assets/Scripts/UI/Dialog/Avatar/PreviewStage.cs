@@ -34,12 +34,12 @@ namespace Assets.Scripts.UI.Dialog
         {
             if (prefab == null)
             {
-                Debug.LogWarning("AvatarPreviewRenderer.Spawn: prefab is null.", this);
+                Debug.LogWarning("PreviewStage.Spawn: prefab is null.", this);
                 return null;
             }
             if (previewRoot == null)
             {
-                Debug.LogWarning("AvatarPreviewRenderer.Spawn: previewRoot is not assigned.", this);
+                Debug.LogWarning("PreviewStage.Spawn: previewRoot is not assigned.", this);
                 return null;
             }
 
@@ -66,7 +66,7 @@ namespace Assets.Scripts.UI.Dialog
         {
             if (prefab == null)
             {
-                Debug.LogWarning("AvatarPreviewRenderer.Spawn<T>: prefab is null.", this);
+                Debug.LogWarning("PreviewStage.Spawn<T>: prefab is null.", this);
                 return null;
             }
             return Spawn(prefab.gameObject, placement);

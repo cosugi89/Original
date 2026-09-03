@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public sealed class StatusSkillInfoView : MonoBehaviour
+    public sealed class SkillLoadoutCandidateItemView : MonoBehaviour
     {
         [SerializeField] private Button button;
         [SerializeField] private GameObject selectedFrame;

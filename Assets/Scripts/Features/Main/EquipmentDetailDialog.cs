@@ -12,9 +12,9 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public readonly struct DialogEquipmentDetailRequest
+    public readonly struct EquipmentDetailDialogRequest
     {
-        public DialogEquipmentDetailRequest(AvatarPartOptionViewData option, bool isOpenedFromEquipmentSlot)
+        public EquipmentDetailDialogRequest(AvatarPartOptionViewData option, bool isOpenedFromEquipmentSlot)
         {
             Option = option;
             IsOpenedFromEquipmentSlot = isOpenedFromEquipmentSlot;
@@ -24,23 +24,23 @@ namespace Assets.Scripts.Features.Main
         public bool IsOpenedFromEquipmentSlot { get; }
     }
 
-    public readonly struct DialogEquipmentDetailResult
+    public readonly struct EquipmentDetailDialogResult
     {
-        private DialogEquipmentDetailResult(bool isEquipRequested)
+        private EquipmentDetailDialogResult(bool isEquipRequested)
         {
             IsEquipRequested = isEquipRequested;
         }
 
         public bool IsEquipRequested { get; }
 
-        public static DialogEquipmentDetailResult EquipRequested => new(true);
-        public static DialogEquipmentDetailResult Cancelled => new(false);
+        public static EquipmentDetailDialogResult EquipRequested => new(true);
+        public static EquipmentDetailDialogResult Cancelled => new(false);
     }
 
     [DialogAddress("Dialog/EquipmentDetail")]
-    public sealed class DialogEquipmentDetail :
-        DialogBase<DialogEquipmentDetailResult>,
-        IDialogRequestHandler<DialogEquipmentDetailRequest>
+    public sealed class EquipmentDetailDialog :
+        DialogBase<EquipmentDetailDialogResult>,
+        IDialogRequestHandler<EquipmentDetailDialogRequest>
     {
         [SerializeField] private PartsEquipmentItem equipmentItem;
         [SerializeField] private TextMeshProUGUI titleText;
@@ -66,7 +66,7 @@ namespace Assets.Scripts.Features.Main
         private readonly List<TextMeshProUGUI> _buffViews = new();
         private bool _templatesInitialized;
 
-        public void Setup(DialogEquipmentDetailRequest request, DialogContext context)
+        public void Setup(EquipmentDetailDialogRequest request, DialogContext context)
         {
             _option = request.Option;
             Refresh();
@@ -81,7 +81,7 @@ namespace Assets.Scripts.Features.Main
 
         protected override void OnClickClose()
         {
-            Close(DialogEquipmentDetailResult.Cancelled);
+            Close(EquipmentDetailDialogResult.Cancelled);
         }
 
         private void OnClickEquip()
@@ -91,7 +91,7 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            Close(DialogEquipmentDetailResult.EquipRequested);
+            Close(EquipmentDetailDialogResult.EquipRequested);
         }
 
         private void Refresh()

@@ -10,14 +10,14 @@ namespace Assets.Scripts.UI.Dialog
     public sealed class DialogContext
     {
         public DialogContext(
-            PreviewStage avatarPreviewRenderer,
+            PreviewStage avatarPreviewStage,
             AppearanceController avatarPreviewTemplate = null)
         {
-            AvatarPreviewRenderer = avatarPreviewRenderer;
+            AvatarPreviewStage = avatarPreviewStage;
             AvatarPreviewTemplate = avatarPreviewTemplate;
         }
 
-        public PreviewStage AvatarPreviewRenderer { get; }
+        public PreviewStage AvatarPreviewStage { get; }
         public AppearanceController AvatarPreviewTemplate { get; }
     }
 

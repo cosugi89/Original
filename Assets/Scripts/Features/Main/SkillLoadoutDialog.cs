@@ -10,6 +10,7 @@ using Assets.Scripts.UI.Dialog;
 using LayerLab.ArtMakerUnity;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
@@ -24,35 +25,39 @@ namespace Assets.Scripts.Features.Main
         public int SlotIndex { get; }
     }
 
-    public readonly struct SkillLoadoutDialogResponse
+    public readonly struct SkillLoadoutDialogResult
     {
-        private SkillLoadoutDialogResponse(bool isSaved)
+        private SkillLoadoutDialogResult(bool isSaved)
         {
             IsSaved = isSaved;
         }
 
         public bool IsSaved { get; }
 
-        public static SkillLoadoutDialogResponse Saved => new(true);
-        public static SkillLoadoutDialogResponse Cancelled => new(false);
+        public static SkillLoadoutDialogResult Saved => new(true);
+        public static SkillLoadoutDialogResult Cancelled => new(false);
     }
 
     [DialogAddress("Dialog/SkillLoadout")]
     public sealed class SkillLoadoutDialog :
-        DialogBase<SkillLoadoutDialogResponse>,
+        DialogBase<SkillLoadoutDialogResult>,
         IDialogRequestHandler<SkillLoadoutDialogRequest>
     {
-        [SerializeField] private PartsSkillItem[] selectedSkillItems = Array.Empty<PartsSkillItem>();
-        [SerializeField] private Button[] selectedSkillButtons = Array.Empty<Button>();
-        [SerializeField] private StatusSkillInfoView candidateItemTemplate;
-        [SerializeField] private Transform candidateContent;
+        [FormerlySerializedAs("selectedSkillItems")]
+        [SerializeField] private PartsSkillItem[] selectedSkillSlotItems = Array.Empty<PartsSkillItem>();
+        [FormerlySerializedAs("selectedSkillButtons")]
+        [SerializeField] private Button[] selectedSkillSlotButtons = Array.Empty<Button>();
+        [FormerlySerializedAs("candidateItemTemplate")]
+        [SerializeField] private SkillLoadoutCandidateItemView candidateSkillItemTemplate;
+        [FormerlySerializedAs("candidateContent")]
+        [SerializeField] private Transform candidateSkillContent;
         [SerializeField] private TextMeshProUGUI emptyCandidatesText;
         [SerializeField] private GameButton closeButton;
 
         private readonly List<CandidateSkill> _candidates = new();
-        private readonly List<StatusSkillInfoView> _candidateViews = new();
+        private readonly List<SkillLoadoutCandidateItemView> _candidateSkillItemViews = new();
         private readonly List<int> _draftSkillIds = new();
-        private DeckManager _loadoutService;
+        private DeckManager _deckManager;
         private int _selectedSlotIndex;
         private bool _hasSavedChanges;
 
@@ -60,7 +65,7 @@ namespace Assets.Scripts.Features.Main
         {
             EnsurePrefabReferences();
 
-            _loadoutService = UserDataManager.EnsureInitialized().Decks;
+            _deckManager = UserDataManager.EnsureInitialized().Decks;
             _selectedSlotIndex = Mathf.Clamp(
                 request.SlotIndex,
                 0,
@@ -69,7 +74,7 @@ namespace Assets.Scripts.Features.Main
 
             BindButtons();
             LoadDraft();
-            candidateItemTemplate.SetVisible(false);
+            candidateSkillItemTemplate.SetVisible(false);
             CreateCandidateViews();
             Refresh();
         }
@@ -77,17 +82,17 @@ namespace Assets.Scripts.Features.Main
         protected override void OnClickClose()
         {
             Close(_hasSavedChanges
-                ? SkillLoadoutDialogResponse.Saved
-                : SkillLoadoutDialogResponse.Cancelled);
+                ? SkillLoadoutDialogResult.Saved
+                : SkillLoadoutDialogResult.Cancelled);
         }
 
         private void BindButtons()
         {
-            for (var i = 0; i < selectedSkillButtons.Length; i++)
+            for (var i = 0; i < selectedSkillSlotButtons.Length; i++)
             {
                 var index = i;
-                selectedSkillButtons[i].onClick.RemoveAllListeners();
-                selectedSkillButtons[i].onClick.AddListener(() => SelectSlot(index));
+                selectedSkillSlotButtons[i].onClick.RemoveAllListeners();
+                selectedSkillSlotButtons[i].onClick.AddListener(() => SelectSlot(index));
             }
 
             closeButton.SetAction(OnClickClose);
@@ -99,7 +104,7 @@ namespace Assets.Scripts.Features.Main
             _candidates.AddRange(BuildCandidateSources());
 
             _draftSkillIds.Clear();
-            _draftSkillIds.AddRange(_loadoutService.EnsureUsableLoadout(persistImmediately: true));
+            _draftSkillIds.AddRange(_deckManager.EnsureUsableLoadout(persistImmediately: true));
             NormalizeDraft();
         }
 
@@ -137,7 +142,7 @@ namespace Assets.Scripts.Features.Main
         private void SaveDraft()
         {
             NormalizeDraft();
-            _loadoutService.SaveLoadout(_draftSkillIds);
+            _deckManager.SaveLoadout(_draftSkillIds);
             _hasSavedChanges = true;
         }
 
@@ -150,17 +155,17 @@ namespace Assets.Scripts.Features.Main
 
         private void RefreshSelectedSkillItems()
         {
-            for (var i = 0; i < selectedSkillItems.Length; i++)
+            for (var i = 0; i < selectedSkillSlotItems.Length; i++)
             {
                 var candidate = ResolveSkill(SkillIdAt(i));
                 if (candidate == null)
                 {
-                    selectedSkillItems[i].ShowEmptyIconOnly();
+                    selectedSkillSlotItems[i].ShowEmptyIconOnly();
                     continue;
                 }
 
-                selectedSkillItems[i].ShowSkillIconOnly(ToSkillItemType(candidate.Category), candidate.Skill.Icon);
-                selectedSkillItems[i].SetFocused(i == _selectedSlotIndex);
+                selectedSkillSlotItems[i].ShowSkillIconOnly(ToSkillItemType(candidate.Category), candidate.Skill.Icon);
+                selectedSkillSlotItems[i].SetFocused(i == _selectedSlotIndex);
             }
         }
 
@@ -169,12 +174,12 @@ namespace Assets.Scripts.Features.Main
             emptyCandidatesText.gameObject.SetActive(_candidates.Count == 0);
             emptyCandidatesText.text = "No skills available from equipped gear.";
 
-            for (var i = 0; i < _candidateViews.Count; i++)
+            for (var i = 0; i < _candidateSkillItemViews.Count; i++)
             {
                 var candidate = _candidates[i];
                 var selected = SkillIdAt(_selectedSlotIndex) == candidate.Skill.SkillId;
                 var assignedSlotIndex = FindAssignedSlot(candidate.Skill.SkillId);
-                _candidateViews[i].Refresh(
+                _candidateSkillItemViews[i].Refresh(
                     candidate.Skill,
                     candidate.Equipment,
                     selected,
@@ -242,8 +247,8 @@ namespace Assets.Scripts.Features.Main
 
         private void EnsurePrefabReferences()
         {
-            if (selectedSkillItems.Length < UserProfileData.BattleSkillLoadoutSlotCount ||
-                selectedSkillButtons.Length < UserProfileData.BattleSkillLoadoutSlotCount)
+            if (selectedSkillSlotItems.Length < UserProfileData.BattleSkillLoadoutSlotCount ||
+                selectedSkillSlotButtons.Length < UserProfileData.BattleSkillLoadoutSlotCount)
             {
                 throw new InvalidOperationException($"{nameof(SkillLoadoutDialog)} requires {UserProfileData.BattleSkillLoadoutSlotCount} selected skill items and buttons.");
             }
@@ -254,21 +259,21 @@ namespace Assets.Scripts.Features.Main
             for (var i = 0; i < _candidates.Count; i++)
             {
                 var index = i;
-                var candidateView = Instantiate(candidateItemTemplate, candidateContent);
+                var candidateView = Instantiate(candidateSkillItemTemplate, candidateSkillContent);
                 candidateView.SetAction(() => SelectCandidate(index));
                 candidateView.SetVisible(true);
-                _candidateViews.Add(candidateView);
+                _candidateSkillItemViews.Add(candidateView);
             }
         }
 
         private IEnumerable<CandidateSkill> BuildCandidateSources()
         {
             var seenSkillIds = new HashSet<int>();
-            var deck = _loadoutService.GetCurrentDeck();
+            var deck = _deckManager.GetCurrentDeck();
             foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(deck))
             {
                 if (equipmentId <= 0 ||
-                    !_loadoutService.InventoryManager.TryGetDefinition(equipmentId, out var equipment) ||
+                    !_deckManager.InventoryManager.TryGetDefinition(equipmentId, out var equipment) ||
                     equipment == null)
                 {
                     continue;

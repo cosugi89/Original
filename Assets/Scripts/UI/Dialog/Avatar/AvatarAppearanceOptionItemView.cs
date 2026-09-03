@@ -4,13 +4,13 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.Dialog
 {
-    public sealed class AvatarAppearanceSelectionItemView : MonoBehaviour
+    public sealed class AvatarAppearanceOptionItemView : MonoBehaviour
     {
         [SerializeField] private Button button;
         [SerializeField] private Image icon;
         [SerializeField] private GameObject selectedGraphic;
 
-        public void Show(Sprite sprite, bool isSelected, bool isInteractable, UnityAction onClick)
+        public void Setup(Sprite sprite, bool isSelected, bool isInteractable, UnityAction onClick)
         {
             gameObject.SetActive(true);
             if (sprite != null)

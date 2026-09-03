@@ -10,6 +10,7 @@ using Cysharp.Threading.Tasks;
 using LayerLab.ArtMakerUnity;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
@@ -34,9 +35,12 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private StatusAvatarPreviewView avatarPreview;
 
         [Header("Appearance Dialog")]
-        [SerializeField] private Button skinButton;
-        [SerializeField] private Button deckButton;
-        [SerializeField] private PreviewStage avatarPreviewRenderer;
+        [FormerlySerializedAs("skinButton")]
+        [SerializeField] private Button appearanceButton;
+        [FormerlySerializedAs("deckButton")]
+        [SerializeField] private Button deckLoadoutButton;
+        [FormerlySerializedAs("avatarPreviewRenderer")]
+        [SerializeField] private PreviewStage avatarPreviewStage;
 
         private AvatarEditorPresenter _presenter;
         private StatusEquipmentCategory _currentCategory = StatusEquipmentCategory.All;
@@ -47,7 +51,7 @@ namespace Assets.Scripts.Features.Main
 
         public void Init(AppearanceController previewPartsManager, params AppearanceController[] additionalPreviewTargets)
         {
-            avatarPreview.Initialize(previewPartsManager, additionalPreviewTargets, avatarPreviewRenderer);
+            avatarPreview.Initialize(previewPartsManager, additionalPreviewTargets, avatarPreviewStage);
             _presenter = AvatarEditorPresenter.CreateDefault();
             _presenter.BindPreview(previewPartsManager);
             Setup();
@@ -88,10 +92,10 @@ namespace Assets.Scripts.Features.Main
             }
 
             // Appearance Dialog
-            skinButton.onClick.RemoveListener(OnClickSkinButton);
-            skinButton.onClick.AddListener(OnClickSkinButton);
-            deckButton.onClick.RemoveListener(OnClickDeckButton);
-            deckButton.onClick.AddListener(OnClickDeckButton);
+            appearanceButton.onClick.RemoveListener(OnClickAppearanceButton);
+            appearanceButton.onClick.AddListener(OnClickAppearanceButton);
+            deckLoadoutButton.onClick.RemoveListener(OnClickDeckLoadoutButton);
+            deckLoadoutButton.onClick.AddListener(OnClickDeckLoadoutButton);
         }
 
         private void SelectCategory(StatusEquipmentCategory category)
@@ -230,11 +234,11 @@ namespace Assets.Scripts.Features.Main
             try
             {
                 var result = await DialogService.OpenAsync<
-                    DialogEquipmentDetail,
-                    DialogEquipmentDetailRequest,
-                    DialogEquipmentDetailResult>(
-                        new DialogEquipmentDetailRequest(option, isOpenedFromEquipmentSlot),
-                        new DialogContext(avatarPreviewRenderer));
+                    EquipmentDetailDialog,
+                    EquipmentDetailDialogRequest,
+                    EquipmentDetailDialogResult>(
+                        new EquipmentDetailDialogRequest(option, isOpenedFromEquipmentSlot),
+                        new DialogContext(avatarPreviewStage));
                 if (result.IsEquipRequested)
                 {
                     if (option == null || !_presenter.TrySelectEquipment(option.EquipmentId))
@@ -269,9 +273,9 @@ namespace Assets.Scripts.Features.Main
                 var result = await DialogService.OpenAsync<
                     SkillLoadoutDialog,
                     SkillLoadoutDialogRequest,
-                    SkillLoadoutDialogResponse>(
+                    SkillLoadoutDialogResult>(
                         new SkillLoadoutDialogRequest(slotIndex),
-                        new DialogContext(avatarPreviewRenderer));
+                        new DialogContext(avatarPreviewStage));
                 if (result.IsSaved)
                 {
                     Refresh();
@@ -283,12 +287,12 @@ namespace Assets.Scripts.Features.Main
             }
         }
 
-        private void OnClickSkinButton()
+        private void OnClickAppearanceButton()
         {
             OpenAppearanceDialogAsync().Forget();
         }
 
-        private void OnClickDeckButton()
+        private void OnClickDeckLoadoutButton()
         {
             OpenDeckLoadoutDialogAsync().Forget();
         }
@@ -304,11 +308,11 @@ namespace Assets.Scripts.Features.Main
             try
             {
                 var result = await DialogService.OpenAsync<
-                    DialogDeckLoadout,
-                    DialogDeckLoadoutRequest,
-                    DialogDeckLoadoutResult>(
-                        new DialogDeckLoadoutRequest(),
-                        new DialogContext(avatarPreviewRenderer, avatarPreview.PrimaryTarget));
+                    DeckLoadoutDialog,
+                    DeckLoadoutDialogRequest,
+                    DeckLoadoutDialogResult>(
+                        new DeckLoadoutDialogRequest(),
+                        new DialogContext(avatarPreviewStage, avatarPreview.PrimaryTarget));
                 if (result.IsDeckSelected)
                 {
                     avatarPreview.ApplySavedAppearance();
@@ -329,7 +333,7 @@ namespace Assets.Scripts.Features.Main
                 var request = new AvatarDialogRequest(avatarPreview.PrimaryTarget, avatarPreview.GetTargets());
                 var result = await DialogService.OpenAsync<AvatarDialog, AvatarDialogRequest, AvatarDialogResult>(
                     request,
-                    new DialogContext(avatarPreviewRenderer));
+                    new DialogContext(avatarPreviewStage));
                 if (result.IsSaved)
                 {
                     _presenter = AvatarEditorPresenter.CreateDefault();
@@ -478,7 +482,8 @@ namespace Assets.Scripts.Features.Main
 
         private void OnDestroy()
         {
-            skinButton.onClick.RemoveListener(OnClickSkinButton);
+            appearanceButton.onClick.RemoveListener(OnClickAppearanceButton);
+            deckLoadoutButton.onClick.RemoveListener(OnClickDeckLoadoutButton);
         }
     }
 }

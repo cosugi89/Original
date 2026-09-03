@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-08-26
+- 最終更新: 2026-09-04
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と MainScene / Status タブ拡充タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -112,15 +112,13 @@
 - [x] 戦闘用4装備・Skill4枠を正本とするデッキ3件と `CurrentDeckId` を保存モデルへ実装し、旧 `Avatar.Parts` / 単一 `SkillLoadout` を廃止する
 - [x] `DeckLoadoutUtility` を実装し、デッキ保存時・適用時に装備を正として無効Skillを空枠化する
 - [x] StatusSceneのデッキ一覧ダイアログから、内容確認とデッキ切替を行えるようにする
-- [ ] 攻撃力・防御力は装備依存、HPは解放要素など装備以外の要素で上下する前提で、依存先と算出ルールを確定する。確定までステータス表示は仮とし、確定後に `DialogDeckLoadout` と StatusScene へ正しく表示する
-- [ ] 敗戦後の再挑戦導線にデッキ切替を追加し、切替後の構成で再挑戦できるようにする
+- [ ] 攻撃力・防御力は装備依存、HPは解放要素など装備以外の要素で上下する前提で、依存先と算出ルールを確定する。確定までステータス表示は仮とし、確定後に `DeckLoadoutDialog` と StatusScene へ正しく表示する
+- [ ] 敗戦後に `DeckLoadoutDialog` を開けるようにする。再挑戦までの導線と、デッキ切替後にどの時点で再挑戦へ戻るかは別途整理する
 - [x] Dialog 基盤を `DialogService` / 専用 `DialogCanvas` / `DialogAddressAttribute` ベースへ移行し、呼び出し側の prefab 参照と parent 指定を外す
 - [x] 汎用 `GameButton` を `Button` 継承 + 単体 Prefab ベースで追加し、見た目 enum / SE enum / Badge を切り替えられるようにする
 - [ ] `Dialog-EquipmentDetail` 以外の Dialog と主要 UI の既存 `Button` を、触るタイミングで `GameButton` へ段階的に置き換える
-- [ ] 見た目変更ダイアログの最終レイアウトを `Settings.prefab` 基準で調整する
 - [ ] アスペクト比の変更でDialogとFooter以外のUIが崩れないよう、MainScene UI全体のレイアウトを対応する
-- [ ] アバター表示周辺の余白に、今後追加する必要があるUIを配置できる表示領域を設計・実装する
-- [ ] 装備変更による戦闘ステータス、候補スキル、タグ一致ボーナスのプレビュー表示方針を決める
+- [ ] アバター表示周辺の余白に、装備変更時の戦闘ステータス、候補スキル、タグ一致ボーナスなど、今後必要な情報を表示できる領域を設計・実装する
 - [ ] `BattleSkillMasterData` にスキルの解放状態を追加し、`Dialog-EquipmentDetail` の候補行を解放済みは `NormalState`、未解放は `LockState` で表示する。
 
 ## 6. P2: 敵行動、戦型、特殊敗北

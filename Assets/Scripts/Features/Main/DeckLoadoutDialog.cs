@@ -10,13 +10,13 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public readonly struct DialogDeckLoadoutRequest
+    public readonly struct DeckLoadoutDialogRequest
     {
     }
 
-    public readonly struct DialogDeckLoadoutResult
+    public readonly struct DeckLoadoutDialogResult
     {
-        private DialogDeckLoadoutResult(bool isDeckSelected, int deckId)
+        private DeckLoadoutDialogResult(bool isDeckSelected, int deckId)
         {
             IsDeckSelected = isDeckSelected;
             DeckId = deckId;
@@ -25,14 +25,14 @@ namespace Assets.Scripts.Features.Main
         public bool IsDeckSelected { get; }
         public int DeckId { get; }
 
-        public static DialogDeckLoadoutResult Selected(int deckId) => new(true, deckId);
-        public static DialogDeckLoadoutResult Cancelled => new(false, 0);
+        public static DeckLoadoutDialogResult Selected(int deckId) => new(true, deckId);
+        public static DeckLoadoutDialogResult Cancelled => new(false, 0);
     }
 
     [DialogAddress("Dialog/DeckLoadout")]
-    public sealed class DialogDeckLoadout :
-        DialogBase<DialogDeckLoadoutResult>,
-        IDialogRequestHandler<DialogDeckLoadoutRequest>
+    public sealed class DeckLoadoutDialog :
+        DialogBase<DeckLoadoutDialogResult>,
+        IDialogRequestHandler<DeckLoadoutDialogRequest>
     {
         [SerializeField] private Transform deckContent;
         [SerializeField] private DeckLoadoutItemView deckItemTemplate;
@@ -49,7 +49,7 @@ namespace Assets.Scripts.Features.Main
         private bool _hasDeckSelection;
         private Vector2 _deckItemSize;
 
-        public void Setup(DialogDeckLoadoutRequest request, DialogContext context)
+        public void Setup(DeckLoadoutDialogRequest request, DialogContext context)
         {
             _deckManager = UserDataManager.EnsureInitialized().Decks;
             _appearanceManager = UserDataManager.EnsureInitialized().Appearance;
@@ -65,8 +65,8 @@ namespace Assets.Scripts.Features.Main
         protected override void OnClickClose()
         {
             Close(_hasDeckSelection
-                ? DialogDeckLoadoutResult.Selected(_deckManager.CurrentDeckId)
-                : DialogDeckLoadoutResult.Cancelled);
+                ? DeckLoadoutDialogResult.Selected(_deckManager.CurrentDeckId)
+                : DeckLoadoutDialogResult.Cancelled);
         }
 
         private void Refresh()
@@ -133,7 +133,7 @@ namespace Assets.Scripts.Features.Main
         {
             ClearLiveAvatarPreviews();
 
-            var previewStage = context.AvatarPreviewRenderer;
+            var previewStage = context.AvatarPreviewStage;
             var avatarTemplate = context.AvatarPreviewTemplate;
             if (previewStage == null || avatarTemplate == null)
             {

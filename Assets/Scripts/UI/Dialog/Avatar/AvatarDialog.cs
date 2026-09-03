@@ -8,6 +8,7 @@ using Assets.Scripts.UI.Components;
 using LayerLab.ArtMakerUnity;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.Dialog
@@ -58,15 +59,18 @@ namespace Assets.Scripts.UI.Dialog
         [SerializeField] private GameButton closeButton;
         [SerializeField] private GameButton saveButton;
         [SerializeField] private Transform categoryContent;
-        [SerializeField] private AvatarAppearanceSelectionItemView categorySlotTemplate;
+        [FormerlySerializedAs("categorySlotTemplate")]
+        [SerializeField] private AvatarAppearanceOptionItemView categoryOptionTemplate;
         [SerializeField] private Transform partOptionContent;
-        [SerializeField] private AvatarAppearanceSelectionItemView partOptionSlotTemplate;
+        [FormerlySerializedAs("partOptionSlotTemplate")]
+        [SerializeField] private AvatarAppearanceOptionItemView partOptionTemplate;
         [SerializeField] private TextMeshProUGUI emptyText;
         [SerializeField] private AvatarAppearanceCategoryIcon[] categoryFallbackIcons;
         [SerializeField] private ColorSelectScrollUIScript colorPicker;
 
         [Header("Prefab")]
-        [SerializeField] private AppearanceController characterPrefab;
+        [FormerlySerializedAs("characterPrefab")]
+        [SerializeField] private AppearanceController previewCharacterPrefab;
 
         [Header("Preview Placement")]
         [SerializeField] private Vector3 previewLocalPosition = Vector3.zero;
@@ -76,21 +80,21 @@ namespace Assets.Scripts.UI.Dialog
         private PreviewHandle dialogPreviewHandle;
         private AppearanceController sourcePartsManager;
         private IReadOnlyList<AppearanceController> saveTargets;
-        private PreviewStage previewRenderer;
+        private PreviewStage previewStage;
         private AvatarEditorPresenter avatarEditorPresenter;
         private UICategory selectedCategory;
-        private readonly List<AvatarAppearanceSelectionItemView> categorySlots = new();
-        private readonly List<AvatarAppearanceSelectionItemView> partOptionSlots = new();
+        private readonly List<AvatarAppearanceOptionItemView> categoryOptionViews = new();
+        private readonly List<AvatarAppearanceOptionItemView> partOptionViews = new();
 
         public void Setup(AvatarDialogRequest request, DialogContext context)
         {
             sourcePartsManager = request.SourcePartsManager;
             saveTargets = request.SaveTargets;
-            previewRenderer = context.AvatarPreviewRenderer;
+            previewStage = context.AvatarPreviewStage;
             previewImage.texture = previewTexture;
 
             var placement = new PreviewPlacement(previewLocalPosition, Quaternion.identity, previewLocalScale);
-            dialogPreviewHandle = previewRenderer.Spawn(characterPrefab, placement);
+            dialogPreviewHandle = previewStage.Spawn(previewCharacterPrefab, placement);
             dialogPlayer = dialogPreviewHandle.Get<AppearanceController>();
             dialogPlayer.Init();
 
@@ -117,14 +121,14 @@ namespace Assets.Scripts.UI.Dialog
 
         private void CreateCategorySlots()
         {
-            categorySlotTemplate.gameObject.SetActive(false);
+            categoryOptionTemplate.gameObject.SetActive(false);
             var sections = avatarEditorPresenter.GetSections();
             foreach (var section in sections)
             {
                 var category = section.Category;
-                var slot = Instantiate(categorySlotTemplate, categoryContent);
-                categorySlots.Add(slot);
-                slot.Show(ResolveCategoryIcon(section), false, true, () => SelectCategory(category));
+                var optionView = Instantiate(categoryOptionTemplate, categoryContent);
+                categoryOptionViews.Add(optionView);
+                optionView.Setup(ResolveCategoryIcon(section), false, true, () => SelectCategory(category));
             }
 
             SelectCategory(sections[0].Category);
@@ -136,10 +140,10 @@ namespace Assets.Scripts.UI.Dialog
             var section = avatarEditorPresenter.GetSection(category);
 
             var sections = avatarEditorPresenter.GetSections();
-            for (var i = 0; i < categorySlots.Count; i++)
+            for (var i = 0; i < categoryOptionViews.Count; i++)
             {
                 var slotCategory = sections[i].Category;
-                categorySlots[i].Show(
+                categoryOptionViews[i].Setup(
                     ResolveCategoryIcon(sections[i]),
                     slotCategory == selectedCategory,
                     true,
@@ -153,22 +157,22 @@ namespace Assets.Scripts.UI.Dialog
                 emptyText.text = "No options available";
             }
 
-            partOptionSlotTemplate.gameObject.SetActive(false);
-            while (partOptionSlots.Count < options.Count)
+            partOptionTemplate.gameObject.SetActive(false);
+            while (partOptionViews.Count < options.Count)
             {
-                partOptionSlots.Add(Instantiate(partOptionSlotTemplate, partOptionContent));
+                partOptionViews.Add(Instantiate(partOptionTemplate, partOptionContent));
             }
 
-            for (var i = 0; i < partOptionSlots.Count; i++)
+            for (var i = 0; i < partOptionViews.Count; i++)
             {
                 if (i >= options.Count)
                 {
-                    partOptionSlots[i].gameObject.SetActive(false);
+                    partOptionViews[i].gameObject.SetActive(false);
                     continue;
                 }
                 var option = options[i];
-                var optionSlot = partOptionSlots[i];
-                optionSlot.Show(option.Icon, option.IsSelected, option.CanSelect, () => SelectOption(option.EquipmentId));
+                var optionView = partOptionViews[i];
+                optionView.Setup(option.Icon, option.IsSelected, option.CanSelect, () => SelectOption(option.EquipmentId));
             }
 
             colorPicker.gameObject.SetActive(section.SupportsColor);
@@ -237,9 +241,9 @@ namespace Assets.Scripts.UI.Dialog
 
         private void DespawnDialogPreview()
         {
-            if (previewRenderer != null && dialogPreviewHandle != null)
+            if (previewStage != null && dialogPreviewHandle != null)
             {
-                previewRenderer.Despawn(dialogPreviewHandle);
+                previewStage.Despawn(dialogPreviewHandle);
             }
 
             dialogPreviewHandle = null;

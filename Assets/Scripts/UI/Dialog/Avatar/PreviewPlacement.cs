@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Assets.Scripts.UI.Dialog
 {
     /// <summary>
-    /// AvatarPreviewRenderer 上に生成するプレビューの配置情報。
+    /// PreviewStage 上に生成するプレビューの配置情報。
     /// previewRoot のローカル空間での位置・回転・スケールを指定する。
     /// </summary>
     public readonly struct PreviewPlacement

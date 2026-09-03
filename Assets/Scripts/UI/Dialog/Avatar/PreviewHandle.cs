@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Assets.Scripts.UI.Dialog
 {
     /// <summary>
-    /// AvatarPreviewRenderer が払い出すスポーン結果のハンドル。
+    /// PreviewStage が払い出すスポーン結果のハンドル。
     /// 呼び出し側はこのハンドルを保持することで、該当プレビューの参照取得・個別破棄が行える。
     /// </summary>
     public sealed class PreviewHandle

@@ -25,12 +25,12 @@ namespace Assets.Scripts.UI.Dialog
 
         private readonly List<BattleSkillData> _candidates = new();
         private readonly List<int> _draftSkillIds = new();
-        private DeckManager _loadoutService;
+        private DeckManager _deckManager;
         private int _selectedSlotIndex;
 
         private void Awake()
         {
-            _loadoutService = UserDataManager.EnsureInitialized().Decks;
+            _deckManager = UserDataManager.EnsureInitialized().Decks;
             BindButtons();
         }
 
@@ -41,12 +41,12 @@ namespace Assets.Scripts.UI.Dialog
 
         public void Refresh()
         {
-            _loadoutService ??= UserDataManager.EnsureInitialized().Decks;
+            _deckManager ??= UserDataManager.EnsureInitialized().Decks;
             _candidates.Clear();
-            _candidates.AddRange(_loadoutService.GetCandidateSkillsFromEquippedEquipment());
+            _candidates.AddRange(_deckManager.GetCandidateSkillsFromEquippedEquipment());
 
             _draftSkillIds.Clear();
-            _draftSkillIds.AddRange(_loadoutService.EnsureUsableLoadout(persistImmediately: true));
+            _draftSkillIds.AddRange(_deckManager.EnsureUsableLoadout(persistImmediately: true));
             NormalizeDraft();
             _selectedSlotIndex = Mathf.Clamp(
                 _selectedSlotIndex,
@@ -125,7 +125,7 @@ namespace Assets.Scripts.UI.Dialog
         private void Save()
         {
             NormalizeDraft();
-            _loadoutService.SaveLoadout(_draftSkillIds);
+            _deckManager.SaveLoadout(_draftSkillIds);
             Refresh();
         }
 
