@@ -11,7 +11,9 @@ namespace Assets.Scripts.Features.Main
     {
         [SerializeField] private Button button;
         [SerializeField] private GameObject selectedFrame;
-        [SerializeField] private SkillFrame skillFrame;
+        [SerializeField] private GameObject selectionBlocker;
+        [SerializeField] private TextMeshProUGUI assignedSlotText;
+        [SerializeField] private PartsSkillItem skillItem;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI descriptionText;
 
@@ -26,12 +28,21 @@ namespace Assets.Scripts.Features.Main
             button.onClick.AddListener(() => action());
         }
 
-        public void Refresh(BattleSkillData skill, bool selected)
+        public void Refresh(
+            BattleSkillData skill,
+            EquipmentData sourceEquipment,
+            bool selected,
+            bool blocked,
+            int assignedSlotIndex)
         {
             selectedFrame.SetActive(selected);
-            skillFrame.ShowNormal(skill.Icon);
-            nameText.text = BuildDisplayName(skill);
-            descriptionText.text = BuildDescription(skill);
+            selectionBlocker.SetActive(blocked);
+            button.interactable = !blocked;
+            assignedSlotText.gameObject.SetActive(blocked);
+            assignedSlotText.text = $"Assigned to Skill Slot {assignedSlotIndex + 1}";
+            skillItem.ShowSkillIconOnly(skill.Icon);
+            nameText.text = $"{BuildDisplayName(skill)} · {BuildEquipmentName(sourceEquipment)}";
+            descriptionText.text = $"Equipment: {BuildEquipmentName(sourceEquipment)}\n{BuildDescription(skill)}";
         }
 
         private static string BuildDisplayName(BattleSkillData skill)
@@ -46,6 +57,13 @@ namespace Assets.Scripts.Features.Main
             return string.IsNullOrWhiteSpace(skill.Description)
                 ? "No description."
                 : skill.Description;
+        }
+
+        private static string BuildEquipmentName(EquipmentData equipment)
+        {
+            return !string.IsNullOrWhiteSpace(equipment.DisplayName)
+                ? TextLocalization.Get(equipment.DisplayName)
+                : $"Equipment {equipment.EquipmentId}";
         }
     }
 }

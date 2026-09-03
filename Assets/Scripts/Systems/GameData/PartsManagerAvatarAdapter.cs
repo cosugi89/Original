@@ -11,6 +11,29 @@ namespace Assets.Scripts.Systems.GameData
 {
     public static class PartsManagerAvatarAdapter
     {
+        /// <summary>
+        /// 現在デッキを含む見た目を決定的に適用する。
+        /// 複製元や初期化時の既定装備を残さず、デッキに存在する装備だけを表示する。
+        /// </summary>
+        public static void ApplyDeckAppearance(
+            AppearanceController partsManager,
+            AvatarAppearanceData appearance,
+            InventoryManager inventoryManager)
+        {
+            if (partsManager == null || appearance == null)
+                return;
+
+            foreach (var category in DeckLoadoutUtility.EquipmentCategories)
+            {
+                foreach (var partType in UICategoryConfig.GetSubTypes(category))
+                {
+                    partsManager.UnequipParts(partType);
+                }
+            }
+
+            ApplyAppearance(partsManager, appearance, inventoryManager);
+        }
+
         public static AvatarAppearanceData CaptureAppearance(AppearanceController partsManager, InventoryManager inventoryManager)
         {
             var appearance = new AvatarAppearanceData();

@@ -1,4 +1,5 @@
 using System;
+using Assets.Scripts.Core;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -8,12 +9,16 @@ namespace Assets.Scripts.UI.Dialog
 {
     public sealed class DialogContext
     {
-        public DialogContext(PreviewStage avatarPreviewRenderer)
+        public DialogContext(
+            PreviewStage avatarPreviewRenderer,
+            AppearanceController avatarPreviewTemplate = null)
         {
             AvatarPreviewRenderer = avatarPreviewRenderer;
+            AvatarPreviewTemplate = avatarPreviewTemplate;
         }
 
         public PreviewStage AvatarPreviewRenderer { get; }
+        public AppearanceController AvatarPreviewTemplate { get; }
     }
 
     public enum DialogCloseReason

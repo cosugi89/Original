@@ -7,6 +7,7 @@ using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using Assets.Scripts.UI.Components;
 using Assets.Scripts.UI.Dialog;
+using LayerLab.ArtMakerUnity;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -41,15 +42,14 @@ namespace Assets.Scripts.Features.Main
         DialogBase<SkillLoadoutDialogResponse>,
         IDialogRequestHandler<SkillLoadoutDialogRequest>
     {
-        [SerializeField] private SkillFrameView[] selectedSkillViews = Array.Empty<SkillFrameView>();
-        [SerializeField] private StatusSkillInfoView candidateViewPrefab;
+        [SerializeField] private PartsSkillItem[] selectedSkillItems = Array.Empty<PartsSkillItem>();
+        [SerializeField] private Button[] selectedSkillButtons = Array.Empty<Button>();
+        [SerializeField] private StatusSkillInfoView candidateItemTemplate;
         [SerializeField] private Transform candidateContent;
         [SerializeField] private TextMeshProUGUI emptyCandidatesText;
-        [SerializeField] private GameButton clearButton;
-        [SerializeField] private GameButton saveButton;
         [SerializeField] private GameButton closeButton;
 
-        private readonly List<BattleSkillData> _candidates = new();
+        private readonly List<CandidateSkill> _candidates = new();
         private readonly List<StatusSkillInfoView> _candidateViews = new();
         private readonly List<int> _draftSkillIds = new();
         private DeckManager _loadoutService;
@@ -69,6 +69,7 @@ namespace Assets.Scripts.Features.Main
 
             BindButtons();
             LoadDraft();
+            candidateItemTemplate.SetVisible(false);
             CreateCandidateViews();
             Refresh();
         }
@@ -82,21 +83,20 @@ namespace Assets.Scripts.Features.Main
 
         private void BindButtons()
         {
-            for (var i = 0; i < selectedSkillViews.Length; i++)
+            for (var i = 0; i < selectedSkillButtons.Length; i++)
             {
                 var index = i;
-                selectedSkillViews[i].SetAction(() => SelectSlot(index));
+                selectedSkillButtons[i].onClick.RemoveAllListeners();
+                selectedSkillButtons[i].onClick.AddListener(() => SelectSlot(index));
             }
 
-            clearButton.SetAction(ClearSelectedSlot);
-            saveButton.SetVisible(false);
             closeButton.SetAction(OnClickClose);
         }
 
         private void LoadDraft()
         {
             _candidates.Clear();
-            _candidates.AddRange(_loadoutService.GetCandidateSkillsFromEquippedEquipment());
+            _candidates.AddRange(BuildCandidateSources());
 
             _draftSkillIds.Clear();
             _draftSkillIds.AddRange(_loadoutService.EnsureUsableLoadout(persistImmediately: true));
@@ -122,7 +122,7 @@ namespace Assets.Scripts.Features.Main
             }
 
             NormalizeDraft();
-            var skillId = _candidates[index].SkillId;
+            var skillId = _candidates[index].Skill.SkillId;
             if (_draftSkillIds[_selectedSlotIndex] == skillId)
             {
                 Refresh();
@@ -130,20 +130,6 @@ namespace Assets.Scripts.Features.Main
             }
 
             _draftSkillIds[_selectedSlotIndex] = skillId;
-            SaveDraft();
-            Refresh();
-        }
-
-        private void ClearSelectedSlot()
-        {
-            NormalizeDraft();
-            if (_draftSkillIds[_selectedSlotIndex] == 0)
-            {
-                Refresh();
-                return;
-            }
-
-            _draftSkillIds[_selectedSlotIndex] = 0;
             SaveDraft();
             Refresh();
         }
@@ -158,24 +144,23 @@ namespace Assets.Scripts.Features.Main
         private void Refresh()
         {
             SetTitle($"Skill Slot {_selectedSlotIndex + 1}");
-            RefreshSlotButtons();
+            RefreshSelectedSkillItems();
             RefreshCandidateButtons();
-            RefreshSelectedSkill();
         }
 
-        private void RefreshSlotButtons()
+        private void RefreshSelectedSkillItems()
         {
-            for (var i = 0; i < selectedSkillViews.Length; i++)
+            for (var i = 0; i < selectedSkillItems.Length; i++)
             {
-                var visible = i < UserProfileData.BattleSkillLoadoutSlotCount;
-                selectedSkillViews[i].SetVisible(visible);
-                if (!visible)
+                var candidate = ResolveSkill(SkillIdAt(i));
+                if (candidate == null)
                 {
+                    selectedSkillItems[i].ShowEmptyIconOnly();
                     continue;
                 }
 
-                var skillId = i < _draftSkillIds.Count ? _draftSkillIds[i] : 0;
-                selectedSkillViews[i].Refresh(ResolveSkill(skillId), i == _selectedSlotIndex);
+                selectedSkillItems[i].ShowSkillIconOnly(ToSkillItemType(candidate.Category), candidate.Skill.Icon);
+                selectedSkillItems[i].SetFocused(i == _selectedSlotIndex);
             }
         }
 
@@ -186,17 +171,16 @@ namespace Assets.Scripts.Features.Main
 
             for (var i = 0; i < _candidateViews.Count; i++)
             {
-                var skill = _candidates[i];
-                var selected = SkillIdAt(_selectedSlotIndex) == skill.SkillId;
-                _candidateViews[i].Refresh(skill, selected);
+                var candidate = _candidates[i];
+                var selected = SkillIdAt(_selectedSlotIndex) == candidate.Skill.SkillId;
+                var assignedSlotIndex = FindAssignedSlot(candidate.Skill.SkillId);
+                _candidateViews[i].Refresh(
+                    candidate.Skill,
+                    candidate.Equipment,
+                    selected,
+                    assignedSlotIndex >= 0,
+                    assignedSlotIndex);
             }
-        }
-
-        private void RefreshSelectedSkill()
-        {
-            var skillId = SkillIdAt(_selectedSlotIndex);
-            var skill = ResolveSkill(skillId);
-            clearButton.SetInteractable(skill != null);
         }
 
         private int SkillIdAt(int index)
@@ -204,14 +188,27 @@ namespace Assets.Scripts.Features.Main
             return index >= 0 && index < _draftSkillIds.Count ? _draftSkillIds[index] : 0;
         }
 
-        private BattleSkillData ResolveSkill(int skillId)
+        private int FindAssignedSlot(int skillId)
+        {
+            for (var i = 0; i < _draftSkillIds.Count; i++)
+            {
+                if (i != _selectedSlotIndex && _draftSkillIds[i] == skillId)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private CandidateSkill ResolveSkill(int skillId)
         {
             if (skillId <= 0)
             {
                 return null;
             }
 
-            return _candidates.FirstOrDefault(skill => skill != null && skill.SkillId == skillId);
+            return _candidates.FirstOrDefault(candidate => candidate.Skill.SkillId == skillId);
         }
 
         private void NormalizeDraft()
@@ -228,21 +225,27 @@ namespace Assets.Scripts.Features.Main
 
             var candidateSkillIds = new HashSet<int>(
                 _candidates
-                    .Where(candidate => candidate != null && candidate.SkillId > 0)
-                    .Select(candidate => candidate.SkillId));
+                    .Where(candidate => candidate.Skill.SkillId > 0)
+                    .Select(candidate => candidate.Skill.SkillId));
 
+            var assignedSkillIds = new HashSet<int>();
             for (var i = 0; i < _draftSkillIds.Count; i++)
             {
                 var skillId = Mathf.Max(0, _draftSkillIds[i]);
-                _draftSkillIds[i] = skillId > 0 && candidateSkillIds.Contains(skillId) ? skillId : 0;
+                _draftSkillIds[i] = skillId > 0 &&
+                                    candidateSkillIds.Contains(skillId) &&
+                                    assignedSkillIds.Add(skillId)
+                    ? skillId
+                    : 0;
             }
         }
 
         private void EnsurePrefabReferences()
         {
-            if (selectedSkillViews.Length < UserProfileData.BattleSkillLoadoutSlotCount)
+            if (selectedSkillItems.Length < UserProfileData.BattleSkillLoadoutSlotCount ||
+                selectedSkillButtons.Length < UserProfileData.BattleSkillLoadoutSlotCount)
             {
-                throw new InvalidOperationException($"{nameof(SkillLoadoutDialog)} requires {UserProfileData.BattleSkillLoadoutSlotCount} selected skill views.");
+                throw new InvalidOperationException($"{nameof(SkillLoadoutDialog)} requires {UserProfileData.BattleSkillLoadoutSlotCount} selected skill items and buttons.");
             }
         }
 
@@ -251,44 +254,68 @@ namespace Assets.Scripts.Features.Main
             for (var i = 0; i < _candidates.Count; i++)
             {
                 var index = i;
-                var candidateView = Instantiate(candidateViewPrefab, candidateContent);
+                var candidateView = Instantiate(candidateItemTemplate, candidateContent);
                 candidateView.SetAction(() => SelectCandidate(index));
                 candidateView.SetVisible(true);
                 _candidateViews.Add(candidateView);
             }
         }
 
-        [Serializable]
-        private sealed class SkillFrameView
+        private IEnumerable<CandidateSkill> BuildCandidateSources()
         {
-            [SerializeField] private GameObject root;
-            [SerializeField] private Button button;
-            [SerializeField] private Image iconImage;
-            [SerializeField] private GameObject normalRoot;
-            [SerializeField] private GameObject emptyRoot;
-            [SerializeField] private GameObject selectedRoot;
-
-            public void SetVisible(bool visible)
+            var seenSkillIds = new HashSet<int>();
+            var deck = _loadoutService.GetCurrentDeck();
+            foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(deck))
             {
-                root.SetActive(visible);
+                if (equipmentId <= 0 ||
+                    !_loadoutService.InventoryManager.TryGetDefinition(equipmentId, out var equipment) ||
+                    equipment == null)
+                {
+                    continue;
+                }
+
+                var category = DeckLoadoutUtility.GetCategory(equipment);
+                if (!category.HasValue)
+                {
+                    continue;
+                }
+
+                foreach (var skill in equipment.AssignableSkills)
+                {
+                    if (skill == null || skill.SkillId <= 0 || !seenSkillIds.Add(skill.SkillId))
+                    {
+                        continue;
+                    }
+
+                    yield return new CandidateSkill(skill, equipment, category.Value);
+                }
+            }
+        }
+
+        private static SkillItemType ToSkillItemType(UICategory category)
+        {
+            return category switch
+            {
+                UICategory.HandRight => SkillItemType.Weapon,
+                UICategory.HandLeft => SkillItemType.Shield,
+                UICategory.Chest => SkillItemType.Armor,
+                UICategory.Helmet => SkillItemType.Headgear,
+                _ => throw new InvalidOperationException($"Unsupported equipped skill category: {category}"),
+            };
+        }
+
+        private sealed class CandidateSkill
+        {
+            public CandidateSkill(BattleSkillData skill, EquipmentData equipment, UICategory category)
+            {
+                Skill = skill;
+                Equipment = equipment;
+                Category = category;
             }
 
-            public void SetAction(Action action)
-            {
-                button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(() => action());
-            }
-
-            public void Refresh(BattleSkillData skill, bool selected)
-            {
-                var hasSkill = skill != null;
-                normalRoot.SetActive(hasSkill);
-                emptyRoot.SetActive(!hasSkill);
-                selectedRoot.SetActive(selected);
-                iconImage.sprite = hasSkill ? skill.Icon : null;
-                iconImage.enabled = hasSkill && skill.Icon != null;
-                iconImage.preserveAspect = true;
-            }
+            public BattleSkillData Skill { get; }
+            public EquipmentData Equipment { get; }
+            public UICategory Category { get; }
         }
 
     }

@@ -61,8 +61,17 @@ namespace Assets.Scripts.Systems.GameData
 
         public IReadOnlyList<AvatarPartStateData> GetCurrentPartStates()
         {
+            return GetPartStates(GetCurrentDeck());
+        }
+
+        /// <summary>
+        /// 指定デッキの装備4枠を、アバター表示へ適用できるPart状態へ変換する。
+        /// デッキの選択や保存は行わない。
+        /// </summary>
+        public IReadOnlyList<AvatarPartStateData> GetPartStates(DeckData deck)
+        {
             var states = new List<AvatarPartStateData>();
-            foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(GetCurrentDeck()))
+            foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(deck))
             {
                 if (equipmentId <= 0 ||
                     !InventoryManager.TryGetDefinition(equipmentId, out var definition) ||
@@ -149,9 +158,18 @@ namespace Assets.Scripts.Systems.GameData
 
         public IReadOnlyList<BattleSkillData> GetCandidateSkillsFromEquippedEquipment()
         {
+            return GetCandidateSkills(GetCurrentDeck());
+        }
+
+        /// <summary>
+        /// 指定デッキの装備から、設定可能なSkill候補を取得する。
+        /// デッキの選択や保存は行わない。
+        /// </summary>
+        public IReadOnlyList<BattleSkillData> GetCandidateSkills(DeckData deck)
+        {
             var result = new List<BattleSkillData>();
             var seenSkillIds = new HashSet<int>();
-            foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(GetCurrentDeck()))
+            foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(deck))
             {
                 if (equipmentId <= 0 ||
                     !InventoryManager.TryGetDefinition(equipmentId, out var equipment) ||
@@ -197,11 +215,12 @@ namespace Assets.Scripts.Systems.GameData
         {
             var deck = GetCurrentDeck();
             var allowedSkillIds = new HashSet<int>(GetCandidateSkillsFromEquippedEquipment().Select(skill => skill.SkillId));
+            var assignedSkillIds = new HashSet<int>();
             deck.SkillIds.Clear();
             for (var i = 0; i < UserProfileData.BattleSkillLoadoutSlotCount; i++)
             {
                 var skillId = requestedSkillIds != null && i < requestedSkillIds.Count ? Mathf.Max(0, requestedSkillIds[i]) : 0;
-                deck.SkillIds.Add(allowedSkillIds.Contains(skillId) ? skillId : 0);
+                deck.SkillIds.Add(allowedSkillIds.Contains(skillId) && assignedSkillIds.Add(skillId) ? skillId : 0);
             }
 
             UserDataStore.MarkDirty();
@@ -265,10 +284,12 @@ namespace Assets.Scripts.Systems.GameData
         private bool EnsureUsableLoadoutInternal(DeckData deck)
         {
             var candidates = new HashSet<int>(GetCandidateSkills(deck).Select(skill => skill.SkillId));
+            var assignedSkillIds = new HashSet<int>();
             var hasChanges = false;
             for (var i = 0; i < deck.SkillIds.Count; i++)
             {
-                if (deck.SkillIds[i] > 0 && !candidates.Contains(deck.SkillIds[i]))
+                if (deck.SkillIds[i] > 0 &&
+                    (!candidates.Contains(deck.SkillIds[i]) || !assignedSkillIds.Add(deck.SkillIds[i])))
                 {
                     deck.SkillIds[i] = 0;
                     hasChanges = true;
@@ -278,21 +299,6 @@ namespace Assets.Scripts.Systems.GameData
             return hasChanges;
         }
 
-        private IEnumerable<BattleSkillData> GetCandidateSkills(DeckData deck)
-        {
-            var seenSkillIds = new HashSet<int>();
-            foreach (var equipmentId in DeckLoadoutUtility.GetEquipmentIds(deck))
-            {
-                if (!InventoryManager.TryGetDefinition(equipmentId, out var equipment) || equipment == null)
-                    continue;
-
-                foreach (var skill in equipment.AssignableSkills ?? Array.Empty<BattleSkillData>())
-                {
-                    if (skill != null && skill.SkillId > 0 && seenSkillIds.Add(skill.SkillId))
-                        yield return skill;
-                }
-            }
-        }
     }
 
     public static class DeckLoadoutUtility

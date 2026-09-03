@@ -11,6 +11,12 @@ using UnityEngine;
 
 namespace Assets.Scripts.UI.Dialog
 {
+    public enum AvatarEditorMode
+    {
+        Full,
+        AppearanceOnly
+    }
+
     public class AvatarEditorPresenter
     {
         private static readonly UICategory[] SectionOrder =
@@ -28,6 +34,7 @@ namespace Assets.Scripts.UI.Dialog
         private readonly AppearanceManager _appearanceManager;
         private readonly InventoryManager _inventoryManager;
         private readonly AppearanceAdapter _avatarRenderService;
+        private readonly AvatarEditorMode _mode;
         private AvatarAppearanceData _draftAppearance;
         private AppearanceController _previewPartsManager;
 
@@ -35,16 +42,20 @@ namespace Assets.Scripts.UI.Dialog
             AppearanceManager appearanceManager,
             InventoryManager inventoryManager,
             AppearanceAdapter avatarRenderService,
-            AvatarAppearanceData initialAppearance)
+            AvatarAppearanceData initialAppearance,
+            AvatarEditorMode mode = AvatarEditorMode.Full)
         {
             _appearanceManager = appearanceManager;
             _inventoryManager = inventoryManager;
             _avatarRenderService = avatarRenderService;
+            _mode = mode;
             _draftAppearance = CloneAppearance(initialAppearance);
             EnsureDefaultColors(_draftAppearance);
         }
 
-        public static AvatarEditorPresenter CreateDefault(AppearanceController sourcePartsManager = null)
+        public static AvatarEditorPresenter CreateDefault(
+            AppearanceController sourcePartsManager = null,
+            AvatarEditorMode mode = AvatarEditorMode.Full)
         {
             var userDataManager = UserDataManager.EnsureInitialized();
             var inventoryManager = userDataManager.Inventory;
@@ -55,7 +66,7 @@ namespace Assets.Scripts.UI.Dialog
                 ? PartsManagerAvatarAdapter.CaptureAppearance(sourcePartsManager, inventoryManager)
                 : appearanceManager.GetCurrentAppearance();
 
-            return new AvatarEditorPresenter(appearanceManager, inventoryManager, avatarRenderService, initialAppearance);
+            return new AvatarEditorPresenter(appearanceManager, inventoryManager, avatarRenderService, initialAppearance, mode);
         }
 
         public void BindPreview(AppearanceController previewPartsManager)
@@ -66,7 +77,7 @@ namespace Assets.Scripts.UI.Dialog
 
         public IReadOnlyList<AvatarPartSectionViewData> GetSections(bool includeLocked = false)
         {
-            return SectionOrder
+            return GetEditableCategories()
                 .Select(category => GetSection(category, includeLocked))
                 .ToArray();
         }
@@ -117,6 +128,9 @@ namespace Assets.Scripts.UI.Dialog
             }
 
             var category = ToCategory(definition.PartType);
+            if (!IsEditableCategory(category))
+                return false;
+
             if (UICategoryConfig.IsGroup(category))
             {
                 foreach (var partType in UICategoryConfig.GetSubTypes(category))
@@ -138,6 +152,9 @@ namespace Assets.Scripts.UI.Dialog
 
         public void ResetCategory(UICategory category)
         {
+            if (!IsEditableCategory(category))
+                return;
+
             foreach (var partType in UICategoryConfig.GetSubTypes(category))
             {
                 ResetPart(partType);
@@ -194,14 +211,31 @@ namespace Assets.Scripts.UI.Dialog
         public void Commit()
         {
             var committedAppearance = CloneAppearance(_draftAppearance);
-            _appearanceManager.SetCurrentAppearance(committedAppearance);
-
-            foreach (var equipmentId in committedAppearance.Parts
-                         .Where(state => state != null && state.EquipmentId > 0)
-                         .Select(state => state.EquipmentId)
-                         .Distinct())
+            if (_mode == AvatarEditorMode.AppearanceOnly)
             {
-                _inventoryManager.MarkEquipped(equipmentId);
+                committedAppearance.Parts = committedAppearance.Parts
+                    .Where(state => state != null && IsAppearancePartType(state.PartType))
+                    .ToList();
+            }
+
+            if (_mode == AvatarEditorMode.AppearanceOnly)
+            {
+                _appearanceManager.SetCosmeticAppearance(committedAppearance);
+            }
+            else
+            {
+                _appearanceManager.SetAppearanceWithDeckEquipment(committedAppearance);
+            }
+
+            if (_mode == AvatarEditorMode.Full)
+            {
+                foreach (var equipmentId in committedAppearance.Parts
+                             .Where(state => state != null && state.EquipmentId > 0)
+                             .Select(state => state.EquipmentId)
+                             .Distinct())
+                {
+                    _inventoryManager.MarkEquipped(equipmentId);
+                }
             }
 
             if (_previewPartsManager != null)
@@ -407,6 +441,28 @@ namespace Assets.Scripts.UI.Dialog
             }
 
             return UICategory.Hair;
+        }
+
+        private IEnumerable<UICategory> GetEditableCategories()
+        {
+            return SectionOrder.Where(IsEditableCategory);
+        }
+
+        private bool IsEditableCategory(UICategory category)
+        {
+            return _mode == AvatarEditorMode.Full ||
+                   category == UICategory.Hair ||
+                   category == UICategory.Eye ||
+                   category == UICategory.Beard ||
+                   category == UICategory.Skin;
+        }
+
+        private static bool IsAppearancePartType(PartsType partType)
+        {
+            return partType == PartsType.Hair ||
+                   partType == PartsType.Eye ||
+                   partType == PartsType.Beard ||
+                   partType == PartsType.Skin;
         }
 
         private static bool TryGetColorTarget(UICategory category, out ColorTargetType target)

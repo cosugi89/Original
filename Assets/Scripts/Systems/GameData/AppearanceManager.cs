@@ -38,13 +38,22 @@ namespace Assets.Scripts.Systems.GameData
 
         public AvatarAppearanceData GetCurrentAppearance()
         {
+            return GetAppearanceForDeck(DeckManager.GetCurrentDeck());
+        }
+
+        /// <summary>
+        /// 共有する髪・肌・目などの見た目と、指定デッキの装備4枠を合成した表示用外見を返す。
+        /// 現在デッキや保存データは変更しない。
+        /// </summary>
+        public AvatarAppearanceData GetAppearanceForDeck(DeckData deck)
+        {
             var storedAppearance = EnsureAppearance();
             return new AvatarAppearanceData
             {
                 Parts = storedAppearance.Parts
-                    .Where(part => part != null)
+                    .Where(part => part != null && IsCosmeticPart(part.PartType))
                     .Select(ClonePartState)
-                    .Concat(DeckManager.GetCurrentPartStates())
+                    .Concat(DeckManager.GetPartStates(deck))
                     .ToList(),
                 Colors = storedAppearance.Colors
                     .Where(color => color != null)
@@ -57,7 +66,7 @@ namespace Assets.Scripts.Systems.GameData
             };
         }
 
-        public void SetCurrentAppearance(AvatarAppearanceData appearance, bool markDirty = true)
+        public void SetAppearanceWithDeckEquipment(AvatarAppearanceData appearance, bool markDirty = true)
         {
             Session.UserData.Profile ??= new UserProfileDemoData();
 
@@ -66,10 +75,21 @@ namespace Assets.Scripts.Systems.GameData
             normalized.Colors ??= new List<AvatarColorData>();
 
             DeckManager.SaveEquipmentFromAppearance(normalized);
+            SetCosmeticAppearance(normalized, markDirty);
+        }
+
+        public void SetCosmeticAppearance(AvatarAppearanceData appearance, bool markDirty = true)
+        {
+            Session.UserData.Profile ??= new UserProfileDemoData();
+
+            var normalized = appearance ?? new AvatarAppearanceData();
+            normalized.Parts ??= new List<AvatarPartStateData>();
+            normalized.Colors ??= new List<AvatarColorData>();
+
             var cosmeticAppearance = new AvatarAppearanceData
             {
                 Parts = normalized.Parts
-                    .Where(part => part != null && !IsDeckEquipment(part))
+                    .Where(part => part != null && IsCosmeticPart(part.PartType))
                     .Select(ClonePartState)
                     .ToList(),
                 Colors = normalized.Colors,
@@ -263,11 +283,12 @@ namespace Assets.Scripts.Systems.GameData
             return Session.UserData.Profile.AvatarAppearance;
         }
 
-        private bool IsDeckEquipment(AvatarPartStateData part)
+        private static bool IsCosmeticPart(PartsType partType)
         {
-            return part.EquipmentId > 0 &&
-                   InventoryManager.TryGetDefinition(part.EquipmentId, out var definition) &&
-                   DeckLoadoutUtility.GetCategory(definition).HasValue;
+            return partType == PartsType.Hair ||
+                   partType == PartsType.Eye ||
+                   partType == PartsType.Beard ||
+                   partType == PartsType.Skin;
         }
 
         private bool TryGetDeckCategory(PartsType partType, out UICategory category)

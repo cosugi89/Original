@@ -43,6 +43,7 @@ namespace Assets.Scripts.Features.Main
         private bool _initialized;
         private bool _equipmentDetailDialogOpen;
         private bool _skillLoadoutDialogOpen;
+        private bool _deckLoadoutDialogOpen;
 
         public void Init(AppearanceController previewPartsManager, params AppearanceController[] additionalPreviewTargets)
         {
@@ -89,6 +90,8 @@ namespace Assets.Scripts.Features.Main
             // Appearance Dialog
             skinButton.onClick.RemoveListener(OnClickSkinButton);
             skinButton.onClick.AddListener(OnClickSkinButton);
+            deckButton.onClick.RemoveListener(OnClickDeckButton);
+            deckButton.onClick.AddListener(OnClickDeckButton);
         }
 
         private void SelectCategory(StatusEquipmentCategory category)
@@ -283,6 +286,39 @@ namespace Assets.Scripts.Features.Main
         private void OnClickSkinButton()
         {
             OpenAppearanceDialogAsync().Forget();
+        }
+
+        private void OnClickDeckButton()
+        {
+            OpenDeckLoadoutDialogAsync().Forget();
+        }
+
+        private async UniTaskVoid OpenDeckLoadoutDialogAsync()
+        {
+            if (_deckLoadoutDialogOpen)
+            {
+                return;
+            }
+
+            _deckLoadoutDialogOpen = true;
+            try
+            {
+                var result = await DialogService.OpenAsync<
+                    DialogDeckLoadout,
+                    DialogDeckLoadoutRequest,
+                    DialogDeckLoadoutResult>(
+                        new DialogDeckLoadoutRequest(),
+                        new DialogContext(avatarPreviewRenderer, avatarPreview.PrimaryTarget));
+                if (result.IsDeckSelected)
+                {
+                    avatarPreview.ApplySavedAppearance();
+                    Refresh();
+                }
+            }
+            finally
+            {
+                _deckLoadoutDialogOpen = false;
+            }
         }
 
         private async UniTaskVoid OpenAppearanceDialogAsync()

@@ -69,7 +69,7 @@ namespace Assets.Scripts.Systems.GameData
                 return;
 
             EnsurePartsManagerInitialized(partsManager);
-            PartsManagerAvatarAdapter.ApplyAppearance(
+            PartsManagerAvatarAdapter.ApplyDeckAppearance(
                 partsManager,
                 AppearanceManager.GetCurrentAppearance(),
                 InventoryManager);
@@ -83,7 +83,7 @@ namespace Assets.Scripts.Systems.GameData
             EnsurePartsManagerInitialized(partsManager);
 
             var appearance = PartsManagerAvatarAdapter.CaptureAppearance(partsManager, InventoryManager);
-            AppearanceManager.SetCurrentAppearance(appearance);
+            AppearanceManager.SetAppearanceWithDeckEquipment(appearance);
             SyncOwnedEquipments(appearance);
 
             if (saveAfterCapture)

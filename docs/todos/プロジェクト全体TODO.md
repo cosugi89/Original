@@ -111,12 +111,15 @@
 - [x] Status タブで実戦用 Skill ロードアウト4枠を表示し、Skill 設定ダイアログから変更できるようにする
 - [x] 戦闘用4装備・Skill4枠を正本とするデッキ3件と `CurrentDeckId` を保存モデルへ実装し、旧 `Avatar.Parts` / 単一 `SkillLoadout` を廃止する
 - [x] `DeckLoadoutUtility` を実装し、デッキ保存時・適用時に装備を正として無効Skillを空枠化する
-- [ ] StatusSceneのデッキ一覧ダイアログから、内容確認とデッキ切替を行えるようにする
+- [x] StatusSceneのデッキ一覧ダイアログから、内容確認とデッキ切替を行えるようにする
+- [ ] 攻撃力・防御力は装備依存、HPは解放要素など装備以外の要素で上下する前提で、依存先と算出ルールを確定する。確定までステータス表示は仮とし、確定後に `DialogDeckLoadout` と StatusScene へ正しく表示する
 - [ ] 敗戦後の再挑戦導線にデッキ切替を追加し、切替後の構成で再挑戦できるようにする
 - [x] Dialog 基盤を `DialogService` / 専用 `DialogCanvas` / `DialogAddressAttribute` ベースへ移行し、呼び出し側の prefab 参照と parent 指定を外す
 - [x] 汎用 `GameButton` を `Button` 継承 + 単体 Prefab ベースで追加し、見た目 enum / SE enum / Badge を切り替えられるようにする
 - [ ] `Dialog-EquipmentDetail` 以外の Dialog と主要 UI の既存 `Button` を、触るタイミングで `GameButton` へ段階的に置き換える
 - [ ] 見た目変更ダイアログの最終レイアウトを `Settings.prefab` 基準で調整する
+- [ ] アスペクト比の変更でDialogとFooter以外のUIが崩れないよう、MainScene UI全体のレイアウトを対応する
+- [ ] アバター表示周辺の余白に、今後追加する必要があるUIを配置できる表示領域を設計・実装する
 - [ ] 装備変更による戦闘ステータス、候補スキル、タグ一致ボーナスのプレビュー表示方針を決める
 - [ ] `BattleSkillMasterData` にスキルの解放状態を追加し、`Dialog-EquipmentDetail` の候補行を解放済みは `NormalState`、未解放は `LockState` で表示する。
 

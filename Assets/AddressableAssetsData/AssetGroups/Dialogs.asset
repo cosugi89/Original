@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a03295a1248cb36449959b2350f56efd
+    m_Address: Dialog/DeckLoadout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2a43cbdd04a4a57b7df8a694c2f1a64
     m_Address: Dialog/EquipmentDetail
     m_ReadOnly: 0

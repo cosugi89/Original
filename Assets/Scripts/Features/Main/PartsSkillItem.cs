@@ -71,6 +71,14 @@ namespace Assets.Scripts.Features.Main
             label.gameObject.SetActive(false);
         }
 
+        public void ShowSkillIconOnly(SkillItemType type, Sprite icon)
+        {
+            ShowNormal();
+            SetTypeIcon(type);
+            SetSkill(icon);
+            label.gameObject.SetActive(false);
+        }
+
         public void ShowLockedIconOnly()
         {
             ShowLocked();
@@ -84,6 +92,14 @@ namespace Assets.Scripts.Features.Main
             HideTypeIcons();
             SetSkill(fallbackIcon);
             label.text = displayName ?? string.Empty;
+        }
+
+        public void ShowEmptyIconOnly()
+        {
+            ShowEmpty();
+            HideTypeIcons();
+            SetSkill(fallbackIcon);
+            label.gameObject.SetActive(false);
         }
 
         public void ShowLocked()

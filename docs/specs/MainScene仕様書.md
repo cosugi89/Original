@@ -179,21 +179,20 @@ Status タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が
 - 初回表示ではCanvasレイアウト確定後にアイコンサイズを計算する。保存や再選択などの後続操作を行わなくても、すべてのSlotSkillでIconを表示する。
 - 未設定または現在の装備から使用できない Skill は `Empty` として表示する。
 - スロットを押下すると `SkillLoadoutDialog` を開き、押下したスロットを選択状態にする。
-- ダイアログ内では、`SelectedSkill` に現在のドラフト上の Skill ロードアウトを表示し、現在選択中のスロットを切り替えられるようにする。
+- ダイアログ内では、`SelectedSkill` の4個の `PartsSkillItem` に現在のドラフト上のSkillロードアウトをアイコンのみで表示する。編集対象スロットはダイアログを開いたStatus側のSkill枠で決まり、`SelectedSkill` は操作を持たない。`PartsSkillItem` 内部の名前テキストと種別アイコンは常に非表示にする。
 - 候補 Skill は、現在デッキの `EquipmentData.AssignableSkills` から `DeckManager.GetCandidateSkillsFromEquippedEquipment()` で取得する。対象は右手、左手、胴、兜の4装備枠に限定し、Hair、Eye、Beard、Skin などの見た目専用パーツは候補元に含めない。
-- 候補 Skill は `SkillInfoArea` のスクロール領域に、候補数に応じて候補行テンプレートから動的に生成して表示する。候補数を8件に固定せず、装備枠や候補数の拡張に追従できるようにする。
-- 候補行の `SkillFrame` は `ShowNormal` / `ShowDisabled` / `ShowEmpty` / `ShowLocked` で表示を切り替える表示専用ViewControllerとする。状態enumは内部実装に留める。`ShowNormal(icon)` はセット可能かつSkillがセット済みの平時表示を表し、黒い `Image` を必ず非表示にする。バトル用には `ShowBattleNormal(icon)` と `SetBattleChargeProgress(chargeProgress01)` を使い、Normal表示内の黒い `Image` を使用可能に近づくほど減らす。候補行ではゲージを表示しない。候補行のクリック操作は `StatusSkillInfoView` が持ち、`SkillFrame` がInspector参照で持つ `FeedbackButton` のクリック操作とは分ける。
-- 各候補 Skill は名前と説明を表示し、現在選択中スロットへ割り当てられている候補だけ Skill frame を表示する。
-- 候補 Skill を押すとダイアログ内のドラフトと `SelectedSkill` 表示が即時に切り替わり、同時に `DeckManager.SaveLoadout(...)` で現在デッキへ保存する。
+- 候補 Skill は `SkillInfoArea` のスクロール領域に、`Dialog-SkillLoadout.prefab` の `Content` に置いた非表示の `StatusSkillInfoView` テンプレートを複製して表示する。外部の候補行Prefabは参照しない。候補数を8件に固定せず、装備枠や候補数の拡張に追従できるようにする。
+- 候補行のアイコン枠は `PartsSkillItem` を使う。候補行では `ShowSkillIconOnly(icon)` を使い、`PartsSkillItem` 内部のSkill名テキストと種別アイコンは常に非表示にする。名前と説明は行側のテキストで表示し、現在選択中スロットへ割り当てられている候補だけ選択Frameを表示する。
+- 候補 Skill の選択によるロードアウト変更時に、ダイアログ内のドラフトと `SelectedSkill` 表示を即時に切り替え、同時に `DeckManager.SaveLoadout(...)` で現在デッキへ保存する。SaveボタンとClearボタンは使わない。
 - Skill ロードアウトは現在デッキの `SkillIds` に反映し、他のユーザーデータと同じメインセーブJSONへ保存する。
 - `Close` または背景クリックで閉じた場合も、変更済みの Skill は戻さない。未変更で閉じた場合はStatus表示の再描画を行わない。
 
 ### 6.6 見た目変更ダイアログ
 
-見た目変更では、装備 ID で表現するパーツ変更と、色変更を分けて扱う。
+見た目変更は戦闘デッキと独立して扱い、髪・目・ひげ・肌の見た目パーツと色だけを変更する。
 Status タブ上の `Button_Skin` を押下すると `AvatarDialog` を開き、Dialog 内の `PreviewStage` に一時生成した `Character` で編集中の見た目を確認する。
 
-- パーツ変更: `AvatarPartStateData` に `PartType`、`EquipmentId`、`Visible` を保存する。
+- パーツ変更: `Hair`、`Eye`、`Beard`、`Skin` のみを `AvatarPartStateData` に `PartType`、`EquipmentId`、`Visible` として保存する。
 - 色変更: `AvatarColorData` に `ColorTargetType` と色を保存する。
 
 色変更対象は現行の見た目仕様に合わせ、少なくとも以下を候補にする。
@@ -203,9 +202,11 @@ Status タブ上の `Button_Skin` を押下すると `AvatarDialog` を開き、
 - `Eye`
 - `Beard`
 
-`Arrow` と `HelmetHair` は派生パーツとして扱い、Status タブから直接保存対象にしない。表示状態は `AppearanceController` の同期処理に任せる。
+`Helmet`、`Chest`、`HandRight`、`HandLeft` は現在デッキの戦闘装備であり、このダイアログからは表示・変更・保存しない。`Arrow` と `HelmetHair` は派生パーツとして扱い、Status タブから直接保存対象にしない。表示状態は `AppearanceController` の同期処理に任せる。
 
-Dialog 内での変更は編集中プレビューへ反映し、保存ボタン押下時に `AvatarEditorPresenter.Commit()` で `AppearanceManager` へ反映する。
+`Assets/Resources/Prefabs/Dialog-AvatarController 1.prefab` は、カテゴリ枠と候補枠を各1件の非表示テンプレートとして持ち、外見カテゴリ・所持候補の件数ぶん動的に生成する。`ColorPicker`、Save、CloseはPrefab内の既存要素を使う。Dialog 内での変更は編集中プレビューへ反映し、保存ボタン押下時に `AvatarEditorPresenter.Commit()` で `AppearanceManager` へ反映する。外見専用モードでは `InventoryManager.MarkEquipped(...)`、`DeckManager`、戦闘装備には触れない。
+
+候補がないカテゴリでは、Prefab参照の `emptyText` に `No options available` を表示する。外見専用モードの保存は `AppearanceManager.SetCosmeticAppearance(...)` を使い、現在デッキの装備・Skill・選択中デッキを変更しない。
 保存後は `AppearanceAdapter.ApplyTo(...)` で Home 用プレビューと Status 用プレビューへ反映し、`UserDataJsonStore.SaveSession()` で保存する。
 閉じるボタンまたは背景クリックで閉じた場合は保存しない。
 Dialog 表示中は、Status タブ本体側のプレビューを一時的に非表示にし、Dialog 内プレビューだけを表示する。
