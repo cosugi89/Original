@@ -48,11 +48,6 @@ namespace Assets.Scripts.Features.Main
             totalDefenseText.text = "--";
             avatarPreviewImage.raycastTarget = false;
 
-            foreach (var text in GetComponentsInChildren<TextMeshProUGUI>(true))
-            {
-                if (text.name == "Text_Level")
-                    text.gameObject.SetActive(false);
-            }
         }
 
         public void SetAvatarPreview(Texture previewTexture)

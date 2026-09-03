@@ -231,7 +231,6 @@ namespace Assets.Scripts.Systems.GameData
 
         public IReadOnlyList<int> GetCurrentSkillIds()
         {
-            EnsureUsableLoadout();
             return GetCurrentDeck().SkillIds.ToArray();
         }
 

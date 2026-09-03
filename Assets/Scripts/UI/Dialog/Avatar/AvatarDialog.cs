@@ -88,6 +88,7 @@ namespace Assets.Scripts.UI.Dialog
 
         public void Setup(AvatarDialogRequest request, DialogContext context)
         {
+            EnsurePrefabReferences(context);
             sourcePartsManager = request.SourcePartsManager;
             saveTargets = request.SaveTargets;
             previewStage = context.AvatarPreviewStage;
@@ -114,24 +115,50 @@ namespace Assets.Scripts.UI.Dialog
 
         private void BindButtons()
         {
-            closeButton.onClick.AddListener(OnClickClose);
-            saveButton.onClick.AddListener(OnClickSave);
-
+            closeButton.SetAction(OnClickClose);
+            saveButton.SetAction(OnClickSave);
         }
 
         private void CreateCategorySlots()
         {
             categoryOptionTemplate.gameObject.SetActive(false);
             var sections = avatarEditorPresenter.GetSections();
-            foreach (var section in sections)
+            while (categoryOptionViews.Count < sections.Count)
             {
-                var category = section.Category;
                 var optionView = Instantiate(categoryOptionTemplate, categoryContent);
                 categoryOptionViews.Add(optionView);
-                optionView.Setup(ResolveCategoryIcon(section), false, true, () => SelectCategory(category));
+            }
+
+            for (var i = 0; i < categoryOptionViews.Count; i++)
+            {
+                categoryOptionViews[i].gameObject.SetActive(i < sections.Count);
+            }
+
+            if (sections.Count == 0)
+            {
+                return;
             }
 
             SelectCategory(sections[0].Category);
+        }
+
+        private void EnsurePrefabReferences(DialogContext context)
+        {
+            if (context?.AvatarPreviewStage == null ||
+                previewImage == null ||
+                previewTexture == null ||
+                closeButton == null ||
+                saveButton == null ||
+                categoryContent == null ||
+                categoryOptionTemplate == null ||
+                partOptionContent == null ||
+                partOptionTemplate == null ||
+                emptyText == null ||
+                colorPicker == null ||
+                previewCharacterPrefab == null)
+            {
+                throw new InvalidOperationException($"{nameof(AvatarDialog)} has missing serialized prefab references or preview context.");
+            }
         }
 
         private void SelectCategory(UICategory category)
@@ -140,7 +167,7 @@ namespace Assets.Scripts.UI.Dialog
             var section = avatarEditorPresenter.GetSection(category);
 
             var sections = avatarEditorPresenter.GetSections();
-            for (var i = 0; i < categoryOptionViews.Count; i++)
+            for (var i = 0; i < sections.Count; i++)
             {
                 var slotCategory = sections[i].Category;
                 categoryOptionViews[i].Setup(

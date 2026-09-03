@@ -10,6 +10,7 @@ using Assets.Scripts.UI.Dialog;
 using LayerLab.ArtMakerUnity;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -58,6 +59,7 @@ namespace Assets.Scripts.Features.Main
         private readonly List<SkillLoadoutCandidateItemView> _candidateSkillItemViews = new();
         private readonly List<int> _draftSkillIds = new();
         private DeckManager _deckManager;
+        private UnityAction[] _selectedSkillSlotActions;
         private int _selectedSlotIndex;
         private bool _hasSavedChanges;
 
@@ -88,11 +90,22 @@ namespace Assets.Scripts.Features.Main
 
         private void BindButtons()
         {
+            if (_selectedSkillSlotActions == null || _selectedSkillSlotActions.Length != selectedSkillSlotButtons.Length)
+            {
+                _selectedSkillSlotActions = new UnityAction[selectedSkillSlotButtons.Length];
+            }
+
             for (var i = 0; i < selectedSkillSlotButtons.Length; i++)
             {
                 var index = i;
-                selectedSkillSlotButtons[i].onClick.RemoveAllListeners();
-                selectedSkillSlotButtons[i].onClick.AddListener(() => SelectSlot(index));
+                var button = selectedSkillSlotButtons[index];
+                if (_selectedSkillSlotActions[index] != null)
+                {
+                    button.onClick.RemoveListener(_selectedSkillSlotActions[index]);
+                }
+
+                _selectedSkillSlotActions[index] = () => SelectSlot(index);
+                button.onClick.AddListener(_selectedSkillSlotActions[index]);
             }
 
             closeButton.SetAction(OnClickClose);
@@ -178,6 +191,12 @@ namespace Assets.Scripts.Features.Main
 
             for (var i = 0; i < _candidateSkillItemViews.Count; i++)
             {
+                if (i >= _candidates.Count)
+                {
+                    _candidateSkillItemViews[i].SetVisible(false);
+                    continue;
+                }
+
                 var candidate = _candidates[i];
                 var selected = SkillIdAt(_selectedSlotIndex) == candidate.Skill.SkillId;
                 var assignedSlotIndex = FindAssignedSlot(candidate.Skill.SkillId);
@@ -258,21 +277,38 @@ namespace Assets.Scripts.Features.Main
         private void EnsurePrefabReferences()
         {
             if (selectedSkillSlotItems.Length < UserProfileData.BattleSkillLoadoutSlotCount ||
-                selectedSkillSlotButtons.Length < UserProfileData.BattleSkillLoadoutSlotCount)
+                selectedSkillSlotButtons.Length < UserProfileData.BattleSkillLoadoutSlotCount ||
+                selectedSkillSlotItems.Take(UserProfileData.BattleSkillLoadoutSlotCount).Any(item => item == null) ||
+                selectedSkillSlotButtons.Take(UserProfileData.BattleSkillLoadoutSlotCount).Any(button => button == null) ||
+                candidateSkillItemTemplate == null ||
+                candidateSkillContent == null ||
+                emptyCandidatesText == null ||
+                closeButton == null)
             {
-                throw new InvalidOperationException($"{nameof(SkillLoadoutDialog)} requires {UserProfileData.BattleSkillLoadoutSlotCount} selected skill items and buttons.");
+                throw new InvalidOperationException(
+                    $"{nameof(SkillLoadoutDialog)} requires {UserProfileData.BattleSkillLoadoutSlotCount} selected skill items and buttons, " +
+                    "candidateSkillItemTemplate, candidateSkillContent, emptyCandidatesText, and closeButton references.");
             }
         }
 
         private void CreateCandidateViews()
         {
-            for (var i = 0; i < _candidates.Count; i++)
+            while (_candidateSkillItemViews.Count < _candidates.Count)
+            {
+                var candidateView = Instantiate(candidateSkillItemTemplate, candidateSkillContent);
+                _candidateSkillItemViews.Add(candidateView);
+            }
+
+            for (var i = 0; i < _candidateSkillItemViews.Count; i++)
             {
                 var index = i;
-                var candidateView = Instantiate(candidateSkillItemTemplate, candidateSkillContent);
-                candidateView.SetAction(() => SelectCandidate(index));
-                candidateView.SetVisible(true);
-                _candidateSkillItemViews.Add(candidateView);
+                var isVisible = index < _candidates.Count;
+                var candidateView = _candidateSkillItemViews[index];
+                candidateView.SetVisible(isVisible);
+                if (isVisible)
+                {
+                    candidateView.SetAction(() => SelectCandidate(index));
+                }
             }
         }
 
@@ -286,6 +322,23 @@ namespace Assets.Scripts.Features.Main
                 UICategory.Helmet => SkillItemType.Headgear,
                 _ => throw new InvalidOperationException($"Unsupported equipped skill category: {category}"),
             };
+        }
+
+        protected override void OnDestroy()
+        {
+            if (_selectedSkillSlotActions != null)
+            {
+                var count = Math.Min(selectedSkillSlotButtons.Length, _selectedSkillSlotActions.Length);
+                for (var i = 0; i < count; i++)
+                {
+                    if (selectedSkillSlotButtons[i] != null && _selectedSkillSlotActions[i] != null)
+                    {
+                        selectedSkillSlotButtons[i].onClick.RemoveListener(_selectedSkillSlotActions[i]);
+                    }
+                }
+            }
+
+            base.OnDestroy();
         }
 
     }

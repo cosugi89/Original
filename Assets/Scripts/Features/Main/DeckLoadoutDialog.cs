@@ -51,15 +51,17 @@ namespace Assets.Scripts.Features.Main
 
         public void Setup(DeckLoadoutDialogRequest request, DialogContext context)
         {
-            _deckManager = UserDataManager.EnsureInitialized().Decks;
-            _appearanceManager = UserDataManager.EnsureInitialized().Appearance;
+            EnsurePrefabReferences();
+
+            var userDataManager = UserDataManager.EnsureInitialized();
+            _deckManager = userDataManager.Decks;
+            _appearanceManager = userDataManager.Appearance;
             _hasDeckSelection = false;
             InitializeTemplate();
             Refresh();
             CreateLiveAvatarPreviews(context);
 
-            closeButton.onClick.RemoveListener(OnClickClose);
-            closeButton.onClick.AddListener(OnClickClose);
+            closeButton.SetAction(OnClickClose);
         }
 
         protected override void OnClickClose()
@@ -113,10 +115,22 @@ namespace Assets.Scripts.Features.Main
                 deckContent.GetChild(i).gameObject.SetActive(false);
             }
 
-            _deckItemSize = deckItemTemplate.transform.parent
-                .GetComponent<GridLayoutGroup>()
-                .cellSize;
+            _deckItemSize = deckContent.GetComponent<GridLayoutGroup>().cellSize;
             _templateInitialized = true;
+        }
+
+        private void EnsurePrefabReferences()
+        {
+            if (deckContent == null ||
+                deckItemTemplate == null ||
+                closeButton == null ||
+                deckItemTemplate.transform.parent != deckContent ||
+                deckContent.GetComponent<GridLayoutGroup>() == null)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(DeckLoadoutDialog)} requires deckContent, a direct-child deckItemTemplate, " +
+                    $"a {nameof(GridLayoutGroup)}, and closeButton references.");
+            }
         }
 
         private void EnsureViewCount(int requiredCount)

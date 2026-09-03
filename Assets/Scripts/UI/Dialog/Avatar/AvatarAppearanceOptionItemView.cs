@@ -10,6 +10,22 @@ namespace Assets.Scripts.UI.Dialog
         [SerializeField] private Image icon;
         [SerializeField] private GameObject selectedGraphic;
 
+        private UnityAction _action;
+
+        private void Awake()
+        {
+            button.onClick.RemoveListener(OnClick);
+            button.onClick.AddListener(OnClick);
+        }
+
+        private void OnDestroy()
+        {
+            if (button != null)
+            {
+                button.onClick.RemoveListener(OnClick);
+            }
+        }
+
         public void Setup(Sprite sprite, bool isSelected, bool isInteractable, UnityAction onClick)
         {
             gameObject.SetActive(true);
@@ -20,8 +36,12 @@ namespace Assets.Scripts.UI.Dialog
             icon.color = Color.white;
             selectedGraphic.SetActive(isSelected);
             button.interactable = isInteractable;
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(onClick);
+            _action = onClick;
+        }
+
+        private void OnClick()
+        {
+            _action?.Invoke();
         }
 
         public void SetSelected(bool isSelected)

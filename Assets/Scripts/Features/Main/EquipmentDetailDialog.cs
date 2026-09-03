@@ -68,15 +68,14 @@ namespace Assets.Scripts.Features.Main
 
         public void Setup(EquipmentDetailDialogRequest request, DialogContext context)
         {
+            EnsurePrefabReferences();
             _option = request.Option;
             Refresh();
 
-            closeButton.onClick.RemoveListener(OnClickClose);
-            closeButton.onClick.AddListener(OnClickClose);
+            closeButton.SetAction(OnClickClose);
 
             buttonArea.SetActive(!request.IsOpenedFromEquipmentSlot);
-            equipButton.onClick.RemoveListener(OnClickEquip);
-            equipButton.onClick.AddListener(OnClickEquip);
+            equipButton.SetAction(OnClickEquip);
         }
 
         protected override void OnClickClose()
@@ -213,6 +212,30 @@ namespace Assets.Scripts.Features.Main
             skillTemplate.gameObject.SetActive(false);
             buffTemplate.gameObject.SetActive(false);
             _templatesInitialized = true;
+        }
+
+        private void EnsurePrefabReferences()
+        {
+            if (equipmentItem == null ||
+                titleText == null ||
+                detailText == null ||
+                tagsContent == null ||
+                tagTemplate == null ||
+                skillsContent == null ||
+                skillTemplate == null ||
+                buffsContent == null ||
+                buffTemplate == null ||
+                scrollContent == null ||
+                rarityText == null ||
+                rarityBackgroundImage == null ||
+                rarityInnerColorImage == null ||
+                rarityDecoImage == null ||
+                buttonArea == null ||
+                equipButton == null ||
+                closeButton == null)
+            {
+                throw new InvalidOperationException($"{nameof(EquipmentDetailDialog)} has missing serialized prefab references.");
+            }
         }
 
         private static void EnsureViewCount<T>(List<T> views, int requiredCount, Func<T> createView)

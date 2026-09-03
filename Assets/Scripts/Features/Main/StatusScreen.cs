@@ -214,13 +214,7 @@ namespace Assets.Scripts.Features.Main
             }
 
             _presenter.ResetCategory(categories[0]);
-            _presenter.Commit();
-            avatarPreview.ApplySavedAppearance();
-
-            var userDataManager = UserDataManager.EnsureInitialized();
-            userDataManager.Decks.EnsureUsableLoadout(persistImmediately: true);
-            userDataManager.UserDataStore.SaveSession();
-            Refresh();
+            CommitEquipmentChange();
         }
 
         private void OnSkillSlotClicked(int slotIndex)
@@ -253,18 +247,24 @@ namespace Assets.Scripts.Features.Main
                         return;
                     }
 
-                    _presenter.Commit();
-                    avatarPreview.ApplySavedAppearance();
-                    var userDataManager = UserDataManager.EnsureInitialized();
-                    userDataManager.Decks.EnsureUsableLoadout(persistImmediately: true);
-                    userDataManager.UserDataStore.SaveSession();
-                    Refresh();
+                    CommitEquipmentChange();
                 }
             }
             finally
             {
                 _equipmentDetailDialogOpen = false;
             }
+        }
+
+        private void CommitEquipmentChange()
+        {
+            _presenter.Commit();
+            avatarPreview.ApplySavedAppearance();
+
+            var userDataManager = UserDataManager.EnsureInitialized();
+            userDataManager.Decks.EnsureUsableLoadout(persistImmediately: true);
+            userDataManager.UserDataStore.SaveSession();
+            Refresh();
         }
 
         private async UniTaskVoid OpenSkillLoadoutDialogAsync(int slotIndex)

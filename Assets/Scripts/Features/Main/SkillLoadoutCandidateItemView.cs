@@ -17,6 +17,22 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI descriptionText;
 
+        private Action _action;
+
+        private void Awake()
+        {
+            button.onClick.RemoveListener(OnClick);
+            button.onClick.AddListener(OnClick);
+        }
+
+        private void OnDestroy()
+        {
+            if (button != null)
+            {
+                button.onClick.RemoveListener(OnClick);
+            }
+        }
+
         public void SetVisible(bool visible)
         {
             gameObject.SetActive(visible);
@@ -24,8 +40,12 @@ namespace Assets.Scripts.Features.Main
 
         public void SetAction(Action action)
         {
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => action());
+            _action = action;
+        }
+
+        private void OnClick()
+        {
+            _action?.Invoke();
         }
 
         public void Refresh(
