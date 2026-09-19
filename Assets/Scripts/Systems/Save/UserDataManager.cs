@@ -22,6 +22,7 @@ namespace Assets.Scripts.Systems.Save
         public AppearanceManager Appearance { get; private set; }
         public ProgressManager Progress { get; private set; }
         public DeckManager Decks { get; private set; }
+        public AbilityProgressManager AbilityProgress { get; private set; }
 
         [Description("セッション初期化が完了しているかどうか。起動直後のガードに使う。")]
         public bool IsInitialized { get; private set; }
@@ -117,6 +118,17 @@ namespace Assets.Scripts.Systems.Save
         public void SetCurrentStageId(int stageId)
         {
             CurrentStageId = stageId;
+        }
+
+        /// <summary>指定TreeのAbility進捗窓口を取得する。Battle/Status接続時も同じ導出結果を利用する。</summary>
+        public AbilityProgressManager GetAbilityProgress(AbilityTreeMasterData tree)
+        {
+            if (AbilityProgress == null || AbilityProgress.Tree != tree)
+            {
+                AbilityProgress = new AbilityProgressManager(UserDataStore, tree);
+            }
+
+            return AbilityProgress;
         }
 
         private void SavePendingChanges()

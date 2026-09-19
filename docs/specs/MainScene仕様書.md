@@ -3,7 +3,7 @@
 - 最終更新: 2026-09-03
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Status タブ拡充方針を定義する。
-- 関連文書: `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
+- 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
 
 ## 1. 基本方針
 
@@ -24,7 +24,7 @@
 | タブ index | 画面 | 役割 |
 | --- | --- | --- |
 | 0 | `Status` | 装備変更、実戦用 Skill ロードアウト変更、見た目変更ダイアログの入口を持つタブ。 |
-| 1 | `Ability` | スキルや能力関連の入口候補。詳細は未確定。 |
+| 1 | `Ability` | プレイヤーの恒久成長を管理する入口。初期実装では `Trait` Tree を扱う。詳細は `docs/specs/Ability仕様書.md` を正とする。 |
 | 2 | `Home` | 初期表示。戦闘開始導線を持つ。 |
 | 3 | `Dungeon` | ステージ、ダンジョン関連の入口候補。詳細は未確定。 |
 | 4 | `Shop` | ショップ関連の入口候補。詳細は未確定。 |
@@ -65,19 +65,28 @@ Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleS
 
 Home と Status の表示サイズ、位置、向きは、それぞれのシーン上の `Transform` で調整する。Dialog 内の表示サイズ、位置、向きは `AvatarDialog` の `previewLocalPosition` / `previewLocalScale` と `PreviewStage` 側で調整する。
 
-## 4. MainTabs の仕様
+## 4. MainScene の下部Tab仕様
 
-`MainTabs` は `MainScene` 下部のタブ切り替えを担当する。
+下部の `Status`、`Ability`、`Home`、`Dungeon`、`Shop` Tabの切り替えは `MainScene` が担当する。`MainTabs` コンポーネントは使用しない。
 
-- `tabButtons`、`screens`、`normalStates`、`focusStates` は同じ index 順で設定する。
-- `defaultIndex` は `2` とし、対応画面は `Home` である。
-- 起動時はシーン保存時の active 状態ではなく `defaultIndex` を初期選択として扱う。
+- 各TabのNormal表示へ `PartsTabItem` を配置し、`MainScene` の `statusTab`、`abilityTab`、`homeTab`、`dungeonTab`、`shopTab` にInspector参照で設定する。
+- 対応画面も `MainScene` の各 `*TabScreen` にInspector参照で設定する。
+- 起動時は `Home` を初期選択として扱う。
 - タブ押下時は、選択画面だけを active にし、他の画面を inactive にする。
-- 選択タブの `focusStates` だけを active にし、他の focus 表示は inactive にする。
-- `normalStates` はタブのベース表示として active のまま維持する。
-- 選択画面が `Screen` コンポーネントを持つ場合、`MainScene.ChangeScreen(...)` へ通知する。
+- 選択TabだけをFocused表示にし、ほかのTabはNormal表示にする。
+- HomeとStatusの選択時は、対応するアバタープレビューだけを表示する。
 
-タブの `Button.onClick` へ個別に永続イベントを設定するのではなく、`MainTabs` が起動時に動的 listener を登録する。
+タブの `Button.onClick` へ個別に永続イベントを設定するのではなく、`MainScene` が起動時に動的 listener を登録する。
+
+### 4.1 AbilityScene の仕様
+
+`Ability` 画面には `AbilityScene` を配置し、内部の `Artifact`、`Skill`、`Trait` を切り替える。
+
+- `artifactTab` / `skillTab` / `traitTab` と、対応する `artifactScreen` / `skillScreen` をInspectorで設定する。
+- Trait画面は `TraitTabScreen` を `traitTabScreen` として `AbilityScene` から直接参照する。
+- 初期選択は右端の `Trait` とする。
+- Ability内Tabのlistenerも `AbilityScene` が起動時に登録し、Buttonの永続イベントは使わない。
+- `AbilityScene` の責務はTabと画面のactive切り替えだけとし、Tabの見た目、Tree表示、Point表示、購入処理は持たない。
 
 ## 5. Home 画面
 
@@ -245,7 +254,6 @@ Skill ロードアウトは、Skill 設定ダイアログ内で候補 Skill を�
 
 ## 7. 未確定事項
 
-- Ability タブで扱う範囲。
 - Dungeon タブをステージ選択と同一視するかどうか。
 - Shop タブで扱う通貨、商品、購入フロー。
 - Status タブの最終 UI レイアウト。

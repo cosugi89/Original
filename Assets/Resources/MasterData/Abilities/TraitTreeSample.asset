@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04e5cfe05ad80f24595435487cb4d4da, type: 3}
+  m_Name: TraitTreeSample
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AbilityTreeMasterData
+  treeId: trait
+  displayName: Trait
+  nodeEntries:
+  - treeNodeId: trait.training
+    node: {fileID: 11400000, guid: 1f0cdcc5ce314b4a9bedceb1fd8a776e, type: 2}
+    prerequisiteMode: 0
+  - treeNodeId: trait.vitality.branch
+    node: {fileID: 11400000, guid: a09cbf46aa7a44df9367c6c41b91d084, type: 2}
+    prerequisiteMode: 0
+  - treeNodeId: trait.strength.branch
+    node: {fileID: 11400000, guid: 9568730b319044918e2191b0a1ddce1f, type: 2}
+    prerequisiteMode: 0
+  - treeNodeId: trait.adapt.merge
+    node: {fileID: 11400000, guid: 5ac1c56d1caa4e4588dcdfe52a91ee20, type: 2}
+    prerequisiteMode: 1
+  links:
+  - fromTreeNodeId: trait.training
+    toTreeNodeId: trait.vitality.branch
+    requiredLevel: 1
+  - fromTreeNodeId: trait.training
+    toTreeNodeId: trait.strength.branch
+    requiredLevel: 1
+  - linkType: 1
+    fromTreeNodeId: trait.vitality.branch
+    toTreeNodeId: trait.strength.branch
+    requiredLevel: 1
+  - fromTreeNodeId: trait.vitality.branch
+    toTreeNodeId: trait.adapt.merge
+    requiredLevel: 1
+  - fromTreeNodeId: trait.strength.branch
+    toTreeNodeId: trait.adapt.merge
+    requiredLevel: 1

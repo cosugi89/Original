@@ -18,6 +18,9 @@ namespace Assets.Scripts.Systems.Save.Models
 
         [Description("バトルステージの解放・クリア状況。")]
         public BattleProgressData BattleProgress { get; set; } = new();
+
+        [Description("AbilityのPoint残高とTree配置NodeのLevel。")]
+        public AbilityProgressData Ability { get; set; } = new();
     }
 
     public class UserMetaData

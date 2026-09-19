@@ -80,11 +80,14 @@ namespace Assets.Scripts.Systems.Save
             userData.Profile.AvatarAppearance ??= new AvatarAppearanceData();
             userData.Inventory ??= new InventoryData();
             userData.BattleProgress ??= new BattleProgressData();
+            userData.Ability ??= new AbilityProgressData();
 
             userData.Profile.AvatarAppearance.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
             userData.Profile.AvatarAppearance.Colors ??= new System.Collections.Generic.List<AvatarColorData>();
             userData.Inventory.Equipments ??= new System.Collections.Generic.List<InventoryEntryData>();
             userData.BattleProgress.Stages ??= new System.Collections.Generic.List<StageProgressData>();
+            userData.Ability.NodeLevels ??= new System.Collections.Generic.List<AbilityTreeNodeLevelData>();
+            userData.Ability.PointBalance = Mathf.Max(0, userData.Ability.PointBalance);
 
             if (string.IsNullOrWhiteSpace(userData.Meta.CreatedAtUtc))
                 userData.Meta.CreatedAtUtc = System.DateTime.UtcNow.ToString("O");

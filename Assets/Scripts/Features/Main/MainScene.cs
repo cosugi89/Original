@@ -1,6 +1,8 @@
 using UnityEngine;
+using UnityEngine.Events;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Features.Main;
+using Assets.Scripts.UI.Components;
 using Assets.Scripts.Core;
 
 /// <summary>
@@ -24,11 +26,46 @@ public class MainScene : MonoBehaviour
     [SerializeField] private HomeScreen homeScreen;
     [SerializeField] private StatusScreen statusScreen;
 
+    [Header("Main Tabs")]
+    [SerializeField] private PartsTabItem statusTab;
+    [SerializeField] private PartsTabItem abilityTab;
+    [SerializeField] private PartsTabItem homeTab;
+    [SerializeField] private PartsTabItem dungeonTab;
+    [SerializeField] private PartsTabItem shopTab;
+
+    [SerializeField] private GameObject statusTabScreen;
+    [SerializeField] private GameObject abilityTabScreen;
+    [SerializeField] private GameObject homeTabScreen;
+    [SerializeField] private GameObject dungeonTabScreen;
+    [SerializeField] private GameObject shopTabScreen;
+
     private AppearanceController _homeCharacterPreview;
     private GameObject _homeCharacterRoot;
     private AppearanceController _statusCharacterPreview;
     private GameObject _statusCharacterRoot;
 
+    private UnityAction _statusTabHandler;
+    private UnityAction _abilityTabHandler;
+    private UnityAction _homeTabHandler;
+    private UnityAction _dungeonTabHandler;
+    private UnityAction _shopTabHandler;
+
+    private void Awake()
+    {
+        _statusTabHandler = ShowStatus;
+        _abilityTabHandler = ShowAbility;
+        _homeTabHandler = ShowHome;
+        _dungeonTabHandler = ShowDungeon;
+        _shopTabHandler = ShowShop;
+
+        statusTab.Button.onClick.AddListener(_statusTabHandler);
+        abilityTab.Button.onClick.AddListener(_abilityTabHandler);
+        homeTab.Button.onClick.AddListener(_homeTabHandler);
+        dungeonTab.Button.onClick.AddListener(_dungeonTabHandler);
+        shopTab.Button.onClick.AddListener(_shopTabHandler);
+
+        ShowHome();
+    }
 
     private void Start()
     {
@@ -48,9 +85,58 @@ public class MainScene : MonoBehaviour
         SetPreviewVisibility(ResolveActivePreviewScreen());
     }
 
-    public void ChangeScreen(Assets.Scripts.Features.Main.Screen screen)
+    private void OnDestroy()
     {
-        SetPreviewVisibility(screen);
+        statusTab.Button.onClick.RemoveListener(_statusTabHandler);
+        abilityTab.Button.onClick.RemoveListener(_abilityTabHandler);
+        homeTab.Button.onClick.RemoveListener(_homeTabHandler);
+        dungeonTab.Button.onClick.RemoveListener(_dungeonTabHandler);
+        shopTab.Button.onClick.RemoveListener(_shopTabHandler);
+    }
+
+    private void ShowStatus()
+    {
+        SelectTab(statusTab, statusTabScreen);
+    }
+
+    private void ShowAbility()
+    {
+        SelectTab(abilityTab, abilityTabScreen);
+    }
+
+    private void ShowHome()
+    {
+        SelectTab(homeTab, homeTabScreen);
+    }
+
+    private void ShowDungeon()
+    {
+        SelectTab(dungeonTab, dungeonTabScreen);
+    }
+
+    private void ShowShop()
+    {
+        SelectTab(shopTab, shopTabScreen);
+    }
+
+    private void SelectTab(PartsTabItem selectedTab, GameObject selectedScreen)
+    {
+        statusTabScreen.SetActive(selectedScreen == statusTabScreen);
+        abilityTabScreen.SetActive(selectedScreen == abilityTabScreen);
+        homeTabScreen.SetActive(selectedScreen == homeTabScreen);
+        dungeonTabScreen.SetActive(selectedScreen == dungeonTabScreen);
+        shopTabScreen.SetActive(selectedScreen == shopTabScreen);
+
+        statusTab.SetNormalState();
+        abilityTab.SetNormalState();
+        homeTab.SetNormalState();
+        dungeonTab.SetNormalState();
+        shopTab.SetNormalState();
+        selectedTab.SetFocusedState();
+
+        SetPreviewVisibility(
+            selectedScreen == homeTabScreen ? homeScreen :
+            selectedScreen == statusTabScreen ? statusScreen : null);
     }
 
     private AppearanceController ResolveSceneCharacterPreview()
