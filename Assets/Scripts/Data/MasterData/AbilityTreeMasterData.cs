@@ -36,6 +36,29 @@ namespace Assets.Scripts.Data.MasterData
         }
     }
 
+    /// <summary>Trait Tree UIの1段分の配置。並び順はTreeの始点から終点までとする。</summary>
+    [Serializable]
+    public sealed class AbilityTreeDisplayRow
+    {
+        [SerializeField] private string centerTreeNodeId = string.Empty;
+        [SerializeField] private string leftTreeNodeId = string.Empty;
+        [SerializeField] private string rightTreeNodeId = string.Empty;
+
+        public string CenterTreeNodeId => centerTreeNodeId ?? string.Empty;
+        public string LeftTreeNodeId => leftTreeNodeId ?? string.Empty;
+        public string RightTreeNodeId => rightTreeNodeId ?? string.Empty;
+        public int NodeCount => !string.IsNullOrWhiteSpace(CenterTreeNodeId)
+            ? 1
+            : !string.IsNullOrWhiteSpace(LeftTreeNodeId) && !string.IsNullOrWhiteSpace(RightTreeNodeId) ? 2 : 0;
+
+        public void Normalize()
+        {
+            centerTreeNodeId = (centerTreeNodeId ?? string.Empty).Trim();
+            leftTreeNodeId = (leftTreeNodeId ?? string.Empty).Trim();
+            rightTreeNodeId = (rightTreeNodeId ?? string.Empty).Trim();
+        }
+    }
+
     [Serializable]
     public sealed class AbilityTreeLinkDefinition
     {
@@ -72,11 +95,13 @@ namespace Assets.Scripts.Data.MasterData
         [SerializeField] private string displayName = "Trait";
         [SerializeField] private List<AbilityTreeNodeEntry> nodeEntries = new();
         [SerializeField] private List<AbilityTreeLinkDefinition> links = new();
+        [SerializeField] private List<AbilityTreeDisplayRow> displayRows = new();
 
         public string TreeId => treeId ?? string.Empty;
         public string DisplayName => displayName ?? string.Empty;
         public IReadOnlyList<AbilityTreeNodeEntry> NodeEntries => nodeEntries ??= new List<AbilityTreeNodeEntry>();
         public IReadOnlyList<AbilityTreeLinkDefinition> Links => links ??= new List<AbilityTreeLinkDefinition>();
+        public IReadOnlyList<AbilityTreeDisplayRow> DisplayRows => displayRows ??= new List<AbilityTreeDisplayRow>();
 
         public AbilityTreeNodeEntry FindNodeEntry(string treeNodeId)
         {
@@ -98,6 +123,7 @@ namespace Assets.Scripts.Data.MasterData
             displayName = (displayName ?? string.Empty).Trim();
             nodeEntries ??= new List<AbilityTreeNodeEntry>();
             links ??= new List<AbilityTreeLinkDefinition>();
+            displayRows ??= new List<AbilityTreeDisplayRow>();
             for (var i = 0; i < nodeEntries.Count; i++)
             {
                 nodeEntries[i]?.Normalize();
@@ -106,6 +132,11 @@ namespace Assets.Scripts.Data.MasterData
             for (var i = 0; i < links.Count; i++)
             {
                 links[i]?.Normalize();
+            }
+
+            for (var i = 0; i < displayRows.Count; i++)
+            {
+                displayRows[i]?.Normalize();
             }
         }
 
@@ -122,6 +153,73 @@ namespace Assets.Scripts.Data.MasterData
             ValidateNodeMasters(issues, entriesById);
             ValidateLinks(issues, entriesById);
             ValidatePrerequisiteCycles(issues, entriesById);
+            ValidateDisplayRows(issues, entriesById);
+        }
+
+        private void ValidateDisplayRows(
+            List<ValidationIssue> issues,
+            IReadOnlyDictionary<string, AbilityTreeNodeEntry> entriesById)
+        {
+            if (DisplayRows.Count == 0)
+            {
+                AddIssue(issues, "empty_display_rows", "Display Rows が空です。Trait Tree UI用の配置を設定してください。", ValidationSeverity.Warning);
+                return;
+            }
+
+            var displayedIds = new HashSet<string>(StringComparer.Ordinal);
+            for (var rowIndex = 0; rowIndex < DisplayRows.Count; rowIndex++)
+            {
+                var row = DisplayRows[rowIndex];
+                if (row == null)
+                {
+                    AddIssue(issues, "null_display_row", $"Display Rows[{rowIndex}] が未設定です。", ValidationSeverity.Error);
+                    continue;
+                }
+
+                var hasCenter = !string.IsNullOrWhiteSpace(row.CenterTreeNodeId);
+                var hasLeft = !string.IsNullOrWhiteSpace(row.LeftTreeNodeId);
+                var hasRight = !string.IsNullOrWhiteSpace(row.RightTreeNodeId);
+                if (hasCenter == (hasLeft || hasRight) || hasLeft != hasRight)
+                {
+                    AddIssue(issues, "invalid_display_row_slots", $"Display Rows[{rowIndex}] は Center 1件、または Left / Right 2件だけを設定してください。", ValidationSeverity.Error);
+                    continue;
+                }
+
+                ValidateDisplayRowNode(issues, entriesById, displayedIds, row.CenterTreeNodeId, rowIndex, "Center");
+                ValidateDisplayRowNode(issues, entriesById, displayedIds, row.LeftTreeNodeId, rowIndex, "Left");
+                ValidateDisplayRowNode(issues, entriesById, displayedIds, row.RightTreeNodeId, rowIndex, "Right");
+            }
+
+            foreach (var treeNodeId in entriesById.Keys)
+            {
+                if (!displayedIds.Contains(treeNodeId))
+                {
+                    AddIssue(issues, "missing_display_row_node", $"TreeNodeId {treeNodeId} が Display Rows にありません。", ValidationSeverity.Error);
+                }
+            }
+        }
+
+        private static void ValidateDisplayRowNode(
+            List<ValidationIssue> issues,
+            IReadOnlyDictionary<string, AbilityTreeNodeEntry> entriesById,
+            HashSet<string> displayedIds,
+            string treeNodeId,
+            int rowIndex,
+            string slotName)
+        {
+            if (string.IsNullOrWhiteSpace(treeNodeId))
+            {
+                return;
+            }
+
+            if (!entriesById.ContainsKey(treeNodeId))
+            {
+                AddIssue(issues, "display_row_node_outside_tree", $"Display Rows[{rowIndex}] {slotName} がTree外のTreeNodeIdを参照しています: {treeNodeId}", ValidationSeverity.Error);
+            }
+            else if (!displayedIds.Add(treeNodeId))
+            {
+                AddIssue(issues, "duplicate_display_row_node", $"TreeNodeId {treeNodeId} が Display Rows に重複しています。", ValidationSeverity.Error);
+            }
         }
 
         private Dictionary<string, AbilityTreeNodeEntry> CollectEntries(List<ValidationIssue> issues)

@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Assets.Scripts.Core.Const;
 using Assets.Scripts.Core.Interfaces;
 using TMPro;
 using UnityEngine;
@@ -29,35 +31,41 @@ namespace Assets.Scripts.UI.Components
         [SerializeField] private GameObject specialState;
         [SerializeField] private GameObject disabledState;
 
-        private string FractionText(string numerator, string Denominator) => $"{numerator}/{Denominator}";
-        private string MaxText => "MAX";
-
-        public void ShowNormal()
+        private const string MaxText = "MAX";
+        public void SetContent(Sprite icon, int currentLevel, int maxLevel)
         {
+            iconImage.sprite = icon;
+            iconImage.enabled = icon != null;
+            iconImage.preserveAspect = true;
             
+            text.text = currentLevel == maxLevel
+                ? MaxText
+                : $"{Mathf.Clamp(currentLevel, 0, Mathf.Max(0, maxLevel))}/{Mathf.Max(0, maxLevel)}";
         }
 
-        public void ShowFocused()
+        public void SetAlertVisible(bool isVisible) => alertIcon.SetActive(isVisible);
+        public void SetUpgradeMarkerVisible(bool isVisible)  => upIcon.SetActive(isVisible);
+        public void ShowNormal() => SetState(State.Normal, true);
+        public void ShowFocused() => SetState(State.Focused, true);
+        public void ShowSpecial() => SetState(State.Special, true);
+        public void ShowDisabled()  => SetState(State.Disabled, false);
+        
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void ShowLocked()  => ShowDisabled(); // Interface で用意する必要があるため
+        
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void ShowEmpty() => ShowDisabled(); // Interface で用意する必要があるため
+
+        private void SetState(State state, bool isInteractable)
         {
-
+            text.gameObject.SetActive(state != State.Disabled);
+            normalState.SetActive(state == State.Normal);
+            focusedState.SetActive(state == State.Focused);
+            specialState.SetActive(state == State.Special);
+            disabledState.SetActive(state == State.Disabled);
+            lockIcon.SetActive(state == State.Disabled);
+            iconImage.color = state == State.Disabled ? UIColors.TraitTree.DisableIconColor : UIColors.White;
+            button.interactable = isInteractable;
         }
-
-        public void ShowSpecial()
-        {
-
-        }
-
-        public void ShowDisabled()
-        {
-        }
-
-        public void ShowEmpty() { }
-
-
-        public void ShowLocked()
-        {
-
-        }
-
     }
 }

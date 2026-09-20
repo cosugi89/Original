@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-09-06
+- 最終更新: 2026-09-20
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と MainScene / Status タブ拡充タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -104,7 +104,11 @@
 - [x] Status タブに現在の装備枠一覧を表示する
 - [x] Ability タブ向けに `AbilityNodeMasterData` / `AbilityTreeMasterData`、Inspector検証、Tree Builder Windowを追加する。Node Masterは再利用可能とし、Tree配置ごとの `TreeNodeId`、Rank、Tree接続、排他、循環依存を検証できるようにする
 - [x] Ability内の `Artifact` / `Skill` / `Trait` Tab切り替えを `AbilityScene` に限定して接続する
-- [ ] Ability タブのTrait Treeを段階実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続はTab切り替え確認後に着手する
+- [x] Ability タブのTrait Tree基盤を実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続まで完了。
+- [x] `PartsTraitTreeRow` / `PartsTraitLine` のPrefabを作成して`TraitTabScreen`のRow Prefab / Scroll Contentへ配線する。各Line Imageには `UI/Trait Line Reveal` Materialと曲線の進行度を持つReveal Mapを設定する。
+- [ ] Trait Itemクリックで詳細Dialogを開き、購入可能Nodeだけ購入ボタンを表示して、結果をTree表示へ即時反映する。
+- [ ] Ability進捗の重複 `TreeNodeId` を安全に補正・無視し、Trait UIの状態辞書生成で例外にならないようにする。
+- [ ] `DisplayRows` と `Links` の整合をMasterData検証で保証する。直前Row以外の前提接続、TwoToTwoの交差接続、Prefabで表現できない接続をエラーにするか、UIの接続表現を拡張する方針を確定する。
 - [ ] ステージ初回クリアのPoint報酬と受領済み状態を実装する
 - [ ] ステータス算出仕様の確定後、Abilityの導出済み能力補正をBattleとStatus表示へ接続する
 - [x] Status タブで所持済み / 解放済み装備から装備を選択できるようにする

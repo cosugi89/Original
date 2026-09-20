@@ -27,6 +27,11 @@ MonoBehaviour:
   - treeNodeId: trait.adapt.merge
     node: {fileID: 11400000, guid: 5ac1c56d1caa4e4588dcdfe52a91ee20, type: 2}
     prerequisiteMode: 1
+  displayRows:
+  - centerTreeNodeId: trait.training
+  - leftTreeNodeId: trait.vitality.branch
+    rightTreeNodeId: trait.strength.branch
+  - centerTreeNodeId: trait.adapt.merge
   links:
   - fromTreeNodeId: trait.training
     toTreeNodeId: trait.vitality.branch

@@ -13,7 +13,6 @@ namespace Assets.Scripts.Core.Const
         public static readonly Color White = new Color(1, 1, 1);
         public static readonly Color Black = new Color(0, 0, 0);
 
-
         public interface IColorSet
         {
             Color Background { get; }
@@ -61,6 +60,13 @@ namespace Assets.Scripts.Core.Const
             public Color Background { get; } = new Color32(206, 43, 42, 255);
             public Color InnerColor1 { get; } = new Color32(214, 55, 49, 255);
             public Color Glow { get; } = new Color32(164, 37, 36, 255);
+        }
+
+        public class TraitTree
+        {
+            public static readonly Color DisableIconColor = new Color32(128, 128, 128, 128);
+            public static readonly Color DisableLineColor = new Color32(71, 69, 66, 255);
+            public static readonly Color EnableLineColor = new Color32(211, 169, 107, 255);
         }
     }
 }

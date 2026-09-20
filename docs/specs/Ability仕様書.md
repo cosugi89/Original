@@ -1,6 +1,6 @@
 # Ability 仕様書
 
-- 最終更新: 2026-09-06
+- 最終更新: 2026-09-20
 - 文書状態: Trait Treeの進捗保存・購入・UI接続まで実装済み。Point報酬とBattle/Status反映は未実装。
 - 位置づけ: MainScene の Ability タブにおける恒久成長Tree、Point、進捗保存の設計正本。
 
@@ -66,7 +66,9 @@ Tree構造は、Tree単位のマスターデータで接続として管理する
 - `AbilityTreeLinkDefinition`: `Prerequisite`（From TreeNodeId → To TreeNodeId、必要Level）または `Exclusive`（両配置Node間の無向排他）を定義する。
 - `Any` / `All` はTree上のNode Entryが持つ前提判定であり、複数前提接続をどう満たすかだけを示す。管理用Groupは持たない。
 - 次Node一覧は保存せず、Tree接続から導出する。UIの接続線も同じ接続を使う。
-- Nodeの画面配置、接続線の見た目、画面比率ごとのレイアウトはUI側で管理する。`AbilityScene` の責務はScene上の `Artifact` / `Skill` / `Trait` Tabと対応画面をInspector参照で切り替えることだけとし、初期表示は右端の `Trait` とする。`Trait` 画面のTree表示、Point表示、購入処理は別コンポーネントとして段階的に接続する。
+- Treeのゲーム上の接続は `Links` を正本とする。画面の縦Row配置は `AbilityTreeMasterData.DisplayRows` に保存し、並び順はTreeの始点から終点までとする。各RowはCenter 1件、またはLeft / Right 2件のいずれかで `TreeNodeId` を参照する。開始・終端・前後Node数・接続線パターンはDisplayRowsとLinksから導出し、重複保存しない。
+- `TraitTabScreen` はScroll Contentに `PartsTraitTreeRow` PrefabをDisplayRowsごとに生成する。接続線は同じImageをDisabled色とEnabled色で表示し、解放時は曲線に沿った進行度を記録したReveal Mapを使って、Disabled色からEnabled色へ始点から終点まで切り替わる演出を行う。
+- Tree表示では、始点RowのItemを必ずFocused表示とする。後続Itemは自身がLv.1以上ならFocused、直前Rowの接続元ItemがFocusedまたは購入済みならNormal、それ以外はDisabledとする。複数前提は `Any` ではいずれか、`All` ではすべての直前接続元がFocusedまたは購入済みであることを必要とする。接続線は、接続先NodeがLv.1以上のときだけEnabled色で表示する。これは購入可能状態ではなく、取得済みの経路を示す表示規則とする。
 - MasterDataの編集には `Tools > Original > Ability Tree Graph` または `AbilityTreeMasterData` Inspectorの「Tree編集ウィンドウを開く」を使える。Window左側は進行開始点を下、後続Nodeを上に置く接続グラフであり、配置Node間の接続を線で表示する。カードは表示名、`TreeNodeId`、前提条件だけを表示し、カード選択で右側の編集対象を切り替える。右側では通常操作として開始Nodeまたは後続Nodeを追加し、分岐・合流、接続編集、Node定義編集、削除操作は折りたたみ項目に分ける。既存の配置Nodeへの接続は再合流に使い、新規追加とは区別する。再合流候補は配置Node単位で表示し、自己接続、重複、循環だけを除外して理由を表示する。排他経路から `All` 条件の配置Nodeへ合流する候補は接続可能とし、「いずれか」へ変更する必要があることを表示する。選択済み配置のNode Masterは接続を維持したまま差し替えられる。「接続を確認・編集」では接続単位で削除と必要Level変更を行い、配置Nodeを削除する場合は関連接続だけを削除して他の配置NodeとNode Master Assetを残す。Node Masterを編集すると、そのAssetを参照する全配置Nodeに反映される。Nodeの画面座標は保存せず、ゲームのUIレイアウトや実行時データには含めない。
 - Editor検証では、TreeNodeId重複、Tree外の配置Node接続、空・重複・自己接続、到達不能な必要Level、循環依存、Rank数と `ProgressionType` の不整合を検出する。
 

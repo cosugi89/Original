@@ -128,7 +128,7 @@ namespace Assets.Scripts.Editor
     }
 
     /// <summary>
-    /// Editorだけが使うGraph配置情報。ゲーム用のAbilityTreeMasterDataにはUI座標を保存しない。
+    /// Editor Graphだけが使う自由配置情報。ゲーム用の縦Row配置は AbilityTreeMasterData.DisplayRows で管理する。
     /// </summary>
     public sealed class AbilityTreeGraphLayout : ScriptableObject
     {
