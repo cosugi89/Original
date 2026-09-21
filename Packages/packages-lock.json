@@ -24,6 +24,13 @@
       "dependencies": {},
       "hash": "a9e27c03d411d2fca01cc7410c24c97cd77cb539"
     },
+    "com.harumak.unitydebugsheet": {
+      "version": "https://github.com/Haruma-K/UnityDebugSheet.git?path=/Assets/UnityDebugSheet",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "01cb400b746ac30d92811b6462bc0caf56421288"
+    },
     "com.unity.2d.animation": {
       "version": "10.2.2",
       "depth": 0,
