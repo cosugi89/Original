@@ -3,6 +3,8 @@ using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.UI.Components;
+using Assets.Scripts.UI.Dialog;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Scripts.Features.Main
@@ -16,6 +18,7 @@ namespace Assets.Scripts.Features.Main
 
         private readonly List<PartsTraitTreeRow> _rows = new();
         private AbilityProgressManager _progress;
+        private bool _isDetailDialogOpen;
 
         private void OnEnable()
         {
@@ -37,8 +40,62 @@ namespace Assets.Scripts.Features.Main
             {
                 var row = Instantiate(rowPrefab, content);
                 var previousRow = rowIndex > 0 ? traitTree.DisplayRows[rowIndex - 1] : null;
-                row.Setup(traitTree, traitTree.DisplayRows[rowIndex], previousRow, statesById);
+                row.Setup(traitTree, traitTree.DisplayRows[rowIndex], previousRow, statesById, OpenTraitItemDetail);
                 _rows.Add(row);
+            }
+        }
+
+        private void OpenTraitItemDetail(string treeNodeId, PartsTraitItem.VisualStyle visualStyle)
+        {
+            OpenTraitItemDetailAsync(treeNodeId, visualStyle).Forget();
+        }
+
+        private async UniTaskVoid OpenTraitItemDetailAsync(
+            string treeNodeId,
+            PartsTraitItem.VisualStyle visualStyle)
+        {
+            if (_isDetailDialogOpen)
+            {
+                return;
+            }
+
+            _isDetailDialogOpen = true;
+            try
+            {
+                var derivedData = _progress.Recalculate();
+                AbilityTreeNodeState nodeState = null;
+                for (var i = 0; i < derivedData.NodeStates.Count; i++)
+                {
+                    var candidate = derivedData.NodeStates[i];
+                    if (candidate.Entry.TreeNodeId == treeNodeId)
+                    {
+                        nodeState = candidate;
+                        break;
+                    }
+                }
+
+                if (nodeState == null)
+                {
+                    return;
+                }
+
+                var dialogResult = await DialogService.OpenAsync<
+                    TraitItemDetailDialog,
+                    TraitItemDetailDialogRequest,
+                    TraitItemDetailDialogResult>(
+                        new TraitItemDetailDialogRequest(nodeState, visualStyle),
+                        new DialogContext(null));
+                if (!dialogResult.IsPurchaseRequested)
+                {
+                    return;
+                }
+
+                var purchaseResult = _progress.TryPurchase(treeNodeId);
+                BuildTree(purchaseResult.DerivedData);
+            }
+            finally
+            {
+                _isDetailDialogOpen = false;
             }
         }
 

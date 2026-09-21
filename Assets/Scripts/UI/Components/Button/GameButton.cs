@@ -1,4 +1,5 @@
 using System;
+using Assets.Scripts.Core.Const;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -339,8 +340,9 @@ namespace Assets.Scripts.UI.Components
             ((RectTransform)transform).sizeDelta = size;
             Stretch(visualRoot, 0f, 0f, 0f, 0f);
 
-            SetImage(backgroundImage, closeBackgroundSprite, new Color32(90, 43, 44, 255), true, Image.Type.Sliced);
-            SetImage(lightImage, closeLightSprite, new Color32(110, 41, 42, 255), true, Image.Type.Sliced);
+            var colors = new UIColors.CloseButtonColorSet();
+            SetImage(backgroundImage, closeBackgroundSprite, colors.Background, true, Image.Type.Sliced);
+            SetImage(lightImage, closeLightSprite, colors.InnerColor1, true, Image.Type.Sliced);
             SetImage(highLightImage, null, Color.clear, false, Image.Type.Simple);
             SetImage(gradientImage, null, Color.clear, false, Image.Type.Sliced);
             SetImage(shadowImage, null, Color.clear, false, Image.Type.Sliced);
@@ -352,7 +354,7 @@ namespace Assets.Scripts.UI.Components
             SetOptionalActive(valueText.gameObject, false);
             SetOptionalActive(iconImage.gameObject, true);
             iconImage.sprite = closeIconSprite;
-            iconImage.color = new Color32(189, 163, 137, 255);
+            iconImage.color = colors.Glow;
             iconImage.type = Image.Type.Simple;
             iconImage.preserveAspect = false;
             iconImage.raycastTarget = false;
@@ -369,7 +371,7 @@ namespace Assets.Scripts.UI.Components
             SetOptionalActive(loadingRoot, _loading);
         }
 
-        private void ApplyFrame(FrameType frame, ColorSet colors)
+        private void ApplyFrame(FrameType frame, UIColors.IColorSet colors)
         {
             switch (frame)
             {
@@ -596,34 +598,34 @@ namespace Assets.Scripts.UI.Components
             }
         }
 
-        private static ColorSet GetColorSet(ColorType color)
+        private static UIColors.IColorSet GetColorSet(ColorType color)
         {
             switch (color)
             {
                 case ColorType.Blue:
-                    return new ColorSet(0x098AD3FF, 0x29ADE6FF, 0x42D7FFFF, 0x1EA5DEFF, 0x0679BEFF, true);
+                    return new UIColors.BlueColorSet();
                 case ColorType.Brown:
-                    return new ColorSet(0xA57D42FF, 0xC69A4AFF, 0xE1B76EFF, 0xBA914BFF, 0x7B5531FF, true);
+                    return new UIColors.BrownColorSet();
                 case ColorType.Dark:
-                    return new ColorSet(0x2D2C2DFF, 0x393C39FF, 0x525152FF, 0x363736FF, 0x212021FF, false);
+                    return new UIColors.DarkColorSet();
                 case ColorType.Gray:
-                    return new ColorSet(0x524B4AFF, 0x6B5E5AFF, 0x7B716CFF, 0x635852FF, 0x393031FF, true);
+                    return new UIColors.GrayColorSet();
                 case ColorType.Green:
-                    return new ColorSet(0x6EAA3CFF, 0xA5CE31FF, 0xCCDD5AFF, 0x84B735FF, 0x529220FF, true);
+                    return new UIColors.GreenColorSet();
                 case ColorType.Mint:
-                    return new ColorSet(0x06AB9AFF, 0x10D79CFF, 0x27E7ACFF, 0x0ABE94FF, 0x008A73FF, true);
+                    return new UIColors.MintColorSet();
                 case ColorType.OffWhite:
-                    return new ColorSet(0xD6D4D3FF, 0xFFFFFFFF, 0xFFFFFFFF, 0xE7E7E6FF, 0xB0A9A8FF, true);
+                    return new UIColors.OffWhiteColorSet();
                 case ColorType.Orange:
-                    return new ColorSet(0xF8653AFF, 0xF79E63FF, 0xFFB673FF, 0xFC7F42FF, 0xD65131FF, true);
+                    return new UIColors.OrangeColorSet();
                 case ColorType.Pink:
-                    return new ColorSet(0xBD41B5FF, 0xDE65D6FF, 0xEF71E7FF, 0xCE55C5FF, 0x942F9CFF, true);
+                    return new UIColors.PinkColorSet();
                 case ColorType.Plum:
-                    return new ColorSet(0x8827F3FF, 0xB545F8FF, 0xC66DFFFF, 0xA037F9FF, 0x6A00DEFF, true);
+                    return new UIColors.PlumColorSet();
                 case ColorType.Yellow:
-                    return new ColorSet(0xFB9E00FF, 0xFFCF19FF, 0xFFE928FF, 0xFFBE11FF, 0xD67D06FF, true);
+                    return new UIColors.YellowColorSet();
                 default:
-                    return new ColorSet(0xCE2A42FF, 0xF74C63FF, 0xAD4D4AFF, 0x7D3233FF, 0x632022FF, true);
+                    return new UIColors.RedColorSet();
             }
         }
 
@@ -669,35 +671,6 @@ namespace Assets.Scripts.UI.Components
             if (target != null && target.activeSelf != active)
             {
                 target.SetActive(active);
-            }
-        }
-
-        private readonly struct ColorSet
-        {
-            public readonly Color32 Background;
-            public readonly Color32 Light;
-            public readonly Color32 Highlight;
-            public readonly Color32 Gradient;
-            public readonly Color32 Shadow;
-            public readonly bool Button01InnerVisible;
-
-            public ColorSet(uint background, uint light, uint highlight, uint gradient, uint shadow, bool button01InnerVisible)
-            {
-                Background = ToColor(background);
-                Light = ToColor(light);
-                Highlight = ToColor(highlight);
-                Gradient = ToColor(gradient);
-                Shadow = ToColor(shadow);
-                Button01InnerVisible = button01InnerVisible;
-            }
-
-            private static Color32 ToColor(uint value)
-            {
-                return new Color32(
-                    (byte)((value >> 24) & 0xFF),
-                    (byte)((value >> 16) & 0xFF),
-                    (byte)((value >> 8) & 0xFF),
-                    (byte)(value & 0xFF));
             }
         }
 

@@ -14,11 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AbilityNodeMasterData
   nodeId: trait.adapt
   displayName: Adapt
-  description: A later path available after either foundation is chosen.
+  description: どちらの分岐からでも進める、応用的な強化。
   icon: {fileID: 21300000, guid: dd4222597645d46faba8f91059ee00c2, type: 3}
   progressionType: 1
   ranks:
   - pointCost: 2
-    battleStatModifiers: []
+    battleStatModifiers:
+    - targetType: 0
+      parameterType: 3
+      operationType: 1
+      value: 2
   - pointCost: 3
-    battleStatModifiers: []
+    battleStatModifiers:
+    - targetType: 0
+      parameterType: 2
+      operationType: 1
+      value: 3

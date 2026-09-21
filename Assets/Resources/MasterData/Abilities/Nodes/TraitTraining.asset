@@ -14,11 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AbilityNodeMasterData
   nodeId: trait.training
   displayName: Basic Training
-  description: A first step toward lasting strength.
+  description: 基礎訓練で、耐久力と防御の土台を作る。
   icon: {fileID: 21300000, guid: dd4222597645d46faba8f91059ee00c2, type: 3}
   progressionType: 1
   ranks:
   - pointCost: 1
-    battleStatModifiers: []
+    battleStatModifiers:
+    - targetType: 0
+      parameterType: 1
+      operationType: 1
+      value: 5
   - pointCost: 2
-    battleStatModifiers: []
+    battleStatModifiers:
+    - targetType: 0
+      parameterType: 3
+      operationType: 1
+      value: 1

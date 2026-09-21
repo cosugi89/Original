@@ -1,6 +1,6 @@
 # UI 共通部品仕様書
 
-- 最終更新: 2026-09-02
+- 最終更新: 2026-09-21
 - 文書状態: 運用中
 - 位置づけ: プロジェクト内で共通利用する UI 部品の責務と運用方針を定義する。
 
@@ -19,6 +19,7 @@
 - 見た目は `ButtonType`、`FrameType`、`ColorType`、`SizeType`、`ContentType` の enum で切り替える。`ButtonType` は通常の `Normal` と、閉じる操作用の `Close` を持つ。
 - `FrameType` は `Button01`、`Button02`、`Button03` を持つ。
 - `ColorType` は `Blue`、`Brown`、`Dark`、`Gray`、`Green`、`Mint`、`OffWhite`、`Orange`、`Pink`、`Plum`、`Red`、`Yellow` を持つ。
+- `ColorType` ごとの配色は `UIColors.IColorSet` を正本とし、`Background`、`Light`、`Highlight`、`Gradient`、`Shadow` を各 Frame へ適用する。`Button01InnerVisible` も `Button01` の内枠表示に適用する。`GameButton` 内に個別のカラーセットは持たない。
 - `SizeType` は `Small`、`Medium`、`Large`、`IconSmall`、`IconMedium`、`Wide`、`TitleWide` を持つ。
 - `ContentType` は `None`、`Label`、`Icon`、`IconLabel`、`TitleIconLabel` を持つ。
 - Icon は `iconSprite` が未設定なら表示しない。

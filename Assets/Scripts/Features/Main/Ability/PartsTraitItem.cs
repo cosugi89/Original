@@ -1,20 +1,47 @@
-using System.ComponentModel;
+using System;
 using Assets.Scripts.Core.Const;
-using Assets.Scripts.Core.Interfaces;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.UI.Components
 {
-    public class PartsTraitItem : MonoBehaviour, IItemStateView
+    public class PartsTraitItem : MonoBehaviour
     {
-        private enum State
+        public enum VisualState
         {
             Normal,
             Focused,
             Special,
             Disabled
+        }
+
+        public readonly struct VisualStyle
+        {
+            public VisualStyle(
+                Sprite icon,
+                int currentLevel,
+                int maxLevel,
+                VisualState state,
+                bool isAlertVisible = false,
+                bool isUpgradeMarkerVisible = false)
+            {
+                Icon = icon;
+                MaxLevel = Mathf.Max(0, maxLevel);
+                CurrentLevel = Mathf.Clamp(currentLevel, 0, MaxLevel);
+                State = state;
+                IsAlertVisible = isAlertVisible;
+                IsUpgradeMarkerVisible = isUpgradeMarkerVisible;
+            }
+
+            public Sprite Icon { get; }
+            public int CurrentLevel { get; }
+            public int MaxLevel { get; }
+            public VisualState State { get; }
+            public bool IsAlertVisible { get; }
+            public bool IsUpgradeMarkerVisible { get; }
+            public bool IsMaxLevel => CurrentLevel >= MaxLevel;
+            public string LevelText => IsMaxLevel ? "MAX" : $"{CurrentLevel}/{MaxLevel}";
         }
 
         [Header("UI Components")]
@@ -31,41 +58,49 @@ namespace Assets.Scripts.UI.Components
         [SerializeField] private GameObject specialState;
         [SerializeField] private GameObject disabledState;
 
-        private const string MaxText = "MAX";
-        public void SetContent(Sprite icon, int currentLevel, int maxLevel)
+        private Action _clickAction;
+
+        private void Awake()
         {
-            iconImage.sprite = icon;
-            iconImage.enabled = icon != null;
-            iconImage.preserveAspect = true;
-            
-            text.text = currentLevel == maxLevel
-                ? MaxText
-                : $"{Mathf.Clamp(currentLevel, 0, Mathf.Max(0, maxLevel))}/{Mathf.Max(0, maxLevel)}";
+            button.onClick.AddListener(InvokeClickAction);
         }
 
-        public void SetAlertVisible(bool isVisible) => alertIcon.SetActive(isVisible);
-        public void SetUpgradeMarkerVisible(bool isVisible)  => upIcon.SetActive(isVisible);
-        public void ShowNormal() => SetState(State.Normal, true);
-        public void ShowFocused() => SetState(State.Focused, true);
-        public void ShowSpecial() => SetState(State.Special, true);
-        public void ShowDisabled()  => SetState(State.Disabled, false);
-        
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void ShowLocked()  => ShowDisabled(); // Interface で用意する必要があるため
-        
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void ShowEmpty() => ShowDisabled(); // Interface で用意する必要があるため
-
-        private void SetState(State state, bool isInteractable)
+        private void OnDestroy()
         {
-            text.gameObject.SetActive(state != State.Disabled);
-            normalState.SetActive(state == State.Normal);
-            focusedState.SetActive(state == State.Focused);
-            specialState.SetActive(state == State.Special);
-            disabledState.SetActive(state == State.Disabled);
-            lockIcon.SetActive(state == State.Disabled);
-            iconImage.color = state == State.Disabled ? UIColors.TraitTree.DisableIconColor : UIColors.White;
-            button.interactable = isInteractable;
+            button.onClick.RemoveListener(InvokeClickAction);
+        }
+
+        public void Setup(VisualStyle style)
+        {
+            iconImage.sprite = style.Icon;
+            iconImage.enabled = style.Icon != null;
+            iconImage.preserveAspect = true;
+            text.text = style.LevelText;
+            alertIcon.SetActive(style.IsAlertVisible);
+            upIcon.SetActive(style.IsUpgradeMarkerVisible);
+            SetState(style.State);
+        }
+
+        /// <summary>表示状態にかかわらずItem選択時に呼ぶ処理を設定する。</summary>
+        public void SetClickAction(Action clickAction)
+        {
+            _clickAction = clickAction;
+        }
+
+        private void InvokeClickAction()
+        {
+            _clickAction?.Invoke();
+        }
+
+        private void SetState(VisualState state)
+        {
+            text.gameObject.SetActive(state != VisualState.Disabled);
+            normalState.SetActive(state == VisualState.Normal);
+            focusedState.SetActive(state == VisualState.Focused);
+            specialState.SetActive(state == VisualState.Special);
+            disabledState.SetActive(state == VisualState.Disabled);
+            lockIcon.SetActive(state == VisualState.Disabled);
+            iconImage.color = state == VisualState.Disabled ? UIColors.TraitTree.DisableIconColor : UIColors.White;
         }
     }
 }

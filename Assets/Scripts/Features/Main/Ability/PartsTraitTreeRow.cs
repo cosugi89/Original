@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.GameData;
@@ -20,12 +21,12 @@ namespace Assets.Scripts.UI.Components
             AbilityTreeMasterData tree,
             AbilityTreeDisplayRow displayRow,
             AbilityTreeDisplayRow previousRow,
-            IReadOnlyDictionary<string, AbilityTreeNodeState> statesById)
+            IReadOnlyDictionary<string, AbilityTreeNodeState> statesById,
+            Action<string, PartsTraitItem.VisualStyle> onItemClicked)
         {
-            var isStart = previousRow == null;
-            SetupItem(traitItemCenter, displayRow.CenterTreeNodeId, isStart, tree, previousRow, statesById);
-            SetupItem(traitItemLeft, displayRow.LeftTreeNodeId, isStart, tree, previousRow, statesById);
-            SetupItem(traitItemRight, displayRow.RightTreeNodeId, isStart, tree, previousRow, statesById);
+            SetupItem(traitItemCenter, displayRow.CenterTreeNodeId, tree, previousRow, statesById, onItemClicked);
+            SetupItem(traitItemLeft, displayRow.LeftTreeNodeId, tree, previousRow, statesById, onItemClicked);
+            SetupItem(traitItemRight, displayRow.RightTreeNodeId, tree, previousRow, statesById, onItemClicked);
 
             lineOneToOne.gameObject.SetActive(false);
             lineOneToTwo.gameObject.SetActive(false);
@@ -64,10 +65,10 @@ namespace Assets.Scripts.UI.Components
         private static void SetupItem(
             PartsTraitItem item,
             string treeNodeId,
-            bool isStart,
             AbilityTreeMasterData tree,
             AbilityTreeDisplayRow previousRow,
-            IReadOnlyDictionary<string, AbilityTreeNodeState> statesById)
+            IReadOnlyDictionary<string, AbilityTreeNodeState> statesById,
+            Action<string, PartsTraitItem.VisualStyle> onItemClicked)
         {
             var hasNode = !string.IsNullOrWhiteSpace(treeNodeId);
             item.gameObject.SetActive(hasNode);
@@ -77,25 +78,18 @@ namespace Assets.Scripts.UI.Components
             }
 
             var state = statesById[treeNodeId];
-            item.SetContent(state.Entry.Node.Icon, state.CurrentLevel, state.MaxLevel);
-            item.SetAlertVisible(false);
-            item.SetUpgradeMarkerVisible(false);
-            if (isStart)
-            {
-                item.ShowFocused();
-            }
-            else if (state.CurrentLevel > 0)
-            {
-                item.ShowFocused();
-            }
-            else if (HasFocusedPreviousItem(tree, previousRow, treeNodeId, statesById))
-            {
-                item.ShowNormal();
-            }
-            else
-            {
-                item.ShowDisabled();
-            }
+            var visualState = state.CurrentLevel > 0
+                ? PartsTraitItem.VisualState.Focused
+                : previousRow == null || HasFocusedPreviousItem(tree, previousRow, treeNodeId, statesById)
+                    ? PartsTraitItem.VisualState.Normal
+                    : PartsTraitItem.VisualState.Disabled;
+            var visualStyle = new PartsTraitItem.VisualStyle(
+                state.Entry.Node.Icon,
+                state.CurrentLevel,
+                state.MaxLevel,
+                visualState);
+            item.Setup(visualStyle);
+            item.SetClickAction(() => onItemClicked(treeNodeId, visualStyle));
         }
 
         private static bool HasFocusedPreviousItem(
@@ -122,7 +116,7 @@ namespace Assets.Scripts.UI.Components
                 }
 
                 hasPrerequisite = true;
-                if (IsFocusedOrPurchased(tree, link.FromTreeNodeId, statesById))
+                if (IsPurchased(link.FromTreeNodeId, statesById))
                 {
                     hasFocusedPrerequisite = true;
                 }
@@ -150,27 +144,11 @@ namespace Assets.Scripts.UI.Components
                    row.RightTreeNodeId == treeNodeId;
         }
 
-        private static bool IsFocusedOrPurchased(
-            AbilityTreeMasterData tree,
+        private static bool IsPurchased(
             string treeNodeId,
             IReadOnlyDictionary<string, AbilityTreeNodeState> statesById)
         {
-            if (statesById[treeNodeId].CurrentLevel > 0)
-            {
-                return true;
-            }
-
-            for (var i = 0; i < tree.Links.Count; i++)
-            {
-                var link = tree.Links[i];
-                if (link != null && link.LinkType == AbilityTreeLinkType.Prerequisite &&
-                    link.ToTreeNodeId == treeNodeId)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return statesById[treeNodeId].CurrentLevel > 0;
         }
 
         private static bool IsLinkEnabled(

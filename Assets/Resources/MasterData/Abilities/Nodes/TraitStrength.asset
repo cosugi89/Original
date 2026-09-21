@@ -14,9 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.AbilityNodeMasterData
   nodeId: trait.strength
   displayName: Strength
-  description: Commit to a more forceful foundation.
+  description: 攻撃力を高める、力重視の分岐。
   icon: {fileID: 21300000, guid: dd4222597645d46faba8f91059ee00c2, type: 3}
   progressionType: 0
   ranks:
   - pointCost: 1
-    battleStatModifiers: []
+    battleStatModifiers:
+    - targetType: 0
+      parameterType: 2
+      operationType: 1
+      value: 4

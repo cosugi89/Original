@@ -22,6 +22,7 @@ namespace Assets.Scripts.Systems.GameData
     public sealed class AbilityTreeNodeState
     {
         public AbilityTreeNodeEntry Entry { get; init; }
+        public bool IsStart { get; init; }
         public int CurrentLevel { get; init; }
         public int MaxLevel { get; init; }
         public bool IsPurchasable { get; init; }
@@ -79,15 +80,19 @@ namespace Assets.Scripts.Systems.GameData
 
                 var level = levels.TryGetValue(entry.TreeNodeId, out var savedLevel) ? savedLevel : 0;
                 var maxLevel = entry.Node.MaxLevel;
+                var isStart = IsStartNode(entry.TreeNodeId);
                 var exclusiveClosed = level == 0 && IsExclusiveClosed(entry.TreeNodeId, levels);
                 var impossible = level == 0 && HasImpossibleAllPrerequisites(entry.TreeNodeId);
                 var prerequisitesMet = ArePrerequisitesMet(entry, levels);
-                var nextCost = level < maxLevel ? entry.Node.Ranks[level]?.PointCost ?? 0 : 0;
+                // 開始Nodeは初期解放用の入口であり、Pointを要求しない。
+                // コストも0として導出し、購入処理とUI表示を一致させる。
+                var nextCost = isStart || level >= maxLevel ? 0 : entry.Node.Ranks[level]?.PointCost ?? 0;
                 var reason = ResolveLockReason(level, maxLevel, exclusiveClosed, impossible, prerequisitesMet, nextCost);
 
                 states.Add(new AbilityTreeNodeState
                 {
                     Entry = entry,
+                    IsStart = isStart,
                     CurrentLevel = level,
                     MaxLevel = maxLevel,
                     IsPurchasable = reason == AbilityNodeLockReason.None,
@@ -308,6 +313,13 @@ namespace Assets.Scripts.Systems.GameData
             return entry.PrerequisiteMode == AbilityPrerequisiteMode.All
                 ? prerequisites.All(link => levels.TryGetValue(link.FromTreeNodeId, out var level) && level >= link.RequiredLevel)
                 : prerequisites.Any(link => levels.TryGetValue(link.FromTreeNodeId, out var level) && level >= link.RequiredLevel);
+        }
+
+        private bool IsStartNode(string treeNodeId)
+        {
+            return !Tree.Links.Any(link => link != null &&
+                link.LinkType == AbilityTreeLinkType.Prerequisite &&
+                link.ToTreeNodeId == treeNodeId);
         }
 
         private bool IsExclusiveClosed(string treeNodeId, IReadOnlyDictionary<string, int> levels)

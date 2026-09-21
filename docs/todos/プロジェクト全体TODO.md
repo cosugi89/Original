@@ -106,7 +106,7 @@
 - [x] Ability内の `Artifact` / `Skill` / `Trait` Tab切り替えを `AbilityScene` に限定して接続する
 - [x] Ability タブのTrait Tree基盤を実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続まで完了。
 - [x] `PartsTraitTreeRow` / `PartsTraitLine` のPrefabを作成して`TraitTabScreen`のRow Prefab / Scroll Contentへ配線する。各Line Imageには `UI/Trait Line Reveal` Materialと曲線の進行度を持つReveal Mapを設定する。
-- [ ] Trait Itemクリックで詳細Dialogを開き、購入可能Nodeだけ購入ボタンを表示して、結果をTree表示へ即時反映する。
+- [x] Trait Itemクリックで詳細Dialogを開き、購入可能Nodeだけ購入ボタンを表示して、結果をTree表示へ即時反映する。
 - [ ] Ability進捗の重複 `TreeNodeId` を安全に補正・無視し、Trait UIの状態辞書生成で例外にならないようにする。
 - [ ] `DisplayRows` と `Links` の整合をMasterData検証で保証する。直前Row以外の前提接続、TwoToTwoの交差接続、Prefabで表現できない接続をエラーにするか、UIの接続表現を拡張する方針を確定する。
 - [ ] ステージ初回クリアのPoint報酬と受領済み状態を実装する

@@ -18,48 +18,167 @@ namespace Assets.Scripts.Core.Const
             Color Background { get; }
             Color InnerColor1 { get; }
             Color Glow { get; }
+            Color Light { get; }
+            Color Highlight { get; }
+            Color Gradient { get; }
+            Color Shadow { get; }
+            bool Button01InnerVisible { get; }
         }
 
         public sealed class PlumColorSet : IColorSet
         {
-            public Color Background { get; } = new Color32(143, 74, 189, 255);
-            public Color InnerColor1 { get; } = new Color32(181, 93, 214, 255);
-            public Color Glow { get; } = new Color32(123, 63, 164, 255);
+            public Color Background { get; } = new Color32(136, 39, 243, 255);
+            public Color InnerColor1 { get; } = new Color32(181, 69, 248, 255);
+            public Color Glow { get; } = new Color32(106, 0, 222, 255);
+            public Color Light { get; } = new Color32(181, 69, 248, 255);
+            public Color Highlight { get; } = new Color32(198, 109, 255, 255);
+            public Color Gradient { get; } = new Color32(160, 55, 249, 255);
+            public Color Shadow { get; } = new Color32(106, 0, 222, 255);
+            public bool Button01InnerVisible => true;
         }
 
         public sealed class GreenColorSet : IColorSet
         {
-            public Color Background { get; } = new Color32(37, 124, 85, 255);
-            public Color InnerColor1 { get; } = new Color32(57, 151, 90, 255);
-            public Color Glow { get; } = new Color32(27, 94, 64, 255);
+            public Color Background { get; } = new Color32(110, 170, 60, 255);
+            public Color InnerColor1 { get; } = new Color32(165, 206, 49, 255);
+            public Color Glow { get; } = new Color32(82, 146, 32, 255);
+            public Color Light { get; } = new Color32(165, 206, 49, 255);
+            public Color Highlight { get; } = new Color32(204, 221, 90, 255);
+            public Color Gradient { get; } = new Color32(132, 183, 53, 255);
+            public Color Shadow { get; } = new Color32(82, 146, 32, 255);
+            public bool Button01InnerVisible => true;
         }
 
         public sealed class GrayColorSet : IColorSet
         {
-            public Color Background { get; } = new Color32(99, 94, 90, 255);
-            public Color InnerColor1 { get; } = new Color32(115, 113, 115, 255);
-            public Color Glow { get; } = new Color32(67, 63, 60, 255);
+            public Color Background { get; } = new Color32(82, 75, 74, 255);
+            public Color InnerColor1 { get; } = new Color32(107, 94, 90, 255);
+            public Color Glow { get; } = new Color32(57, 48, 49, 255);
+            public Color Light { get; } = new Color32(107, 94, 90, 255);
+            public Color Highlight { get; } = new Color32(123, 113, 108, 255);
+            public Color Gradient { get; } = new Color32(99, 88, 82, 255);
+            public Color Shadow { get; } = new Color32(57, 48, 49, 255);
+            public bool Button01InnerVisible => true;
         }
 
         public sealed class BlueColorSet : IColorSet
         {
-            public Color Background { get; } = new Color32(49, 97, 165, 255);
-            public Color InnerColor1 { get; } = new Color32(57, 121, 206, 255);
-            public Color Glow { get; } = new Color32(49, 69, 132, 255);
+            public Color Background { get; } = new Color32(9, 138, 211, 255);
+            public Color InnerColor1 { get; } = new Color32(41, 173, 230, 255);
+            public Color Glow { get; } = new Color32(6, 121, 190, 255);
+            public Color Light { get; } = new Color32(41, 173, 230, 255);
+            public Color Highlight { get; } = new Color32(66, 215, 255, 255);
+            public Color Gradient { get; } = new Color32(30, 165, 222, 255);
+            public Color Shadow { get; } = new Color32(6, 121, 190, 255);
+            public bool Button01InnerVisible => true;
+        }
+
+        public sealed class BrownColorSet : IColorSet
+        {
+            public Color Background { get; } = new Color32(165, 125, 66, 255);
+            public Color InnerColor1 { get; } = new Color32(198, 154, 74, 255);
+            public Color Glow { get; } = new Color32(123, 85, 49, 255);
+            public Color Light { get; } = new Color32(198, 154, 74, 255);
+            public Color Highlight { get; } = new Color32(225, 183, 110, 255);
+            public Color Gradient { get; } = new Color32(186, 145, 75, 255);
+            public Color Shadow { get; } = new Color32(123, 85, 49, 255);
+            public bool Button01InnerVisible => true;
+        }
+
+        public sealed class DarkColorSet : IColorSet
+        {
+            public Color Background { get; } = new Color32(45, 44, 45, 255);
+            public Color InnerColor1 { get; } = new Color32(57, 60, 57, 255);
+            public Color Glow { get; } = new Color32(33, 32, 33, 255);
+            public Color Light { get; } = new Color32(57, 60, 57, 255);
+            public Color Highlight { get; } = new Color32(82, 81, 82, 255);
+            public Color Gradient { get; } = new Color32(54, 55, 54, 255);
+            public Color Shadow { get; } = new Color32(33, 32, 33, 255);
+            public bool Button01InnerVisible => false;
+        }
+
+        public sealed class MintColorSet : IColorSet
+        {
+            public Color Background { get; } = new Color32(6, 171, 154, 255);
+            public Color InnerColor1 { get; } = new Color32(16, 215, 156, 255);
+            public Color Glow { get; } = new Color32(0, 138, 115, 255);
+            public Color Light { get; } = new Color32(16, 215, 156, 255);
+            public Color Highlight { get; } = new Color32(39, 231, 172, 255);
+            public Color Gradient { get; } = new Color32(10, 190, 148, 255);
+            public Color Shadow { get; } = new Color32(0, 138, 115, 255);
+            public bool Button01InnerVisible => true;
+        }
+
+        public sealed class OffWhiteColorSet : IColorSet
+        {
+            public Color Background { get; } = new Color32(214, 212, 211, 255);
+            public Color InnerColor1 { get; } = Color.white;
+            public Color Glow { get; } = new Color32(176, 169, 168, 255);
+            public Color Light { get; } = Color.white;
+            public Color Highlight { get; } = Color.white;
+            public Color Gradient { get; } = new Color32(231, 231, 230, 255);
+            public Color Shadow { get; } = new Color32(176, 169, 168, 255);
+            public bool Button01InnerVisible => true;
+        }
+
+        public sealed class OrangeColorSet : IColorSet
+        {
+            public Color Background { get; } = new Color32(248, 101, 58, 255);
+            public Color InnerColor1 { get; } = new Color32(247, 158, 99, 255);
+            public Color Glow { get; } = new Color32(214, 81, 49, 255);
+            public Color Light { get; } = new Color32(247, 158, 99, 255);
+            public Color Highlight { get; } = new Color32(255, 182, 115, 255);
+            public Color Gradient { get; } = new Color32(252, 127, 66, 255);
+            public Color Shadow { get; } = new Color32(214, 81, 49, 255);
+            public bool Button01InnerVisible => true;
+        }
+
+        public sealed class PinkColorSet : IColorSet
+        {
+            public Color Background { get; } = new Color32(189, 65, 181, 255);
+            public Color InnerColor1 { get; } = new Color32(222, 101, 214, 255);
+            public Color Glow { get; } = new Color32(148, 47, 156, 255);
+            public Color Light { get; } = new Color32(222, 101, 214, 255);
+            public Color Highlight { get; } = new Color32(239, 113, 231, 255);
+            public Color Gradient { get; } = new Color32(206, 85, 197, 255);
+            public Color Shadow { get; } = new Color32(148, 47, 156, 255);
+            public bool Button01InnerVisible => true;
         }
 
         public sealed class YellowColorSet : IColorSet
         {
-            public Color Background { get; } = new Color32(202, 176, 70, 255);
-            public Color InnerColor1 { get; } = new Color32(231, 211, 74, 255);
-            public Color Glow { get; } = new Color32(183, 162, 61, 255);
+            public Color Background { get; } = new Color32(251, 158, 0, 255);
+            public Color InnerColor1 { get; } = new Color32(255, 207, 25, 255);
+            public Color Glow { get; } = new Color32(214, 125, 6, 255);
+            public Color Light { get; } = new Color32(255, 207, 25, 255);
+            public Color Highlight { get; } = new Color32(255, 233, 40, 255);
+            public Color Gradient { get; } = new Color32(255, 190, 17, 255);
+            public Color Shadow { get; } = new Color32(214, 125, 6, 255);
+            public bool Button01InnerVisible => true;
         }
 
         public sealed class RedColorSet : IColorSet
         {
-            public Color Background { get; } = new Color32(206, 43, 42, 255);
-            public Color InnerColor1 { get; } = new Color32(214, 55, 49, 255);
-            public Color Glow { get; } = new Color32(164, 37, 36, 255);
+            public Color Background { get; } = new Color32(115, 44, 44, 255);
+            public Color InnerColor1 { get; } = new Color32(136, 56, 57, 255);
+            public Color Glow { get; } = new Color32(173, 77, 74, 255);
+            public Color Light { get; } = new Color32(136, 56, 57, 255);
+            public Color Highlight { get; } = new Color32(173, 77, 74, 255);
+            public Color Gradient { get; } = new Color32(125, 50, 51, 255);
+            public Color Shadow { get; } = new Color32(99, 32, 34, 255);
+            public bool Button01InnerVisible => true;
+        }
+
+        public sealed class CloseButtonColorSet : IColorSet
+        {
+            public Color Background { get; } = new Color32(90, 43, 44, 255);
+            public Color InnerColor1 { get; } = new Color32(110, 41, 42, 255);
+            public Color Glow { get; } = new Color32(189, 163, 137, 255);
+            public Color Light { get; } = new Color32(110, 41, 42, 255);
+            public Color Highlight { get; } = Color.clear;
+            public Color Gradient { get; } = Color.clear;
+            public Color Shadow { get; } = Color.clear;
+            public bool Button01InnerVisible => true;
         }
 
         public class TraitTree
