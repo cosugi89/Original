@@ -874,7 +874,7 @@ MonoBehaviour:
   centerLine: {fileID: 0}
   leftLine: {fileID: 0}
   rightLine: {fileID: 0}
-  enableAnimationDuration: 0.3
+  enableAnimationDuration: 5
   enableAnimationCurve:
     serializedVersion: 2
     m_Curve:
