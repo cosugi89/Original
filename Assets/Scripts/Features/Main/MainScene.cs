@@ -4,6 +4,8 @@ using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Features.Main;
 using Assets.Scripts.UI.Components;
 using Assets.Scripts.Core;
+using Assets.Scripts.Systems.Save;
+using TMPro;
 
 /// <summary>
 /// MainScene のエントリポイント。
@@ -25,6 +27,10 @@ public class MainScene : MonoBehaviour
     [Header("Screens")]
     [SerializeField] private HomeScreen homeScreen;
     [SerializeField] private StatusScreen statusScreen;
+
+    [Header("Points")]
+    [SerializeField] private TextMeshProUGUI pointBalanceText;
+    [SerializeField] private TextMeshProUGUI abilityPointText;
 
     [Header("Main Tabs")]
     [SerializeField] private PartsTabItem statusTab;
@@ -83,6 +89,27 @@ public class MainScene : MonoBehaviour
         homeScreen.Init();
         statusScreen.Init(_statusCharacterPreview, _homeCharacterPreview);
         SetPreviewVisibility(ResolveActivePreviewScreen());
+        RefreshPointTexts();
+    }
+
+    /// <summary>
+    /// Resource BarのPoint表示を保存済み残高で更新する。
+    /// Pointを変更したControllerは、処理完了後にこのメソッドを呼んで表示を同期する。
+    /// </summary>
+    public void RefreshPointTexts()
+    {
+        var userData = UserDataManager.EnsureInitialized().UserData;
+        var gold = userData.Profile?.Gold ?? 0;
+        var abilityPointBalance = userData.Ability?.PointBalance ?? 0;
+        if (pointBalanceText != null)
+        {
+            pointBalanceText.text = gold.ToString();
+        }
+
+        if (abilityPointText != null)
+        {
+            abilityPointText.text = abilityPointBalance.ToString();
+        }
     }
 
     private void OnDestroy()

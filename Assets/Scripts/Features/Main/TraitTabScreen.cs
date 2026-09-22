@@ -97,6 +97,10 @@ namespace Assets.Scripts.Features.Main
 
                 var purchaseResult = _progress.TryPurchase(treeNodeId);
                 BuildTree(purchaseResult.DerivedData);
+                if (purchaseResult.IsPurchased)
+                {
+                    FindFirstObjectByType<MainScene>()?.RefreshPointTexts();
+                }
             }
             finally
             {

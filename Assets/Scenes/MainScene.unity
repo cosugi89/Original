@@ -165767,8 +165767,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1687852151}
   - {fileID: 916057755}
+  - {fileID: 1687852151}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &908000003
@@ -187641,6 +187641,8 @@ MonoBehaviour:
   sceneCharacterPreview: {fileID: 1211169407}
   homeScreen: {fileID: 285065588}
   statusScreen: {fileID: 1071613853}
+  pointBalanceText: {fileID: 1409539328}
+  abilityPointText: {fileID: 1960926057}
   statusTab: {fileID: 753808320}
   abilityTab: {fileID: 2116141459}
   homeTab: {fileID: 1005188841}
@@ -256859,6 +256861,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1409457539}
   m_CullTransparentMesh: 1
+--- !u!114 &1409539328 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4819963814387292270, guid: c9352b9376d374ce5ad2a803915fda23, type: 3}
+  m_PrefabInstance: {fileID: 110367514}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1409700709
 GameObject:
   m_ObjectHideFlags: 0
@@ -361740,6 +361753,17 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 48, y: 48}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1960926057 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5181236984731220941, guid: c9352b9376d374ce5ad2a803915fda23, type: 3}
+  m_PrefabInstance: {fileID: 110367514}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1960953475
 GameObject:
   m_ObjectHideFlags: 0

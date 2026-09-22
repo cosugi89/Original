@@ -17,6 +17,7 @@ Ability タブは、プレイヤーの恒久成長を管理する入口とする
 - Point は主にステージ初回クリアと進行マイルストーンで付与する。周回報酬にはしない。
 - ステージマスターはPoint報酬額を持ち、各ステージ進捗は報酬受領済み状態を保存する。
 - Node購入ではPoint消費、NodeLevel更新、導出データ再計算、即時保存を一つの処理で行う。
+- MainScene上部の `pointBalanceText` は `UserProfileData.Gold`、Abilityタブ内の `abilityPointText` は `AbilityProgressData.PointBalance` を表示する。GoldまたはPointを変更したControllerは `MainScene.RefreshPointTexts()` を呼び、表示を保存残高へ同期できる。UI参照が未設定でも、この更新処理は画面初期化を止めない。
 
 ## 3. Tree とNode
 
