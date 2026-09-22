@@ -107,8 +107,12 @@
 - [x] Ability タブのTrait Tree基盤を実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続まで完了。
 - [x] `PartsTraitTreeRow` / `PartsTraitLine` のPrefabを作成して`TraitTabScreen`のRow Prefab / Scroll Contentへ配線する。各Line Imageには `UI/Trait Line Reveal` Materialと曲線の進行度を持つReveal Mapを設定する。
 - [x] Trait Itemクリックで詳細Dialogを開き、購入可能Nodeだけ購入ボタンを表示して、結果をTree表示へ即時反映する。
-- [ ] Ability進捗の重複 `TreeNodeId` を安全に補正・無視し、Trait UIの状態辞書生成で例外にならないようにする。
-- [ ] `DisplayRows` と `Links` の整合をMasterData検証で保証する。直前Row以外の前提接続、TwoToTwoの交差接続、Prefabで表現できない接続をエラーにするか、UIの接続表現を拡張する方針を確定する。
+- [ ] Trait Tree表示の責務を整理する。購入可否とは別にNode/Lineの表示状態を一箇所で導出し、排他経路のDisabled表示を末端まで一貫させる。
+- [ ] Trait Treeの更新を最適化する。購入時は全Rowを再生成せず、既存RowのItem/Line表示だけを更新できるようにする。
+- [ ] Gold / Ability PointのResource Bar更新をUI探索から分離する。通貨変更通知または明示的な表示更新窓口を定義し、購入・報酬・Debug付与の各経路を同期する。
+- [ ] Trait Treeで未使用の表示・演出APIを整理する。未接続のLineアニメーション、`VisualState.Special`、alert/up表示フラグは、次の仕様へ接続するか削除する。
+- [ ] Ability進捗のセーブ互換性を強化する。重複 `TreeNodeId` の安全な無視、正規化結果の即時永続化、不正な空Rankの購入拒否、排他ルート下流を含む矛盾保存の補正方針を実装し、複合キー・Level 0除外・Any/All・排他・不正保存補正をEditModeテストで保証する。
+- [ ] `DisplayRows` と `Links` の整合をMasterData検証で保証する。現行Row UIが表現できる隣接Row間の 1→1 / 1→2 / 2→2（左→左・右→右）/ 2→1 接続だけを許可し、飛び越し・交差・表現不能な前提接続はエラーにする。
 - [ ] ステージ初回クリアのPoint報酬と受領済み状態を実装する
 - [ ] ステータス算出仕様の確定後、Abilityの導出済み能力補正をBattleとStatus表示へ接続する
 - [x] Status タブで所持済み / 解放済み装備から装備を選択できるようにする
