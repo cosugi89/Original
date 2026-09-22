@@ -13,6 +13,7 @@ namespace Assets.Scripts.UI.Components
             Normal,
             Focused,
             Special,
+            Locked,
             Disabled
         }
 
@@ -94,13 +95,14 @@ namespace Assets.Scripts.UI.Components
 
         private void SetState(VisualState state)
         {
-            text.gameObject.SetActive(state != VisualState.Disabled);
+            var usesDisabledVisual = state == VisualState.Locked || state == VisualState.Disabled;
+            text.gameObject.SetActive(!usesDisabledVisual);
             normalState.SetActive(state == VisualState.Normal);
             focusedState.SetActive(state == VisualState.Focused);
             specialState.SetActive(state == VisualState.Special);
-            disabledState.SetActive(state == VisualState.Disabled);
-            lockIcon.SetActive(state == VisualState.Disabled);
-            iconImage.color = state == VisualState.Disabled ? UIColors.TraitTree.DisableIconColor : UIColors.White;
+            disabledState.SetActive(usesDisabledVisual);
+            lockIcon.SetActive(state == VisualState.Locked);
+            iconImage.color = usesDisabledVisual ? UIColors.TraitTree.DisableIconColor : UIColors.White;
         }
     }
 }

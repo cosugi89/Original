@@ -85,7 +85,6 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            Debug.Log("Requesting purchase");
             Close(TraitItemDetailDialogResult.PurchaseRequested);
         }
 

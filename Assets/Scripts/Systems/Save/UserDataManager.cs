@@ -131,6 +131,56 @@ namespace Assets.Scripts.Systems.Save
             return AbilityProgress;
         }
 
+        /// <summary>指定Treeに属する保存済みNode Levelだけを消去して即時保存する。Point残高と他Treeの進捗は保持する。</summary>
+        public int ClearAbilityTreeNodeLevels(string treeId)
+        {
+            InitializeGameData();
+            var nodeLevels = UserData.Ability?.NodeLevels;
+            if (nodeLevels == null)
+            {
+                return 0;
+            }
+
+            var removedCount = nodeLevels.RemoveAll(level => level != null && level.TreeId == treeId);
+            if (removedCount == 0)
+            {
+                return 0;
+            }
+
+            UserDataStore.MarkDirty();
+            if (AbilityProgress != null && AbilityProgress.Tree.TreeId == treeId)
+            {
+                AbilityProgress.Recalculate();
+            }
+
+            UserDataStore.SaveSession();
+            return removedCount;
+        }
+
+        /// <summary>Ability Pointを加算して即時保存する。0以下の付与要求は無視する。</summary>
+        public int AddAbilityPoints(int amount)
+        {
+            if (amount <= 0)
+            {
+                return 0;
+            }
+
+            InitializeGameData();
+            var ability = UserData.Ability;
+            ability.PointBalance = Mathf.Max(0, ability.PointBalance);
+            var addedAmount = Mathf.Min(amount, int.MaxValue - ability.PointBalance);
+            if (addedAmount == 0)
+            {
+                return 0;
+            }
+
+            ability.PointBalance += addedAmount;
+            UserDataStore.MarkDirty();
+            AbilityProgress?.Recalculate();
+            UserDataStore.SaveSession();
+            return addedAmount;
+        }
+
         private void SavePendingChanges()
         {
             if (!IsDirty || UserDataStore == null)

@@ -86,6 +86,11 @@ namespace Assets.Scripts.UI.Components
 
             StopEnableAnimation(ref animationCoroutine);
             line.gameObject.SetActive(true);
+            if (isEnabled)
+            {
+                line.transform.SetAsLastSibling();
+            }
+
             material.SetFloat(RevealProgressId, isEnabled ? 1f : -0.001f);
         }
 
@@ -98,6 +103,7 @@ namespace Assets.Scripts.UI.Components
 
             StopEnableAnimation(ref animationCoroutine);
             line.gameObject.SetActive(true);
+            line.transform.SetAsLastSibling();
             material.SetFloat(RevealProgressId, -0.001f);
             animationCoroutine = StartCoroutine(PlayEnableAnimationRoutine(material));
         }

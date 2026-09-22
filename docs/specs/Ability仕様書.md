@@ -59,7 +59,7 @@ Node効果は保存せず、起動時とNode購入時に `AbilityDerivedData` �
 
 Tree構造は、Tree単位のマスターデータで接続として管理する。`AbilityNodeMasterData`、`AbilityTreeMasterData` とInspectorの検証表示は実装済みであり、Asset作成後にInspectorから問題を確認できる。
 
-旧形式で作成した `Assets/Resources/MasterData/Abilities/TraitTree.asset` は移行対象として残すが、新形式のNode参照を持たないため使用前に作り直す。動作確認には `Assets/Resources/MasterData/Abilities/TraitTreeSample.asset` と `Abilities/Nodes/` 配下の4 Nodeを使う。サンプルTreeは `Basic Training` の後に `Vitality` / `Strength` の排他分岐を置き、`Adapt` へ `Any` 前提で再合流する。正式なゲームバランス用データではない。
+旧形式で作成した `Assets/Resources/MasterData/Abilities/TraitTree.asset` は移行対象として残すが、新形式のNode参照を持たないため使用前に作り直す。動作確認には `Assets/Resources/MasterData/Abilities/TraitTreeSample.asset` と `Abilities/Nodes/` 配下の4 Nodeを使う。サンプルTreeは `Basic Training` の後に `Vitality` / `Strength` の排他分岐を置き、`Adapt` へ `Any` 前提で再合流した後、1→1の終端Nodeを置く。正式なゲームバランス用データではない。
 
 - `AbilityNodeMasterData`: Node ID、表示情報、Icon、`ProgressionType`、Rank一覧と効果。Tree接続は持たない。
 - `AbilityTreeMasterData`: Tree ID、表示情報、`AbilityTreeNodeEntry` の一覧、接続一覧。画面配置は持たない。
@@ -69,7 +69,7 @@ Tree構造は、Tree単位のマスターデータで接続として管理する
 - 次Node一覧は保存せず、Tree接続から導出する。UIの接続線も同じ接続を使う。
 - Treeのゲーム上の接続は `Links` を正本とする。画面の縦Row配置は `AbilityTreeMasterData.DisplayRows` に保存し、並び順はTreeの始点から終点までとする。各RowはCenter 1件、またはLeft / Right 2件のいずれかで `TreeNodeId` を参照する。開始・終端・前後Node数・接続線パターンはDisplayRowsとLinksから導出し、重複保存しない。
 - `TraitTabScreen` はScroll Contentに `PartsTraitTreeRow` PrefabをDisplayRowsごとに生成する。接続線は同じImageをDisabled色とEnabled色で表示し、解放時は曲線に沿った進行度を記録したReveal Mapを使って、Disabled色からEnabled色へ始点から終点まで切り替わる演出を行う。
-- Tree表示では、自身がLv.1以上ならFocused表示とする。未取得の開始NodeはNormal、未取得の後続Itemは直前Rowの必要前提NodeがLv.1以上ならNormal、それ以外はDisabledとする。複数前提は `Any` ではいずれか、`All` ではすべての直前接続元がLv.1以上であることを必要とする。接続線は、接続先NodeがLv.1以上のときだけEnabled色で表示する。これは購入可能状態ではなく、取得済みの経路を示す表示規則とする。
+- Tree表示では、自身がLv.1以上ならFocused表示とする。未取得の開始NodeはNormal、未取得の後続Itemは直前Rowの必要前提NodeがLv.1以上ならNormal、それ以外はLockedとする。Lockedは前提不足により将来解放され得る状態であり、鍵アイコンとLevel Textを表示しない。排他で選ばれなかったNode、および到達不能な前提を持つNodeはDisabledとし、鍵アイコンとLevel Textを表示しない。`TwoToTwo` では、対応する直前前提NodeがDisabledならその継続NodeもDisabledにする。複数前提は `Any` ではいずれか、`All` ではすべての直前接続元がLv.1以上であることを必要とする。通常の接続線は接続先NodeがLv.1以上のときEnabled色で表示する。`TwoToOne` の合流線は、合流先NodeがLv.1以上であり、かつ対応する接続元NodeがLv.1以上の側だけEnabled色で表示する。合流先が未取得なら左右ともDisabled色で表示する。これは購入可能状態ではなく、取得済みの経路を示す表示規則とする。
 - Trait Itemは表示状態にかかわらず詳細Dialogを開く。`TraitItemDetailDialog` はNode状態とItemの `VisualStyle` を受け取る。最大Level、排他、到達不能な前提、不足している前提では購入ボタンを非表示にする。Point不足だけは購入ボタンを表示し、押下時は現時点では不足内容をConsoleへ出力して購入を行わない。購入可能な場合、ボタンは購入要求だけを返し、`TraitTabScreen` が `AbilityProgressManager.TryPurchase` を呼ぶ。購入後は導出結果からTreeを即時再構築する。
 - MasterDataの編集には `Tools > Original > Ability Tree Graph` または `AbilityTreeMasterData` Inspectorの「Tree編集ウィンドウを開く」を使える。Window左側は進行開始点を下、後続Nodeを上に置く接続グラフであり、配置Node間の接続を線で表示する。カードは表示名、`TreeNodeId`、前提条件だけを表示し、カード選択で右側の編集対象を切り替える。右側では通常操作として開始Nodeまたは後続Nodeを追加し、分岐・合流、接続編集、Node定義編集、削除操作は折りたたみ項目に分ける。既存の配置Nodeへの接続は再合流に使い、新規追加とは区別する。再合流候補は配置Node単位で表示し、自己接続、重複、循環だけを除外して理由を表示する。排他経路から `All` 条件の配置Nodeへ合流する候補は接続可能とし、「いずれか」へ変更する必要があることを表示する。選択済み配置のNode Masterは接続を維持したまま差し替えられる。「接続を確認・編集」では接続単位で削除と必要Level変更を行い、配置Nodeを削除する場合は関連接続だけを削除して他の配置NodeとNode Master Assetを残す。Node Masterを編集すると、そのAssetを参照する全配置Nodeに反映される。Nodeの画面座標は保存せず、ゲームのUIレイアウトや実行時データには含めない。
 - Editor検証では、TreeNodeId重複、Tree外の配置Node接続、空・重複・自己接続、到達不能な必要Level、循環依存、Rank数と `ProgressionType` の不整合を検出する。

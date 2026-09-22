@@ -51,8 +51,8 @@ namespace Assets.Scripts.UI.Components
             else if (displayRow.NodeCount == 1)
             {
                 lineTwoToOne.gameObject.SetActive(true);
-                lineTwoToOne.SetupLeft(IsLinkEnabled(tree, previousRow.LeftTreeNodeId, displayRow.CenterTreeNodeId, statesById));
-                lineTwoToOne.SetupRight(IsLinkEnabled(tree, previousRow.RightTreeNodeId, displayRow.CenterTreeNodeId, statesById));
+                lineTwoToOne.SetupLeft(IsTwoToOneLineEnabled(tree, previousRow.LeftTreeNodeId, displayRow.CenterTreeNodeId, statesById));
+                lineTwoToOne.SetupRight(IsTwoToOneLineEnabled(tree, previousRow.RightTreeNodeId, displayRow.CenterTreeNodeId, statesById));
             }
             else
             {
@@ -80,9 +80,13 @@ namespace Assets.Scripts.UI.Components
             var state = statesById[treeNodeId];
             var visualState = state.CurrentLevel > 0
                 ? PartsTraitItem.VisualState.Focused
+                : state.IsExclusiveClosed || state.LockReason == AbilityNodeLockReason.ImpossiblePrerequisites
+                    ? PartsTraitItem.VisualState.Disabled
+                : IsDisabledByPreviousRow(tree, previousRow, treeNodeId, statesById)
+                    ? PartsTraitItem.VisualState.Disabled
                 : previousRow == null || HasFocusedPreviousItem(tree, previousRow, treeNodeId, statesById)
                     ? PartsTraitItem.VisualState.Normal
-                    : PartsTraitItem.VisualState.Disabled;
+                    : PartsTraitItem.VisualState.Locked;
             var visualStyle = new PartsTraitItem.VisualStyle(
                 state.Entry.Node.Icon,
                 state.CurrentLevel,
@@ -137,6 +141,52 @@ namespace Assets.Scripts.UI.Components
                 : !hasUnfocusedPrerequisite;
         }
 
+        /// <summary>
+        /// 2→2のように同じ経路を継続するNodeは、直前の前提が排他などで恒久的に
+        /// Disabledなら、前提不足のLockedではなく同じくDisabledとして扱う。
+        /// Anyでは他の直前前提が残っていれば継続できるため、すべてDisabledの場合だけ伝播する。
+        /// </summary>
+        private static bool IsDisabledByPreviousRow(
+            AbilityTreeMasterData tree,
+            AbilityTreeDisplayRow previousRow,
+            string treeNodeId,
+            IReadOnlyDictionary<string, AbilityTreeNodeState> statesById)
+        {
+            if (previousRow == null)
+            {
+                return false;
+            }
+
+            var hasPrerequisite = false;
+            var hasDisabledPrerequisite = false;
+            var hasAvailablePrerequisite = false;
+            for (var i = 0; i < tree.Links.Count; i++)
+            {
+                var link = tree.Links[i];
+                if (link == null || link.LinkType != AbilityTreeLinkType.Prerequisite ||
+                    link.ToTreeNodeId != treeNodeId || !ContainsNodeId(previousRow, link.FromTreeNodeId))
+                {
+                    continue;
+                }
+
+                hasPrerequisite = true;
+                var previousState = statesById[link.FromTreeNodeId];
+                var isDisabled = previousState.IsExclusiveClosed ||
+                    previousState.LockReason == AbilityNodeLockReason.ImpossiblePrerequisites;
+                hasDisabledPrerequisite |= isDisabled;
+                hasAvailablePrerequisite |= !isDisabled;
+            }
+
+            if (!hasPrerequisite)
+            {
+                return false;
+            }
+
+            return statesById[treeNodeId].Entry.PrerequisiteMode == AbilityPrerequisiteMode.All
+                ? hasDisabledPrerequisite
+                : !hasAvailablePrerequisite;
+        }
+
         private static bool ContainsNodeId(AbilityTreeDisplayRow row, string treeNodeId)
         {
             return row.CenterTreeNodeId == treeNodeId ||
@@ -170,6 +220,16 @@ namespace Assets.Scripts.UI.Components
             }
 
             return false;
+        }
+
+        private static bool IsTwoToOneLineEnabled(
+            AbilityTreeMasterData tree,
+            string fromTreeNodeId,
+            string toTreeNodeId,
+            IReadOnlyDictionary<string, AbilityTreeNodeState> statesById)
+        {
+            return statesById[fromTreeNodeId].CurrentLevel > 0 &&
+                   IsLinkEnabled(tree, fromTreeNodeId, toTreeNodeId, statesById);
         }
     }
 }

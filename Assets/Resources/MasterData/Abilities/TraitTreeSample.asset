@@ -24,14 +24,26 @@ MonoBehaviour:
   - treeNodeId: trait.strength.branch
     node: {fileID: 11400000, guid: 9568730b319044918e2191b0a1ddce1f, type: 2}
     prerequisiteMode: 0
+  - treeNodeId: trait.vitality.advance
+    node: {fileID: 11400000, guid: a09cbf46aa7a44df9367c6c41b91d084, type: 2}
+    prerequisiteMode: 0
+  - treeNodeId: trait.strength.advance
+    node: {fileID: 11400000, guid: 9568730b319044918e2191b0a1ddce1f, type: 2}
+    prerequisiteMode: 0
   - treeNodeId: trait.adapt.merge
     node: {fileID: 11400000, guid: 5ac1c56d1caa4e4588dcdfe52a91ee20, type: 2}
     prerequisiteMode: 1
+  - treeNodeId: trait.mastery.final
+    node: {fileID: 11400000, guid: a09cbf46aa7a44df9367c6c41b91d084, type: 2}
+    prerequisiteMode: 0
   displayRows:
   - centerTreeNodeId: trait.training
   - leftTreeNodeId: trait.vitality.branch
     rightTreeNodeId: trait.strength.branch
+  - leftTreeNodeId: trait.vitality.advance
+    rightTreeNodeId: trait.strength.advance
   - centerTreeNodeId: trait.adapt.merge
+  - centerTreeNodeId: trait.mastery.final
   links:
   - fromTreeNodeId: trait.training
     toTreeNodeId: trait.vitality.branch
@@ -44,8 +56,17 @@ MonoBehaviour:
     toTreeNodeId: trait.strength.branch
     requiredLevel: 1
   - fromTreeNodeId: trait.vitality.branch
-    toTreeNodeId: trait.adapt.merge
+    toTreeNodeId: trait.vitality.advance
     requiredLevel: 1
   - fromTreeNodeId: trait.strength.branch
+    toTreeNodeId: trait.strength.advance
+    requiredLevel: 1
+  - fromTreeNodeId: trait.vitality.advance
     toTreeNodeId: trait.adapt.merge
+    requiredLevel: 1
+  - fromTreeNodeId: trait.strength.advance
+    toTreeNodeId: trait.adapt.merge
+    requiredLevel: 1
+  - fromTreeNodeId: trait.adapt.merge
+    toTreeNodeId: trait.mastery.final
     requiredLevel: 1

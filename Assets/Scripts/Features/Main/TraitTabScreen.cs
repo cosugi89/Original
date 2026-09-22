@@ -40,7 +40,12 @@ namespace Assets.Scripts.Features.Main
             {
                 var row = Instantiate(rowPrefab, content);
                 var previousRow = rowIndex > 0 ? traitTree.DisplayRows[rowIndex - 1] : null;
-                row.Setup(traitTree, traitTree.DisplayRows[rowIndex], previousRow, statesById, OpenTraitItemDetail);
+                row.Setup(
+                    traitTree,
+                    traitTree.DisplayRows[rowIndex],
+                    previousRow,
+                    statesById,
+                    OpenTraitItemDetail);
                 _rows.Add(row);
             }
         }
