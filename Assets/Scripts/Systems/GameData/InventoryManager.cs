@@ -23,11 +23,16 @@ namespace Assets.Scripts.Systems.GameData
         private Dictionary<int, EquipmentData> _byId;
         private Dictionary<int, EquipmentData> _byPartIndexKey;
         private Dictionary<PartsType, List<EquipmentData>> _byPartType;
+        private readonly Action _onItemStacksChanged;
 
-        public InventoryManager(UserDataJsonStore userDataStore, IReadOnlyList<EquipmentData> equipmentData)
+        public InventoryManager(
+            UserDataJsonStore userDataStore,
+            IReadOnlyList<EquipmentData> equipmentData,
+            Action onItemStacksChanged = null)
         {
             UserDataStore = userDataStore;
             Session = userDataStore.Session;
+            _onItemStacksChanged = onItemStacksChanged;
             RefreshDefinitions(equipmentData);
         }
 
@@ -41,6 +46,87 @@ namespace Assets.Scripts.Systems.GameData
         public IReadOnlyList<InventoryEntryData> GetAllEntries()
         {
             return EnsureInventory().Equipments.Where(entry => entry != null).ToArray();
+        }
+
+        public int GetItemCount(int itemId)
+        {
+            if (itemId <= 0)
+                return 0;
+
+            return EnsureInventory().ItemStacks
+                .FirstOrDefault(stack => stack != null && stack.ItemId == itemId)?.Quantity ?? 0;
+        }
+
+        public int AddItem(int itemId, int quantity)
+        {
+            if (itemId <= 0 || quantity <= 0)
+                return 0;
+
+            var inventory = EnsureInventory();
+            var stack = inventory.ItemStacks.FirstOrDefault(candidate => candidate != null && candidate.ItemId == itemId);
+            if (stack == null)
+            {
+                stack = new ItemStackData { ItemId = itemId };
+                inventory.ItemStacks.Add(stack);
+            }
+
+            var addedQuantity = Mathf.Min(quantity, int.MaxValue - stack.Quantity);
+            if (addedQuantity == 0)
+                return 0;
+
+            stack.Quantity += addedQuantity;
+            UserDataStore.MarkDirty();
+            _onItemStacksChanged?.Invoke();
+            return addedQuantity;
+        }
+
+        /// <summary>指定アイテムの所持数を直接設定する。0を指定した場合はスタックを削除する。</summary>
+        public bool SetItemCount(int itemId, int quantity)
+        {
+            if (itemId <= 0)
+                return false;
+
+            var inventory = EnsureInventory();
+            var normalizedQuantity = Mathf.Max(0, quantity);
+            var stack = inventory.ItemStacks.FirstOrDefault(candidate => candidate != null && candidate.ItemId == itemId);
+            if (stack == null)
+            {
+                if (normalizedQuantity == 0)
+                    return false;
+
+                inventory.ItemStacks.Add(new ItemStackData { ItemId = itemId, Quantity = normalizedQuantity });
+            }
+            else if (normalizedQuantity == 0)
+            {
+                inventory.ItemStacks.Remove(stack);
+            }
+            else
+            {
+                if (stack.Quantity == normalizedQuantity)
+                    return false;
+
+                stack.Quantity = normalizedQuantity;
+            }
+
+            UserDataStore.MarkDirty();
+            _onItemStacksChanged?.Invoke();
+            return true;
+        }
+
+        public bool TryConsumeItem(int itemId, int quantity)
+        {
+            if (itemId <= 0 || quantity <= 0)
+                return false;
+
+            var stack = EnsureInventory().ItemStacks
+                .FirstOrDefault(candidate => candidate != null && candidate.ItemId == itemId);
+            if (stack == null || stack.Quantity < quantity)
+                return false;
+
+            stack.Quantity -= quantity;
+            UserDataStore.MarkDirty();
+            _onItemStacksChanged?.Invoke();
+            return true;
         }
 
         public IReadOnlyList<EquipmentData> GetOwnedDefinitions()
@@ -121,6 +207,7 @@ namespace Assets.Scripts.Systems.GameData
         private void Initialize()
         {
             EnsureInventory();
+            NormalizeItemStacks();
             SyncDefaultOwnedEquipments();
         }
 
@@ -128,7 +215,33 @@ namespace Assets.Scripts.Systems.GameData
         {
             Session.UserData.Inventory ??= new InventoryData();
             Session.UserData.Inventory.Equipments ??= new List<InventoryEntryData>();
+            Session.UserData.Inventory.ItemStacks ??= new List<ItemStackData>();
             return Session.UserData.Inventory;
+        }
+
+        private void NormalizeItemStacks()
+        {
+            var stacks = EnsureInventory().ItemStacks;
+            var quantitiesById = new Dictionary<int, int>();
+            foreach (var stack in stacks)
+            {
+                if (stack == null || stack.ItemId <= 0 || stack.Quantity <= 0)
+                    continue;
+
+                quantitiesById.TryGetValue(stack.ItemId, out var quantity);
+                quantitiesById[stack.ItemId] = (int)Math.Min(int.MaxValue, (long)quantity + stack.Quantity);
+            }
+
+            var normalized = quantitiesById
+                .OrderBy(pair => pair.Key)
+                .Select(pair => new ItemStackData { ItemId = pair.Key, Quantity = pair.Value })
+                .ToList();
+            if (stacks.Count == normalized.Count && stacks.Zip(normalized, (left, right) => left.ItemId == right.ItemId && left.Quantity == right.Quantity).All(isSame => isSame))
+                return;
+
+            stacks.Clear();
+            stacks.AddRange(normalized);
+            UserDataStore.MarkDirty();
         }
 
         private void RebuildLookups()

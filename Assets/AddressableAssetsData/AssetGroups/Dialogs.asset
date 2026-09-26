@@ -40,6 +40,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7a9a13626c504094c9bb5f66c9287b9d
+    m_Address: Dialog/ItemInventory
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 0ff3bd33b22e5e44b840aeb56feb0580, type: 2}
   m_SchemaSet:

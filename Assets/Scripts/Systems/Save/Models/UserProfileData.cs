@@ -17,18 +17,6 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("最後にプレイしたUTC時刻。継続ボーナスや最終ログイン表示に使える。")]
         public string LastPlayedAtUtc { get; set; } = "";
 
-        [Description("通常通貨の所持数。ショップや報酬で使う想定。")]
-        public int Gold { get; set; } = 0;
-
-        [Description("プレミアム通貨の所持数。不要なら削除してよい。")]
-        public int Gem { get; set; } = 0;
-
-        [Description("プレイヤーレベル。将来の成長要素を入れるなら使う。")]
-        public int Level { get; set; } = 1;
-
-        [Description("現在の経験値。レベル制を採用しないなら削除してよい。")]
-        public int Experience { get; set; } = 0;
-
         [Description("髪・目・ひげ・色など、戦闘デッキと独立したアバター見た目。")]
         public AvatarAppearanceData AvatarAppearance { get; set; } = new();
 

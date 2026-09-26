@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 395e36d1bbf744e9a8cce1c5784ca289, type: 3}
+  m_Name: AbilityPoint
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.ItemMasterData
+  itemId: 2
+  displayName: Ability Point
+  description: Trait\u306e\u89e3\u653e\u306b\u4f7f\u3046Point\u3002
+  icon: {fileID: 21300000, guid: d13bcdb25ae4740f79932d65f91ac8d4, type: 3}
+  isImportantItem: 1
+  isAlwaysVisibleInInventory: 1
+  isQuantityVisibleInInventory: 1
+  sortOrder: 1

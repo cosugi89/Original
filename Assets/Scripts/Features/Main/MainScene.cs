@@ -49,6 +49,7 @@ public class MainScene : MonoBehaviour
     private GameObject _homeCharacterRoot;
     private AppearanceController _statusCharacterPreview;
     private GameObject _statusCharacterRoot;
+    private UserDataManager _userDataManager;
 
     private UnityAction _statusTabHandler;
     private UnityAction _abilityTabHandler;
@@ -89,6 +90,8 @@ public class MainScene : MonoBehaviour
         homeScreen.Init();
         statusScreen.Init(_statusCharacterPreview, _homeCharacterPreview);
         SetPreviewVisibility(ResolveActivePreviewScreen());
+        _userDataManager = UserDataManager.EnsureInitialized();
+        _userDataManager.ResourceBalancesChanged += RefreshPointTexts;
         RefreshPointTexts();
     }
 
@@ -98,9 +101,9 @@ public class MainScene : MonoBehaviour
     /// </summary>
     public void RefreshPointTexts()
     {
-        var userData = UserDataManager.EnsureInitialized().UserData;
-        var gold = userData.Profile?.Gold ?? 0;
-        var abilityPointBalance = userData.Ability?.PointBalance ?? 0;
+        var inventory = UserDataManager.EnsureInitialized().Inventory;
+        var gold = inventory.GetItemCount(InventoryItemIds.Gold);
+        var abilityPointBalance = inventory.GetItemCount(InventoryItemIds.AbilityPoint);
         if (pointBalanceText != null)
         {
             pointBalanceText.text = gold.ToString();
@@ -114,6 +117,11 @@ public class MainScene : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_userDataManager != null)
+        {
+            _userDataManager.ResourceBalancesChanged -= RefreshPointTexts;
+        }
+
         statusTab.Button.onClick.RemoveListener(_statusTabHandler);
         abilityTab.Button.onClick.RemoveListener(_abilityTabHandler);
         homeTab.Button.onClick.RemoveListener(_homeTabHandler);

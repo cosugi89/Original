@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
 using UnityDebugSheet;
 using UnityEngine;
@@ -33,7 +34,7 @@ public sealed class AbilityPointDebugPage : DefaultDebugPageBase
             return;
         }
 
-        var balance = UserDataManager.Instance.UserData.Ability.PointBalance;
+        var balance = UserDataManager.Instance.Inventory.GetItemCount(InventoryItemIds.AbilityPoint);
         Debug.Log($"[DebugSheet] Ability Pointを{addedAmount}付与しました。残高: {balance}");
     }
 }

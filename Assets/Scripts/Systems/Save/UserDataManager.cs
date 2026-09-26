@@ -23,6 +23,8 @@ namespace Assets.Scripts.Systems.Save
         public ProgressManager Progress { get; private set; }
         public DeckManager Decks { get; private set; }
         public AbilityProgressManager AbilityProgress { get; private set; }
+        public ArmoryManager Armory { get; private set; }
+        public event System.Action ResourceBalancesChanged;
 
         [Description("セッション初期化が完了しているかどうか。起動直後のガードに使う。")]
         public bool IsInitialized { get; private set; }
@@ -82,10 +84,14 @@ namespace Assets.Scripts.Systems.Save
                 new DefaultUserDataFactory());
             UserDataStore.ReloadSession();
 
-            Inventory = new InventoryManager(UserDataStore, MasterDataResourceLoader.LoadEquipmentData());
+            Inventory = new InventoryManager(
+                UserDataStore,
+                MasterDataResourceLoader.LoadEquipmentData(),
+                NotifyResourceBalancesChanged);
             Decks = new DeckManager(UserDataStore, Inventory);
             Appearance = new AppearanceManager(UserDataStore, Inventory, Decks);
             Progress = new ProgressManager(UserDataStore, MasterDataResourceLoader.LoadBattleStageData());
+            Armory = new ArmoryManager(UserDataStore, Inventory, Progress, MasterDataResourceLoader.LoadArmoryProductDatabase());
 
             if (IsDirty)
                 UserDataStore.SaveSession();
@@ -125,13 +131,13 @@ namespace Assets.Scripts.Systems.Save
         {
             if (AbilityProgress == null || AbilityProgress.Tree != tree)
             {
-                AbilityProgress = new AbilityProgressManager(UserDataStore, tree);
+                AbilityProgress = new AbilityProgressManager(UserDataStore, Inventory, tree);
             }
 
             return AbilityProgress;
         }
 
-        /// <summary>指定Treeに属する保存済みNode Levelだけを消去して即時保存する。Point残高と他Treeの進捗は保持する。</summary>
+        /// <summary>指定Treeに属する保存済みNode Levelだけを消去して即時保存する。所持アイテムと他Treeの進捗は保持する。</summary>
         public int ClearAbilityTreeNodeLevels(string treeId)
         {
             InitializeGameData();
@@ -166,19 +172,18 @@ namespace Assets.Scripts.Systems.Save
             }
 
             InitializeGameData();
-            var ability = UserData.Ability;
-            ability.PointBalance = Mathf.Max(0, ability.PointBalance);
-            var addedAmount = Mathf.Min(amount, int.MaxValue - ability.PointBalance);
+            var addedAmount = Inventory.AddItem(InventoryItemIds.AbilityPoint, amount);
             if (addedAmount == 0)
-            {
                 return 0;
-            }
 
-            ability.PointBalance += addedAmount;
-            UserDataStore.MarkDirty();
             AbilityProgress?.Recalculate();
             UserDataStore.SaveSession();
             return addedAmount;
+        }
+
+        public void NotifyResourceBalancesChanged()
+        {
+            ResourceBalancesChanged?.Invoke();
         }
 
         private void SavePendingChanges()

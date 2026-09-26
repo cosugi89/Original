@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Core;
-using Assets.Scripts.Data.DTO;
+using Assets.Scripts.Features.Main.Character;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using Assets.Scripts.UI.Dialog;
@@ -10,7 +10,6 @@ using Cysharp.Threading.Tasks;
 using LayerLab.ArtMakerUnity;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
@@ -30,17 +29,14 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private StatusEquipmentListView[] listViews;
         [SerializeField] private StatusEquipmentSlotView[] slotEquipmentViews;
         [SerializeField] private StatusSkillSlotView[] slotSkillViews;
-        [SerializeField] private TextMeshProUGUI playerLevelText;
         [SerializeField] private TextMeshProUGUI titleText;
         [SerializeField] private StatusAvatarPreviewView avatarPreview;
 
         [Header("Appearance Dialog")]
-        [FormerlySerializedAs("skinButton")]
-        [SerializeField] private Button appearanceButton;
-        [FormerlySerializedAs("deckButton")]
-        [SerializeField] private Button deckLoadoutButton;
-        [FormerlySerializedAs("avatarPreviewRenderer")]
-        [SerializeField] private PreviewStage avatarPreviewStage;
+        [SerializeField] private Button skinButton;
+        [SerializeField] private Button deckButton;
+        [SerializeField] private Button itemButton;
+        [SerializeField] private PreviewStage avatarPreviewRenderer;
 
         private AvatarEditorPresenter _presenter;
         private StatusEquipmentCategory _currentCategory = StatusEquipmentCategory.All;
@@ -48,10 +44,16 @@ namespace Assets.Scripts.Features.Main
         private bool _equipmentDetailDialogOpen;
         private bool _skillLoadoutDialogOpen;
         private bool _deckLoadoutDialogOpen;
+        private bool _itemListDialogOpen;
+        
+        private void OnSkillSlotClicked(int slotIndex) => OpenSkillLoadoutDialogAsync(slotIndex).Forget();
+        private void OnClickAppearanceButton() => OpenAppearanceDialogAsync().Forget();
+        private void OnClickDeckLoadoutButton() => OpenDeckLoadoutDialogAsync().Forget();
+        private void OnClickItemListButton() => OpenItemListDialogAsync().Forget();
 
         public void Init(AppearanceController previewPartsManager, params AppearanceController[] additionalPreviewTargets)
         {
-            avatarPreview.Initialize(previewPartsManager, additionalPreviewTargets, avatarPreviewStage);
+            avatarPreview.Initialize(previewPartsManager, additionalPreviewTargets, avatarPreviewRenderer);
             _presenter = AvatarEditorPresenter.CreateDefault();
             _presenter.BindPreview(previewPartsManager);
             Setup();
@@ -62,17 +64,16 @@ namespace Assets.Scripts.Features.Main
         private void Setup()
         {
             // Tabs
-            for (var i = 0; i < tabViews.Length; i++)
+            foreach (var tabView in tabViews)
             {
-                var tabView = tabViews[i];
                 tabView.Bind(IsActiveCategory(tabView.Category), SelectCategory);
             }
 
             // equipment slots
-            for (var i = 0; i < slotEquipmentViews.Length; i++)
+            foreach (var t in slotEquipmentViews)
             {
-                slotEquipmentViews[i].SetVisible(true);
-                slotEquipmentViews[i].Bind(OnEquipmentSlotClicked);
+                t.SetVisible(true);
+                t.Bind(OnEquipmentSlotClicked);
             }
 
             // skill slots
@@ -92,10 +93,12 @@ namespace Assets.Scripts.Features.Main
             }
 
             // Appearance Dialog
-            appearanceButton.onClick.RemoveListener(OnClickAppearanceButton);
-            appearanceButton.onClick.AddListener(OnClickAppearanceButton);
-            deckLoadoutButton.onClick.RemoveListener(OnClickDeckLoadoutButton);
-            deckLoadoutButton.onClick.AddListener(OnClickDeckLoadoutButton);
+            skinButton.onClick.RemoveListener(OnClickAppearanceButton);
+            skinButton.onClick.AddListener(OnClickAppearanceButton);
+            deckButton.onClick.RemoveListener(OnClickDeckLoadoutButton);
+            deckButton.onClick.AddListener(OnClickDeckLoadoutButton);
+            itemButton.onClick.RemoveListener(OnClickItemListButton);
+            itemButton.onClick.AddListener(OnClickItemListButton);
         }
 
         private void SelectCategory(StatusEquipmentCategory category)
@@ -114,28 +117,25 @@ namespace Assets.Scripts.Features.Main
             // header
             var userDataManager = UserDataManager.EnsureInitialized();
             var profile = userDataManager.UserData.Profile;
-            playerLevelText.text = $"Lv.{Mathf.Max(1, profile.Level)}";
             titleText.text = string.IsNullOrWhiteSpace(profile.PlayerName) ? "Name" : profile.PlayerName;
 
             // tabs
-            for (var i = 0; i < tabViews.Length; i++)
+            foreach (var tabView in tabViews)
             {
-                var tabView = tabViews[i];
                 tabView.SetSelected(tabView.Category == _currentCategory);
             }
 
-            for (var i = 0; i < listViews.Length; i++)
+            foreach (var listView in listViews)
             {
-                var listView = listViews[i];
                 listView.gameObject.SetActive(
                     IsActiveCategory(listView.Category) && listView.Category == _currentCategory);
             }
 
             // equipment slots
-            for (var i = 0; i < slotEquipmentViews.Length; i++)
+            foreach (var t in slotEquipmentViews)
             {
-                var section = GetSectionForCategory(slotEquipmentViews[i].Category);
-                slotEquipmentViews[i].Refresh(section, slotEquipmentViews[i].Category == _currentCategory);
+                var section = GetSectionForCategory(t.Category);
+                t.Refresh(section, t.Category == _currentCategory);
             }
 
             // skill slots
@@ -169,9 +169,8 @@ namespace Assets.Scripts.Features.Main
 
             // lists
             var options = BuildOptionsForCategory(_currentCategory);
-            for (var i = 0; i < listViews.Length; i++)
+            foreach (var listView in listViews)
             {
-                var listView = listViews[i];
                 var isCurrentCategory = listView.Category == _currentCategory;
                 listView.Refresh(
                     isCurrentCategory ? options : Array.Empty<AvatarPartOptionViewData>(),
@@ -181,7 +180,6 @@ namespace Assets.Scripts.Features.Main
                         : null);
             }
         }
-
 
         private void OnEquipmentClicked(AvatarPartOptionViewData option)
         {
@@ -217,11 +215,6 @@ namespace Assets.Scripts.Features.Main
             CommitEquipmentChange();
         }
 
-        private void OnSkillSlotClicked(int slotIndex)
-        {
-            OpenSkillLoadoutDialogAsync(slotIndex).Forget();
-        }
-
         private async UniTaskVoid OpenEquipmentDetailDialogAsync(
             AvatarPartOptionViewData option,
             bool isOpenedFromEquipmentSlot)
@@ -239,7 +232,7 @@ namespace Assets.Scripts.Features.Main
                     EquipmentDetailDialogRequest,
                     EquipmentDetailDialogResult>(
                         new EquipmentDetailDialogRequest(option, isOpenedFromEquipmentSlot),
-                        new DialogContext(avatarPreviewStage));
+                        new DialogContext(avatarPreviewRenderer));
                 if (result.IsEquipRequested)
                 {
                     if (option == null || !_presenter.TrySelectEquipment(option.EquipmentId))
@@ -254,17 +247,6 @@ namespace Assets.Scripts.Features.Main
             {
                 _equipmentDetailDialogOpen = false;
             }
-        }
-
-        private void CommitEquipmentChange()
-        {
-            _presenter.Commit();
-            avatarPreview.ApplySavedAppearance();
-
-            var userDataManager = UserDataManager.EnsureInitialized();
-            userDataManager.Decks.EnsureUsableLoadout(persistImmediately: true);
-            userDataManager.UserDataStore.SaveSession();
-            Refresh();
         }
 
         private async UniTaskVoid OpenSkillLoadoutDialogAsync(int slotIndex)
@@ -282,7 +264,7 @@ namespace Assets.Scripts.Features.Main
                     SkillLoadoutDialogRequest,
                     SkillLoadoutDialogResult>(
                         new SkillLoadoutDialogRequest(slotIndex),
-                        new DialogContext(avatarPreviewStage));
+                        new DialogContext(avatarPreviewRenderer));
                 if (result.IsSaved)
                 {
                     Refresh();
@@ -294,16 +276,29 @@ namespace Assets.Scripts.Features.Main
             }
         }
 
-        private void OnClickAppearanceButton()
+        private async UniTaskVoid OpenAppearanceDialogAsync()
         {
-            OpenAppearanceDialogAsync().Forget();
+            avatarPreview.SetPrimaryVisible(false);
+            try
+            {
+                var request = new AvatarDialogRequest(avatarPreview.PrimaryTarget, avatarPreview.GetTargets());
+                var result = await DialogService.OpenAsync<AvatarDialog, AvatarDialogRequest, AvatarDialogResult>(
+                    request,
+                    new DialogContext(avatarPreviewRenderer));
+                if (result.IsSaved)
+                {
+                    _presenter = AvatarEditorPresenter.CreateDefault();
+                    _presenter.BindPreview(avatarPreview.PrimaryTarget);
+                    avatarPreview.ApplySavedAppearance();
+                    Refresh();
+                }
+            }
+            finally
+            {
+                avatarPreview.SetPrimaryVisible(isActiveAndEnabled);
+            }
         }
-
-        private void OnClickDeckLoadoutButton()
-        {
-            OpenDeckLoadoutDialogAsync().Forget();
-        }
-
+        
         private async UniTaskVoid OpenDeckLoadoutDialogAsync()
         {
             if (_deckLoadoutDialogOpen)
@@ -319,7 +314,7 @@ namespace Assets.Scripts.Features.Main
                     DeckLoadoutDialogRequest,
                     DeckLoadoutDialogResult>(
                         new DeckLoadoutDialogRequest(),
-                        new DialogContext(avatarPreviewStage, avatarPreview.PrimaryTarget));
+                        new DialogContext(avatarPreviewRenderer, avatarPreview.PrimaryTarget));
                 if (result.IsDeckSelected)
                 {
                     avatarPreview.ApplySavedAppearance();
@@ -332,27 +327,38 @@ namespace Assets.Scripts.Features.Main
             }
         }
 
-        private async UniTaskVoid OpenAppearanceDialogAsync()
+        private async UniTaskVoid OpenItemListDialogAsync()
         {
-            avatarPreview.SetPrimaryVisible(false);
+            if (_itemListDialogOpen)
+            {
+                return;
+            }
+
+            _itemListDialogOpen = true;
             try
             {
-                var request = new AvatarDialogRequest(avatarPreview.PrimaryTarget, avatarPreview.GetTargets());
-                var result = await DialogService.OpenAsync<AvatarDialog, AvatarDialogRequest, AvatarDialogResult>(
-                    request,
-                    new DialogContext(avatarPreviewStage));
-                if (result.IsSaved)
-                {
-                    _presenter = AvatarEditorPresenter.CreateDefault();
-                    _presenter.BindPreview(avatarPreview.PrimaryTarget);
-                    avatarPreview.ApplySavedAppearance();
-                    Refresh();
-                }
+                await DialogService.OpenAsync<
+                    DialogItemInventory,
+                    ItemInventoryDialogRequest,
+                    ItemInventoryDialogResult>(
+                    new ItemInventoryDialogRequest(),
+                    new DialogContext(avatarPreviewRenderer, avatarPreview.PrimaryTarget));
             }
             finally
             {
-                avatarPreview.SetPrimaryVisible(isActiveAndEnabled);
+                _itemListDialogOpen = false;
             }
+        }
+        
+        private void CommitEquipmentChange()
+        {
+            _presenter.Commit();
+            avatarPreview.ApplySavedAppearance();
+
+            var userDataManager = UserDataManager.EnsureInitialized();
+            userDataManager.Decks.EnsureUsableLoadout(persistImmediately: true);
+            userDataManager.UserDataStore.SaveSession();
+            Refresh();
         }
 
         private IReadOnlyList<AvatarPartOptionViewData> BuildOptionsForCategory(StatusEquipmentCategory category)
@@ -432,8 +438,9 @@ namespace Assets.Scripts.Features.Main
 
         private void OnDestroy()
         {
-            appearanceButton.onClick.RemoveListener(OnClickAppearanceButton);
-            deckLoadoutButton.onClick.RemoveListener(OnClickDeckLoadoutButton);
+            skinButton.onClick.RemoveListener(OnClickAppearanceButton);
+            deckButton.onClick.RemoveListener(OnClickDeckLoadoutButton);
+            itemButton.onClick.RemoveListener(OnClickItemListButton);
         }
     }
 }

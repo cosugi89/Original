@@ -7,6 +7,18 @@ namespace Assets.Scripts.Systems.Save.Models
     {
         [Description("所持している装備一覧。装備マスタのIDで参照する。")]
         public List<InventoryEntryData> Equipments { get; set; } = new();
+
+        [Description("通貨、素材、チケットなど、数量を持つ共通アイテム一覧。")]
+        public List<ItemStackData> ItemStacks { get; set; } = new();
+    }
+
+    public class ItemStackData
+    {
+        [Description("アイテムを識別するID。0は未設定。")]
+        public int ItemId { get; set; }
+
+        [Description("所持数。0以下のスタックは正規化時に除外する。")]
+        public int Quantity { get; set; }
     }
 
     public class InventoryEntryData
