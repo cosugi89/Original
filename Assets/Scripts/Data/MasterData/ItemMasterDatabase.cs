@@ -19,5 +19,11 @@ namespace Assets.Scripts.Data.MasterData
                 .ThenBy(item => item.ItemId)
                 .ToArray();
         }
+
+        public bool TryGetById(int itemId, out ItemMasterData definition)
+        {
+            definition = items?.FirstOrDefault(item => item != null && item.ItemId == itemId);
+            return definition != null;
+        }
     }
 }

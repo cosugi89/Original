@@ -1,5 +1,6 @@
 using Assets.Scripts.Core.Const;
 using Assets.Scripts.Data.MasterData;
+using Assets.Scripts.UI.Components;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,6 +20,12 @@ namespace Assets.Scripts.Features.Main.Dungeon
         [SerializeField] private Image bgImage;
         [SerializeField] private Image bgGradientImage;
         [SerializeField] private Image itemImage;
+        private GameButton _button;
+
+        private void Awake()
+        {
+            _button = GetComponentInChildren<GameButton>(true);
+        }
 
         public void Setup(StageMasterData stageData)
         {
@@ -45,6 +52,11 @@ namespace Assets.Scripts.Features.Main.Dungeon
             headerBgImage.color = colorSet.HeaderBg;
             labelBgImage.color = colorSet.LabelBg;
             labelBgLightImage.color = colorSet.LabelLightBg;
+        }
+
+        public void SetClickAction(System.Action action)
+        {
+            _button.SetAction(action);
         }
     }
 }

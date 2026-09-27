@@ -19,4 +19,5 @@ MonoBehaviour:
   isImportantItem: 1
   isAlwaysVisibleInInventory: 0
   isQuantityVisibleInInventory: 0
+  isHiddenUntilMissionClear: 1
   sortOrder: 2

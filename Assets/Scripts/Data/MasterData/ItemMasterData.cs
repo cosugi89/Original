@@ -34,6 +34,9 @@ namespace Assets.Scripts.Data.MasterData
         [Description("Items ダイアログで所持数を表示するかどうか。")]
         private bool isQuantityVisibleInInventory = true;
 
+        [SerializeField, Tooltip("Mission 初回クリア報酬で、クリア前は内容を伏せて表示するかどうかです。")]
+        private bool isHiddenUntilMissionClear;
+
         [SerializeField, Tooltip("Items ダイアログ内の並び順です。小さい値ほど先に表示します。")]
         [Description("Items ダイアログ内の表示順。")]
         private int sortOrder;
@@ -45,6 +48,7 @@ namespace Assets.Scripts.Data.MasterData
         public bool IsImportantItem => isImportantItem;
         public bool IsAlwaysVisibleInInventory => isAlwaysVisibleInInventory;
         public bool IsQuantityVisibleInInventory => isQuantityVisibleInInventory;
+        public bool IsHiddenUntilMissionClear => isHiddenUntilMissionClear;
         public int SortOrder => sortOrder;
     }
 }

@@ -23,5 +23,22 @@ MonoBehaviour:
   stageKind: 0
   unlockRequirementMode: 0
   requiredClearedStageIds: e9030000
+  clearRewards:
+  - rewardType: 0
+    itemId: 1
+    equipmentId: 0
+    quantity: 200
+  - rewardType: 0
+    itemId: 2
+    equipmentId: 0
+    quantity: 10
+  - rewardType: 0
+    itemId: 3
+    equipmentId: 0
+    quantity: 1
+  - rewardType: 1
+    itemId: 0
+    equipmentId: 7001
+    quantity: 1
   enemyRefs:
   - {fileID: 11400000, guid: 5a1d6fbc9a2f47d1a13825a19f8f0d20, type: 2}

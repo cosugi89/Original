@@ -3,6 +3,8 @@ using System.Linq;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Features.Main.Dungeon;
 using Assets.Scripts.Systems.Save;
+using Assets.Scripts.UI.Dialog;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Scripts.Features.Main
@@ -39,6 +41,7 @@ namespace Assets.Scripts.Features.Main
             {
                 var item = Instantiate(itemPrefab, scrollContent);
                 item.Setup(stage);
+                item.SetClickAction(() => OpenMissionDetailAsync(stage).Forget());
                 _items.Add(item);
             }
         }
@@ -58,6 +61,12 @@ namespace Assets.Scripts.Features.Main
             }
 
             _items.Clear();
+        }
+
+        private async UniTaskVoid OpenMissionDetailAsync(StageMasterData stage)
+        {
+            await DialogService.OpenAsync<DialogMissionDetail, MissionDetailDialogRequest, MissionDetailDialogResult>(
+                new MissionDetailDialogRequest(stage), null);
         }
     }
 }
