@@ -6,6 +6,7 @@ using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.UI.Components;
 using Assets.Scripts.UI.Dialog;
+using LayerLab.ArtMakerUnity;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,23 +19,84 @@ namespace Assets.Scripts.Features.Main
         {
             Option = option;
             IsOpenedFromEquipmentSlot = isOpenedFromEquipmentSlot;
+            IsPurchaseMode = false;
+            PurchasePrice = 0;
+            CanPurchase = false;
+        }
+
+        private EquipmentDetailDialogRequest(AvatarPartOptionViewData option, int purchasePrice, bool canPurchase)
+        {
+            Option = option;
+            IsOpenedFromEquipmentSlot = false;
+            IsPurchaseMode = true;
+            PurchasePrice = purchasePrice;
+            CanPurchase = canPurchase;
         }
 
         public AvatarPartOptionViewData Option { get; }
         public bool IsOpenedFromEquipmentSlot { get; }
+        public bool IsPurchaseMode { get; }
+        public int PurchasePrice { get; }
+        public bool CanPurchase { get; }
+
+        public static EquipmentDetailDialogRequest ForPurchase(
+            EquipmentMasterData equipment,
+            int purchasePrice,
+            bool canPurchase)
+        {
+            if (equipment == null)
+            {
+                throw new ArgumentNullException(nameof(equipment));
+            }
+
+            return new EquipmentDetailDialogRequest(
+                new AvatarPartOptionViewData
+                {
+                    EquipmentId = equipment.EquipmentId,
+                    DisplayName = equipment.DisplayName,
+                    Description = equipment.Description,
+                    Category = ToUiCategory(equipment.PartType),
+                    PartType = equipment.PartType,
+                    Icon = equipment.Icon,
+                    CanSelect = true,
+                    Rarity = equipment.Rarity,
+                    CategoryTags = equipment.CategoryTags,
+                },
+                purchasePrice,
+                canPurchase);
+        }
+
+        private static UICategory ToUiCategory(PartsType partType)
+        {
+            return partType switch
+            {
+                PartsType.Helmet => UICategory.Helmet,
+                PartsType.Chest => UICategory.Chest,
+                PartsType.Sword or PartsType.Axe or PartsType.Bow or PartsType.Wand or PartsType.Staff or
+                    PartsType.Spear or PartsType.Blunt or PartsType.Crossbow => UICategory.HandRight,
+                PartsType.Shield or PartsType.SubItem => UICategory.HandLeft,
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(partType),
+                    partType,
+                    "Only combat equipment can open the Armory purchase detail dialog."),
+            };
+        }
     }
 
     public readonly struct EquipmentDetailDialogResult
     {
-        private EquipmentDetailDialogResult(bool isEquipRequested)
+        private EquipmentDetailDialogResult(bool isEquipRequested, bool isPurchaseRequested)
         {
             IsEquipRequested = isEquipRequested;
+            IsPurchaseRequested = isPurchaseRequested;
         }
 
         public bool IsEquipRequested { get; }
+        public bool IsPurchaseRequested { get; }
 
-        public static EquipmentDetailDialogResult EquipRequested => new(true);
-        public static EquipmentDetailDialogResult Cancelled => new(false);
+        public static EquipmentDetailDialogResult EquipRequested => new(true, false);
+        public static EquipmentDetailDialogResult PurchaseRequested => new(false, true);
+        public static EquipmentDetailDialogResult Cancelled => new(false, false);
     }
 
     [DialogAddress("Dialog/EquipmentDetail")]
@@ -65,17 +127,23 @@ namespace Assets.Scripts.Features.Main
         private readonly List<StatusEquipmentDetailSkillView> _skillViews = new();
         private readonly List<TextMeshProUGUI> _buffViews = new();
         private bool _templatesInitialized;
+        private bool _isPurchaseMode;
+        private int _purchasePrice;
+        private bool _canPurchase;
 
         public void Setup(EquipmentDetailDialogRequest request, DialogContext context)
         {
             EnsurePrefabReferences();
             _option = request.Option;
+            _isPurchaseMode = request.IsPurchaseMode;
+            _purchasePrice = request.PurchasePrice;
+            _canPurchase = request.CanPurchase;
             Refresh();
 
             closeButton.SetAction(OnClickClose);
 
-            buttonArea.SetActive(!request.IsOpenedFromEquipmentSlot);
-            equipButton.SetAction(OnClickEquip);
+            buttonArea.SetActive(_isPurchaseMode || !request.IsOpenedFromEquipmentSlot);
+            equipButton.SetAction(_isPurchaseMode ? OnClickPurchase : OnClickEquip);
         }
 
         protected override void OnClickClose()
@@ -91,6 +159,16 @@ namespace Assets.Scripts.Features.Main
             }
 
             Close(EquipmentDetailDialogResult.EquipRequested);
+        }
+
+        private void OnClickPurchase()
+        {
+            if (!_canPurchase)
+            {
+                return;
+            }
+
+            Close(EquipmentDetailDialogResult.PurchaseRequested);
         }
 
         private void Refresh()
@@ -118,9 +196,17 @@ namespace Assets.Scripts.Features.Main
                 new UIColors.PlumColorSet());
             equipmentItem.SetChecked(_option.IsSelected);
 
-            var canEquip = _option.CanSelect && !_option.IsSelected;
-            equipButton.SetInteractable(canEquip);
-            equipButton.SetLabel(!_option.CanSelect ? "Locked" : (_option.IsSelected ? "Equipped" : "Equip"));
+            if (_isPurchaseMode)
+            {
+                equipButton.SetInteractable(_canPurchase);
+                equipButton.SetLabel(_purchasePrice.ToString());
+            }
+            else
+            {
+                var canEquip = _option.CanSelect && !_option.IsSelected;
+                equipButton.SetInteractable(canEquip);
+                equipButton.SetLabel(!_option.CanSelect ? "Locked" : (_option.IsSelected ? "Equipped" : "Equip"));
+            }
         }
 
         private static string BuildDisplayName(AvatarPartOptionViewData option)
