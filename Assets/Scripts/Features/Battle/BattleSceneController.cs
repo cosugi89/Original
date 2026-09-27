@@ -465,12 +465,6 @@ namespace Assets.Scripts.Features.Battle
             }
 
             battleProgress.RecordStageClear(clearedStageId);
-
-            var nextStageId = battleProgress.GetNextStageId(clearedStageId);
-            if (nextStageId >= 0)
-            {
-                battleProgress.UnlockStage(nextStageId);
-            }
         }
 
         private SkillSlotRuntime GetSelectedSkill()

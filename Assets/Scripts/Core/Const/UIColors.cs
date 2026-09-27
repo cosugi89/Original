@@ -180,6 +180,53 @@ namespace Assets.Scripts.Core.Const
             public Color Shadow { get; } = Color.clear;
             public bool Button01InnerVisible => true;
         }
+        
+        #region Dungeon Colors
+        public interface IDungeonColorSet
+        {
+            Color Background { get; }
+            Color GradientBg { get; }
+            Color HeaderBg { get; }
+            Color LabelBg { get; }
+            Color LabelLightBg { get; }
+        }
+
+        public sealed class DungeonBlueColorSet : IDungeonColorSet
+        {
+            public Color Background { get; } = new Color32(44, 74, 142, 255);
+            public Color GradientBg { get; } = new Color32(36, 62, 123, 255);
+            public Color HeaderBg { get; } = new Color32(51, 84, 153, 255);
+            public Color LabelBg { get; } = new Color32(35, 61, 132, 255);
+            public Color LabelLightBg { get; } = new Color32(48, 77, 149, 255);
+        }
+            
+        public sealed class DungeonPinkColorSet : IDungeonColorSet
+        {
+            public Color Background { get; } = new Color32(148, 65, 107, 255);
+            public Color GradientBg { get; }  = new Color32(125, 45, 116, 255);
+            public Color HeaderBg { get; } = new Color32(156, 67, 136, 255);
+            public Color LabelBg { get; } = new Color32(136, 36, 115, 255);
+            public Color LabelLightBg { get; } = new Color32(156, 44, 132, 255);
+        }
+            
+        public sealed class DungeonGreenColorSet : IDungeonColorSet
+        {
+            public Color Background { get; } = new Color32(35, 100, 59, 255);
+            public Color GradientBg { get; }  = new Color32(32, 95, 95, 255);
+            public Color HeaderBg { get; } = new Color32(22, 116, 90, 255);
+            public Color LabelBg { get; } = new Color32(33, 95, 99, 255);
+            public Color LabelLightBg { get; } = new Color32(34, 110, 107, 255);
+        }
+
+        public sealed class DungeonGrayColorSet : IDungeonColorSet
+        {
+            public Color Background { get; } = new Color32(79, 83, 91, 255);
+            public Color GradientBg { get; } = new Color32(64, 68, 77, 255);
+            public Color HeaderBg { get; } = new Color32(91, 95, 105, 255);
+            public Color LabelBg { get; } = new Color32(68, 72, 81, 255);
+            public Color LabelLightBg { get; } = new Color32(87, 91, 101, 255);
+        }
+        #endregion
 
         public class TraitTree
         {
