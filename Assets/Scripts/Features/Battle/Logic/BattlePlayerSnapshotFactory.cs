@@ -49,7 +49,7 @@ namespace Assets.Scripts.Features.Battle.Logic
             BattleEquipmentDerivedData equipmentDerivedData)
         {
             var normalizedProfile = profile ?? new UserProfileDemoData();
-            var statBlock = _playerStatBlockFactory.Create(normalizedProfile, equipmentDerivedData);
+            var statBlock = _playerStatBlockFactory.Create(equipmentDerivedData);
             return _combatantStatsFactory.CreatePlayerStats(statBlock, Math.Max(1, normalizedProfile.MaxHp));
         }
 

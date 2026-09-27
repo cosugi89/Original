@@ -1,6 +1,5 @@
 using System;
 using Assets.Scripts.Data.DTO;
-using Assets.Scripts.Systems.Save.Models;
 
 namespace Assets.Scripts.Features.Battle.Logic
 {
@@ -9,23 +8,17 @@ namespace Assets.Scripts.Features.Battle.Logic
     /// </summary>
     public sealed class BattlePlayerStatBlockFactory
     {
-        public BattleStatBlockData Create(
-            UserProfileData profile,
-            BattleEquipmentDerivedData equipmentDerivedData = null)
+        private const int BaseAttack = 100;
+
+        public BattleStatBlockData Create(BattleEquipmentDerivedData equipmentDerivedData = null)
         {
-            var normalizedProfile = profile ?? new UserProfileDemoData();
             return new BattleStatBlockData
             {
-                Attack = ResolveLevelBasedAttack(normalizedProfile),
+                Attack = BaseAttack,
                 Defense = 0,
                 Guard = 0,
                 Modifiers = equipmentDerivedData?.BattleStatModifiers ?? Array.Empty<BattleStatModifierData>(),
             };
-        }
-
-        private static int ResolveLevelBasedAttack(UserProfileData profile)
-        {
-            return 100 + Math.Max(0, (profile?.Level ?? 1) - 1) * 5;
         }
     }
 }
