@@ -12,7 +12,6 @@ namespace Assets.Scripts.UI.Components
         {
             Normal,
             Focused,
-            Special,
             Locked,
             Disabled
         }
@@ -23,24 +22,18 @@ namespace Assets.Scripts.UI.Components
                 Sprite icon,
                 int currentLevel,
                 int maxLevel,
-                VisualState state,
-                bool isAlertVisible = false,
-                bool isUpgradeMarkerVisible = false)
+                VisualState state)
             {
                 Icon = icon;
                 MaxLevel = Mathf.Max(0, maxLevel);
                 CurrentLevel = Mathf.Clamp(currentLevel, 0, MaxLevel);
                 State = state;
-                IsAlertVisible = isAlertVisible;
-                IsUpgradeMarkerVisible = isUpgradeMarkerVisible;
             }
 
             public Sprite Icon { get; }
             public int CurrentLevel { get; }
             public int MaxLevel { get; }
             public VisualState State { get; }
-            public bool IsAlertVisible { get; }
-            public bool IsUpgradeMarkerVisible { get; }
             public bool IsMaxLevel => CurrentLevel >= MaxLevel;
             public string LevelText => IsMaxLevel ? "MAX" : $"{CurrentLevel}/{MaxLevel}";
         }
@@ -51,12 +44,9 @@ namespace Assets.Scripts.UI.Components
         [SerializeField] private Image iconImage;
 
         [Header("State Objects")]
-        [SerializeField] private GameObject alertIcon;
-        [SerializeField] private GameObject upIcon;
         [SerializeField] private GameObject lockIcon;
         [SerializeField] private GameObject normalState;
         [SerializeField] private GameObject focusedState;
-        [SerializeField] private GameObject specialState;
         [SerializeField] private GameObject disabledState;
 
         private Action _clickAction;
@@ -77,8 +67,6 @@ namespace Assets.Scripts.UI.Components
             iconImage.enabled = style.Icon != null;
             iconImage.preserveAspect = true;
             text.text = style.LevelText;
-            alertIcon.SetActive(style.IsAlertVisible);
-            upIcon.SetActive(style.IsUpgradeMarkerVisible);
             SetState(style.State);
         }
 
@@ -99,7 +87,6 @@ namespace Assets.Scripts.UI.Components
             text.gameObject.SetActive(!usesDisabledVisual);
             normalState.SetActive(state == VisualState.Normal);
             focusedState.SetActive(state == VisualState.Focused);
-            specialState.SetActive(state == VisualState.Special);
             disabledState.SetActive(usesDisabledVisual);
             lockIcon.SetActive(state == VisualState.Locked);
             iconImage.color = usesDisabledVisual ? UIColors.TraitTree.DisableIconColor : UIColors.White;

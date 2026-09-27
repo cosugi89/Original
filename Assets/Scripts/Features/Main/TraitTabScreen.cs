@@ -4,6 +4,7 @@ using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.UI.Components;
 using Assets.Scripts.UI.Dialog;
+using Assets.Scripts.Features.Main.Ability;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -23,31 +24,32 @@ namespace Assets.Scripts.Features.Main
         private void OnEnable()
         {
             _progress ??= UserDataManager.EnsureInitialized().GetAbilityProgress(traitTree);
-            BuildTree(_progress.Recalculate());
+            RefreshTree(_progress.Recalculate());
         }
 
-        private void BuildTree(AbilityDerivedData derivedData)
+        private void RefreshTree(AbilityDerivedData derivedData)
         {
-            ClearRows();
-            var statesById = new Dictionary<string, AbilityTreeNodeState>();
-            for (var i = 0; i < derivedData.NodeStates.Count; i++)
-            {
-                var state = derivedData.NodeStates[i];
-                statesById.Add(state.Entry.TreeNodeId, state);
-            }
+            EnsureRows();
+            var presentation = TraitTreePresentationBuilder.Build(traitTree, derivedData);
 
-            for (var rowIndex = traitTree.DisplayRows.Count - 1; rowIndex >= 0; rowIndex--)
+            var viewIndex = 0;
+            for (var rowIndex = traitTree.DisplayRows.Count - 1; rowIndex >= 0; rowIndex--, viewIndex++)
             {
-                var row = Instantiate(rowPrefab, content);
                 var previousRow = rowIndex > 0 ? traitTree.DisplayRows[rowIndex - 1] : null;
-                row.Setup(
-                    traitTree,
+                _rows[viewIndex].Setup(
                     traitTree.DisplayRows[rowIndex],
                     previousRow,
-                    statesById,
+                    presentation,
                     OpenTraitItemDetail);
-                _rows.Add(row);
             }
+        }
+
+        private void EnsureRows()
+        {
+            if (_rows.Count == traitTree.DisplayRows.Count) return;
+            ClearRows();
+            for (var rowIndex = traitTree.DisplayRows.Count - 1; rowIndex >= 0; rowIndex--)
+                _rows.Add(Instantiate(rowPrefab, content));
         }
 
         private void OpenTraitItemDetail(string treeNodeId, PartsTraitItem.VisualStyle visualStyle)
@@ -96,11 +98,7 @@ namespace Assets.Scripts.Features.Main
                 }
 
                 var purchaseResult = _progress.TryPurchase(treeNodeId);
-                BuildTree(purchaseResult.DerivedData);
-                if (purchaseResult.IsPurchased)
-                {
-                    FindFirstObjectByType<MainScene>()?.RefreshPointTexts();
-                }
+                if (purchaseResult.IsPurchased) RefreshTree(purchaseResult.DerivedData);
             }
             finally
             {
