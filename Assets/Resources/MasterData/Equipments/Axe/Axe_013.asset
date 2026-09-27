@@ -18,7 +18,7 @@ MonoBehaviour:
   partsIndex: 13
   icon: {fileID: 21300000, guid: 45e6d7e917bb341eb8f12065faa35351, type: 3}
   sortOrder: 13
-  isDefaultOwned: 1
+  isDefaultOwned: 0
   assignableSkills:
   - {fileID: 11400000, guid: f04963ed63102904ab316063199ebece, type: 2}
   - {fileID: 11400000, guid: fb97b82158cc3204ea0d6540bd7ef10c, type: 2}
