@@ -31,6 +31,8 @@
 
 初期表示は `Home` とする。
 
+Missionカードを選択すると `Dialog-MissionDetail` を開く。DialogはMissionテーマ色、敵画像、初回クリア報酬を表示し、`Enter` 押下でそのMissionを選択して `BattleScene` へ遷移する。Main／Event Missionとも入場鍵や鍵表示は持たない。Itemマスタの `IsHiddenUntilMissionClear` が有効な初回報酬は、未クリア時には未知アイコンで表示する。
+
 `StageKind.Debug` のステージは通常は一覧に表示しない。DebugSheet の `Stage` ページは `Visibility` と `Progress` に分かれる。`Visibility` では Debug ステージの表示をトグルで切り替える。`Progress` では StageId を入力して Clear を押すと、同じ千番台かつ入力値以下の全ステージをクリア済みにする。表示または進捗を変更すると、開いている Dungeon 一覧も再生成される。Debug 表示フラグはセッション限定で保存しない。進捗の上書きは通常のセーブ対象であり、クリア回数などの記録値は変更しない。DebugSheet の `Equipment` ページでは全 `EquipmentData` を所持Switchとして表示し、個別に所持状態を切り替えられる。`Reset Owned Equipment` は現在セーブの全所持装備を削除する。`IsDefaultOwned` の装備は次回ゲームデータ初期化時に再付与される。
 
 Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleScene.unity` を登録する。
