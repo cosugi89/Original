@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Features.Main
 {
-    public class DungeonScene : MonoBehaviour
+    public class MissionsScreen : MonoBehaviour
     {
         [SerializeField] private RectTransform scrollContent;
         [SerializeField] private PartsDungeonItem itemPrefab;

@@ -5,9 +5,9 @@ using UnityEngine.Events;
 namespace Assets.Scripts.Features.Main
 {
     /// <summary>
-    /// Ability画面内のArtifact、Skill、Traitタブを切り替える。
+    /// Progress画面内の既存タブを切り替える。
     /// </summary>
-    public sealed class AbilityScene : Screen
+    public sealed class ProgressScreen : Screen
     {
         [Header("Tab Items")]
         [SerializeField] private PartsTabItem artifactTab;

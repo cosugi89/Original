@@ -6,11 +6,12 @@ using Assets.Scripts.UI.Components;
 using Assets.Scripts.Core;
 using Assets.Scripts.Systems.Save;
 using TMPro;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// MainScene のエントリポイント。
 /// - PreviewStage へのプレイヤー生成とアピアランス適用
-/// - HomeScreen UI の初期化
+/// - HomeScreen UI と CharacterScreen UI の初期化
 ///
 /// 注意: MainScene.unity の MonoBehaviour バインディングが
 /// "Assembly-CSharp::MainScene" (名前空間なし) を指しているため、
@@ -26,50 +27,59 @@ public class MainScene : MonoBehaviour
 
     [Header("Screens")]
     [SerializeField] private HomeScreen homeScreen;
-    [SerializeField] private StatusScreen statusScreen;
+    [FormerlySerializedAs("statusScreen")]
+    [SerializeField] private CharacterScreen characterScreen;
 
     [Header("Points")]
     [SerializeField] private TextMeshProUGUI pointBalanceText;
     [SerializeField] private TextMeshProUGUI abilityPointText;
 
     [Header("Main Tabs")]
-    [SerializeField] private PartsTabItem statusTab;
-    [SerializeField] private PartsTabItem abilityTab;
+    [FormerlySerializedAs("statusTab")]
+    [SerializeField] private PartsTabItem characterTab;
+    [FormerlySerializedAs("abilityTab")]
+    [SerializeField] private PartsTabItem progressTab;
     [SerializeField] private PartsTabItem homeTab;
-    [SerializeField] private PartsTabItem dungeonTab;
-    [SerializeField] private PartsTabItem shopTab;
+    [FormerlySerializedAs("dungeonTab")]
+    [SerializeField] private PartsTabItem missionsTab;
+    [FormerlySerializedAs("shopTab")]
+    [SerializeField] private PartsTabItem armoryTab;
 
-    [SerializeField] private GameObject statusTabScreen;
-    [SerializeField] private GameObject abilityTabScreen;
+    [FormerlySerializedAs("statusTabScreen")]
+    [SerializeField] private GameObject characterTabScreen;
+    [FormerlySerializedAs("abilityTabScreen")]
+    [SerializeField] private GameObject progressTabScreen;
     [SerializeField] private GameObject homeTabScreen;
-    [SerializeField] private GameObject dungeonTabScreen;
-    [SerializeField] private GameObject shopTabScreen;
+    [FormerlySerializedAs("dungeonTabScreen")]
+    [SerializeField] private GameObject missionsTabScreen;
+    [FormerlySerializedAs("shopTabScreen")]
+    [SerializeField] private GameObject armoryTabScreen;
 
     private AppearanceController _homeCharacterPreview;
     private GameObject _homeCharacterRoot;
-    private AppearanceController _statusCharacterPreview;
-    private GameObject _statusCharacterRoot;
+    private AppearanceController _characterPreview;
+    private GameObject _characterPreviewRoot;
     private UserDataManager _userDataManager;
 
-    private UnityAction _statusTabHandler;
-    private UnityAction _abilityTabHandler;
+    private UnityAction _characterTabHandler;
+    private UnityAction _progressTabHandler;
     private UnityAction _homeTabHandler;
-    private UnityAction _dungeonTabHandler;
-    private UnityAction _shopTabHandler;
+    private UnityAction _missionsTabHandler;
+    private UnityAction _armoryTabHandler;
 
     private void Awake()
     {
-        _statusTabHandler = ShowStatus;
-        _abilityTabHandler = ShowAbility;
+        _characterTabHandler = ShowCharacter;
+        _progressTabHandler = ShowProgress;
         _homeTabHandler = ShowHome;
-        _dungeonTabHandler = ShowDungeon;
-        _shopTabHandler = ShowShop;
+        _missionsTabHandler = ShowMissions;
+        _armoryTabHandler = ShowArmory;
 
-        statusTab.Button.onClick.AddListener(_statusTabHandler);
-        abilityTab.Button.onClick.AddListener(_abilityTabHandler);
+        characterTab.Button.onClick.AddListener(_characterTabHandler);
+        progressTab.Button.onClick.AddListener(_progressTabHandler);
         homeTab.Button.onClick.AddListener(_homeTabHandler);
-        dungeonTab.Button.onClick.AddListener(_dungeonTabHandler);
-        shopTab.Button.onClick.AddListener(_shopTabHandler);
+        missionsTab.Button.onClick.AddListener(_missionsTabHandler);
+        armoryTab.Button.onClick.AddListener(_armoryTabHandler);
 
         ShowHome();
     }
@@ -82,13 +92,13 @@ public class MainScene : MonoBehaviour
         ApplyAvatarTo(_homeCharacterPreview, avatarRenderService);
         _homeCharacterRoot = ResolveHomePreviewRoot();
 
-        _statusCharacterPreview = ResolveStatusCharacterPreview();
-        ApplyAvatarTo(_statusCharacterPreview, avatarRenderService);
-        _statusCharacterRoot = ResolvePreviewRoot(_statusCharacterPreview);
+        _characterPreview = ResolveCharacterPreview();
+        ApplyAvatarTo(_characterPreview, avatarRenderService);
+        _characterPreviewRoot = ResolvePreviewRoot(_characterPreview);
 
         ExcludeAvatarPreviewLayerFromScreenCameras();
         homeScreen.Init();
-        statusScreen.Init(_statusCharacterPreview, _homeCharacterPreview);
+        characterScreen.Init(_characterPreview, _homeCharacterPreview);
         SetPreviewVisibility(ResolveActivePreviewScreen());
         _userDataManager = UserDataManager.EnsureInitialized();
         _userDataManager.ResourceBalancesChanged += RefreshPointTexts;
@@ -122,21 +132,21 @@ public class MainScene : MonoBehaviour
             _userDataManager.ResourceBalancesChanged -= RefreshPointTexts;
         }
 
-        statusTab.Button.onClick.RemoveListener(_statusTabHandler);
-        abilityTab.Button.onClick.RemoveListener(_abilityTabHandler);
+        characterTab.Button.onClick.RemoveListener(_characterTabHandler);
+        progressTab.Button.onClick.RemoveListener(_progressTabHandler);
         homeTab.Button.onClick.RemoveListener(_homeTabHandler);
-        dungeonTab.Button.onClick.RemoveListener(_dungeonTabHandler);
-        shopTab.Button.onClick.RemoveListener(_shopTabHandler);
+        missionsTab.Button.onClick.RemoveListener(_missionsTabHandler);
+        armoryTab.Button.onClick.RemoveListener(_armoryTabHandler);
     }
 
-    private void ShowStatus()
+    private void ShowCharacter()
     {
-        SelectTab(statusTab, statusTabScreen);
+        SelectTab(characterTab, characterTabScreen);
     }
 
-    private void ShowAbility()
+    private void ShowProgress()
     {
-        SelectTab(abilityTab, abilityTabScreen);
+        SelectTab(progressTab, progressTabScreen);
     }
 
     private void ShowHome()
@@ -144,34 +154,34 @@ public class MainScene : MonoBehaviour
         SelectTab(homeTab, homeTabScreen);
     }
 
-    private void ShowDungeon()
+    private void ShowMissions()
     {
-        SelectTab(dungeonTab, dungeonTabScreen);
+        SelectTab(missionsTab, missionsTabScreen);
     }
 
-    private void ShowShop()
+    private void ShowArmory()
     {
-        SelectTab(shopTab, shopTabScreen);
+        SelectTab(armoryTab, armoryTabScreen);
     }
 
     private void SelectTab(PartsTabItem selectedTab, GameObject selectedScreen)
     {
-        statusTabScreen.SetActive(selectedScreen == statusTabScreen);
-        abilityTabScreen.SetActive(selectedScreen == abilityTabScreen);
+        characterTabScreen.SetActive(selectedScreen == characterTabScreen);
+        progressTabScreen.SetActive(selectedScreen == progressTabScreen);
         homeTabScreen.SetActive(selectedScreen == homeTabScreen);
-        dungeonTabScreen.SetActive(selectedScreen == dungeonTabScreen);
-        shopTabScreen.SetActive(selectedScreen == shopTabScreen);
+        missionsTabScreen.SetActive(selectedScreen == missionsTabScreen);
+        armoryTabScreen.SetActive(selectedScreen == armoryTabScreen);
 
-        statusTab.SetNormalState();
-        abilityTab.SetNormalState();
+        characterTab.SetNormalState();
+        progressTab.SetNormalState();
         homeTab.SetNormalState();
-        dungeonTab.SetNormalState();
-        shopTab.SetNormalState();
+        missionsTab.SetNormalState();
+        armoryTab.SetNormalState();
         selectedTab.SetFocusedState();
 
         SetPreviewVisibility(
             selectedScreen == homeTabScreen ? homeScreen :
-            selectedScreen == statusTabScreen ? statusScreen : null);
+            selectedScreen == characterTabScreen ? characterScreen : null);
     }
 
     private AppearanceController ResolveSceneCharacterPreview()
@@ -211,7 +221,7 @@ public class MainScene : MonoBehaviour
         return playerObject.GetComponent<AppearanceController>();
     }
 
-    private AppearanceController ResolveStatusCharacterPreview()
+    private AppearanceController ResolveCharacterPreview()
     {
         var candidate = ResolveSceneCharacterPreview();
         if (candidate != null && ResolvePreviewRoot(candidate) != _homeCharacterRoot)
@@ -219,18 +229,18 @@ public class MainScene : MonoBehaviour
             return candidate;
         }
 
-        var statusRoot = new GameObject("StatusCharacterPreviewRoot");
+        var characterRoot = new GameObject("CharacterPreviewRoot");
         if (playerRoot != null)
         {
-            statusRoot.transform.SetPositionAndRotation(playerRoot.position, playerRoot.rotation);
-            statusRoot.transform.localScale = playerRoot.lossyScale;
+            characterRoot.transform.SetPositionAndRotation(playerRoot.position, playerRoot.rotation);
+            characterRoot.transform.localScale = playerRoot.lossyScale;
         }
 
-        var statusObject = Instantiate(playerPrefab, statusRoot.transform);
-        MatchPreviewLocalTransform(statusObject.transform);
-        var statusPreview = statusObject.GetComponent<AppearanceController>();
-        statusRoot.SetActive(false);
-        return statusPreview;
+        var characterObject = Instantiate(playerPrefab, characterRoot.transform);
+        MatchPreviewLocalTransform(characterObject.transform);
+        var characterPreview = characterObject.GetComponent<AppearanceController>();
+        characterRoot.SetActive(false);
+        return characterPreview;
     }
 
     private void MatchPreviewLocalTransform(Transform previewTransform)
@@ -275,7 +285,7 @@ public class MainScene : MonoBehaviour
     private static bool IsPreviewRoot(Transform transform)
     {
         return transform.name == "GameObject" ||
-               transform.name == "StatusCharacterPreviewRoot";
+               transform.name == "CharacterPreviewRoot";
     }
 
     private static void ExcludeAvatarPreviewLayerFromScreenCameras()
@@ -301,14 +311,14 @@ public class MainScene : MonoBehaviour
     private void SetPreviewVisibility(Assets.Scripts.Features.Main.Screen screen)
     {
         SetActiveIfNeeded(_homeCharacterRoot, screen == homeScreen);
-        SetActiveIfNeeded(_statusCharacterRoot, screen == statusScreen);
+        SetActiveIfNeeded(_characterPreviewRoot, screen == characterScreen);
     }
 
     private Assets.Scripts.Features.Main.Screen ResolveActivePreviewScreen()
     {
-        if (statusScreen.gameObject.activeSelf)
+        if (characterScreen.gameObject.activeSelf)
         {
-            return statusScreen;
+            return characterScreen;
         }
 
         if (homeScreen.gameObject.activeSelf)

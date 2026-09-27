@@ -43258,7 +43258,7 @@ GameObject:
   m_Component:
   - component: {fileID: 241187645}
   m_Layer: 5
-  m_Name: AbilityScreens
+  m_Name: ProgressScreens
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -186496,19 +186496,19 @@ MonoBehaviour:
   playerRoot: {fileID: 622549166}
   sceneCharacterPreview: {fileID: 1211169407}
   homeScreen: {fileID: 285065588}
-  statusScreen: {fileID: 1071613853}
+  characterScreen: {fileID: 1071613853}
   pointBalanceText: {fileID: 1409539328}
   abilityPointText: {fileID: 1960926057}
-  statusTab: {fileID: 753808320}
-  abilityTab: {fileID: 2116141459}
+  characterTab: {fileID: 753808320}
+  progressTab: {fileID: 2116141459}
   homeTab: {fileID: 1005188841}
-  dungeonTab: {fileID: 1402507064}
-  shopTab: {fileID: 750346434}
-  statusTabScreen: {fileID: 1071613851}
-  abilityTabScreen: {fileID: 2738521818848115700}
+  missionsTab: {fileID: 1402507064}
+  armoryTab: {fileID: 750346434}
+  characterTabScreen: {fileID: 1071613851}
+  progressTabScreen: {fileID: 2738521818848115700}
   homeTabScreen: {fileID: 285065586}
-  dungeonTabScreen: {fileID: 1349442355}
-  shopTabScreen: {fileID: 1855493485}
+  missionsTabScreen: {fileID: 1349442355}
+  armoryTabScreen: {fileID: 1855493485}
 --- !u!4 &1033368311
 Transform:
   m_ObjectHideFlags: 0
@@ -193559,7 +193559,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 948af52f97a8a434388fdfb3d80aa72b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Main.StatusScreen
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Main.CharacterScreen
   tabViews:
   - {fileID: 6222320734586809361}
   - {fileID: 6473210922959853113}
@@ -222718,7 +222718,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1225798682}
   m_Layer: 5
-  m_Name: StatusScreens
+  m_Name: CharacterScreens
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -395079,7 +395079,7 @@ GameObject:
   - component: {fileID: 5867842916444445200}
   - component: {fileID: 249235365058494729}
   m_Layer: 0
-  m_Name: AbilityTabs
+  m_Name: ProgressTabs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -428092,7 +428092,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a641de82aec94a809a1b97a25ace78d5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Main.AbilityScene
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Main.ProgressScreen
   artifactTab: {fileID: 8761105532000000001}
   skillTab: {fileID: 1371592068000000001}
   traitTab: {fileID: 1592718100000000001}
@@ -451094,7 +451094,7 @@ GameObject:
   - component: {fileID: 1212988064315043561}
   - component: {fileID: 4529446372247372498}
   m_Layer: 0
-  m_Name: StatusTabs
+  m_Name: CharacterTabs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

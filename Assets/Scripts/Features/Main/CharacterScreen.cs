@@ -14,7 +14,7 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public sealed class StatusScreen : Screen
+    public sealed class CharacterScreen : Screen
     {
         private static readonly StatusEquipmentCategory[] ActiveCategories =
         {
@@ -80,7 +80,7 @@ namespace Assets.Scripts.Features.Main
             var battleSkillLoadoutSlotCount = UserProfileData.BattleSkillLoadoutSlotCount;
             if (slotSkillViews.Length < battleSkillLoadoutSlotCount)
             {
-                throw new InvalidOperationException($"{nameof(StatusScreen)} requires {battleSkillLoadoutSlotCount} skill slot views.");
+                throw new InvalidOperationException($"{nameof(CharacterScreen)} requires {battleSkillLoadoutSlotCount} skill slot views.");
             }
             for (var i = 0; i < slotSkillViews.Length; i++)
             {
