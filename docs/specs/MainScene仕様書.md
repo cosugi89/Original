@@ -1,8 +1,8 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-09-03
+- 最終更新: 2026-09-27
 - 文書状態: 運用中
-- 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Status タブ拡充方針を定義する。
+- 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Character / Progress / Missions / Armoryの方針を定義する。
 - 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
 
 ## 1. 基本方針
@@ -23,13 +23,15 @@
 
 | タブ index | 画面 | 役割 |
 | --- | --- | --- |
-| 0 | `Status` | 装備変更、実戦用 Skill ロードアウト変更、見た目変更ダイアログの入口を持つタブ。 |
-| 1 | `Ability` | プレイヤーの恒久成長を管理する入口。初期実装では `Trait` Tree を扱う。詳細は `docs/specs/Ability仕様書.md` を正とする。 |
+| 0 | `Character` | 装備変更、Deck、Appearance、重要所持品の入口を持つタブ。 |
+| 1 | `Progress` | `Traits`、ボス由来能力の `Insights`、Resurgence時だけの `Remnant` を扱う。詳細は `docs/specs/Ability仕様書.md` を正とする。 |
 | 2 | `Home` | 初期表示。戦闘開始導線を持つ。 |
-| 3 | `Dungeon` | ステージ、ダンジョン関連の入口候補。詳細は未確定。 |
-| 4 | `Shop` | ショップ関連の入口候補。詳細は未確定。 |
+| 3 | `Missions` | `Angel`が提示する任務一覧。解放済みかつ未クリアのMain / Event Missionを動的表示し、クリア済みは一覧から外す。カード選択による戦闘遷移は未接続。 |
+| 4 | `Armory` | GoldでItemまたは装備を購入するカタログ。進行に応じて商品を増やし、解放済み商品はResurgence後も維持する。 |
 
 初期表示は `Home` とする。
+
+`StageKind.Debug` のステージは通常は一覧に表示しない。DebugSheet の `Stage` ページは `Visibility` と `Progress` に分かれる。`Visibility` では Debug ステージの表示をトグルで切り替える。`Progress` では StageId を入力して Clear を押すと、同じ千番台かつ入力値以下の全ステージをクリア済みにする。表示または進捗を変更すると、開いている Dungeon 一覧も再生成される。Debug 表示フラグはセッション限定で保存しない。進捗の上書きは通常のセーブ対象であり、クリア回数などの記録値は変更しない。DebugSheet の `Equipment` ページでは全 `EquipmentData` を所持Switchとして表示し、個別に所持状態を切り替えられる。`Reset Owned Equipment` は現在セーブの全所持装備を削除する。`IsDefaultOwned` の装備は次回ゲームデータ初期化時に再付与される。
 
 Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleScene.unity` を登録する。
 `Assets/Scenes/SampleScene.unity` は使用しない。
@@ -67,7 +69,7 @@ Home と Status の表示サイズ、位置、向きは、それぞれのシー�
 
 ## 4. MainScene の下部Tab仕様
 
-下部の `Status`、`Ability`、`Home`、`Dungeon`、`Shop` Tabの切り替えは `MainScene` が担当する。`MainTabs` コンポーネントは使用しない。
+下部の `Character`、`Progress`、`Home`、`Missions`、`Armory` Tabの切り替えは `MainScene` が担当する。`MainTabs` コンポーネントは使用しない。
 
 - 各TabのNormal表示へ `PartsTabItem` を配置し、`MainScene` の `statusTab`、`abilityTab`、`homeTab`、`dungeonTab`、`shopTab` にInspector参照で設定する。
 - 対応画面も `MainScene` の各 `*TabScreen` にInspector参照で設定する。
@@ -78,13 +80,13 @@ Home と Status の表示サイズ、位置、向きは、それぞれのシー�
 
 タブの `Button.onClick` へ個別に永続イベントを設定するのではなく、`MainScene` が起動時に動的 listener を登録する。
 
-### 4.1 AbilityScene の仕様
+### 4.1 ProgressScene の仕様
 
-`Ability` 画面には `AbilityScene` を配置し、内部の `Artifact`、`Skill`、`Trait` を切り替える。
+`Progress` 画面には `AbilityScene` を配置し、内部の `Traits`、`Insights`、Resurgence時だけ表示する `Remnant` を切り替える。
 
-- `artifactTab` / `skillTab` / `traitTab` と、対応する `artifactScreen` / `skillScreen` をInspectorで設定する。
-- Trait画面は `TraitTabScreen` を `traitTabScreen` として `AbilityScene` から直接参照する。
-- 初期選択は右端の `Trait` とする。
+- `traitTab` / `insightsTab` / `remnantTab` と対応ScreenをInspectorで設定する。`remnantTab` はResurgence以外では非表示とする。
+- Traits画面は `TraitTabScreen` を `traitTabScreen` として `AbilityScene` から直接参照する。
+- 初期選択は `Traits` とする。
 - Ability内Tabのlistenerも `AbilityScene` が起動時に登録し、Buttonの永続イベントは使わない。
 - `AbilityScene` の責務はTabと画面のactive切り替えだけとし、Tabの見た目、Tree表示、Point表示、購入処理は持たない。
 
@@ -97,9 +99,13 @@ Home と Status の表示サイズ、位置、向きは、それぞれのシー�
 - false の場合は `ProgressManager.GetRecommendedStageId()` から推奨ステージを取得する。
 - 遷移前に `BattleSceneRequest.SelectedStageId` を設定する。
 
-## 6. Status タブ
+Mission の初回クリア報酬は各 `StageMasterData.ClearRewards` で定義する。報酬は `Item`（`ItemStacks` へ数量を加算）または `Equipment`（所持装備として付与）とし、同じMissionで二重に付与しない。個別の報酬内容は各 Stage マスターで設定する。
 
-Status タブは、プレイヤーの装備変更、実戦用 Skill ロードアウト変更、見た目変更を行うタブである。
+Armory は `ArmoryProductDatabase` の商品一覧を正本とする。各 `ArmoryProductMasterData` は販売対象として `EquipmentMasterData` または `ItemMasterData` を直接参照し、数量、Gold価格、解放に必要なクリア済みMission、表示順、購入上限を持つ。Equipment商品に登録できるのは、Helmet、Chest、右手、左手の戦闘4部位だけとし、Hair／Eye／Beard／Skinなどの見た目専用パーツは登録不可とする。購入回数は `UserData.Armory` に保存し、Resurgence後も維持する。一覧は Item と Equipment で親・Prefab・View を分ける。Item は並び順を維持し、名称・付与数・必要に応じて残り購入回数を表示する。Equipment は購入可能品を先、売切・所持済み品を末尾に並べ、名称と短いタグ文を表示する。未解放品は非表示、売切品は Disabled とする。購入時は、Item は `Dialog-Common-ConfilmWithIcon`、Equipment は `Dialog-EquipmentDetail` を購入モードで開く。どちらもGold不足、売切、または既に所持している装備は確定操作をDisabledにする。確定時にGold消費、Item加算または装備付与、購入回数保存を同一処理で行う。
+
+## 6. Character タブ
+
+Character タブは、プレイヤーの装備変更、実戦用 Skill ロードアウト変更、見た目変更、重要所持品の確認を行うタブである。
 装備変更はタブ内で即時選択し、髪、肌、目、ひげなどの見た目変更は `Button_Skin` から開くダイアログで行う。
 
 ### 6.1 UI 構成方針
@@ -125,7 +131,9 @@ Status タブは、プレイヤーの装備変更、実戦用 Skill ロードア
 - 実戦用 Skill ロードアウト4枠の現在設定を確認し、設定ダイアログから変更する。
 - `Button_Skin` から見た目変更ダイアログを開く。
 - 装備変更により使えなくなった実戦用 Skill ロードアウトを自動で外す。
-- 将来的には、戦闘ステータス、候補スキル、タグ一致ボーナスへの影響確認を追加する。
+- 最終 `HP / Attack / Defense`、候補Skill、タグ一致ボーナスへの影響を確認する。
+- `DeckLoadoutDialog` では、現在選択中Deckで成立したタグ、一致部位数、各タグが加えた `HP / Attack / Defense` を表示する。Deck切替と装備変更のプレビュー中にも即時更新する。
+- 装備選択Dialogでは、現在装備中の候補で成立しているタグを点灯し、未装備候補では装備した場合に成立するタグを明滅して予告する。
 
 装備データは、現行方針どおり戦闘用データと見た目用データを兼用する。詳細は `docs/specs/装備仕様書.md` を正とする。
 
@@ -151,11 +159,11 @@ Status タブは以下のデータを参照、更新する。
 - 右手装備
 - 左手装備
 
-アイテム枠は `docs/specs/装備仕様書.md` 側で正式な枠が確定してから Status タブへ接続する。
+`Items` は装備枠ではなく、装備できない重要所持品を表示する独立したDialogまたはページとして Character タブから開く。装備一覧カテゴリには含めない。
 
-Status タブ内のカテゴリは以下のとおりである。
+Character タブ内の装備カテゴリは以下のとおりである。
 
-Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor`、`Item` とする。
+Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor` とする。
 
 | カテゴリ | 対応する `UICategory` | 備考 |
 | --- | --- | --- |
@@ -164,11 +172,12 @@ Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor`、`Item` �
 | `Shield` | `HandLeft` | 左手装備を表示する。 |
 | `Armor` | `Chest` | 胴装備を表示する。 |
 | `Headgear` | `Helmet` | 頭装備を表示する。 |
-| `Item` | なし | 現行実装では非表示、未接続。 |
 
 装備一覧の項目、または装備済みのSlotEquipmentをクリックすると装備詳細ダイアログを開く。SlotEquipment起点では `ButtonArea` ごと装備操作を非表示にして詳細表示だけを行う。装備一覧起点では `Button_Equip` を表示し、選択可能かつ未装備の項目を装備できる。
 装備一覧での選択と解除は、所持済みかつ解放済みの装備だけを対象にする。
 カテゴリ別一覧の解除行は確認ダイアログを開かず、対象カテゴリを未装備にして保存する。装備解除で使用不能になったSkillは、装備変更時と同様に実戦用ロードアウトから外す。
+
+`Items` は装備一覧とは別の専用一覧であり、解除行、`Equip` ボタン、装備スロットは持たない。`InventoryData.ItemStacks` のうち `ItemMasterData.IsImportantItem` が有効な Item を、表示名・説明・アイコンを持つマスターから解決して表示する。各ItemMasterDataは、所持数が0でも一覧に表示するかを `IsAlwaysVisibleInInventory`、所持数をUIに表示するかを `IsQuantityVisibleInInventory` で定義する。Gold と Ability Point は両方を有効にし、所持数0でも `0` を表示する。`The Remnant` は所持数が1以上のときだけ表示し、所持数は表示しない。`Dialog-ItemInventory` は `ItemMasterDatabase` をPrefab参照で受け取り、所持数が1以上の表示対象Itemと `IsAlwaysVisibleInInventory` が有効なItemを `Parts-InventoryItem` として先頭から並べる。表示枠は常に最大15枠とし、残りはアイコン・数量を持たず操作できない Disabled 状態で表示する。Content の `ScrollRect` は縦スクロールを無効化する。表示はダイアログを開いた時点の所持状態を使い、開いている間の所持数変更をリアルタイム更新しない。選択したItemの名前と説明を表示する。
 装備スロットと装備一覧の各行は、背景フレーム、アイコン領域、名称を常に表示し、装備データやプール再利用状態によって表示有無が揺れないようにする。
 装備アイコンが未設定の場合はスロットまたは一覧テンプレートの代替アイコン、表示名が空の場合は `EquipmentId` 由来の表示名にフォールバックする。
 戦闘装備は `CurrentDeckId` の `DeckData` に反映し、髪・目・ひげ・色などの見た目専用状態は `UserData.Profile.AvatarAppearance` に保存する。変更後は `MainScene` 上のプレイヤープレビューと、非表示の `GameObject/Character` にも即時反映する。
@@ -223,9 +232,9 @@ Dialog 表示中は、Status タブ本体側のプレビューを一時的に非
 Dialog 表示は `DialogService` / `DialogHost` / `DialogBase` を使う。`DialogHost` は必要になった時点で最前面用の `DialogCanvas` を動的生成し、その中に `Backdrop` と `DialogParent` を置く。`StatusScreen` などの呼び出し側は prefab 参照や parent 指定を持たず、`DialogService.OpenAsync<...>()` でダイアログを開く。
 黒背景は `DialogHost` が管理し、開いているダイアログがひとつ以上背景表示を要求している場合に 1 枚だけ表示する。背景クリック可否や背景クリックで閉じるかどうかは `DialogBase.SetBackdrop(...)`、`SetBackdropVisible(...)`、`SetBackdropInteractable(...)`、`SetBackdropCloseEnabled(...)` でダイアログ単位に指定する。
 見た目は `Assets/Layer Lab/GUI Pro-MinimalGame/Theme_Dark/Prefabs/Prefabs~DemoScenes/Settings.prefab` の中央 Popup と暗い背景を参考にしつつ、実体 Prefab / Script は `Layer Lab` 配下には作らない。
-ダイアログ prefab は Addressables で解決する。装備詳細ダイアログは `Assets/Resources/Prefabs/Dialog/Dialog-EquipmentDetail.prefab` を正本 Prefab とし、Addressables address は `Dialog/EquipmentDetail`、`StatusEquipmentDetailDialog` には `[DialogAddress("Dialog/EquipmentDetail")]` を付与する。Skill 設定ダイアログは `Assets/Resources/Prefabs/Dialog-SkillLoadout.prefab` を正本 Prefab とし、Addressables address は `Dialog/SkillLoadout`、`SkillLoadoutDialog` には `[DialogAddress("Dialog/SkillLoadout")]` を付与する。見た目変更ダイアログは `Assets/Resources/Prefabs/Dialog-AvatarController 1.prefab` を正本 Prefab とし、Addressables address は `Dialog/AvatarController`、`AvatarDialog` には `[DialogAddress("Dialog/AvatarController")]` を付与する。Prefab 内の必須 UI 参照が未設定の場合はセットアップ不備として使用箇所で失敗させ、個別の null ガードによる回避、ダイアログ本体 UI の実行時動的生成、`Resources.Load<T>()` による代替探索は行わない。
+ダイアログ prefab は Addressables で解決する。装備詳細ダイアログは `Assets/Resources/Prefabs/Dialog/Dialog-EquipmentDetail.prefab` を正本 Prefab とし、Addressables address は `Dialog/EquipmentDetail`、`EquipmentDetailDialog` には `[DialogAddress("Dialog/EquipmentDetail")]` を付与する。Item購入確認は `Assets/Resources/Prefabs/Dialog/Dialog-Common-ConfilmWithIcon.prefab` を正本 Prefab とし、Addressables address は `Dialog/Common/ConfilmWithIcon`、`DialogCommonConfirmWithIcon` には同じ `[DialogAddress]` を付与する。Skill 設定ダイアログは `Assets/Resources/Prefabs/Dialog-SkillLoadout.prefab` を正本 Prefab とし、Addressables address は `Dialog/SkillLoadout`、`SkillLoadoutDialog` には `[DialogAddress("Dialog/SkillLoadout")]` を付与する。見た目変更ダイアログは `Assets/Resources/Prefabs/Dialog-AvatarController 1.prefab` を正本 Prefab とし、Addressables address は `Dialog/AvatarController`、`AvatarDialog` には `[DialogAddress("Dialog/AvatarController")]` を付与する。Prefab 内の必須 UI 参照が未設定の場合はセットアップ不備として使用箇所で失敗させ、個別の null ガードによる回避、ダイアログ本体 UI の実行時動的生成、`Resources.Load<T>()` による代替探索は行わない。
 
-`Dialog-EquipmentDetail` は `Parts-EquipmentItem` を装備表示に使用し、装備種別と `CategoryTags` をタグとして複数表示する。説明文は `EquipmentData.Description` を本文へ表示する。レアリティは `EquipmentData.Rarity` をラベルへ反映し、`Label_Tapered_01_Plum` の `Bg` / `InnerBorder` / `Deco` には対応する `UIColors.IColorSet` の `Background` / `InnerColor1` / `Glow` を適用する。スキル、戦闘補正、タグはそれぞれPrefab内の単一テンプレートを複製して表示し、`Scroll View/Viewport/Content` の `VerticalLayoutGroup` と `ContentSizeFitter` で表示件数に応じた高さにする。`Button_Close` は `GameButton` としてダイアログをキャンセルして閉じる。`Button_Equip` を含む `ButtonArea` はSlotEquipment起点だけ非表示にし、装備一覧起点では表示する。
+`Dialog-EquipmentDetail` は `Parts-EquipmentItem` を装備表示に使用し、装備種別と `CategoryTags` をタグとして複数表示する。説明文は `EquipmentData.Description` を本文へ表示する。レアリティは `EquipmentData.Rarity` をラベルへ反映し、`Label_Tapered_01_Plum` の `Bg` / `InnerBorder` / `Deco` には対応する `UIColors.IColorSet` の `Background` / `InnerColor1` / `Glow` を適用する。スキル、戦闘補正、タグはそれぞれPrefab内の単一テンプレートを複製して表示し、`Scroll View/Viewport/Content` の `VerticalLayoutGroup` と `ContentSizeFitter` で表示件数に応じた高さにする。`Button_Close` は `GameButton` としてダイアログをキャンセルして閉じる。`Button_Equip` を含む `ButtonArea` はSlotEquipment起点だけ非表示にし、装備一覧起点では表示する。Armoryから開いた購入モードでは同じ `ButtonArea` を表示し、`Button_Equip` のラベルをGold価格へ切り替えて購入確定に使う。
 
 装備詳細のスキル行は `PartsSkillItem` をアイコン枠として使う。通常は `NormalState` のみを表示し、`TypeArea`、Prefab内ラベル、Focusは常に隠す。スキルの解放状態を導入した後は、未解放行だけ `LockState` にする。
 
@@ -254,10 +263,8 @@ Skill ロードアウトは、Skill 設定ダイアログ内で候補 Skill を�
 
 ## 7. 未確定事項
 
-- Dungeon タブをステージ選択と同一視するかどうか。
-- Shop タブで扱う通貨、商品、購入フロー。
-- Status タブの最終 UI レイアウト。
-- Status タブの Item 枠の正式対応。
+- Missionsカードの選択時の未解放制御と戦闘遷移。
+- Character タブの最終 UI レイアウトと4つ目の入口の要否。
 - 見た目変更ダイアログの最終レイアウトと、`Settings.prefab` を基準にした細部調整。
 - 装備変更による戦闘ステータス、候補スキル、タグ一致ボーナスのプレビュー表示方針。
 
