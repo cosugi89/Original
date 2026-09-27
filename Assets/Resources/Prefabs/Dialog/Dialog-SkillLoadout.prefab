@@ -2802,18 +2802,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Main.StatusSkillLoadoutDialog
   dialogTitleGraphic: {fileID: 8900099042315701311}
-  selectedSkillItems:
+  selectedSkillSlotItems:
   - {fileID: 3303482087618880676}
   - {fileID: 5288515162274213813}
   - {fileID: 8363986529626005634}
   - {fileID: 6674358903618081388}
-  selectedSkillButtons:
+  selectedSkillSlotButtons:
   - {fileID: 1182476611516475806}
   - {fileID: 3899683874956068189}
   - {fileID: 514832896019240878}
   - {fileID: 5232289020642873031}
-  candidateItemTemplate: {fileID: 6648383511785250342}
-  candidateContent: {fileID: 6327136691504390135}
+  candidateSkillItemTemplate: {fileID: 6648383511785250342}
+  candidateSkillContent: {fileID: 6327136691504390135}
   emptyCandidatesText: {fileID: 7685997730724278223}
   closeButton: {fileID: 4364145224788178580}
 --- !u!1 &5152592750758903376
