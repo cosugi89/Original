@@ -138067,7 +138067,7 @@ GameObject:
   - component: {fileID: 750346434}
   - component: {fileID: 750346433}
   m_Layer: 5
-  m_Name: Tab_05
+  m_Name: ArmoryTab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -138810,7 +138810,7 @@ GameObject:
   - component: {fileID: 753808320}
   - component: {fileID: 753808319}
   m_Layer: 5
-  m_Name: Tab_01
+  m_Name: CharacterTab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -181033,7 +181033,7 @@ GameObject:
   - component: {fileID: 1005188841}
   - component: {fileID: 1005188840}
   m_Layer: 5
-  m_Name: Tab_03
+  m_Name: HomeTab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -193517,7 +193517,7 @@ GameObject:
   - component: {fileID: 1071613853}
   - component: {fileID: 1071613854}
   m_Layer: 5
-  m_Name: Status
+  m_Name: Character
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -244756,7 +244756,7 @@ GameObject:
   - component: {fileID: 1349442356}
   - component: {fileID: 1349442357}
   m_Layer: 5
-  m_Name: Dungeon
+  m_Name: Missions
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -254651,7 +254651,7 @@ GameObject:
   - component: {fileID: 1402507064}
   - component: {fileID: 1402507063}
   m_Layer: 5
-  m_Name: Tab_04
+  m_Name: MissionsTab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -389651,7 +389651,7 @@ GameObject:
   - component: {fileID: 2116141459}
   - component: {fileID: 2116141458}
   m_Layer: 5
-  m_Name: Tab_02
+  m_Name: ProgressTab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -428054,7 +428054,7 @@ GameObject:
   - component: {fileID: 2738521818848115701}
   - component: {fileID: 2738521818848115702}
   m_Layer: 5
-  m_Name: Ability
+  m_Name: Progress
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
