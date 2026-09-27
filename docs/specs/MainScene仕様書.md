@@ -1,6 +1,6 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-09-27
+- 最終更新: 2026-09-28
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Character / Progress / Missions / Armoryの方針を定義する。
 - 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
@@ -12,7 +12,7 @@
 - プレイヤーの現在状態を確認する。
 - タブで主要機能へ移動する。
 - ホームから戦闘へ遷移する。
-- Status タブから装備変更、実戦用 Skill ロードアウト変更、見た目変更を行う。
+- Character タブから装備変更、実戦用 Skill ロードアウト変更、見た目変更を行う。
 
 戦闘中の一時状態やターン処理は `BattleScene` 側の責務とし、`MainScene` は永続データ、所持品、ロードアウト、見た目状態を編集する入口として扱う。
 独立した `Assets/Scenes/Home.unity` は持たず、`Home` は `MainScene` 内のタブ画面として扱う。
@@ -26,14 +26,14 @@
 | 0 | `Character` | 装備変更、Deck、Appearance、重要所持品の入口を持つタブ。 |
 | 1 | `Progress` | `Traits`、ボス由来能力の `Insights`、Resurgence時だけの `Remnant` を扱う。詳細は `docs/specs/Ability仕様書.md` を正とする。 |
 | 2 | `Home` | 初期表示。戦闘開始導線を持つ。 |
-| 3 | `Missions` | `Angel`が提示する任務一覧。解放済みかつ未クリアのMain / Event Missionを動的表示し、クリア済みは一覧から外す。カード選択による戦闘遷移は未接続。 |
+| 3 | `Missions` | `Angel`が提示する任務一覧。解放済みかつ未クリアのMain / Event Missionを動的表示し、クリア済みは一覧から外す。カード選択で詳細Dialogを開く。 |
 | 4 | `Armory` | GoldでItemまたは装備を購入するカタログ。進行に応じて商品を増やし、解放済み商品はResurgence後も維持する。 |
 
 初期表示は `Home` とする。
 
 Missionカードを選択すると `Dialog-MissionDetail` を開く。DialogはMissionテーマ色、敵画像、初回クリア報酬を表示し、`Enter` 押下でそのMissionを選択して `BattleScene` へ遷移する。Main／Event Missionとも入場鍵や鍵表示は持たない。Itemマスタの `IsHiddenUntilMissionClear` が有効な初回報酬は、未クリア時には未知アイコンで表示する。
 
-`StageKind.Debug` のステージは通常は一覧に表示しない。DebugSheet の `Stage` ページは `Visibility` と `Progress` に分かれる。`Visibility` では Debug ステージの表示をトグルで切り替える。`Progress` では StageId を入力して Clear を押すと、同じ千番台かつ入力値以下の全ステージをクリア済みにする。表示または進捗を変更すると、開いている Dungeon 一覧も再生成される。Debug 表示フラグはセッション限定で保存しない。進捗の上書きは通常のセーブ対象であり、クリア回数などの記録値は変更しない。DebugSheet の `Equipment` ページでは全 `EquipmentData` を所持Switchとして表示し、個別に所持状態を切り替えられる。`Reset Owned Equipment` は現在セーブの全所持装備を削除する。`IsDefaultOwned` の装備は次回ゲームデータ初期化時に再付与される。
+`StageKind.Debug` のステージは通常は一覧に表示しない。DebugSheet の `Stage` ページは `Visibility` と `Progress` に分かれる。`Visibility` では Debug ステージの表示をトグルで切り替える。`Progress` では StageId を入力して Clear を押すと、同じ千番台かつ入力値以下の全ステージをクリア済みにする。表示または進捗を変更すると、開いている Missions 一覧も再生成される。Debug 表示フラグはセッション限定で保存しない。進捗の上書きは通常のセーブ対象であり、クリア回数などの記録値は変更しない。DebugSheet の `Equipment` ページでは全 `EquipmentData` を所持Switchとして表示し、個別に所持状態を切り替えられ、`Reset Owned Equipment` は現在セーブの全所持装備を削除する。`IsDefaultOwned` の装備は次回ゲームデータ初期化時に再付与される。
 
 Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleScene.unity` を登録する。
 `Assets/Scenes/SampleScene.unity` は使用しない。
@@ -45,15 +45,15 @@ Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleS
 - `playerRoot` 配下に既存の `AppearanceController` があればそれを Home 用プレビューとして使い、無ければ `playerPrefab` から生成する。
 - Home 用プレビューの `AppearanceController.Init()` を呼び、アバター表示の土台を作る。
 - `AppearanceAdapter` で保存済みのアバター状態を Home 用プレビューへ反映する。
-- シーン内に非表示状態で置かれている `GameObject/Character` を Status 用プレビューとして扱い、保存済みアバター状態の反映先にする。
-- Home 用プレビューと Status 用プレビューが同じ Root を共有している場合は、Status 用プレビューを `playerPrefab` から別 Root に生成して表示切り替えの衝突を避ける。
+- シーン内に非表示状態で置かれている `GameObject/Character` を Character 用プレビューとして扱い、保存済みアバター状態の反映先にする。
+- Home 用プレビューと Character 用プレビューが同じ Root を共有している場合は、Character 用プレビューを `playerPrefab` から別 Root に生成して表示切り替えの衝突を避ける。
 - `HomeScreen.Init()` を呼び、戦闘開始ボタンを初期化する。
-- `StatusScreen.Init(...)` を呼び、Status タブの編集 UI を Status 用プレビューと Home 用プレビューへ接続する。
+- `CharacterScreen.Init(...)` を呼び、Character タブの編集 UI を Character 用プレビューと Home 用プレビューへ接続する。
 
-`MainScene.ChangeScreen(...)` は、タブ切り替え後に画面ごとのプレイヤー表示を切り替える。
+`MainScene` のタブ切り替え処理は、画面ごとのプレイヤー表示も切り替える。
 
-- `Home` 選択時は Home 用プレビューを表示し、Status 用プレビューを非表示にする。
-- `Status` 選択時は Status 用プレビューを表示し、Home 用プレビューを非表示にする。
+- `Home` 選択時は Home 用プレビューを表示し、Character 用プレビューを非表示にする。
+- `Character` 選択時は Character 用プレビューを表示し、Home 用プレビューを非表示にする。
 - その他タブでは、現時点では両プレビューを非表示にする。
 
 ### 3.1 起動時のデータ初期化
@@ -67,30 +67,32 @@ Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleS
 - 未保存変更は `UserDataManager` がアプリのバックグラウンド移行時または終了時に保存する。明示的な即時保存を行う既存の UI 導線は維持する。
 - 将来 `TitleScene` を追加するときは、この `GameInitializer` GameObject を `TitleScene` へ移し、Build Settings の先頭シーンを `TitleScene` に切り替える。初期化処理の内容は移動しない。
 
-Home と Status の表示サイズ、位置、向きは、それぞれのシーン上の `Transform` で調整する。Dialog 内の表示サイズ、位置、向きは `AvatarDialog` の `previewLocalPosition` / `previewLocalScale` と `PreviewStage` 側で調整する。
+Home と Character の表示サイズ、位置、向きは、それぞれのシーン上の `Transform` で調整する。Dialog 内の表示サイズ、位置、向きは `AvatarDialog` の `previewLocalPosition` / `previewLocalScale` と `PreviewStage` 側で調整する。
 
 ## 4. MainScene の下部Tab仕様
 
 下部の `Character`、`Progress`、`Home`、`Missions`、`Armory` Tabの切り替えは `MainScene` が担当する。`MainTabs` コンポーネントは使用しない。
 
-- 各TabのNormal表示へ `PartsTabItem` を配置し、`MainScene` の `statusTab`、`abilityTab`、`homeTab`、`dungeonTab`、`shopTab` にInspector参照で設定する。
+- 各TabのNormal表示へ `PartsTabItem` を配置し、`MainScene` の `characterTab`、`progressTab`、`homeTab`、`missionsTab`、`armoryTab` にInspector参照で設定する。
 - 対応画面も `MainScene` の各 `*TabScreen` にInspector参照で設定する。
 - 起動時は `Home` を初期選択として扱う。
 - タブ押下時は、選択画面だけを active にし、他の画面を inactive にする。
 - 選択TabだけをFocused表示にし、ほかのTabはNormal表示にする。
-- HomeとStatusの選択時は、対応するアバタープレビューだけを表示する。
+- HomeとCharacterの選択時は、対応するアバタープレビューだけを表示する。
 
 タブの `Button.onClick` へ個別に永続イベントを設定するのではなく、`MainScene` が起動時に動的 listener を登録する。
 
-### 4.1 ProgressScene の仕様
+### 4.1 ProgressScreen の仕様
 
-`Progress` 画面には `AbilityScene` を配置し、内部の `Traits`、`Insights`、Resurgence時だけ表示する `Remnant` を切り替える。
+`Progress` 画面には `ProgressScreen` を配置する。正式な内部構成は `Traits`、`Insights`、Resurgence時だけ表示する `Remnant` とする。
 
-- `traitTab` / `insightsTab` / `remnantTab` と対応ScreenをInspectorで設定する。`remnantTab` はResurgence以外では非表示とする。
-- Traits画面は `TraitTabScreen` を `traitTabScreen` として `AbilityScene` から直接参照する。
+現行 `ProgressScreen` は移行前の `Artifact` / `Skill` / `Trait` Tabを保持し、`TraitTabScreen` を表示している。正式構成への再編は別タスクとする。
+
+- 正式構成では `traitTab` / `insightsTab` / `remnantTab` と対応ScreenをInspectorで設定する。`remnantTab` はResurgence以外では非表示とする。
+- Traits画面は `TraitTabScreen` を `traitTabScreen` として `ProgressScreen` から直接参照する。
 - 初期選択は `Traits` とする。
-- Ability内Tabのlistenerも `AbilityScene` が起動時に登録し、Buttonの永続イベントは使わない。
-- `AbilityScene` の責務はTabと画面のactive切り替えだけとし、Tabの見た目、Tree表示、Point表示、購入処理は持たない。
+- Progress内Tabのlistenerも `ProgressScreen` が起動時に登録し、Buttonの永続イベントは使わない。
+- `ProgressScreen` の責務はTabと画面のactive切り替えだけとし、Tabの見た目、Tree表示、Point表示、購入処理は持たない。
 
 ## 5. Home 画面
 
@@ -112,7 +114,7 @@ Character タブは、プレイヤーの装備変更、実戦用 Skill ロード
 
 ### 6.1 UI 構成方針
 
-- `StatusScreen` は画面全体の状態遷移とデータ更新を担当し、タブ、装備一覧、装備枠、Skill 枠は各 View に分離する。
+- `CharacterScreen` は画面全体の状態遷移とデータ更新を担当し、タブ、装備一覧、装備枠、Skill 枠は各 View に分離する。
 - 各 View の必須 UI 参照とカテゴリ、スロット番号は Inspector で明示的に設定する。名前検索、子階層走査、実行時の既定 UI 生成による補完は行わない。
 - 装備一覧はカテゴリごとのテンプレート行を元に、候補数に応じて行を生成する。ScrollRect の Content は全候補を収め、固定20件で表示を打ち切らない。`All` 以外のカテゴリでは先頭に `Empty` 状態の解除行を置き、押下するとそのカテゴリの装備を即時に外す。
 - 装備一覧の `ListItem_Template` ルートは Raycast を受ける透明な `Image` を持つ。候補行のクリックはこのルートの `StatusEquipmentListItemView` へ届け、装備詳細ダイアログを開く。
@@ -123,7 +125,7 @@ Character タブは、プレイヤーの装備変更、実戦用 Skill ロード
 - `Parts-SkillItem` は Skill 枠の見た目専用Prefabとする。Prefabに付く `PartsSkillItem` は、Skillアイコン、名前、`Icon-Attack` / `Icon-Shield` / `Icon-Armor` / `Icon-HeadGear` の種別アイコンObject、Normal / Locked / Disabled / Empty の表示状態、Focusだけを管理する。種別表示はSpriteの差替えではなく、該当するPrefab内Objectの有効状態を切り替える。`Empty` と種別なしSkillでは種別アイコンの親 `TypeArea` ごと非表示にする。保存、候補選択、バトルの Runtime は扱わない。
 - `StatusSkillSlotView` はMainScene上の各 Skill スロットに付く中間Viewとし、ロードアウトデータを `PartsSkillItem` の公開APIへ渡し、Skill設定ダイアログを開くクリックだけを扱う。
 - 装備枠と Skill 枠の通常フレームは各スロットの Prefab/Scene構成として常時配置する。表示データの有無でフレーム自体を生成、複製しない。
-- Status 用アバタープレビューの表示、RenderTexture 接続、見た目反映、ダイアログ中の一時非表示は `StatusAvatarPreviewView` が担当する。`StatusScreen` はこの View を通じてプレビューを操作する。
+- Character 用アバタープレビューの表示、RenderTexture 接続、見た目反映、ダイアログ中の一時非表示は `StatusAvatarPreviewView` が担当する。`CharacterScreen` はこの View を通じてプレビューを操作する。
 
 ### 6.2 役割
 
@@ -141,7 +143,7 @@ Character タブは、プレイヤーの装備変更、実戦用 Skill ロード
 
 ### 6.3 扱うデータ
 
-Status タブは以下のデータを参照、更新する。
+Character タブは以下のデータを参照、更新する。
 
 - 所持装備: `UserData.Inventory.Equipments`
 - 現在の見た目状態: `UserData.Profile.AvatarAppearance`
@@ -154,7 +156,7 @@ Status タブは以下のデータを参照、更新する。
 
 ### 6.4 装備変更
 
-現行実装では、以下の枠を Status タブで扱う。
+現行実装では、以下の枠を Character タブで扱う。
 
 - 頭装備
 - 胴装備
@@ -188,7 +190,7 @@ Tabの表示順は `All`、`Weapon`、`Shield`、`Headgear`、`Armor` とする�
 
 ### 6.5 Skill ロードアウト
 
-Status タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が担当し、`DeckManager.EnsureUsableLoadout(...)` で得た現在デッキの実戦用 Skill を表示する。
+Character タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が担当し、`DeckManager.EnsureUsableLoadout(...)` で得た現在デッキの実戦用 Skill を表示する。
 
 各 `StatusSkillSlotView` は `PartsSkillItem` を Inspector 参照し、表示状態の直接切替や画像・テキストへの直接代入は行わない。
 
@@ -199,18 +201,18 @@ Status タブの `SlotSkill_01` 〜 `SlotSkill_04` は `StatusSkillSlotView` が
 - 初回表示ではCanvasレイアウト確定後にアイコンサイズを計算する。保存や再選択などの後続操作を行わなくても、すべてのSlotSkillでIconを表示する。
 - 未設定または現在の装備から使用できない Skill は `Empty` として表示する。
 - スロットを押下すると `SkillLoadoutDialog` を開き、押下したスロットを選択状態にする。
-- ダイアログ内では、`SelectedSkill` の4個の `PartsSkillItem` に現在のドラフト上のSkillロードアウトをアイコンのみで表示する。編集対象スロットはダイアログを開いたStatus側のSkill枠で決まり、`SelectedSkill` は操作を持たない。`PartsSkillItem` 内部の名前テキストと種別アイコンは常に非表示にする。
+- ダイアログ内では、`SelectedSkill` の4個の `PartsSkillItem` に現在のドラフト上のSkillロードアウトをアイコンのみで表示する。編集対象スロットはダイアログを開いたCharacter側のSkill枠で決まり、`SelectedSkill` は操作を持たない。`PartsSkillItem` 内部の名前テキストと種別アイコンは常に非表示にする。
 - 候補 Skill は、現在デッキの `EquipmentData.AssignableSkills` から `DeckManager.GetCandidateSkillsFromEquippedEquipment()` で取得する。対象は右手、左手、胴、兜の4装備枠に限定し、Hair、Eye、Beard、Skin などの見た目専用パーツは候補元に含めない。
 - 候補 Skill は `SkillInfoArea` のスクロール領域に、`Dialog-SkillLoadout.prefab` の `Content` に置いた非表示の `SkillLoadoutCandidateItemView` テンプレートを複製して表示する。外部の候補行Prefabは参照しない。候補数を8件に固定せず、装備枠や候補数の拡張に追従できるようにする。
 - 候補行のアイコン枠は `PartsSkillItem` を使う。候補行では `ShowSkillIconOnly(icon)` を使い、`PartsSkillItem` 内部のSkill名テキストと種別アイコンは常に非表示にする。名前と説明は行側のテキストで表示し、現在選択中スロットへ割り当てられている候補だけ選択Frameを表示する。
 - 候補 Skill の選択によるロードアウト変更時に、ダイアログ内のドラフトと `SelectedSkill` 表示を即時に切り替え、同時に `DeckManager.SaveLoadout(...)` で現在デッキへ保存する。SaveボタンとClearボタンは使わない。
 - Skill ロードアウトは現在デッキの `SkillIds` に反映し、他のユーザーデータと同じメインセーブJSONへ保存する。
-- `Close` または背景クリックで閉じた場合も、変更済みの Skill は戻さない。未変更で閉じた場合はStatus表示の再描画を行わない。
+- `Close` または背景クリックで閉じた場合も、変更済みの Skill は戻さない。未変更で閉じた場合はCharacter表示の再描画を行わない。
 
 ### 6.6 見た目変更ダイアログ
 
 見た目変更は戦闘デッキと独立して扱い、髪・目・ひげ・肌の見た目パーツと色だけを変更する。
-Status タブ上の `Button_Skin` を押下すると `AvatarDialog` を開き、Dialog 内の `PreviewStage` に一時生成した `Character` で編集中の見た目を確認する。
+Character タブ上の `Button_Skin` を押下すると `AvatarDialog` を開き、Dialog 内の `PreviewStage` に一時生成した `Character` で編集中の見た目を確認する。
 
 - パーツ変更: `Hair`、`Eye`、`Beard`、`Skin` のみを `AvatarPartStateData` に `PartType`、`EquipmentId`、`Visible` として保存する。
 - 色変更: `AvatarColorData` に `ColorTargetType` と色を保存する。
@@ -222,16 +224,16 @@ Status タブ上の `Button_Skin` を押下すると `AvatarDialog` を開き、
 - `Eye`
 - `Beard`
 
-`Helmet`、`Chest`、`HandRight`、`HandLeft` は現在デッキの戦闘装備であり、このダイアログからは表示・変更・保存しない。`Arrow` と `HelmetHair` は派生パーツとして扱い、Status タブから直接保存対象にしない。表示状態は `AppearanceController` の同期処理に任せる。
+`Helmet`、`Chest`、`HandRight`、`HandLeft` は現在デッキの戦闘装備であり、このダイアログからは表示・変更・保存しない。`Arrow` と `HelmetHair` は派生パーツとして扱い、Character タブから直接保存対象にしない。表示状態は `AppearanceController` の同期処理に任せる。
 
 `Assets/Resources/Prefabs/Dialog-AvatarController 1.prefab` は、カテゴリ枠と候補枠を各1件の非表示テンプレートとして持ち、外見カテゴリ・所持候補の件数ぶん動的に生成する。`ColorPicker`、Save、CloseはPrefab内の既存要素を使う。Dialog 内での変更は編集中プレビューへ反映し、保存ボタン押下時に `AvatarEditorPresenter.Commit()` で `AppearanceManager` へ反映する。外見専用モードでは `InventoryManager.MarkEquipped(...)`、`DeckManager`、戦闘装備には触れない。
 
 候補がないカテゴリでは、Prefab参照の `emptyText` に `No options available` を表示する。外見専用モードの保存は `AppearanceManager.SetCosmeticAppearance(...)` を使い、現在デッキの装備・Skill・選択中デッキを変更しない。
-保存後は `AppearanceAdapter.ApplyTo(...)` で Home 用プレビューと Status 用プレビューへ反映し、`UserDataJsonStore.SaveSession()` で保存する。
+保存後は `AppearanceAdapter.ApplyTo(...)` で Home 用プレビューと Character 用プレビューへ反映し、`UserDataJsonStore.SaveSession()` で保存する。
 閉じるボタンまたは背景クリックで閉じた場合は保存しない。
-Dialog 表示中は、Status タブ本体側のプレビューを一時的に非表示にし、Dialog 内プレビューだけを表示する。
+Dialog 表示中は、Character タブ本体側のプレビューを一時的に非表示にし、Dialog 内プレビューだけを表示する。
 
-Dialog 表示は `DialogService` / `DialogHost` / `DialogBase` を使う。`DialogHost` は必要になった時点で最前面用の `DialogCanvas` を動的生成し、その中に `Backdrop` と `DialogParent` を置く。`StatusScreen` などの呼び出し側は prefab 参照や parent 指定を持たず、`DialogService.OpenAsync<...>()` でダイアログを開く。
+Dialog 表示は `DialogService` / `DialogHost` / `DialogBase` を使う。`DialogHost` は必要になった時点で最前面用の `DialogCanvas` を動的生成し、その中に `Backdrop` と `DialogParent` を置く。`CharacterScreen` などの呼び出し側は prefab 参照や parent 指定を持たず、`DialogService.OpenAsync<...>()` でダイアログを開く。
 黒背景は `DialogHost` が管理し、開いているダイアログがひとつ以上背景表示を要求している場合に 1 枚だけ表示する。背景クリック可否や背景クリックで閉じるかどうかは `DialogBase.SetBackdrop(...)`、`SetBackdropVisible(...)`、`SetBackdropInteractable(...)`、`SetBackdropCloseEnabled(...)` でダイアログ単位に指定する。
 見た目は `Assets/Layer Lab/GUI Pro-MinimalGame/Theme_Dark/Prefabs/Prefabs~DemoScenes/Settings.prefab` の中央 Popup と暗い背景を参考にしつつ、実体 Prefab / Script は `Layer Lab` 配下には作らない。
 ダイアログ prefab は Addressables で解決する。装備詳細ダイアログは `Assets/Resources/Prefabs/Dialog/Dialog-EquipmentDetail.prefab` を正本 Prefab とし、Addressables address は `Dialog/EquipmentDetail`、`EquipmentDetailDialog` には `[DialogAddress("Dialog/EquipmentDetail")]` を付与する。Item購入確認は `Assets/Resources/Prefabs/Dialog/Dialog-Common-ConfilmWithIcon.prefab` を正本 Prefab とし、Addressables address は `Dialog/Common/ConfilmWithIcon`、`DialogCommonConfirmWithIcon` には同じ `[DialogAddress]` を付与する。Skill 設定ダイアログは `Assets/Resources/Prefabs/Dialog-SkillLoadout.prefab` を正本 Prefab とし、Addressables address は `Dialog/SkillLoadout`、`SkillLoadoutDialog` には `[DialogAddress("Dialog/SkillLoadout")]` を付与する。見た目変更ダイアログは `Assets/Resources/Prefabs/Dialog-AvatarController 1.prefab` を正本 Prefab とし、Addressables address は `Dialog/AvatarController`、`AvatarDialog` には `[DialogAddress("Dialog/AvatarController")]` を付与する。Prefab 内の必須 UI 参照が未設定の場合はセットアップ不備として使用箇所で失敗させ、個別の null ガードによる回避、ダイアログ本体 UI の実行時動的生成、`Resources.Load<T>()` による代替探索は行わない。
@@ -251,7 +253,7 @@ Dialog 表示は `DialogService` / `DialogHost` / `DialogBase` を使う。`Dial
 - 詳細ダイアログで `Equip` ボタンを押す。
 - `AvatarEditorPresenter.TrySelectEquipment(...)` で選択状態を更新する。
 - `AvatarEditorPresenter.Commit()` で `AppearanceManager` へ反映する。
-- `AppearanceAdapter.ApplyTo(...)` で Home 用プレビューと Status 用プレビューを更新する。
+- `AppearanceAdapter.ApplyTo(...)` で Home 用プレビューと Character 用プレビューを更新する。
 - `DeckManager.EnsureUsableLoadout(persistImmediately: true)` で、装備変更後に使えなくなった Skill を現在デッキから自動で外す。
 - `UserDataJsonStore.SaveSession()` で即時保存する。
 
@@ -260,7 +262,7 @@ Skill ロードアウトは、Skill 設定ダイアログ内で候補 Skill を�
 - `SlotSkill_01` 〜 `SlotSkill_04` のいずれかを押し、Skill 設定ダイアログを開く。
 - ダイアログ内で対象スロットと候補 Skill を選ぶ。
 - 候補 Skill 選択または Clear 実行時に `DeckManager.SaveLoadout(...)` を呼び、現在デッキの `SkillIds` を更新する。
-- 保存後は Status タブの Skill スロット表示を更新する。
+- 保存後は Character タブの Skill スロット表示を更新する。
 - Unity Editor の Domain Reload 無効環境でも再生開始時に保存済み JSON を読み直せるよう、保存データに依存する static singleton は `RuntimeInitializeLoadType.SubsystemRegistration` でリセットする。
 
 ## 7. 未確定事項
@@ -272,4 +274,4 @@ Skill ロードアウトは、Skill 設定ダイアログ内で候補 Skill を�
 
 ## 8. 次期実装: 戦闘デッキ
 
-戦闘用の右手・左手・兜・胴と、戦闘Skill4枠はデッキ3件として保存・切替する。見た目用の髪・目・ひげ・色は `AvatarAppearance` に分離し、デッキには含めない。StatusSceneのデッキ一覧ダイアログと、敗戦後の再挑戦導線からデッキを切り替えられるようにする。詳細は `docs/specs/デッキ仕様書.md` を正とする。
+戦闘用の右手・左手・兜・胴と、戦闘Skill4枠はデッキ3件として保存・切替する。見た目用の髪・目・ひげ・色は `AvatarAppearance` に分離し、デッキには含めない。Characterのデッキ一覧ダイアログと、敗戦後の再挑戦導線からデッキを切り替えられるようにする。詳細は `docs/specs/デッキ仕様書.md` を正とする。

@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-09-27
+- 最終更新: 2026-09-28
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と、下記「非戦闘側の着手順」に沿った Character / Progress / Missions / Armory改修タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -134,12 +134,12 @@
 - [ ] 勝利時に実際の `score`、`rank`、`clearTimeSeconds` を `RecordStageClear()` へ渡す
 - [ ] 戦闘終了時に `UserDataJsonStore.SaveSession()` を呼ぶ導線を整える
 
-## 5. P1: MainScene / Status タブ
+## 5. P1: MainScene / Character タブ
 
-- [x] Status タブに現在の装備枠一覧を表示する
-- [x] Ability タブ向けに `AbilityNodeMasterData` / `AbilityTreeMasterData`、Inspector検証、Tree Builder Windowを追加する。Node Masterは再利用可能とし、Tree配置ごとの `TreeNodeId`、Rank、Tree接続、排他、循環依存を検証できるようにする
+- [x] Character タブに現在の装備枠一覧を表示する
+- [x] Progress タブ向けに `AbilityNodeMasterData` / `AbilityTreeMasterData`、Inspector検証、Tree Builder Windowを追加する。Node Masterは再利用可能とし、Tree配置ごとの `TreeNodeId`、Rank、Tree接続、排他、循環依存を検証できるようにする
 - [ ] Progress内Tabを `Traits` / `Insights` / Resurgence限定の `Remnant` へ再構成する。旧 `Artifact` / `Skill` Tabを廃止し、`Remnant` の表示可否を周回状態へ接続する。
-- [x] Ability タブのTrait Tree基盤を実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続まで完了。
+- [x] Progress タブのTrait Tree基盤を実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続まで完了。
 - [x] `PartsTraitTreeRow` / `PartsTraitLine` のPrefabを作成して`TraitTabScreen`のRow Prefab / Scroll Contentへ配線する。各Line Imageには `UI/Trait Line Reveal` Materialと曲線の進行度を持つReveal Mapを設定する。
 - [x] Trait Itemクリックで詳細Dialogを開き、購入可能Nodeだけ購入ボタンを表示して、結果をTree表示へ即時反映する。
 - [x] Trait Tree表示の責務を整理する。購入可否とは別にNode/Lineの表示状態を一箇所で導出し、排他経路のDisabled表示を末端まで一貫させる。
@@ -151,16 +151,16 @@
 - [ ] `DisplayRows` と `Links` の整合をMasterData検証で保証する。現行Row UIが表現できる隣接Row間の 1→1 / 1→2 / 2→2（左→左・右→右）/ 2→1 接続だけを許可し、飛び越し・交差・表現不能な前提接続はエラーにする。
 - [ ] ステージ初回クリアのPoint報酬と受領済み状態を実装する
 - [ ] ステータス算出仕様の確定後、Abilityの導出済み能力補正をBattleとStatus表示へ接続する
-- [x] Status タブで所持済み / 解放済み装備から装備を選択できるようにする
+- [x] Character タブで所持済み / 解放済み装備から装備を選択できるようにする
 - [x] 装備変更を `UserData.Profile.Avatar.Parts` と MainScene 上のプレイヤープレビューへ反映する
 - [x] `Button_Skin` から髪、肌、目、ひげなどの見た目変更ダイアログを開く
 - [x] 見た目変更ダイアログの保存を `UserData.Profile.Avatar` と MainScene 上の各プレイヤープレビューへ反映する
-- [x] Status タブの変更保存タイミングを確定し、`UserDataJsonStore.SaveSession()` へ接続する
+- [x] Character タブの変更保存タイミングを確定し、`UserDataJsonStore.SaveSession()` へ接続する
 - [x] 装備変更により使用不可になった Skill ロードアウトを自動で外す
-- [x] Status タブで実戦用 Skill ロードアウト4枠を表示し、Skill 設定ダイアログから変更できるようにする
+- [x] Character タブで実戦用 Skill ロードアウト4枠を表示し、Skill 設定ダイアログから変更できるようにする
 - [x] 戦闘用4装備・Skill4枠を正本とするデッキ3件と `CurrentDeckId` を保存モデルへ実装し、旧 `Avatar.Parts` / 単一 `SkillLoadout` を廃止する
 - [x] `DeckLoadoutUtility` を実装し、デッキ保存時・適用時に装備を正として無効Skillを空枠化する
-- [x] StatusSceneのデッキ一覧ダイアログから、内容確認とデッキ切替を行えるようにする
+- [x] Characterのデッキ一覧ダイアログから、内容確認とデッキ切替を行えるようにする
 - [ ] 敗戦後に `DeckLoadoutDialog` を開けるようにする。再挑戦までの導線と、デッキ切替後にどの時点で再挑戦へ戻るかは別途整理する
 - [x] Dialog 基盤を `DialogService` / 専用 `DialogCanvas` / `DialogAddressAttribute` ベースへ移行し、呼び出し側の prefab 参照と parent 指定を外す
 - [x] 汎用 `GameButton` を `Button` 継承 + 単体 Prefab ベースで追加し、見た目 enum / SE enum / Badge を切り替えられるようにする
