@@ -8,9 +8,6 @@ namespace Assets.Scripts.Systems.Save.Models
     /// </summary>
     public sealed class AbilityProgressData
     {
-        [Description("Ability購入に使うPointの残高。")]
-        public int PointBalance { get; set; }
-
         [Description("Tree配置NodeごとのLevel。TreeIdとTreeNodeIdの組で一意に扱う。Level 0は保存しない。")]
         public List<AbilityTreeNodeLevelData> NodeLevels { get; set; } = new();
     }

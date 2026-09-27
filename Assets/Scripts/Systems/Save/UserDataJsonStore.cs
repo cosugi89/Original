@@ -7,6 +7,8 @@ namespace Assets.Scripts.Systems.Save
 {
     public class UserDataJsonStore
     {
+        private const int RemovedEventKey2000ItemId = 2000;
+        private const int RemovedEventKey3000ItemId = 3000;
         [Description("現在の共有セッション。ロード結果の反映先であり保存対象でもある。")]
         public UserDataManager Session { get; }
 
@@ -45,8 +47,14 @@ namespace Assets.Scripts.Systems.Save
                 Repository.Save(userData);
             }
 
+            var removedDeprecatedEventKeys = RemoveDeprecatedEventKeys(userData);
             Normalize(userData);
             userData.Profile.LastPlayedAtUtc = DefaultFactory.CreateTimestamp();
+
+            if (removedDeprecatedEventKeys)
+            {
+                Save(userData);
+            }
 
             return userData;
         }
@@ -59,6 +67,7 @@ namespace Assets.Scripts.Systems.Save
 
         public void Save(UserData userData)
         {
+            RemoveDeprecatedEventKeys(userData);
             Normalize(userData);
             userData.Meta.UpdatedAtUtc = DefaultFactory.CreateTimestamp();
             userData.Profile.LastPlayedAtUtc = userData.Meta.UpdatedAtUtc;
@@ -81,13 +90,15 @@ namespace Assets.Scripts.Systems.Save
             userData.Inventory ??= new InventoryData();
             userData.BattleProgress ??= new BattleProgressData();
             userData.Ability ??= new AbilityProgressData();
+            userData.Armory ??= new ArmoryProgressData();
 
             userData.Profile.AvatarAppearance.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
             userData.Profile.AvatarAppearance.Colors ??= new System.Collections.Generic.List<AvatarColorData>();
             userData.Inventory.Equipments ??= new System.Collections.Generic.List<InventoryEntryData>();
+            userData.Inventory.ItemStacks ??= new System.Collections.Generic.List<ItemStackData>();
             userData.BattleProgress.Stages ??= new System.Collections.Generic.List<StageProgressData>();
             userData.Ability.NodeLevels ??= new System.Collections.Generic.List<AbilityTreeNodeLevelData>();
-            userData.Ability.PointBalance = Mathf.Max(0, userData.Ability.PointBalance);
+            userData.Armory.Purchases ??= new System.Collections.Generic.List<ArmoryProductPurchaseData>();
 
             if (string.IsNullOrWhiteSpace(userData.Meta.CreatedAtUtc))
                 userData.Meta.CreatedAtUtc = System.DateTime.UtcNow.ToString("O");
@@ -101,6 +112,18 @@ namespace Assets.Scripts.Systems.Save
             userData.Profile.MaxHp = Mathf.Max(1, userData.Profile.MaxHp);
             userData.Profile.Decks ??= new List<DeckData>();
             NormalizeDecks(userData.Profile);
+        }
+
+        private static bool RemoveDeprecatedEventKeys(UserData userData)
+        {
+            if (userData?.Inventory?.ItemStacks == null)
+            {
+                return false;
+            }
+
+            return userData.Inventory.ItemStacks.RemoveAll(stack =>
+                stack != null &&
+                (stack.ItemId == RemovedEventKey2000ItemId || stack.ItemId == RemovedEventKey3000ItemId)) > 0;
         }
 
         private static void NormalizeDecks(UserProfileData profile)

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using Assets.Scripts.Data.MasterData;
 using UnityEngine;
 
 namespace Assets.Scripts.Data.DTO
@@ -12,7 +15,18 @@ namespace Assets.Scripts.Data.DTO
         public string DisplayName { get; init; } = "";
         public string DescriptionText { get; init; } = "";
         public int SortOrder { get; init; }
-        public bool IsInitiallyUnlocked { get; init; }
+        public StageKind StageKind { get; init; }
+        public StageUnlockRequirementMode UnlockRequirementMode { get; init; }
+        public IReadOnlyList<int> RequiredClearedStageIds { get; init; } = Array.Empty<int>();
+        public IReadOnlyList<MissionRewardData> ClearRewards { get; init; } = Array.Empty<MissionRewardData>();
         public Sprite PreviewImage { get; init; }
+    }
+
+    public class MissionRewardData
+    {
+        public MissionRewardType RewardType { get; init; }
+        public int ItemId { get; init; }
+        public int EquipmentId { get; init; }
+        public int Quantity { get; init; }
     }
 }

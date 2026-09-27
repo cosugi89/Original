@@ -48,19 +48,21 @@ namespace Assets.Scripts.Systems.GameData
     }
 
     /// <summary>
-    /// 指定TreeのAbility進捗、購入、導出を一箇所で扱う。保存の正本はPointとLevelだけである。
+    /// 指定TreeのAbility進捗、購入、導出を一箇所で扱う。保存の正本はNode Levelだけである。
     /// </summary>
     public sealed class AbilityProgressManager
     {
         public UserDataJsonStore UserDataStore { get; }
         public AbilityTreeMasterData Tree { get; }
+        private readonly InventoryManager _inventory;
         public AbilityDerivedData DerivedData { get; private set; } = new();
 
-        public int PointBalance => Progress.PointBalance;
+        public int PointBalance => _inventory.GetItemCount(InventoryItemIds.AbilityPoint);
 
-        public AbilityProgressManager(UserDataJsonStore userDataStore, AbilityTreeMasterData tree)
+        public AbilityProgressManager(UserDataJsonStore userDataStore, InventoryManager inventory, AbilityTreeMasterData tree)
         {
             UserDataStore = userDataStore ?? throw new ArgumentNullException(nameof(userDataStore));
+            _inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
             Tree = tree ?? throw new ArgumentNullException(nameof(tree));
             NormalizeProgress();
             Recalculate();
@@ -140,7 +142,11 @@ namespace Assets.Scripts.Systems.GameData
             }
 
             var progress = Progress;
-            progress.PointBalance -= state.NextRankPointCost;
+            if (!_inventory.TryConsumeItem(InventoryItemIds.AbilityPoint, state.NextRankPointCost))
+            {
+                return Failed(AbilityNodeLockReason.InsufficientPoints, "Ability Pointが不足しています。");
+            }
+
             progress.NodeLevels.Add(new AbilityTreeNodeLevelData
             {
                 TreeId = Tree.TreeId,
@@ -176,8 +182,7 @@ namespace Assets.Scripts.Systems.GameData
         private void NormalizeProgress()
         {
             var progress = Progress;
-            var changed = progress.PointBalance < 0;
-            progress.PointBalance = Mathf.Max(0, progress.PointBalance);
+            var changed = false;
             var entriesById = BuildEntriesById();
             var levels = progress.NodeLevels;
             var merged = new Dictionary<string, AbilityTreeNodeLevelData>(StringComparer.Ordinal);

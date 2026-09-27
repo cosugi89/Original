@@ -16,8 +16,12 @@ MonoBehaviour:
   stageName: Animation Timing Test
   description: "Roll \u3068\u6575 Attack \u306E\u540C\u6642\u518D\u751F\u78BA\u8A8D\u7528\u30B9\u30C6\u30FC\u30B8\u3002"
   backgroundImage: {fileID: 21300000, guid: 12657bef1d3fb4dc3ad788b2bd0e8012, type: 3}
-  previewImage: {fileID: 21300000, guid: 5546e2c9d34934340bd80bb4e408d1a2, type: 3}
+  previewImage: {fileID: 6233785307203403145, guid: ea4b6da7ceb45f84a99c7073b77485b5, type: 3}
+  dungeonLabelImage: {fileID: 21300000, guid: fd0b80a933f2c496a9f1b18bd0c98eec, type: 3}
+  dungeonColorTheme: 3
   sortOrder: 9001
-  isInitiallyUnlocked: 1
+  stageKind: 2
+  unlockRequirementMode: 0
+  requiredClearedStageIds: []
   enemyRefs:
   - {fileID: 11400000, guid: 62f87bfc4d5e5c840b10860ce9b1604a, type: 2}

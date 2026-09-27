@@ -17,11 +17,11 @@ namespace Assets.Scripts.Systems.Save.Models
         [Description("進捗対象のステージID。ステージマスタと対応する。")]
         public int StageId { get; set; } = -1;
 
-        [Description("そのステージが挑戦可能な状態かどうか。")]
-        public bool IsUnlocked { get; set; } = false;
-
         [Description("そのステージを一度でもクリアしたかどうか。")]
         public bool IsCleared { get; set; } = false;
+
+        [Description("Mission 初回クリア報酬を受領済みかどうか。Resurgence 時は Mission 進捗とともにリセットする。")]
+        public bool IsClearRewardClaimed { get; set; } = false;
 
         [Description("そのステージをクリアした回数。")]
         public int ClearCount { get; set; } = 0;

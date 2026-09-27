@@ -1,0 +1,13 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49e7a3af143348fc9696701ed119fa2e, type: 3}
+  m_Name: ArmoryProductDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.ArmoryProductDatabase
+  products:
+  - {fileID: 11400000, guid: 32ebcaf7f5294e0b93bf61099f5171f6, type: 2}
+  - {fileID: 11400000, guid: c161f48a8cb541b898c4f8b153f5ad3a, type: 2}
+  - {fileID: 11400000, guid: 552cd1b93f4246e2a24e4f8e928e2c5f, type: 2}
+  - {fileID: 11400000, guid: 7ca0f84b31464cb6bf767b5b238bde15, type: 2}

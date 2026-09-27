@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10ee1594327b4ac8a7fbc2f6d811e248, type: 3}
+  m_Name: Shield000
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Data.MasterData.ArmoryProductMasterData
+  productId: 3
+  productType: 0
+  equipment: {fileID: 11400000, guid: 4a8e1c8be99f24b4598ec521e7a7146f, type: 2}
+  item: {fileID: 0}
+  quantity: 1
+  purchaseLimit: 1
+  goldPrice: 150
+  requiredClearedStageIds: []
+  sortOrder: 1

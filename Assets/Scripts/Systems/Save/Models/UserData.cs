@@ -21,6 +21,9 @@ namespace Assets.Scripts.Systems.Save.Models
 
         [Description("AbilityのPoint残高とTree配置NodeのLevel。")]
         public AbilityProgressData Ability { get; set; } = new();
+
+        [Description("Armoryの商品購入状態。")]
+        public ArmoryProgressData Armory { get; set; } = new();
     }
 
     public class UserMetaData

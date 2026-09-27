@@ -14,6 +14,7 @@ namespace Assets.Scripts.Data.MasterData
         private const string BattleSkillMasterDatabasePath = "MasterData/BattleSkillDatabase";
         private const string AttributeMasterDatabasePath = "MasterData/AttributeDatabase";
         private const string StageMasterDatabasePath = "MasterData/StageDatabase";
+        private const string ArmoryProductDatabasePath = "MasterData/ArmoryProductDatabase";
 
         private static bool _loggedMissingEquipmentMasterDatabase;
         private static bool _loggedMissingBattleSkillMasterDatabase;
@@ -33,6 +34,9 @@ namespace Assets.Scripts.Data.MasterData
 
             return BuildEquipmentData(database.Equipments);
         }
+
+        public static ArmoryProductDatabase LoadArmoryProductDatabase() =>
+            Resources.Load<ArmoryProductDatabase>(ArmoryProductDatabasePath);
 
         /// <summary>
         /// バトルスキルマスタを読み込み、DTO リストに変換して返す。
@@ -134,7 +138,19 @@ namespace Assets.Scripts.Data.MasterData
                     DisplayName = m.StageName,
                     DescriptionText = m.Description,
                     SortOrder = m.SortOrder,
-                    IsInitiallyUnlocked = m.IsInitiallyUnlocked,
+                    StageKind = m.StageKind,
+                    UnlockRequirementMode = m.UnlockRequirementMode,
+                    RequiredClearedStageIds = m.RequiredClearedStageIds.ToArray(),
+                    ClearRewards = m.ClearRewards
+                        .Where(reward => reward != null && reward.Quantity > 0)
+                        .Select(reward => new MissionRewardData
+                        {
+                            RewardType = reward.RewardType,
+                            ItemId = reward.ItemId,
+                            EquipmentId = reward.EquipmentId,
+                            Quantity = reward.Quantity,
+                        })
+                        .ToArray(),
                     PreviewImage = m.PreviewImage,
                 })
                 .ToArray();

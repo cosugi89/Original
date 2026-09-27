@@ -203,7 +203,6 @@ namespace Assets.Scripts.Systems.Save
             if (existing != null)
             {
                 _instance = existing;
-                DontDestroyOnLoad(existing.gameObject);
                 return _instance;
             }
 

@@ -138,6 +138,16 @@ namespace Assets.Scripts.Systems.GameData
                 .ToArray();
         }
 
+        public IReadOnlyList<EquipmentData> GetAllEquipmentDefinitions()
+        {
+            return _allEquipmentData
+                .Where(data => data != null && data.EquipmentId > 0)
+                .OrderBy(data => data.PartType)
+                .ThenBy(data => data.SortOrder)
+                .ThenBy(data => data.EquipmentId)
+                .ToArray();
+        }
+
         public IReadOnlyList<EquipmentData> GetDefinitionsByPartType(PartsType partType, bool ownedOnly = false)
         {
             if (!_byPartType.TryGetValue(partType, out var definitions))
@@ -194,6 +204,65 @@ namespace Assets.Scripts.Systems.GameData
                 entry.IsUnlocked = false;
             UserDataStore.MarkDirty();
             return true;
+        }
+
+        public bool SetEquipmentOwned(int equipmentId, bool isOwned)
+        {
+            if (equipmentId <= 0 || !_byId.ContainsKey(equipmentId))
+            {
+                return false;
+            }
+
+            var inventory = EnsureInventory();
+            var entry = inventory.Equipments.FirstOrDefault(candidate =>
+                candidate != null && candidate.EquipmentId == equipmentId);
+
+            if (isOwned)
+            {
+                if (entry != null && entry.IsUnlocked && entry.Quantity > 0)
+                {
+                    return false;
+                }
+
+                if (entry == null)
+                {
+                    entry = new InventoryEntryData { EquipmentId = equipmentId };
+                    inventory.Equipments.Add(entry);
+                }
+
+                entry.IsUnlocked = true;
+                entry.Quantity = Mathf.Max(1, entry.Quantity);
+                if (string.IsNullOrWhiteSpace(entry.ObtainedAtUtc))
+                {
+                    entry.ObtainedAtUtc = DateTime.UtcNow.ToString("O");
+                }
+            }
+            else
+            {
+                if (entry == null)
+                {
+                    return false;
+                }
+
+                inventory.Equipments.Remove(entry);
+            }
+
+            UserDataStore.MarkDirty();
+            return true;
+        }
+
+        public int ResetEquipmentOwnership()
+        {
+            var inventory = EnsureInventory();
+            var removedCount = inventory.Equipments.Count(entry => entry != null && entry.IsUnlocked && entry.Quantity > 0);
+            if (inventory.Equipments.Count == 0)
+            {
+                return 0;
+            }
+
+            inventory.Equipments.Clear();
+            UserDataStore.MarkDirty();
+            return removedCount;
         }
 
         public void MarkEquipped(int equipmentId)
