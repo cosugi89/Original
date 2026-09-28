@@ -10,19 +10,19 @@ using UnityEngine;
 
 namespace Assets.Scripts.Features.Main.Character
 {
-    public readonly struct ItemInventoryDialogRequest
+    public readonly struct RequestDialogItemInventory
     {
     }
 
-    public readonly struct ItemInventoryDialogResult
+    public readonly struct ResultDialogItemInventory
     {
-        public static ItemInventoryDialogResult Closed => new();
+        public static ResultDialogItemInventory Closed => new();
     }
 
     [DialogAddress("Dialog/ItemInventory")]
     public sealed class DialogItemInventory :
-        DialogBase<ItemInventoryDialogResult>,
-        IDialogRequestHandler<ItemInventoryDialogRequest>
+        DialogBase<ResultDialogItemInventory>,
+        IDialogRequestHandler<RequestDialogItemInventory>
     {
         private const int MaximumInventoryItemSlotCount = 15;
 
@@ -40,7 +40,7 @@ namespace Assets.Scripts.Features.Main.Character
 
         private readonly List<PartsInventoryItem> _itemViews = new();
 
-        public void Setup(ItemInventoryDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogItemInventory request, DialogContext context)
         {
             EnsurePrefabReferences();
             SetupInitVisual();
@@ -50,7 +50,7 @@ namespace Assets.Scripts.Features.Main.Character
 
         protected override void OnClickClose()
         {
-            Close(ItemInventoryDialogResult.Closed);
+            Close(ResultDialogItemInventory.Closed);
         }
 
         private void SetupInitVisual()

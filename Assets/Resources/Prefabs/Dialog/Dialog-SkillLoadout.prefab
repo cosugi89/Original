@@ -2800,7 +2800,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6b0c77b01447edb47bfd496ab3f05a96, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Main.StatusSkillLoadoutDialog
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Features.Main.StatusDialogSkillLoadout
   dialogTitleGraphic: {fileID: 8900099042315701311}
   selectedSkillSlotItems:
   - {fileID: 3303482087618880676}

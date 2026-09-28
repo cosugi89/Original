@@ -13,9 +13,9 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public readonly struct EquipmentDetailDialogRequest
+    public readonly struct RequestDialogEquipmentDetail
     {
-        public EquipmentDetailDialogRequest(AvatarPartOptionViewData option, bool isOpenedFromEquipmentSlot)
+        public RequestDialogEquipmentDetail(AvatarPartOptionViewData option, bool isOpenedFromEquipmentSlot)
         {
             Option = option;
             IsOpenedFromEquipmentSlot = isOpenedFromEquipmentSlot;
@@ -24,7 +24,7 @@ namespace Assets.Scripts.Features.Main
             CanPurchase = false;
         }
 
-        private EquipmentDetailDialogRequest(AvatarPartOptionViewData option, int purchasePrice, bool canPurchase)
+        private RequestDialogEquipmentDetail(AvatarPartOptionViewData option, int purchasePrice, bool canPurchase)
         {
             Option = option;
             IsOpenedFromEquipmentSlot = false;
@@ -39,7 +39,7 @@ namespace Assets.Scripts.Features.Main
         public int PurchasePrice { get; }
         public bool CanPurchase { get; }
 
-        public static EquipmentDetailDialogRequest ForPurchase(
+        public static RequestDialogEquipmentDetail ForPurchase(
             EquipmentMasterData equipment,
             int purchasePrice,
             bool canPurchase)
@@ -49,7 +49,7 @@ namespace Assets.Scripts.Features.Main
                 throw new ArgumentNullException(nameof(equipment));
             }
 
-            return new EquipmentDetailDialogRequest(
+            return new RequestDialogEquipmentDetail(
                 new AvatarPartOptionViewData
                 {
                     EquipmentId = equipment.EquipmentId,
@@ -83,9 +83,9 @@ namespace Assets.Scripts.Features.Main
         }
     }
 
-    public readonly struct EquipmentDetailDialogResult
+    public readonly struct ResultDialogEquipmentDetail
     {
-        private EquipmentDetailDialogResult(bool isEquipRequested, bool isPurchaseRequested)
+        private ResultDialogEquipmentDetail(bool isEquipRequested, bool isPurchaseRequested)
         {
             IsEquipRequested = isEquipRequested;
             IsPurchaseRequested = isPurchaseRequested;
@@ -94,15 +94,15 @@ namespace Assets.Scripts.Features.Main
         public bool IsEquipRequested { get; }
         public bool IsPurchaseRequested { get; }
 
-        public static EquipmentDetailDialogResult EquipRequested => new(true, false);
-        public static EquipmentDetailDialogResult PurchaseRequested => new(false, true);
-        public static EquipmentDetailDialogResult Cancelled => new(false, false);
+        public static ResultDialogEquipmentDetail EquipRequested => new(true, false);
+        public static ResultDialogEquipmentDetail PurchaseRequested => new(false, true);
+        public static ResultDialogEquipmentDetail Cancelled => new(false, false);
     }
 
     [DialogAddress("Dialog/EquipmentDetail")]
-    public sealed class EquipmentDetailDialog :
-        DialogBase<EquipmentDetailDialogResult>,
-        IDialogRequestHandler<EquipmentDetailDialogRequest>
+    public sealed class DialogEquipmentDetail :
+        DialogBase<ResultDialogEquipmentDetail>,
+        IDialogRequestHandler<RequestDialogEquipmentDetail>
     {
         [SerializeField] private PartsEquipmentItem equipmentItem;
         [SerializeField] private TextMeshProUGUI titleText;
@@ -131,7 +131,7 @@ namespace Assets.Scripts.Features.Main
         private int _purchasePrice;
         private bool _canPurchase;
 
-        public void Setup(EquipmentDetailDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogEquipmentDetail request, DialogContext context)
         {
             EnsurePrefabReferences();
             _option = request.Option;
@@ -148,7 +148,7 @@ namespace Assets.Scripts.Features.Main
 
         protected override void OnClickClose()
         {
-            Close(EquipmentDetailDialogResult.Cancelled);
+            Close(ResultDialogEquipmentDetail.Cancelled);
         }
 
         private void OnClickEquip()
@@ -158,7 +158,7 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            Close(EquipmentDetailDialogResult.EquipRequested);
+            Close(ResultDialogEquipmentDetail.EquipRequested);
         }
 
         private void OnClickPurchase()
@@ -168,7 +168,7 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            Close(EquipmentDetailDialogResult.PurchaseRequested);
+            Close(ResultDialogEquipmentDetail.PurchaseRequested);
         }
 
         private void Refresh()
@@ -320,7 +320,7 @@ namespace Assets.Scripts.Features.Main
                 equipButton == null ||
                 closeButton == null)
             {
-                throw new InvalidOperationException($"{nameof(EquipmentDetailDialog)} has missing serialized prefab references.");
+                throw new InvalidOperationException($"{nameof(DialogEquipmentDetail)} has missing serialized prefab references.");
             }
         }
 

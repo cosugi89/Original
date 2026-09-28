@@ -7,9 +7,9 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public readonly struct CommonConfirmWithIconDialogRequest
+    public readonly struct RequestDialogCommonConfirmWithIcon
     {
-        public CommonConfirmWithIconDialogRequest(
+        public RequestDialogCommonConfirmWithIcon(
             string title,
             int quantity,
             string description,
@@ -30,20 +30,20 @@ namespace Assets.Scripts.Features.Main
         public bool CanConfirm { get; }
     }
 
-    public readonly struct CommonConfirmWithIconDialogResult
+    public readonly struct ResultDialogCommonConfirmWithIcon
     {
-        private CommonConfirmWithIconDialogResult(bool isConfirmed) => IsConfirmed = isConfirmed;
+        private ResultDialogCommonConfirmWithIcon(bool isConfirmed) => IsConfirmed = isConfirmed;
 
         public bool IsConfirmed { get; }
 
-        public static CommonConfirmWithIconDialogResult Confirmed => new(true);
-        public static CommonConfirmWithIconDialogResult Cancelled => new(false);
+        public static ResultDialogCommonConfirmWithIcon Confirmed => new(true);
+        public static ResultDialogCommonConfirmWithIcon Cancelled => new(false);
     }
 
     [DialogAddress("Dialog/Common/ConfilmWithIcon")]
     public sealed class DialogCommonConfirmWithIcon :
-        DialogBase<CommonConfirmWithIconDialogResult>,
-        IDialogRequestHandler<CommonConfirmWithIconDialogRequest>
+        DialogBase<ResultDialogCommonConfirmWithIcon>,
+        IDialogRequestHandler<RequestDialogCommonConfirmWithIcon>
     {
         [SerializeField] private TextMeshProUGUI titleText;
         [SerializeField] private TextMeshProUGUI numText;
@@ -54,7 +54,7 @@ namespace Assets.Scripts.Features.Main
 
         private bool _canConfirm;
 
-        public void Setup(CommonConfirmWithIconDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogCommonConfirmWithIcon request, DialogContext context)
         {
             EnsurePrefabReferences();
             _canConfirm = request.CanConfirm;
@@ -71,13 +71,13 @@ namespace Assets.Scripts.Features.Main
             closeButton.onClick.AddListener(OnClickClose);
         }
 
-        protected override void OnClickClose() => Close(CommonConfirmWithIconDialogResult.Cancelled);
+        protected override void OnClickClose() => Close(ResultDialogCommonConfirmWithIcon.Cancelled);
 
         private void OnClickConfirm()
         {
             if (_canConfirm)
             {
-                Close(CommonConfirmWithIconDialogResult.Confirmed);
+                Close(ResultDialogCommonConfirmWithIcon.Confirmed);
             }
         }
 

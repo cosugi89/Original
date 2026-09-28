@@ -9,9 +9,9 @@ using UnityEngine;
 
 namespace Assets.Scripts.Features.Main
 {
-    public readonly struct TraitItemDetailDialogRequest
+    public readonly struct RequestDialogTraitItemDetail
     {
-        public TraitItemDetailDialogRequest(
+        public RequestDialogTraitItemDetail(
             AbilityTreeNodeState nodeState,
             PartsTraitItem.VisualStyle traitItemVisualStyle)
         {
@@ -23,23 +23,23 @@ namespace Assets.Scripts.Features.Main
         public PartsTraitItem.VisualStyle TraitItemVisualStyle { get; }
     }
 
-    public readonly struct TraitItemDetailDialogResult
+    public readonly struct ResultDialogTraitItemDetail
     {
-        private TraitItemDetailDialogResult(bool isPurchaseRequested)
+        private ResultDialogTraitItemDetail(bool isPurchaseRequested)
         {
             IsPurchaseRequested = isPurchaseRequested;
         }
 
         public bool IsPurchaseRequested { get; }
 
-        public static TraitItemDetailDialogResult PurchaseRequested => new(true);
-        public static TraitItemDetailDialogResult Closed => new(false);
+        public static ResultDialogTraitItemDetail PurchaseRequested => new(true);
+        public static ResultDialogTraitItemDetail Closed => new(false);
     }
 
     [DialogAddress("Dialog/TraitItemDetail")]
-    public sealed class TraitItemDetailDialog :
-        DialogBase<TraitItemDetailDialogResult>,
-        IDialogRequestHandler<TraitItemDetailDialogRequest>
+    public sealed class DialogTraitItemDetail :
+        DialogBase<ResultDialogTraitItemDetail>,
+        IDialogRequestHandler<RequestDialogTraitItemDetail>
     {
         private const float FullLayoutHeight = 625f; // CurrentValue + NextValue + PurchaseButton
         private const float PreviewLayoutHeight = 520f; // CurrentValue + NextValue
@@ -57,7 +57,7 @@ namespace Assets.Scripts.Features.Main
         private AbilityTreeNodeState _nodeState;
         private PartsTraitItem.VisualStyle _traitItemVisualStyle;
 
-        public void Setup(TraitItemDetailDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogTraitItemDetail request, DialogContext context)
         {
             _nodeState = request.NodeState;
             _traitItemVisualStyle = request.TraitItemVisualStyle;
@@ -79,18 +79,18 @@ namespace Assets.Scripts.Features.Main
             {
                 if (_nodeState.LockReason == AbilityNodeLockReason.InsufficientPoints)
                 {
-                    Debug.Log($"[TraitItemDetailDialog] Pointが不足しています。必要: {_nodeState.NextRankPointCost}");
+                    Debug.Log($"[DialogTraitItemDetail] Pointが不足しています。必要: {_nodeState.NextRankPointCost}");
                 }
 
                 return;
             }
 
-            Close(TraitItemDetailDialogResult.PurchaseRequested);
+            Close(ResultDialogTraitItemDetail.PurchaseRequested);
         }
 
         protected override void OnClickClose()
         {
-            Close(TraitItemDetailDialogResult.Closed);
+            Close(ResultDialogTraitItemDetail.Closed);
         }
 
         private void Refresh()

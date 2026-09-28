@@ -65,8 +65,8 @@ namespace Assets.Scripts.Features.Main
 
         private async UniTaskVoid OpenMissionDetailAsync(StageMasterData stage)
         {
-            await DialogService.OpenAsync<DialogMissionDetail, MissionDetailDialogRequest, MissionDetailDialogResult>(
-                new MissionDetailDialogRequest(stage), null);
+            await DialogService.OpenAsync<DialogMissionDetail, RequestDialogMissionDetail, ResultDialogMissionDetail>(
+                new RequestDialogMissionDetail(stage), null);
         }
     }
 }

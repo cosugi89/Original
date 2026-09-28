@@ -87,10 +87,10 @@ namespace Assets.Scripts.Features.Main
                 }
 
                 var dialogResult = await DialogService.OpenAsync<
-                    TraitItemDetailDialog,
-                    TraitItemDetailDialogRequest,
-                    TraitItemDetailDialogResult>(
-                        new TraitItemDetailDialogRequest(nodeState, visualStyle),
+                    DialogTraitItemDetail,
+                    RequestDialogTraitItemDetail,
+                    ResultDialogTraitItemDetail>(
+                        new RequestDialogTraitItemDetail(nodeState, visualStyle),
                         new DialogContext(null));
                 if (!dialogResult.IsPurchaseRequested)
                 {

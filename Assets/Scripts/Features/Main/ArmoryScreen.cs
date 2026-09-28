@@ -87,9 +87,9 @@ namespace Assets.Scripts.Features.Main
         {
             var result = await DialogService.OpenAsync<
                 DialogCommonConfirmWithIcon,
-                CommonConfirmWithIconDialogRequest,
-                CommonConfirmWithIconDialogResult>(
-                new CommonConfirmWithIconDialogRequest(
+                RequestDialogCommonConfirmWithIcon,
+                ResultDialogCommonConfirmWithIcon>(
+                new RequestDialogCommonConfirmWithIcon(
                     product.Item.DisplayName,
                     product.Quantity,
                     product.Item.Description,
@@ -102,10 +102,10 @@ namespace Assets.Scripts.Features.Main
         private static async UniTask<bool> OpenEquipmentPurchaseDialogAsync(ArmoryProductMasterData product, bool canPurchase)
         {
             var result = await DialogService.OpenAsync<
-                EquipmentDetailDialog,
-                EquipmentDetailDialogRequest,
-                EquipmentDetailDialogResult>(
-                EquipmentDetailDialogRequest.ForPurchase(product.Equipment, product.GoldPrice, canPurchase),
+                DialogEquipmentDetail,
+                RequestDialogEquipmentDetail,
+                ResultDialogEquipmentDetail>(
+                RequestDialogEquipmentDetail.ForPurchase(product.Equipment, product.GoldPrice, canPurchase),
                 new DialogContext(null));
             return result.IsPurchaseRequested;
         }

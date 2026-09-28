@@ -23,15 +23,15 @@ namespace Assets.Scripts.UI.Dialog
         public Sprite Icon => icon;
     }
 
-    public readonly struct AvatarDialogRequest
+    public readonly struct RequestDialogAvatar
     {
-        public AvatarDialogRequest(Player player)
+        public RequestDialogAvatar(Player player)
         {
             SourcePartsManager = player != null ? player.AppearanceController : null;
             SaveTargets = null;
         }
 
-        public AvatarDialogRequest(AppearanceController sourcePartsManager, IReadOnlyList<AppearanceController> saveTargets = null)
+        public RequestDialogAvatar(AppearanceController sourcePartsManager, IReadOnlyList<AppearanceController> saveTargets = null)
         {
             SourcePartsManager = sourcePartsManager;
             SaveTargets = saveTargets;
@@ -41,17 +41,17 @@ namespace Assets.Scripts.UI.Dialog
         public IReadOnlyList<AppearanceController> SaveTargets { get; }
     }
 
-    public readonly struct AvatarDialogResult
+    public readonly struct ResultDialogAvatar
     {
-        private AvatarDialogResult(bool isSaved) => IsSaved = isSaved;
+        private ResultDialogAvatar(bool isSaved) => IsSaved = isSaved;
 
         public bool IsSaved { get; }
-        public static AvatarDialogResult Saved => new(true);
-        public static AvatarDialogResult Cancelled => new(false);
+        public static ResultDialogAvatar Saved => new(true);
+        public static ResultDialogAvatar Cancelled => new(false);
     }
 
     [DialogAddress("Dialog/AvatarController")]
-    public class AvatarDialog : DialogBase<AvatarDialogResult>, IDialogRequestHandler<AvatarDialogRequest>
+    public class DialogAvatar : DialogBase<ResultDialogAvatar>, IDialogRequestHandler<RequestDialogAvatar>
     {
         [Header("UI")]
         [SerializeField] private RawImage previewImage;
@@ -86,7 +86,7 @@ namespace Assets.Scripts.UI.Dialog
         private readonly List<AvatarAppearanceOptionItemView> categoryOptionViews = new();
         private readonly List<AvatarAppearanceOptionItemView> partOptionViews = new();
 
-        public void Setup(AvatarDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogAvatar request, DialogContext context)
         {
             EnsurePrefabReferences(context);
             sourcePartsManager = request.SourcePartsManager;
@@ -110,7 +110,7 @@ namespace Assets.Scripts.UI.Dialog
         protected override void OnClickClose()
         {
             DespawnDialogPreview();
-            Close(AvatarDialogResult.Cancelled);
+            Close(ResultDialogAvatar.Cancelled);
         }
 
         private void BindButtons()
@@ -157,7 +157,7 @@ namespace Assets.Scripts.UI.Dialog
                 colorPicker == null ||
                 previewCharacterPrefab == null)
             {
-                throw new InvalidOperationException($"{nameof(AvatarDialog)} has missing serialized prefab references or preview context.");
+                throw new InvalidOperationException($"{nameof(DialogAvatar)} has missing serialized prefab references or preview context.");
             }
         }
 
@@ -244,7 +244,7 @@ namespace Assets.Scripts.UI.Dialog
             ApplyCurrentAppearanceToSaveTargets();
             UserDataManager.EnsureInitialized().UserDataStore.SaveSession();
             DespawnDialogPreview();
-            Close(AvatarDialogResult.Saved);
+            Close(ResultDialogAvatar.Saved);
         }
 
         private void ApplyCurrentAppearanceToSaveTargets()

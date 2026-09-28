@@ -13,22 +13,22 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main.Dungeon
 {
-    public readonly struct MissionDetailDialogRequest
+    public readonly struct RequestDialogMissionDetail
     {
-        public MissionDetailDialogRequest(StageMasterData stage) => Stage = stage;
+        public RequestDialogMissionDetail(StageMasterData stage) => Stage = stage;
         public StageMasterData Stage { get; }
     }
 
-    public readonly struct MissionDetailDialogResult
+    public readonly struct ResultDialogMissionDetail
     {
-        private MissionDetailDialogResult(bool started) => Started = started;
+        private ResultDialogMissionDetail(bool started) => Started = started;
         public bool Started { get; }
-        public static MissionDetailDialogResult StartedBattle => new(true);
-        public static MissionDetailDialogResult Cancelled => new(false);
+        public static ResultDialogMissionDetail StartedBattle => new(true);
+        public static ResultDialogMissionDetail Cancelled => new(false);
     }
 
     [DialogAddress("Dialog/MissionDetail")]
-    public class DialogMissionDetail : DialogBase<MissionDetailDialogResult>, IDialogRequestHandler<MissionDetailDialogRequest>
+    public class DialogMissionDetail : DialogBase<ResultDialogMissionDetail>, IDialogRequestHandler<RequestDialogMissionDetail>
     {
         [Header("Color")]
         [SerializeField] private Image headerColor;
@@ -53,7 +53,7 @@ namespace Assets.Scripts.Features.Main.Dungeon
         private readonly List<PartsMissionRewardItem> _rewardItems = new();
         private StageMasterData _stage;
 
-        public void Setup(MissionDetailDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogMissionDetail request, DialogContext context)
         {
             _stage = request.Stage;
             titleText.SetText(_stage.StageName);
@@ -73,11 +73,11 @@ namespace Assets.Scripts.Features.Main.Dungeon
             scrollRect.horizontalNormalizedPosition = 0f;
         }
 
-        protected override void OnClickClose() => Close(MissionDetailDialogResult.Cancelled);
+        protected override void OnClickClose() => Close(ResultDialogMissionDetail.Cancelled);
 
         private void OnClickEnter()
         {
-            Close(MissionDetailDialogResult.StartedBattle);
+            Close(ResultDialogMissionDetail.StartedBattle);
             BattleSceneRequest.SelectedStageId = _stage.StageId;
             SceneManager.LoadScene(SceneNames.Battle);
         }

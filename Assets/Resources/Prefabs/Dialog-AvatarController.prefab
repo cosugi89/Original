@@ -2357,7 +2357,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 46b96e2d12bfa3b41bd8c5790dbfd86c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.AvatarDialog
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.DialogAvatar
   dialogTitleGraphic: {fileID: 5938899345981920300}
   previewImage: {fileID: 3986189110733403914}
   previewTexture: {fileID: 8400000, guid: a309760c8f9ff8e4cb6cd43a1b8cb79c, type: 2}

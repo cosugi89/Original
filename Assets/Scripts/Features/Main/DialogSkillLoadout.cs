@@ -16,9 +16,9 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public readonly struct SkillLoadoutDialogRequest
+    public readonly struct RequestDialogSkillLoadout
     {
-        public SkillLoadoutDialogRequest(int slotIndex)
+        public RequestDialogSkillLoadout(int slotIndex)
         {
             SlotIndex = slotIndex;
         }
@@ -26,23 +26,23 @@ namespace Assets.Scripts.Features.Main
         public int SlotIndex { get; }
     }
 
-    public readonly struct SkillLoadoutDialogResult
+    public readonly struct ResultDialogSkillLoadout
     {
-        private SkillLoadoutDialogResult(bool isSaved)
+        private ResultDialogSkillLoadout(bool isSaved)
         {
             IsSaved = isSaved;
         }
 
         public bool IsSaved { get; }
 
-        public static SkillLoadoutDialogResult Saved => new(true);
-        public static SkillLoadoutDialogResult Cancelled => new(false);
+        public static ResultDialogSkillLoadout Saved => new(true);
+        public static ResultDialogSkillLoadout Cancelled => new(false);
     }
 
     [DialogAddress("Dialog/SkillLoadout")]
-    public sealed class SkillLoadoutDialog :
-        DialogBase<SkillLoadoutDialogResult>,
-        IDialogRequestHandler<SkillLoadoutDialogRequest>
+    public sealed class DialogSkillLoadout :
+        DialogBase<ResultDialogSkillLoadout>,
+        IDialogRequestHandler<RequestDialogSkillLoadout>
     {
         [FormerlySerializedAs("selectedSkillItems")]
         [SerializeField] private PartsSkillItem[] selectedSkillSlotItems = Array.Empty<PartsSkillItem>();
@@ -63,7 +63,7 @@ namespace Assets.Scripts.Features.Main
         private int _selectedSlotIndex;
         private bool _hasSavedChanges;
 
-        public void Setup(SkillLoadoutDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogSkillLoadout request, DialogContext context)
         {
             EnsurePrefabReferences();
 
@@ -84,8 +84,8 @@ namespace Assets.Scripts.Features.Main
         protected override void OnClickClose()
         {
             Close(_hasSavedChanges
-                ? SkillLoadoutDialogResult.Saved
-                : SkillLoadoutDialogResult.Cancelled);
+                ? ResultDialogSkillLoadout.Saved
+                : ResultDialogSkillLoadout.Cancelled);
         }
 
         private void BindButtons()
@@ -286,7 +286,7 @@ namespace Assets.Scripts.Features.Main
                 closeButton == null)
             {
                 throw new InvalidOperationException(
-                    $"{nameof(SkillLoadoutDialog)} requires {UserProfileData.BattleSkillLoadoutSlotCount} selected skill items and buttons, " +
+                    $"{nameof(DialogSkillLoadout)} requires {UserProfileData.BattleSkillLoadoutSlotCount} selected skill items and buttons, " +
                     "candidateSkillItemTemplate, candidateSkillContent, emptyCandidatesText, and closeButton references.");
             }
         }

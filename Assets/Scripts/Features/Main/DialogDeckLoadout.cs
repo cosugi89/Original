@@ -10,13 +10,13 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Features.Main
 {
-    public readonly struct DeckLoadoutDialogRequest
+    public readonly struct RequestDialogDeckLoadout
     {
     }
 
-    public readonly struct DeckLoadoutDialogResult
+    public readonly struct ResultDialogDeckLoadout
     {
-        private DeckLoadoutDialogResult(bool isDeckSelected, int deckId)
+        private ResultDialogDeckLoadout(bool isDeckSelected, int deckId)
         {
             IsDeckSelected = isDeckSelected;
             DeckId = deckId;
@@ -25,14 +25,14 @@ namespace Assets.Scripts.Features.Main
         public bool IsDeckSelected { get; }
         public int DeckId { get; }
 
-        public static DeckLoadoutDialogResult Selected(int deckId) => new(true, deckId);
-        public static DeckLoadoutDialogResult Cancelled => new(false, 0);
+        public static ResultDialogDeckLoadout Selected(int deckId) => new(true, deckId);
+        public static ResultDialogDeckLoadout Cancelled => new(false, 0);
     }
 
     [DialogAddress("Dialog/DeckLoadout")]
-    public sealed class DeckLoadoutDialog :
-        DialogBase<DeckLoadoutDialogResult>,
-        IDialogRequestHandler<DeckLoadoutDialogRequest>
+    public sealed class DialogDeckLoadout :
+        DialogBase<ResultDialogDeckLoadout>,
+        IDialogRequestHandler<RequestDialogDeckLoadout>
     {
         [SerializeField] private Transform deckContent;
         [SerializeField] private DeckLoadoutItemView deckItemTemplate;
@@ -49,7 +49,7 @@ namespace Assets.Scripts.Features.Main
         private bool _hasDeckSelection;
         private Vector2 _deckItemSize;
 
-        public void Setup(DeckLoadoutDialogRequest request, DialogContext context)
+        public void Setup(RequestDialogDeckLoadout request, DialogContext context)
         {
             EnsurePrefabReferences();
 
@@ -67,8 +67,8 @@ namespace Assets.Scripts.Features.Main
         protected override void OnClickClose()
         {
             Close(_hasDeckSelection
-                ? DeckLoadoutDialogResult.Selected(_deckManager.CurrentDeckId)
-                : DeckLoadoutDialogResult.Cancelled);
+                ? ResultDialogDeckLoadout.Selected(_deckManager.CurrentDeckId)
+                : ResultDialogDeckLoadout.Cancelled);
         }
 
         private void Refresh()
@@ -128,7 +128,7 @@ namespace Assets.Scripts.Features.Main
                 deckContent.GetComponent<GridLayoutGroup>() == null)
             {
                 throw new InvalidOperationException(
-                    $"{nameof(DeckLoadoutDialog)} requires deckContent, a direct-child deckItemTemplate, " +
+                    $"{nameof(DialogDeckLoadout)} requires deckContent, a direct-child deckItemTemplate, " +
                     $"a {nameof(GridLayoutGroup)}, and closeButton references.");
             }
         }

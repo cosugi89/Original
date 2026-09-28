@@ -46,9 +46,9 @@ namespace Assets.Scripts.Features.Main
         private bool _deckLoadoutDialogOpen;
         private bool _itemListDialogOpen;
         
-        private void OnSkillSlotClicked(int slotIndex) => OpenSkillLoadoutDialogAsync(slotIndex).Forget();
+        private void OnSkillSlotClicked(int slotIndex) => OpenDialogSkillLoadoutAsync(slotIndex).Forget();
         private void OnClickAppearanceButton() => OpenAppearanceDialogAsync().Forget();
-        private void OnClickDeckLoadoutButton() => OpenDeckLoadoutDialogAsync().Forget();
+        private void OnClickDeckLoadoutButton() => OpenDialogDeckLoadoutAsync().Forget();
         private void OnClickItemListButton() => OpenItemListDialogAsync().Forget();
 
         public void Init(AppearanceController previewPartsManager, params AppearanceController[] additionalPreviewTargets)
@@ -188,7 +188,7 @@ namespace Assets.Scripts.Features.Main
                 return;
             }
 
-            OpenEquipmentDetailDialogAsync(option, isOpenedFromEquipmentSlot: false).Forget();
+            OpenDialogEquipmentDetailAsync(option, isOpenedFromEquipmentSlot: false).Forget();
         }
 
         private void OnEquipmentSlotClicked(StatusEquipmentCategory category)
@@ -199,7 +199,7 @@ namespace Assets.Scripts.Features.Main
                 .FirstOrDefault(option => option.IsSelected);
             if (selectedOption != null)
             {
-                OpenEquipmentDetailDialogAsync(selectedOption, isOpenedFromEquipmentSlot: true).Forget();
+                OpenDialogEquipmentDetailAsync(selectedOption, isOpenedFromEquipmentSlot: true).Forget();
             }
         }
 
@@ -215,7 +215,7 @@ namespace Assets.Scripts.Features.Main
             CommitEquipmentChange();
         }
 
-        private async UniTaskVoid OpenEquipmentDetailDialogAsync(
+        private async UniTaskVoid OpenDialogEquipmentDetailAsync(
             AvatarPartOptionViewData option,
             bool isOpenedFromEquipmentSlot)
         {
@@ -228,10 +228,10 @@ namespace Assets.Scripts.Features.Main
             try
             {
                 var result = await DialogService.OpenAsync<
-                    EquipmentDetailDialog,
-                    EquipmentDetailDialogRequest,
-                    EquipmentDetailDialogResult>(
-                        new EquipmentDetailDialogRequest(option, isOpenedFromEquipmentSlot),
+                    DialogEquipmentDetail,
+                    RequestDialogEquipmentDetail,
+                    ResultDialogEquipmentDetail>(
+                        new RequestDialogEquipmentDetail(option, isOpenedFromEquipmentSlot),
                         new DialogContext(avatarPreviewRenderer));
                 if (result.IsEquipRequested)
                 {
@@ -249,7 +249,7 @@ namespace Assets.Scripts.Features.Main
             }
         }
 
-        private async UniTaskVoid OpenSkillLoadoutDialogAsync(int slotIndex)
+        private async UniTaskVoid OpenDialogSkillLoadoutAsync(int slotIndex)
         {
             if (_skillLoadoutDialogOpen)
             {
@@ -260,10 +260,10 @@ namespace Assets.Scripts.Features.Main
             try
             {
                 var result = await DialogService.OpenAsync<
-                    SkillLoadoutDialog,
-                    SkillLoadoutDialogRequest,
-                    SkillLoadoutDialogResult>(
-                        new SkillLoadoutDialogRequest(slotIndex),
+                    DialogSkillLoadout,
+                    RequestDialogSkillLoadout,
+                    ResultDialogSkillLoadout>(
+                        new RequestDialogSkillLoadout(slotIndex),
                         new DialogContext(avatarPreviewRenderer));
                 if (result.IsSaved)
                 {
@@ -281,8 +281,8 @@ namespace Assets.Scripts.Features.Main
             avatarPreview.SetPrimaryVisible(false);
             try
             {
-                var request = new AvatarDialogRequest(avatarPreview.PrimaryTarget, avatarPreview.GetTargets());
-                var result = await DialogService.OpenAsync<AvatarDialog, AvatarDialogRequest, AvatarDialogResult>(
+                var request = new RequestDialogAvatar(avatarPreview.PrimaryTarget, avatarPreview.GetTargets());
+                var result = await DialogService.OpenAsync<DialogAvatar, RequestDialogAvatar, ResultDialogAvatar>(
                     request,
                     new DialogContext(avatarPreviewRenderer));
                 if (result.IsSaved)
@@ -299,7 +299,7 @@ namespace Assets.Scripts.Features.Main
             }
         }
         
-        private async UniTaskVoid OpenDeckLoadoutDialogAsync()
+        private async UniTaskVoid OpenDialogDeckLoadoutAsync()
         {
             if (_deckLoadoutDialogOpen)
             {
@@ -310,10 +310,10 @@ namespace Assets.Scripts.Features.Main
             try
             {
                 var result = await DialogService.OpenAsync<
-                    DeckLoadoutDialog,
-                    DeckLoadoutDialogRequest,
-                    DeckLoadoutDialogResult>(
-                        new DeckLoadoutDialogRequest(),
+                    DialogDeckLoadout,
+                    RequestDialogDeckLoadout,
+                    ResultDialogDeckLoadout>(
+                        new RequestDialogDeckLoadout(),
                         new DialogContext(avatarPreviewRenderer, avatarPreview.PrimaryTarget));
                 if (result.IsDeckSelected)
                 {
@@ -339,9 +339,9 @@ namespace Assets.Scripts.Features.Main
             {
                 await DialogService.OpenAsync<
                     DialogItemInventory,
-                    ItemInventoryDialogRequest,
-                    ItemInventoryDialogResult>(
-                    new ItemInventoryDialogRequest(),
+                    RequestDialogItemInventory,
+                    ResultDialogItemInventory>(
+                    new RequestDialogItemInventory(),
                     new DialogContext(avatarPreviewRenderer, avatarPreview.PrimaryTarget));
             }
             finally

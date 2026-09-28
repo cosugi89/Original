@@ -28,7 +28,7 @@
 - `Manager` は、ゲーム内の状態を正本として保持・更新する窓口に使う。例: `InventoryManager`、`AppearanceManager`、`ProgressManager`。
 - `Store` は、永続データの読み書きをまとめる窓口に使う。保存形式や媒体を表す具体実装は `JsonFile` のように末尾へ置く。例: `UserDataJsonStore`、`UserDataJsonFile`。
 - シーンやダイアログをまたぐ入力と結果は `Request` / `Result` とする。入口で必要な準備を行う型は `Initializer` とする。
-- Dialog を制御する `MonoBehaviour` は `対象名 + Dialog` の型名に統一する。対応する入力と結果は `対象名 + DialogRequest`、`対象名 + DialogResult` とし、`Dialog + 対象名` や `Response` を混在させない。
+- Dialog を制御する `MonoBehaviour` は `Dialog + 対象名` の型名に統一する。対応する入力と結果は `RequestDialog + 対象名`、`ResultDialog + 対象名` とする。`対象名 + Dialog`、`対象名 + DialogRequest`、`対象名 + DialogResult`、`Response` は新規コードで使わない。
 - 異なる表現・層の変換は `Adapter`、Unity 上の見た目部品を直接制御する `MonoBehaviour` は `Controller` とする。これらは状態の正本を持たない。
 - 変数名・プロパティ名も型の責務に合わせる。たとえば保存窓口は `userDataStore`、見た目の正本は `appearanceManager`、シーン遷移入力は `battleSceneRequest` のように、旧名称を引き継がない。
 
