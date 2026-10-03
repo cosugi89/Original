@@ -1,6 +1,6 @@
 # UI 共通部品仕様書
 
-- 最終更新: 2026-09-21
+- 最終更新: 2026-10-03
 - 文書状態: 運用中
 - 位置づけ: プロジェクト内で共通利用する UI 部品の責務と運用方針を定義する。
 
@@ -22,19 +22,22 @@
 - `ColorType` ごとの配色は `UIColors.IColorSet` を正本とし、`Background`、`Light`、`Highlight`、`Gradient`、`Shadow` を各 Frame へ適用する。`Button01InnerVisible` も `Button01` の内枠表示に適用する。`GameButton` 内に個別のカラーセットは持たない。
 - `SizeType` は `Small`、`Medium`、`Large`、`IconSmall`、`IconMedium`、`Wide`、`TitleWide` を持つ。
 - `ContentType` は `None`、`Label`、`Icon`、`IconLabel`、`TitleIconLabel` を持つ。
+- スタイルの土台は専用 Inspector の `Apply Style`、または C# の `SetAppearance(...)` / `ApplyStyle()` で明示的に適用する。適用時は Frame、配色、既定サイズ、既定の子要素レイアウトを設定する。
+- enum の Inspector 値を変更しただけではスタイルを自動適用しない。スタイル適用後の RectTransform、アンカー、余白、文字位置は Prefab を正本とし、画面・Prefab 固有の調整を維持する。
+- `SetLabel(...)`、`SetTitle(...)`、`SetValue(...)`、`SetIcon(...)`、Badge 更新および状態更新は、内容・表示状態だけを更新し、RectTransform やレイアウトを変更しない。
 - Icon は `iconSprite` が未設定なら表示しない。
 - Label / Title / Value は対応文字列が空なら表示しない。
 - `Close` は `FrameType.Button01` 相当の小型ボタンとして BG / Light / Icon のみを表示し、Label / Title / Value / Badge を表示しない。サイズ、配色、閉じるIconは `Dialog-EquipmentDetail` の `Button_Close_02` を基準にする。
 - `GameButton` 専用 Inspector は標準 `Button` 設定の下に独自項目を表示する。これは Unity の `ButtonEditor` が `Button` 継承先にも適用されるため、専用 `CustomEditor` で補う。
 - Badge、選択表示、無効表示、Loading 表示は任意参照として扱う。
 - C# からは `SetAction(...)`、`AddAction(...)`、`RemoveAction(...)`、`ClearAction()` で、ユーザー操作による click / submit 時の追加処理を扱える。
-- C# からは `SetAppearance(...)`、`SetLabel(...)`、`SetTitle(...)`、`SetValue(...)`、`SetIcon(...)` で見た目と内容を切り替えられる。
+- C# からは `SetAppearance(...)` / `ApplyStyle()` でスタイルを明示適用し、`SetLabel(...)`、`SetTitle(...)`、`SetValue(...)`、`SetIcon(...)` で内容を更新できる。
 - Inspector からは継承元 `Button.onClick` を使う。
 - 表示状態は `SetVisible(...)`、操作可否は `SetInteractable(...)`、選択状態は `SetSelected(...)`、Loading 状態は `SetLoading(...)` で切り替える。
 - Badge 表示は `SetBadgeVisible(...)`、`SetBadgeText(...)` で切り替える。
 - Loading 中は内部的に `interactable = false` として扱い、Loading 解除時に Loading 前の操作可否へ戻す。
 - Badge は Prefab に常備し、`badgeVisible` または `SetBadgeVisible(...)` で表示を切り替える。
-- Badge 背景は `badgeSprite` を使い、`GameButton` の見た目再適用時に `badgeImage` の Sprite へ反映する。
+- Badge 背景は `badgeSprite` を使い、内容更新時に `badgeImage` の Sprite へ反映する。
 - Badge text は空なら非表示、文字列がある場合のみ表示する。
 - SE は `audioSource` が設定されている場合のみ再生する。
 - 通常押下と操作不可時の押下は、それぞれ `SoundType` で `Assets/Resources/Sounds` 配下の音を選ぶ。

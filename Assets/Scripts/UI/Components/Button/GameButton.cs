@@ -138,10 +138,6 @@ namespace Assets.Scripts.UI.Components
         private bool _selected;
         private bool _loading;
         private bool _interactableBeforeLoading = true;
-#if UNITY_EDITOR
-        private bool _applyVisualQueued;
-#endif
-
         public bool IsSelectedState => _selected;
         public bool IsLoading => _loading;
 
@@ -149,12 +145,14 @@ namespace Assets.Scripts.UI.Components
         {
             base.Awake();
             _interactableBeforeLoading = interactable;
+            RefreshContent();
             RefreshOptionalVisuals();
         }
 
         protected override void OnEnable()
         {
             base.OnEnable();
+            RefreshContent();
             RefreshOptionalVisuals();
         }
 
@@ -217,38 +215,38 @@ namespace Assets.Scripts.UI.Components
         public void SetBadgeVisible(bool visible)
         {
             badgeVisible = visible;
-            ApplyVisual();
+            RefreshContent();
         }
 
         public void SetBadgeText(string text)
         {
             badgeLabel = text ?? string.Empty;
             badgeVisible = !string.IsNullOrEmpty(badgeLabel);
-            ApplyVisual();
+            RefreshContent();
         }
 
         public void SetLabel(string text)
         {
             label = text ?? string.Empty;
-            ApplyVisual();
+            RefreshContent();
         }
 
         public void SetTitle(string text)
         {
             title = text ?? string.Empty;
-            ApplyVisual();
+            RefreshContent();
         }
 
         public void SetValue(string text)
         {
             value = text ?? string.Empty;
-            ApplyVisual();
+            RefreshContent();
         }
 
         public void SetIcon(Sprite sprite)
         {
             iconSprite = sprite;
-            ApplyVisual();
+            RefreshContent();
         }
 
         public void SetAppearance(FrameType frame, ColorType color, SizeType size, ContentType content)
@@ -257,7 +255,7 @@ namespace Assets.Scripts.UI.Components
             colorType = color;
             sizeType = size;
             contentType = content;
-            ApplyVisual();
+            ApplyStyle();
         }
 
         public void SetAction(Action action)
@@ -316,7 +314,8 @@ namespace Assets.Scripts.UI.Components
             RefreshOptionalVisuals();
         }
 
-        public void ApplyVisual()
+        [ContextMenu("Apply Style")]
+        public void ApplyStyle()
         {
             if (buttonType == ButtonType.Close)
             {
@@ -330,8 +329,9 @@ namespace Assets.Scripts.UI.Components
 
             var colors = GetColorSet(colorType);
             ApplyFrame(frameType, colors);
-            ApplyContent(size);
-            ApplyBadge(size);
+            ApplyContentLayout(size);
+            ApplyBadgeLayout(size);
+            RefreshContent();
         }
 
         private void ApplyCloseVisual()
@@ -408,27 +408,12 @@ namespace Assets.Scripts.UI.Components
             Stretch(backgroundImage.rectTransform, 0f, 0f, 0f, 0f);
         }
 
-        private void ApplyContent(Vector2 size)
+        private void ApplyContentLayout(Vector2 size)
         {
-            var showLabel = (contentType == ContentType.Label || contentType == ContentType.IconLabel) &&
-                !string.IsNullOrEmpty(label);
             var showIcon = (contentType == ContentType.Icon ||
                 contentType == ContentType.IconLabel ||
                 contentType == ContentType.TitleIconLabel) &&
                 iconSprite != null;
-            var showTitle = contentType == ContentType.TitleIconLabel && !string.IsNullOrEmpty(title);
-            var showValue = contentType == ContentType.TitleIconLabel && !string.IsNullOrEmpty(value);
-
-            SetOptionalActive(labelText.gameObject, showLabel);
-            SetOptionalActive(titleText.gameObject, showTitle);
-            SetOptionalActive(valueText.gameObject, showValue);
-            SetOptionalActive(iconImage.gameObject, showIcon);
-
-            labelText.text = label ?? string.Empty;
-            titleText.text = title ?? string.Empty;
-            valueText.text = value ?? string.Empty;
-            iconImage.sprite = iconSprite;
-            iconImage.preserveAspect = true;
 
             switch (contentType)
             {
@@ -476,15 +461,8 @@ namespace Assets.Scripts.UI.Components
             }
         }
 
-        private void ApplyBadge(Vector2 size)
+        private void ApplyBadgeLayout(Vector2 size)
         {
-            SetOptionalActive(badgeRoot, badgeVisible);
-            badgeText.text = badgeLabel ?? string.Empty;
-            SetOptionalActive(badgeText.gameObject, !string.IsNullOrEmpty(badgeLabel));
-            badgeImage.sprite = badgeSprite;
-            badgeImage.type = Image.Type.Simple;
-            badgeImage.color = Color.white;
-
             var badgeSize = Mathf.Clamp(Mathf.Min(size.x, size.y) * 0.34f, 24f, 48f);
             var badgeRect = (RectTransform)badgeRoot.transform;
             badgeRect.anchorMin = new Vector2(1f, 1f);
@@ -495,6 +473,40 @@ namespace Assets.Scripts.UI.Components
             Stretch(badgeText.rectTransform, 2f, 2f, 2f, 2f);
             badgeText.fontSize = Mathf.Max(14f, badgeSize * 0.48f);
             badgeText.alignment = TextAlignmentOptions.Center;
+        }
+
+        private void RefreshContent()
+        {
+            if (buttonType == ButtonType.Close)
+            {
+                return;
+            }
+
+            var showLabel = (contentType == ContentType.Label || contentType == ContentType.IconLabel) &&
+                !string.IsNullOrEmpty(label);
+            var showIcon = (contentType == ContentType.Icon ||
+                contentType == ContentType.IconLabel ||
+                contentType == ContentType.TitleIconLabel) &&
+                iconSprite != null;
+            var showTitle = contentType == ContentType.TitleIconLabel && !string.IsNullOrEmpty(title);
+            var showValue = contentType == ContentType.TitleIconLabel && !string.IsNullOrEmpty(value);
+
+            SetOptionalActive(labelText.gameObject, showLabel);
+            SetOptionalActive(titleText.gameObject, showTitle);
+            SetOptionalActive(valueText.gameObject, showValue);
+            SetOptionalActive(iconImage.gameObject, showIcon);
+            SetOptionalActive(badgeRoot, badgeVisible);
+            SetOptionalActive(badgeText.gameObject, !string.IsNullOrEmpty(badgeLabel));
+
+            labelText.text = label ?? string.Empty;
+            titleText.text = title ?? string.Empty;
+            valueText.text = value ?? string.Empty;
+            iconImage.sprite = iconSprite;
+            iconImage.preserveAspect = true;
+            badgeText.text = badgeLabel ?? string.Empty;
+            badgeImage.sprite = badgeSprite;
+            badgeImage.type = Image.Type.Simple;
+            badgeImage.color = Color.white;
         }
 
         private void Play(SoundType soundType, AudioClip customSound)
@@ -700,33 +712,8 @@ namespace Assets.Scripts.UI.Components
                 return;
             }
 
-            QueueApplyVisual();
-        }
-
-        private void QueueApplyVisual()
-        {
-            if (_applyVisualQueued)
-            {
-                return;
-            }
-
-            _applyVisualQueued = true;
-            UnityEditor.EditorApplication.delayCall += ApplyVisualAfterValidate;
-        }
-
-        private void ApplyVisualAfterValidate()
-        {
-            _applyVisualQueued = false;
-            if (this == null || !HasRequiredVisualReferences())
-            {
-                return;
-            }
-
-            ApplyVisual();
-            if (!Application.isPlaying)
-            {
-                UnityEditor.EditorUtility.SetDirty(this);
-            }
+            RefreshContent();
+            RefreshOptionalVisuals();
         }
 #endif
     }

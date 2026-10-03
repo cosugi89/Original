@@ -146,6 +146,18 @@ namespace Assets.Scripts.Editor
             }
 
             serializedObject.ApplyModifiedProperties();
+
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Apply Style"))
+            {
+                foreach (var targetObject in targets)
+                {
+                    var button = (GameButton)targetObject;
+                    Undo.RecordObject(button, "Apply Game Button Style");
+                    button.ApplyStyle();
+                    EditorUtility.SetDirty(button);
+                }
+            }
         }
 
         private static bool IsCustomSound(SerializedProperty soundType)

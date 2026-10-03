@@ -209,7 +209,7 @@ namespace Assets.Scripts.Editor
             serializedButton.FindProperty("disabledClickSoundType").enumValueIndex = (int)GameButton.SoundType.Error;
             serializedButton.ApplyModifiedPropertiesWithoutUndo();
 
-            button.ApplyVisual();
+            button.ApplyStyle();
         }
 
         private static RectTransform CreateRectTransform(string name, Transform parent)
