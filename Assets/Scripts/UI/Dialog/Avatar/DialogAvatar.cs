@@ -1,11 +1,13 @@
 using System;
+using Assets.Scripts.UI.Dialog.Avatar.Components;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Core;
 using Assets.Scripts.Systems.GameData;
 using Assets.Scripts.Systems.Save;
 using Assets.Scripts.UI.Components;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
+using Assets.Scripts.Samples.CharacterMaker.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;

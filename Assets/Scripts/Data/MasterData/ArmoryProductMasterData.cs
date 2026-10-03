@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData

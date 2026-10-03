@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData

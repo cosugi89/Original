@@ -7,7 +7,7 @@ using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using Assets.Scripts.UI.Dialog;
 using Cysharp.Threading.Tasks;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

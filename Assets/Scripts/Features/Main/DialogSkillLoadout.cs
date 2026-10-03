@@ -7,7 +7,7 @@ using Assets.Scripts.Systems.Save;
 using Assets.Scripts.Systems.Save.Models;
 using Assets.Scripts.UI.Components;
 using Assets.Scripts.UI.Dialog;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;

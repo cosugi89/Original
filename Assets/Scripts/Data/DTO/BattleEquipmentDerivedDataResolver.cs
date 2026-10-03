@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Assets.Scripts.Data.MasterData;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 
 namespace Assets.Scripts.Data.DTO
 {

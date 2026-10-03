@@ -11,8 +11,8 @@ namespace Assets.Scripts.Editor
     {
         private const string PrefabPath = "Assets/Resources/Prefabs/GameButton.prefab";
         private const string AnimatorControllerPath = "Assets/Resources/Animations/Button/Button.controller";
-        private const string ButtonSpritePath = "Assets/Assets/Sprite_Common/Button/";
-        private const string BadgeSpritePath = "Assets/Assets/Sprite_Dark/HUD/Alert_Dot_01_Red.png";
+        private const string ButtonSpritePath = "Assets/Resource/Sprite/Sprite_Common/Button/";
+        private const string BadgeSpritePath = "Assets/Resource/Sprite/Sprite_Dark/HUD/Alert_Dot_01_Red.png";
 
         [MenuItem("GameObject/UI/Game Button", false, 2031)]
         private static void CreateGameButton(MenuCommand menuCommand)
@@ -203,7 +203,7 @@ namespace Assets.Scripts.Editor
             serializedButton.FindProperty("closeLightSprite").objectReferenceValue =
                 LoadSprite("Button_01_White_InnerBorder2.png");
             serializedButton.FindProperty("closeIconSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Assets/Sprite_Common/~Demo/Demo_Icon/Icon_Close.png");
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resource/Sprite/Sprite_Common/~Demo/Demo_Icon/Icon_Close.png");
             serializedButton.FindProperty("audioSource").objectReferenceValue = audioSource;
             serializedButton.FindProperty("clickSoundType").enumValueIndex = (int)GameButton.SoundType.Button1;
             serializedButton.FindProperty("disabledClickSoundType").enumValueIndex = (int)GameButton.SoundType.Error;

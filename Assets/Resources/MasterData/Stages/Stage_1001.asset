@@ -15,9 +15,9 @@ MonoBehaviour:
   stageId: 1001
   stageName: Main Stage 1
   description: Main stage for progression checks.
-  backgroundImage: {fileID: 21300000, guid: 12657bef1d3fb4dc3ad788b2bd0e8012, type: 3}
+  backgroundImage: {fileID: 21300000, guid: 598a8082d36b4e743b4e94d0df96141f, type: 3}
   previewImage: {fileID: -7114847531628077289, guid: 5a88de33652eeac4793999fd5a0f5c2e, type: 3}
-  dungeonLabelImage: {fileID: 21300000, guid: 7b9c4f6b119e741a7a260c7ea3b0cbbf, type: 3}
+  dungeonLabelImage: {fileID: 21300000, guid: d5c1ddebbb94ff945940e17e209e7af9, type: 3}
   dungeonColorTheme: 0
   sortOrder: 1001
   stageKind: 0

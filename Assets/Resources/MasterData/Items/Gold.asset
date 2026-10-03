@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 1
   displayName: Gold
   description: \u88c5\u5099\u306e\u8cfc\u5165\u306a\u3069\u306b\u4f7f\u3046\u901a\u8ca8\u3002
-  icon: {fileID: 21300000, guid: 1229cb2f722b044fc9421035c4e71498, type: 3}
+  icon: {fileID: 21300000, guid: 6e6f506ca0169e7448dbd4c724c7b20f, type: 3}
   isImportantItem: 1
   isAlwaysVisibleInInventory: 1
   isQuantityVisibleInInventory: 1

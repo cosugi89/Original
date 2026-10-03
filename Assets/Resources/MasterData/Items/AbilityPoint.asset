@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 2
   displayName: Ability Point
   description: Trait\u306e\u89e3\u653e\u306b\u4f7f\u3046Point\u3002
-  icon: {fileID: 21300000, guid: ab2138409f98947cfb4c54e3463981fd, type: 3}
+  icon: {fileID: 21300000, guid: 3d69c1a51e3038245bb8ff4e077f7fab, type: 3}
   isImportantItem: 1
   isAlwaysVisibleInInventory: 1
   isQuantityVisibleInInventory: 1

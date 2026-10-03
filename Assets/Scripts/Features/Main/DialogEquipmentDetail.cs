@@ -6,7 +6,7 @@ using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.UI.Components;
 using Assets.Scripts.UI.Dialog;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

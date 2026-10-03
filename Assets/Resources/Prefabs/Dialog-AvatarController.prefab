@@ -142,7 +142,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -353,7 +353,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6f90869ce4a8845f698c8bfd613db4e7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0e20e142288dd384eb408349b3825b31, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -586,7 +586,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 4f5e6a0ec47d349aba68512b6fc951f6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d3ab2b41ad3a8dd42a1b00f2e5264d3d, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -664,7 +664,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -803,7 +803,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 4393c8fa0d253461a98b99872ffb1de9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2ac5108077861504393fa7455b348cec, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1032,7 +1032,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1053,7 +1053,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 6
   imageIcon: {fileID: 5861349525801488906}
   imageBg: {fileID: 1243666562092392494}
@@ -1146,7 +1146,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1167,7 +1167,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dddf304a7759f42c19ad8fbea56b0b74, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsListSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsListSlot
   imageItem: {fileID: 7092098720315043326}
 --- !u!114 &6906541751666049698
 MonoBehaviour:
@@ -1254,7 +1254,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e47cbd01a460b4d5eb77466908d1a0d0, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ee1b4828ea7d1ae4b8afc7a256d5c278, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1329,7 +1329,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 201c4049bdaaa4a2083c8063656b1e5c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a08b2e511eef8884184a8d77c47a2d95, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1404,7 +1404,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: fc848bff183734ecaa325f38410d53e8, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b6b6eba2439d62f4791a12bb3d6065b8, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1560,7 +1560,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1703,7 +1703,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1724,7 +1724,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 4
   imageIcon: {fileID: 26288053485259390}
   imageBg: {fileID: 4457707083007046179}
@@ -1896,7 +1896,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2110,7 +2110,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 46943706687e24f8ca4fb52d38ad580f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 47283f9da2f02164d85ad4d9123e84f1, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -2187,7 +2187,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2336,7 +2336,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 69082e2838c854da6bfd6010bd0a8e27, type: 3}
+  m_Sprite: {fileID: 21300000, guid: bfbd07b5cca36d84bb5e438bbcdd4f73, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2586,7 +2586,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2818,7 +2818,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2961,7 +2961,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2982,7 +2982,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 3
   imageIcon: {fileID: 915546427189385988}
   imageBg: {fileID: 8802179311061597558}
@@ -3229,7 +3229,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3370,7 +3370,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3509,7 +3509,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3319819e88a154172a994c42101915b7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5665ab0eb99413542a1cc7a55e6bb2dd, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3586,7 +3586,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3726,7 +3726,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1a05976668ab64665b5d9ad0091ada05, type: 3}
+  m_Sprite: {fileID: 21300000, guid: dd451066b788cd04da22f7f94936f1c9, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3801,7 +3801,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6f90869ce4a8845f698c8bfd613db4e7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0e20e142288dd384eb408349b3825b31, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3880,7 +3880,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3901,7 +3901,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 7
   imageIcon: {fileID: 1527594968571709844}
   imageBg: {fileID: 952102974020328421}
@@ -4070,7 +4070,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6093f621de51a4ea5a6b044665a9613e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 60984cc367851464cbe696a1ebd1dcda, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -4244,8 +4244,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.PanelPartsControl
   selectFrame: {fileID: 6978477010379378133}
   spriteBgs:
-  - {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
-  - {fileID: 21300000, guid: 1a05976668ab64665b5d9ad0091ada05, type: 3}
+  - {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
+  - {fileID: 21300000, guid: dd451066b788cd04da22f7f94936f1c9, type: 3}
 --- !u!1 &6628413039837995027
 GameObject:
   m_ObjectHideFlags: 0
@@ -4295,7 +4295,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 51f97748c5fad41209fe6d267a135e7a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.ColorSelectScrollUIScript
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.ColorSelectScrollUIScript
   presetColors:
   - {r: 0.13333334, g: 0.12941177, b: 0.12941177, a: 1}
   - {r: 0.34901962, g: 0.18039216, b: 0.18431373, a: 1}
@@ -4381,7 +4381,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1a05976668ab64665b5d9ad0091ada05, type: 3}
+  m_Sprite: {fileID: 21300000, guid: dd451066b788cd04da22f7f94936f1c9, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4432,7 +4432,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9bf0d46000c904044b7866f1c2085af9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PanelPartsListControl
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PanelPartsListControl
   slotTemplate: {fileID: 6341052203887088339}
   contentParent: {fileID: 5827023851050305255}
   colorPicker: {fileID: 8484315779615535715}
@@ -4508,7 +4508,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6f90869ce4a8845f698c8bfd613db4e7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0e20e142288dd384eb408349b3825b31, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -4584,7 +4584,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 201c4049bdaaa4a2083c8063656b1e5c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a08b2e511eef8884184a8d77c47a2d95, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -4683,7 +4683,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4704,7 +4704,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 0
   imageIcon: {fileID: 1882778068542751295}
   imageBg: {fileID: 6912582190486388547}
@@ -4871,7 +4871,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5014,7 +5014,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5035,7 +5035,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 5
   imageIcon: {fileID: 8947510418106213992}
   imageBg: {fileID: 3697058827961228041}
@@ -5127,7 +5127,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5268,7 +5268,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5408,7 +5408,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 201c4049bdaaa4a2083c8063656b1e5c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a08b2e511eef8884184a8d77c47a2d95, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -5503,7 +5503,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6f90869ce4a8845f698c8bfd613db4e7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0e20e142288dd384eb408349b3825b31, type: 3}
   m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -5583,7 +5583,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5660,7 +5660,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -5802,7 +5802,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6018,7 +6018,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6161,7 +6161,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6182,7 +6182,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 2
   imageIcon: {fileID: 7008475010886409270}
   imageBg: {fileID: 3403210783322238920}
@@ -6274,7 +6274,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6417,7 +6417,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 975b535817bd44c8ca93ce39cd343e3a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d1ad14b1ccb49e45bcc01553dcf8e67, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6438,7 +6438,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e4a085d65a3994c0c9df91c8c2102412, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LayerLab.ArtMakerUnity.PartsSlot
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Dialog.Avatar.Components.PartsSlot
   uiCategory: 1
   imageIcon: {fileID: 3706804383371386583}
   imageBg: {fileID: 5479644289359635936}

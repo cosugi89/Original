@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Data.DTO;
 using Assets.Scripts.Features.Battle.Core;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData

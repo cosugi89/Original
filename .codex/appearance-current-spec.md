@@ -28,7 +28,7 @@
 - ツールソース:
   - `Assets/Scripts/Editor/EquipmentMasterCatalogBuilder.cs`
 - ツールは次を読み取る。
-  - `Assets/Layer Lab/2D Minimal-CharacterMaker/Prefabs/Character.prefab`
+  - `Assets/Resources/Prefabs_Sample/Character/Character.prefab`
 - ツールは次を生成または更新する。
   - `Assets/Resources/MasterData/EquipmentDatabase.asset`
   - `Assets/Resources/MasterData/Equipments/<PartsType>/<PartsType>_<index>.asset`
@@ -174,7 +174,7 @@
   - 色は別途設定する。
 - 敵の実行時適用は、loader 解決後も直接 index ベース。
 - 有効な index の正本は次にある `PartsManager` のカテゴリデータ。
-  - `Assets/Layer Lab/2D Minimal-CharacterMaker/Prefabs/Character.prefab`
+  - `Assets/Resources/Prefabs_Sample/Character/Character.prefab`
 - 次は `AppearanceData.visibility` に直接書かない。
   - `Arrow`
   - `HelmetHair`
@@ -263,5 +263,5 @@
 - `Assets/Scripts/Data/MasterData/EquipmentMasterData.cs`
 - `Assets/Scripts/Data/MasterData/StageBattleEnemyMasterData.cs`
 - `Assets/Resources/MasterData/Enemies/June.asset`
-- `Assets/Layer Lab/2D Minimal-CharacterMaker/Prefabs/Character.prefab`
-- `Assets/Layer Lab/2D Minimal-CharacterMaker/Scripts/Core/CharacterEnums.cs`
+- `Assets/Resources/Prefabs_Sample/Character/Character.prefab`
+- `Assets/Scripts/Core/Appearance/CharacterEnums.cs`

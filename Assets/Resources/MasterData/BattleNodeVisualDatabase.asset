@@ -20,42 +20,42 @@ MonoBehaviour:
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   entries:
   - nodeType: 0
-    icon: {fileID: 21300000, guid: 657eea1d8c875414688bfa59d5e084a9, type: 3}
+    icon: {fileID: 21300000, guid: a7f71f94eff276d42b13f0d0d2c8665d, type: 3}
     baseColor: {r: 0.18, g: 0.64, b: 0.73, a: 0.98}
     accentColor: {r: 0.72, g: 0.96, b: 1, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   - nodeType: 8
-    icon: {fileID: 21300000, guid: befa6382759a043fabd8d21e72ea968d, type: 3}
+    icon: {fileID: 21300000, guid: ee0f997b96a485946bddde988b725edb, type: 3}
     baseColor: {r: 0.14, g: 0.72, b: 0.38, a: 0.98}
     accentColor: {r: 0.73, g: 1, b: 0.82, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   - nodeType: 5
-    icon: {fileID: 21300000, guid: b0da9d017810d4a5d913d0e69991569a, type: 3}
+    icon: {fileID: 21300000, guid: ab5dfbc77185dcb4a9350b1413e2274f, type: 3}
     baseColor: {r: 0.84, g: 0.24, b: 0.22, a: 0.98}
     accentColor: {r: 1, g: 0.77, b: 0.72, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   - nodeType: 2
-    icon: {fileID: 21300000, guid: 83c2653bdd91d4856bd5be863a37f31c, type: 3}
+    icon: {fileID: 21300000, guid: 583628cdf818028429c002c506828999, type: 3}
     baseColor: {r: 0.25, g: 0.56, b: 0.96, a: 0.98}
     accentColor: {r: 0.77, g: 0.88, b: 1, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   - nodeType: 3
-    icon: {fileID: 21300000, guid: e7fbe55dd8cf1406eb170a2c0fa23e36, type: 3}
+    icon: {fileID: 21300000, guid: aaa7354a4e42bcc438a5e05fe36b4d92, type: 3}
     baseColor: {r: 0.93, g: 0.58, b: 0.15, a: 0.98}
     accentColor: {r: 1, g: 0.87, b: 0.68, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   - nodeType: 4
-    icon: {fileID: 21300000, guid: 02ff7e367978b4d2cbab5bc99a0ab811, type: 3}
+    icon: {fileID: 21300000, guid: cac45ed77c9d02c49a6e73a2a1ff5a51, type: 3}
     baseColor: {r: 0.82, g: 0.34, b: 0.53, a: 0.98}
     accentColor: {r: 1, g: 0.77, b: 0.89, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   - nodeType: 6
-    icon: {fileID: 21300000, guid: 33fe51662e4f04f44a643659e47c86d2, type: 3}
+    icon: {fileID: 21300000, guid: aecc96278225796469bb5553039d1a5e, type: 3}
     baseColor: {r: 0.25, g: 0.26, b: 0.3, a: 0.98}
     accentColor: {r: 1, g: 0.36, b: 0.36, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}
   - nodeType: 7
-    icon: {fileID: 21300000, guid: 86408f105dcae4578acd9727e85bb047, type: 3}
+    icon: {fileID: 21300000, guid: 8c98e283610d92e40a1a9266909de34b, type: 3}
     baseColor: {r: 0.2, g: 0.28, b: 0.48, a: 0.98}
     accentColor: {r: 0.47, g: 0.88, b: 1, a: 1}
     iconColor: {r: 1, g: 1, b: 1, a: 1}

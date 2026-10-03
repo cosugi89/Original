@@ -15,9 +15,9 @@ MonoBehaviour:
   stageId: 2001
   stageName: Event Stage 1
   description: Unlocked after clearing Main Stage 1.
-  backgroundImage: {fileID: 21300000, guid: 12657bef1d3fb4dc3ad788b2bd0e8012, type: 3}
-  previewImage: {fileID: 21300000, guid: 75cefb9514458408fa94b8e353165e81, type: 3}
-  dungeonLabelImage: {fileID: 21300000, guid: fd0b80a933f2c496a9f1b18bd0c98eec, type: 3}
+  backgroundImage: {fileID: 21300000, guid: 598a8082d36b4e743b4e94d0df96141f, type: 3}
+  previewImage: {fileID: 21300000, guid: 7b4d003ec7b34f74a9aa2e6455b510c0, type: 3}
+  dungeonLabelImage: {fileID: 21300000, guid: 3648c32c9c1e7c84fa57f0c9885bee13, type: 3}
   dungeonColorTheme: 1
   sortOrder: 2001
   stageKind: 1

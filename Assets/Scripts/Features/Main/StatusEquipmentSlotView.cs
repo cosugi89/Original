@@ -1,7 +1,7 @@
 using System;
 using Assets.Scripts.Core.Const;
 using Assets.Scripts.UI.Dialog;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

@@ -1,6 +1,6 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-09-28
+- 最終更新: 2026-10-03
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Character / Progress / Missions / Armoryの方針を定義する。
 - 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
@@ -31,7 +31,7 @@
 
 初期表示は `Home` とする。
 
-Missionカードを選択すると `Dialog-MissionDetail` を開く。DialogはMissionテーマ色、敵画像、初回クリア報酬を表示し、`Enter` 押下でそのMissionを選択して `BattleScene` へ遷移する。Main／Event Missionとも入場鍵や鍵表示は持たない。Itemマスタの `IsHiddenUntilMissionClear` が有効な初回報酬は、未クリア時には未知アイコンで表示する。
+Missionカードを選択すると `Dialog-MissionDetail` を開く。DialogはMissionテーマ色、敵画像、初回クリア報酬を表示し、開始ボタンまたは `Enter` / テンキー `Enter` 押下でそのMissionを選択して `BattleScene` へ遷移する。開始操作は連続入力されても一度だけ受け付ける。Main／Event Missionとも入場鍵や鍵表示は持たない。Itemマスタの `IsHiddenUntilMissionClear` が有効な初回報酬は、未クリア時には未知アイコンで表示する。
 
 `StageKind.Debug` のステージは通常は一覧に表示しない。DebugSheet の `Stage` ページは `Visibility` と `Progress` に分かれる。`Visibility` では Debug ステージの表示をトグルで切り替える。`Progress` では StageId を入力して Clear を押すと、同じ千番台かつ入力値以下の全ステージをクリア済みにする。表示または進捗を変更すると、開いている Missions 一覧も再生成される。Debug 表示フラグはセッション限定で保存しない。進捗の上書きは通常のセーブ対象であり、クリア回数などの記録値は変更しない。DebugSheet の `Equipment` ページでは全 `EquipmentData` を所持Switchとして表示し、個別に所持状態を切り替えられ、`Reset Owned Equipment` は現在セーブの全所持装備を削除する。`IsDefaultOwned` の装備は次回ゲームデータ初期化時に再付与される。
 
@@ -235,7 +235,7 @@ Dialog 表示中は、Character タブ本体側のプレビューを一時的に
 
 Dialog 表示は `DialogService` / `DialogHost` / `DialogBase` を使う。`DialogHost` は必要になった時点で最前面用の `DialogCanvas` を動的生成し、その中に `Backdrop` と `DialogParent` を置く。`CharacterScreen` などの呼び出し側は prefab 参照や parent 指定を持たず、`DialogService.OpenAsync<...>()` でダイアログを開く。
 黒背景は `DialogHost` が管理し、開いているダイアログがひとつ以上背景表示を要求している場合に 1 枚だけ表示する。背景クリック可否や背景クリックで閉じるかどうかは `DialogBase.SetBackdrop(...)`、`SetBackdropVisible(...)`、`SetBackdropInteractable(...)`、`SetBackdropCloseEnabled(...)` でダイアログ単位に指定する。
-見た目は `Assets/Layer Lab/GUI Pro-MinimalGame/Theme_Dark/Prefabs/Prefabs~DemoScenes/Settings.prefab` の中央 Popup と暗い背景を参考にしつつ、実体 Prefab / Script は `Layer Lab` 配下には作らない。
+見た目は `Assets/Resources/Prefabs_Sample/Demo/Scenes/Settings.prefab` の中央 Popup と暗い背景を参考にしつつ、実体 Prefab / Script はサンプル資産を直接使わず、プロジェクト側へ作成する。
 ダイアログ prefab は Addressables で解決する。装備詳細ダイアログは `Assets/Resources/Prefabs/Dialog/Dialog-EquipmentDetail.prefab` を正本 Prefab とし、Addressables address は `Dialog/EquipmentDetail`、`EquipmentDetailDialog` には `[DialogAddress("Dialog/EquipmentDetail")]` を付与する。Item購入確認は `Assets/Resources/Prefabs/Dialog/Dialog-Common-ConfilmWithIcon.prefab` を正本 Prefab とし、Addressables address は `Dialog/Common/ConfilmWithIcon`、`DialogCommonConfirmWithIcon` には同じ `[DialogAddress]` を付与する。Skill 設定ダイアログは `Assets/Resources/Prefabs/Dialog-SkillLoadout.prefab` を正本 Prefab とし、Addressables address は `Dialog/SkillLoadout`、`SkillLoadoutDialog` には `[DialogAddress("Dialog/SkillLoadout")]` を付与する。見た目変更ダイアログは `Assets/Resources/Prefabs/Dialog-AvatarController 1.prefab` を正本 Prefab とし、Addressables address は `Dialog/AvatarController`、`AvatarDialog` には `[DialogAddress("Dialog/AvatarController")]` を付与する。Prefab 内の必須 UI 参照が未設定の場合はセットアップ不備として使用箇所で失敗させ、個別の null ガードによる回避、ダイアログ本体 UI の実行時動的生成、`Resources.Load<T>()` による代替探索は行わない。
 
 `Dialog-EquipmentDetail` は `Parts-EquipmentItem` を装備表示に使用し、装備種別と `CategoryTags` をタグとして複数表示する。説明文は `EquipmentData.Description` を本文へ表示する。レアリティは `EquipmentData.Rarity` をラベルへ反映し、`Label_Tapered_01_Plum` の `Bg` / `InnerBorder` / `Deco` には対応する `UIColors.IColorSet` の `Background` / `InnerColor1` / `Glow` を適用する。スキル、戦闘補正、タグはそれぞれPrefab内の単一テンプレートを複製して表示し、`Scroll View/Viewport/Content` の `VerticalLayoutGroup` と `ContentSizeFitter` で表示件数に応じた高さにする。`Button_Close` は `GameButton` としてダイアログをキャンセルして閉じる。`Button_Equip` を含む `ButtonArea` はSlotEquipment起点だけ非表示にし、装備一覧起点では表示する。Armoryから開いた購入モードでは同じ `ButtonArea` を表示し、`Button_Equip` のラベルをGold価格へ切り替えて購入確定に使う。

@@ -52,6 +52,8 @@ namespace Assets.Scripts.Features.Main.Dungeon
         
         private readonly List<PartsMissionRewardItem> _rewardItems = new();
         private StageMasterData _stage;
+        private GameButton _enterGameButton;
+        private bool _isStartingBattle;
 
         public void Setup(RequestDialogMissionDetail request, DialogContext context)
         {
@@ -61,9 +63,24 @@ namespace Assets.Scripts.Features.Main.Dungeon
             enemyImage.enabled = _stage.PreviewImage != null;
             ApplyColors(_stage.DungeonColorTheme);
             BuildRewards();
-            enterButton.GetComponent<GameButton>().SetAction(OnClickEnter);
+            _isStartingBattle = false;
+            _enterGameButton = enterButton.GetComponent<GameButton>();
+            _enterGameButton.SetAction(OnClickEnter);
             closeButton.SetAction(OnClickClose);
             Refresh();
+        }
+
+        private void Update()
+        {
+            if (_isStartingBattle || !_enterGameButton.interactable)
+            {
+                return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                OnClickEnter();
+            }
         }
         
         public void Refresh()
@@ -77,6 +94,12 @@ namespace Assets.Scripts.Features.Main.Dungeon
 
         private void OnClickEnter()
         {
+            if (_isStartingBattle)
+            {
+                return;
+            }
+
+            _isStartingBattle = true;
             Close(ResultDialogMissionDetail.StartedBattle);
             BattleSceneRequest.SelectedStageId = _stage.StageId;
             SceneManager.LoadScene(SceneNames.Battle);

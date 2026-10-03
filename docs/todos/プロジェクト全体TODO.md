@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-09-28
+- 最終更新: 2026-10-03
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と、下記「非戦闘側の着手順」に沿った Character / Progress / Missions / Armory改修タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -20,7 +20,8 @@
 ### 超高
 
 - [ ] **最終ステータス共通算出**: Character表示とBattle開始時で同じ `HP / Attack / Defense` を導出する窓口を作る。基礎値は HP 450 / Attack 100 / Defense 0 とし、装備・Traits・Insightsの加算後、タグごとの一致装備加算分へ2 / 3 / 4部位一致時の25 / 50 / 75%ボーナスを加える。成立タグはすべて適用し、戦闘中の一時補正と現在HPは含めない。恒久Defenseは999へclampし、被ダメージを `元ダメージ × 333 / (333 + Defense)` へ軽減する。GuardGainは同一ターンだけDefenseを加算し、加算後のDefenseには上限を設けない。軽減後のHPダメージは端数を切り上げ、最低1とする。人間ボスにも同じ式を適用するが、ボス側は固有の基礎値だけから導出する。
-- [ ] **Mission進行の基本ループ**: 前提Missionクリアによる解放、未クリアMissionだけの表示、カード選択からのBattle開始、クリア後の一覧除去、Point / Gold報酬受領を接続する。
+- [x] **Mission詳細／挑戦確定Dialog**: Missionテーマ色、敵画像、初回クリア報酬、未クリア時の未知Item表示を行い、開始ボタンまたは `Enter` でBattleを開始する。開始操作の連続入力は一度だけ受け付ける。
+- [ ] **Mission進行の基本ループ**: 前提Missionクリアによる解放、未クリアMissionだけの表示、クリア後の一覧除去、Point / Gold報酬受領を接続する。
 - [ ] **ボス結果の保存基盤**: 人間ボスごとの通常撃破／救済、Insight解放、安全地帯数、Angel到達状態を保存する。Resurgence開始時にリセットする対象と、装備・Skill・Trait・Armory商品の維持対象を区別する。
 
 ### 高

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using Assets.Scripts.Core;
 using Assets.Scripts.Data.MasterData;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +13,7 @@ namespace Assets.Scripts.Editor
 {
     public static class EquipmentMasterDatabaseBuilder
     {
-        private const string CharacterPrefabPath = "Assets/Layer Lab/2D Minimal-CharacterMaker/Prefabs/Character.prefab";
+        private const string CharacterPrefabPath = "Assets/Resources/Prefabs_Sample/Character/Character.prefab";
         private const string DatabaseAssetPath = "Assets/Resources/MasterData/EquipmentDatabase.asset";
         private const string EquipmentsRootFolder = "Assets/Resources/MasterData/Equipments";
 

@@ -1,7 +1,7 @@
 using System;
 using Assets.Scripts.Core.Const;
 using Assets.Scripts.Core.Interfaces;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;

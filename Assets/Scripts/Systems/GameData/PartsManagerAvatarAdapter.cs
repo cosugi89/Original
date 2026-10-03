@@ -4,7 +4,7 @@ using System.Linq;
 using Assets.Scripts.Core;
 using Assets.Scripts.Data.MasterData;
 using Assets.Scripts.Systems.Save.Models;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 using UnityEngine;
 
 namespace Assets.Scripts.Systems.GameData

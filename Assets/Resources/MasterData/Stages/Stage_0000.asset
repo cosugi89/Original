@@ -15,9 +15,9 @@ MonoBehaviour:
   stageId: 0
   stageName: the first
   description: this is the first stage.
-  backgroundImage: {fileID: 21300000, guid: 12657bef1d3fb4dc3ad788b2bd0e8012, type: 3}
+  backgroundImage: {fileID: 21300000, guid: 598a8082d36b4e743b4e94d0df96141f, type: 3}
   previewImage: {fileID: 21300000, guid: 5546e2c9d34934340bd80bb4e408d1a2, type: 3}
-  dungeonLabelImage: {fileID: 21300000, guid: fd0b80a933f2c496a9f1b18bd0c98eec, type: 3}
+  dungeonLabelImage: {fileID: 21300000, guid: 3648c32c9c1e7c84fa57f0c9885bee13, type: 3}
   dungeonColorTheme: 1
   sortOrder: 0
   isInitiallyUnlocked: 1

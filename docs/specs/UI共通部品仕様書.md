@@ -4,6 +4,17 @@
 - 文書状態: 運用中
 - 位置づけ: プロジェクト内で共通利用する UI 部品の責務と運用方針を定義する。
 
+## 0. サンプル Prefab 資産の管理
+
+外部アセット由来の参考用 Prefab は `Assets/Resources/Prefabs_Sample` に集約する。プロジェクト本体で使用する Prefab は `Assets/Resources/Prefabs` を正とし、サンプル資産をそのまま実装へ使わない。
+
+- `Base`: Button、Frame、Label などの土台 Prefab。
+- `UI`: Button、Control、HUD、Popup など画面部品別の Prefab。
+- `Demo`: レイアウト例と画面例。
+- `Character`: Character 作成用の参考 Prefab。
+
+重複したサンプル Prefab は、内容差分の有無にかかわらず、Scene / Prefab / Addressables から参照されていない複製だけを削除する。移動時は `.meta` を維持して GUID を変えない。
+
 ## 1. GameButton
 
 `GameButton` は、プロジェクト内で汎用ボタンを作るときの標準コンポーネントである。
@@ -13,8 +24,8 @@
 - 基本 Prefab は `Assets/Resources/Prefabs/GameButton.prefab` に置く。
 - Prefab は `CanvasGroup`、`Animator`、`AudioSource` を持ち、`Assets/Resources/Animations/Button/Button.controller` を参照する。
 - `Button.controller` は Unity 標準の Button Animation Transition 用 trigger (`Normal` / `Highlighted` / `Pressed` / `Selected` / `Disabled`) を使う。
-- Button 系 Sprite は `Assets/Assets/Sprite_Common/Button` 配下の project-owned asset を参照する。
-- Badge の既定 Sprite は `Assets/Assets/Sprite_Dark/HUD/Alert_Dot_01_Red.png` を参照する。
+- Button 系 Sprite は `Assets/Resources/Sprite/Sprite_Common/Button` 配下の project-owned asset を参照する。
+- Badge の既定 Sprite は `Assets/Resources/Sprite/Sprite_Dark/HUD/Alert_Dot_01_Red.png` を参照する。
 - `GameButton.prefab` は Layer Lab の Prefab / Sprite へ依存しない。Layer Lab は見た目の参考元としてのみ扱う。
 - 見た目は `ButtonType`、`FrameType`、`ColorType`、`SizeType`、`ContentType` の enum で切り替える。`ButtonType` は通常の `Normal` と、閉じる操作用の `Close` を持つ。
 - `FrameType` は `Button01`、`Button02`、`Button03` を持つ。

@@ -5,7 +5,7 @@ using System.Linq;
 using Assets.Scripts.Core;
 using UnityEditor;
 using UnityEngine;
-using LayerLab.ArtMakerUnity;
+using Assets.Scripts.Core.Appearance;
 
 namespace Assets.Scripts.Editor
 {
@@ -16,7 +16,7 @@ namespace Assets.Scripts.Editor
     [CustomEditor(typeof(AppearanceController))]
     public class AppearanceControllerEditor : UnityEditor.Editor
     {
-        private const string DEFAULT_SPRITE_FOLDER = "Assets/Layer Lab/2D Art Maker Unity/AMMinimalGame Character/Sprites/Character";
+        private const string DEFAULT_SPRITE_FOLDER = "Assets/Resources/Sprite/2D Minimal-CharacterMaker/Sprites/Character";
         private const string PREFS_KEY_SPRITE_FOLDER = "AppearanceControllerEditor_SpriteFolderPath";
 
         private SerializedProperty categoriesProp;
