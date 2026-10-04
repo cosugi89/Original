@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-10-03
+- 最終更新: 2026-10-04
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と、下記「非戦闘側の着手順」に沿った Character / Progress / Missions / Armory改修タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -35,7 +35,7 @@
 
 ### 中
 
-- [ ] **HomeのAngel**: HomeにAngelを常駐させ、タップで進行状況に応じた短い台詞を表示する。初回救済後は一時不在にし、次の通常撃破後に嘘の台詞とともに戻す。Resurgenceでは台詞差分・赤字演出を加える。
+- [ ] **HomeのAngelの進行連動**: Homeの通常形表示とIdleは実装済み。タップで進行状況に応じた短い台詞を表示し、初回救済後は一時不在にする。次の通常撃破後に嘘の台詞とともに戻し、Resurgenceでは台詞差分・赤字演出を加える。
 - [ ] **Event Mission**: 前提Missionクリアで解放される任意の一回限りMissionとして、報酬、世界の補足、追加Battleパターンを実装する。本編の真相、救済条件、安全地帯に必須の情報は置かない。
 
 ### 低
@@ -127,12 +127,9 @@
 - [x] 勝利時に `RecordStageClear()` を呼ぶ
 - [x] 解放条件を `StageMasterData.RequiredClearedStageIds` に持ち、クリア進捗から都度判定する
 - [x] バトル進捗保存用のモデルは存在する
-- [x] `RecordStageClear()` は `BestScore`、`BestRank`、`BestClearTimeSeconds` を更新できる
 - [x] Mission一覧の基盤を `StageMasterDatabase` と進捗へ接続して動的生成する
 - [ ] ステージ選択画面で未解放ステージの選択制御を実装する
 - [ ] 戦闘失敗時の再挑戦導線を実装する
-- [ ] スコア、ランク、クリアタイムの算出ルールを定義する
-- [ ] 勝利時に実際の `score`、`rank`、`clearTimeSeconds` を `RecordStageClear()` へ渡す
 - [ ] 戦闘終了時に `UserDataJsonStore.SaveSession()` を呼ぶ導線を整える
 
 ## 5. P1: MainScene / Character タブ
@@ -140,6 +137,8 @@
 - [x] Character タブに現在の装備枠一覧を表示する
 - [x] Progress タブ向けに `AbilityNodeMasterData` / `AbilityTreeMasterData`、Inspector検証、Tree Builder Windowを追加する。Node Masterは再利用可能とし、Tree配置ごとの `TreeNodeId`、Rank、Tree接続、排他、循環依存を検証できるようにする
 - [ ] Progress内Tabを `Traits` / `Insights` / Resurgence限定の `Remnant` へ再構成する。旧 `Artifact` / `Skill` Tabを廃止し、`Remnant` の表示可否を周回状態へ接続する。
+- [ ] HomeのAchievementsを実装する。ローカル解除状態、一覧・解除通知、Homeトロフィー導線を追加し、Google Play Games Servicesへの任意連携をゲーム内実績IDから行えるようにする。
+- [ ] Google Play Games plugin for Unityを導入し、Play Consoleのゲームサービス・実績ID・Android認証設定を接続する。未認証またはオフラインでも本編を止めず、ローカル解除済み実績を認証成功後に同期できるようにする。
 - [x] Progress タブのTrait Tree基盤を実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続まで完了。
 - [x] `PartsTraitTreeRow` / `PartsTraitLine` のPrefabを作成して`TraitTabScreen`のRow Prefab / Scroll Contentへ配線する。各Line Imageには `UI/Trait Line Reveal` Materialと曲線の進行度を持つReveal Mapを設定する。
 - [x] Trait Itemクリックで詳細Dialogを開き、購入可能Nodeだけ購入ボタンを表示して、結果をTree表示へ即時反映する。
@@ -257,7 +256,6 @@
 - [ ] 赤い目、敵の危険、敵 HP / 敵Skill由来の状態、被弾、敵スキルを赤系で統一し、プレイヤー側・確定済みパスとの配色ルールを UI / VFX へ反映する。
 - [ ] 人間ボスのステージ前後フレーバーと、赤い目から回復する勝利演出を設計・実装する。
 - [ ] ラスボス用の天使形態と赤・黒を基調にした本来の姿、最終ステージ、クリア演出を制作・実装する。
-- [ ] クリア済み Main Stage を通常一覧から外す場合の、再挑戦・記録閲覧・報酬確認の導線を設計する。
 
 ## 10. まず着手する順番
 

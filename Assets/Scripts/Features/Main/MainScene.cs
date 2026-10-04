@@ -25,6 +25,9 @@ public class MainScene : MonoBehaviour
     [SerializeField] private Transform playerRoot;
     [SerializeField] private AppearanceController sceneCharacterPreview;
 
+    [Header("Home Angel")]
+    [SerializeField] private GameObject angelHome;
+
     [Header("Screens")]
     [SerializeField] private HomeScreen homeScreen;
     [FormerlySerializedAs("statusScreen")]
@@ -310,7 +313,8 @@ public class MainScene : MonoBehaviour
 
     private void SetPreviewVisibility(Assets.Scripts.Features.Main.Screen screen)
     {
-        SetActiveIfNeeded(_homeCharacterRoot, screen == homeScreen);
+        SetActiveIfNeeded(_homeCharacterRoot, false);
+        SetActiveIfNeeded(angelHome, screen == homeScreen);
         SetActiveIfNeeded(_characterPreviewRoot, screen == characterScreen);
     }
 

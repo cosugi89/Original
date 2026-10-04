@@ -1,6 +1,6 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-10-03
+- 最終更新: 2026-10-04
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Character / Progress / Missions / Armoryの方針を定義する。
 - 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
@@ -42,19 +42,19 @@ Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleS
 
 `MainScene` は、`GameInitializer` によるゲーム全体の初期化が完了した後、シーン開始時に以下を行う。
 
-- `playerRoot` 配下に既存の `AppearanceController` があればそれを Home 用プレビューとして使い、無ければ `playerPrefab` から生成する。
-- Home 用プレビューの `AppearanceController.Init()` を呼び、アバター表示の土台を作る。
-- `AppearanceAdapter` で保存済みのアバター状態を Home 用プレビューへ反映する。
+- `playerRoot` 配下に既存の `AppearanceController` があればそのプレビュー用に使い、無ければ `playerPrefab` から生成する。
+- プレビューの `AppearanceController.Init()` を呼び、保存済みのアバター状態を反映する。
 - シーン内に非表示状態で置かれている `GameObject/Character` を Character 用プレビューとして扱い、保存済みアバター状態の反映先にする。
-- Home 用プレビューと Character 用プレビューが同じ Root を共有している場合は、Character 用プレビューを `playerPrefab` から別 Root に生成して表示切り替えの衝突を避ける。
+- 表示用の `AngelHome` Prefab instance を `MainScene` の `angelHome` Inspector参照へ明示的に設定し、`Avatar Preview` layer で PreviewCamera に描画する。
+- プレビューと Character 用プレビューが同じ Root を共有している場合は、Character 用プレビューを `playerPrefab` から別 Root に生成して表示切り替えの衝突を避ける。
 - `HomeScreen.Init()` を呼び、戦闘開始ボタンを初期化する。
 - `CharacterScreen.Init(...)` を呼び、Character タブの編集 UI を Character 用プレビューと Home 用プレビューへ接続する。
 
 `MainScene` のタブ切り替え処理は、画面ごとのプレイヤー表示も切り替える。
 
-- `Home` 選択時は Home 用プレビューを表示し、Character 用プレビューを非表示にする。
-- `Character` 選択時は Character 用プレビューを表示し、Home 用プレビューを非表示にする。
-- その他タブでは、現時点では両プレビューを非表示にする。
+- `Home` 選択時は `AngelHome` を表示し、Character プレビューを非表示にする。
+- `Character` 選択時は Character 用プレビューを表示し、`AngelHome` を非表示にする。
+- その他タブでは、現時点では `AngelHome` と Character プレビューを非表示にする。
 
 ### 3.1 起動時のデータ初期化
 
@@ -78,7 +78,7 @@ Home と Character の表示サイズ、位置、向きは、それぞれのシ�
 - 起動時は `Home` を初期選択として扱う。
 - タブ押下時は、選択画面だけを active にし、他の画面を inactive にする。
 - 選択TabだけをFocused表示にし、ほかのTabはNormal表示にする。
-- HomeとCharacterの選択時は、対応するアバタープレビューだけを表示する。
+- Home選択時は `AngelHome`、Character選択時は Character 用アバタープレビューだけを表示する。
 
 タブの `Button.onClick` へ個別に永続イベントを設定するのではなく、`MainScene` が起動時に動的 listener を登録する。
 
@@ -102,10 +102,22 @@ Home と Character の表示サイズ、位置、向きは、それぞれのシ�
 - `useDebugBattleStageId` が true の場合は `debugBattleStageId` を使う。
 - false の場合は `ProgressManager.GetRecommendedStageId()` から推奨ステージを取得する。
 - 遷移前に `BattleSceneRequest.SelectedStageId` を設定する。
+- Home 用の `Angel` 表示は `Assets/Resources/Prefabs/Angel/AngelHome.prefab` を使用する。Root の `Animator` には `Assets/Resources/Animations/Angel/AngelHome.controller` を明示的に設定し、既定状態 `Idle_Normal` は `Assets/Resources/Animations/Angel/Idle_Normal.anim` を3秒でループする。
+- `AngelHome` は通常形 `Normal` と、将来の開示演出用に初期状態では非表示の `Revealed` を同じローカル位置・スケールで持つ。開示演出では両方を重ね、明度と alpha を逆方向に変化させる。Sprite の実行時探索は行わず、各 `SpriteRenderer` の Sprite は Prefab 上で明示的に設定する。
+- `Angel-Front-Normal.png` と `Angel-Front-Revealed.png` の Sprite Pixels Per Unit はともに `1000` とする。`AngelHome` とその `Normal` / `Revealed` の Scale は `(1, 1, 1)` を保ち、表示サイズの補正を Transform の定数倍率へ逃がさない。`Idle_Normal` の上下移動量は `0.006` を基準とする。
+- Angel の2画像は `Compression: None`、`Filter Mode: Bilinear`、mipmap 無効で取り込む。`PreviewCamera` の `RT_AvatarPreview` は `1024 × 1024` とし、Home での表示解像度を確保する。
 
 Mission の初回クリア報酬は各 `StageMasterData.ClearRewards` で定義する。報酬は `Item`（`ItemStacks` へ数量を加算）または `Equipment`（所持装備として付与）とし、同じMissionで二重に付与しない。個別の報酬内容は各 Stage マスターで設定する。
 
 Armory は `ArmoryProductDatabase` の商品一覧を正本とする。各 `ArmoryProductMasterData` は販売対象として `EquipmentMasterData` または `ItemMasterData` を直接参照し、数量、Gold価格、解放に必要なクリア済みMission、表示順、購入上限を持つ。Equipment商品に登録できるのは、Helmet、Chest、右手、左手の戦闘4部位だけとし、Hair／Eye／Beard／Skinなどの見た目専用パーツは登録不可とする。購入回数は `UserData.Armory` に保存し、Resurgence後も維持する。一覧は Item と Equipment で親・Prefab・View を分ける。Item は並び順を維持し、名称・付与数・必要に応じて残り購入回数を表示する。Equipment は購入可能品を先、売切・所持済み品を末尾に並べ、名称と短いタグ文を表示する。未解放品は非表示、売切品は Disabled とする。購入時は、Item は `Dialog-Common-ConfilmWithIcon`、Equipment は `Dialog-EquipmentDetail` を購入モードで開く。どちらもGold不足、売切、または既に所持している装備は確定操作をDisabledにする。確定時にGold消費、Item加算または装備付与、購入回数保存を同一処理で行う。
+
+### 5.1 Achievements
+
+Homeのトロフィー導線はAchievements画面を開く。Achievementsは、進行、救済を含む選択、収集・成長、Resurgence／結末の到達を対象にするゲーム内実績である。スコア、ランク、クリアタイムは解除条件に使わない。
+
+- 解除状態はローカルセーブを正本とし、通信なしでもゲーム内の一覧と解除通知を利用できる。
+- 未解除の隠し実績は、名称と条件を伏せて表示できる。
+- Google Play Games Servicesへの実績送信は、ゲーム内実績IDを起点とする任意のプラットフォーム連携として後から追加する。未認証、オフライン、または連携未対応でもゲーム内の解除状態は変えない。
 
 ## 6. Character タブ
 
