@@ -24,6 +24,9 @@ namespace Assets.Scripts.Systems.Save.Models
 
         [Description("Armoryの商品購入状態。")]
         public ArmoryProgressData Armory { get; set; } = new();
+
+        [Description("周回ごとの人間ボス結果、Insight、Resurgence 状態。")]
+        public CycleProgressData Cycle { get; set; } = new();
     }
 
     public class UserMetaData

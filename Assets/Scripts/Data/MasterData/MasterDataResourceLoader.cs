@@ -15,6 +15,7 @@ namespace Assets.Scripts.Data.MasterData
         private const string AttributeMasterDatabasePath = "MasterData/AttributeDatabase";
         private const string StageMasterDatabasePath = "MasterData/StageDatabase";
         private const string ArmoryProductDatabasePath = "MasterData/ArmoryProductDatabase";
+        private const string BossInsightDatabasePath = "MasterData/BossInsightDatabase";
 
         private static bool _loggedMissingEquipmentMasterDatabase;
         private static bool _loggedMissingBattleSkillMasterDatabase;
@@ -37,6 +38,9 @@ namespace Assets.Scripts.Data.MasterData
 
         public static ArmoryProductDatabase LoadArmoryProductDatabase() =>
             Resources.Load<ArmoryProductDatabase>(ArmoryProductDatabasePath);
+
+        public static BossInsightDatabase LoadBossInsightDatabase() =>
+            Resources.Load<BossInsightDatabase>(BossInsightDatabasePath);
 
         /// <summary>
         /// バトルスキルマスタを読み込み、DTO リストに変換して返す。

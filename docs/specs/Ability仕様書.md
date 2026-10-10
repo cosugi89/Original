@@ -1,7 +1,7 @@
 # Ability 仕様書
 
-- 最終更新: 2026-09-25
-- 文書状態: Trait Treeの進捗保存・購入・UI接続まで実装済み。Point報酬とBattle/Status反映は未実装。
+- 最終更新: 2026-10-11
+- 文書状態: Trait Treeの進捗保存・購入・UI接続まで実装済み。Insights / Remnant はボス定義・周回結果保存、一覧表示、MainSceneのタブ切替、救済再挑戦のBattle遷移まで実装済み。ボス結果接続、Battle/Status反映は未実装。
 - 位置づけ: MainScene の Progress タブにおけるTraits、Insights、Point、進捗保存の設計正本。
 
 ## 1. 目的とスコープ
@@ -55,6 +55,17 @@ Node効果は保存せず、起動時とNode購入時に `AbilityDerivedData` �
 初期のTrait効果は、`HP`、`Attack`、`Defense` の恒久加算を中心にする。`Insights`はボス固有の一回限りのギミックではなく、複数ボスで再利用できる共通効果として実装する。HP、Attack、Defenseの加算に加え、Skill charge促進のような特殊ルールを追加できる。具体的な効果一覧と数値は個別ボス設計時に決める。
 
 最終 `HP / Attack / Defense` は、基礎値、装備加算、Traits加算、Insights加算、タグ一致ボーナスで導出する。タグ一致ボーナスはタグ仕様書を正とする。
+
+## 6.1 Insights と Remnant の進捗
+
+- 人間ボスごとのProgress表示定義は `BossInsightMasterData` と `BossInsightDatabase` で管理する。定義には対応 `StageId`、ボス名、通常撃破時の赤目を含むPortrait Sprite、救済済み時のPortrait Sprite、Insight名・説明・Icon・効果、Remnant表示用の台詞を持たせる。カード側は状態に応じてMasterDataのPortrait Spriteをそのまま切り替え、目位置の動的計算や個別の表示Prefabは使わない。
+- 当該周回の保存は `UserData.Cycle` を正とする。`CycleProgressData` は `IsResurgence`、`HasReachedHigherBeing`、人間ボスごとの `BossResolution` とInsight既読状態を持つ。
+- `BossResolution` は `Unresolved`、`Defeated`、`Redeemed` のいずれかとする。通常撃破と救済はいずれも同じInsightを解放する。解放済みかどうかは結果から導出し、個別の解放済みフラグは保存しない。
+- Insightの `NEW` 表示は、解放済みかつ未閲覧の結果から導出する。Insights一覧を開いた時点で解放済みInsightを既読にする。
+- Insightsには解放済みInsightだけを表示し、未遭遇ボスは表示しない。Remnantにも通常撃破または救済済みのボスだけを表示し、未遭遇ボスはネタバレ防止のため表示しない。Remnantで救済再挑戦できるのは、Resurgence中かつ上位存在へ到達済みであり、対象ボスが `Defeated` かつ未救済の場合だけとする。
+- Insightsのカードは `PartsInsightsCard`、Remnantのカードは `PartsRemnantCard` として分ける。両者はPortraitを左、テキストを中央、補助表示を右に置く見た目を共有するが、Insightsは能力閲覧、Remnantは結末表示と救済再挑戦という異なる責務を持つため、1つのカードScriptへ状態を集約しない。RemnantカードにSource表示は置かず、通常クリア用と救済クリア用の表示はそれぞれInspectorで割り当てる `RectTransform` を切り替える。
+- `InsightsTabScreen` と `RemnantTabScreen` はそれぞれ対応する専用カードPrefabだけをScroll Contentへ生成する。Insightsを開いた後、表示した解放済みInsightを既読にする。Remnantの救済再挑戦ボタンは対象の `StageId` を `BattleSceneRequest` へ設定してBattleSceneへ遷移する。
+- Resurgence開始時は当該周回のボス結果、Insight既読状態、上位存在到達状態をリセットする。Trait進捗は保持する。
 
 `Defense` は受けるHPダメージを軽減する恒久値であり、最終値の上限は `999` とする。ダメージ軽減率は `Defense / (333 + Defense)`、実ダメージは `元ダメージ × 333 / (333 + Defense)` を基準に導出する。Defense `999` 時の軽減率は約75%となる。`GuardGain` は同一ターンだけDefenseを加算するSkill効果であり、効果中の合計Defenseには上限を設けない。軽減後のダメージは端数を切り上げ、最低1のHPダメージとする。人間ボスにも同じ軽減式を適用するが、ボス側のDefenseはボス固有の基礎値だけから導出し、装備、Trait、Insight、タグ一致ボーナスは含めない。
 

@@ -91,6 +91,7 @@ namespace Assets.Scripts.Systems.Save
             userData.BattleProgress ??= new BattleProgressData();
             userData.Ability ??= new AbilityProgressData();
             userData.Armory ??= new ArmoryProgressData();
+            userData.Cycle ??= new CycleProgressData();
 
             userData.Profile.AvatarAppearance.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
             userData.Profile.AvatarAppearance.Colors ??= new System.Collections.Generic.List<AvatarColorData>();
@@ -99,6 +100,7 @@ namespace Assets.Scripts.Systems.Save
             userData.BattleProgress.Stages ??= new System.Collections.Generic.List<StageProgressData>();
             userData.Ability.NodeLevels ??= new System.Collections.Generic.List<AbilityTreeNodeLevelData>();
             userData.Armory.Purchases ??= new System.Collections.Generic.List<ArmoryProductPurchaseData>();
+            userData.Cycle.BossResults ??= new System.Collections.Generic.List<BossCycleResultData>();
 
             if (string.IsNullOrWhiteSpace(userData.Meta.CreatedAtUtc))
                 userData.Meta.CreatedAtUtc = System.DateTime.UtcNow.ToString("O");

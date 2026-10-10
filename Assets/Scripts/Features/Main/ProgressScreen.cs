@@ -5,66 +5,70 @@ using UnityEngine.Events;
 namespace Assets.Scripts.Features.Main
 {
     /// <summary>
-    /// Progress画面内の既存タブを切り替える。
+    /// Progress画面内のTraits、Insights、Remnantタブを切り替える。
     /// </summary>
     public sealed class ProgressScreen : Screen
     {
         [Header("Tab Items")]
-        [SerializeField] private PartsTabItem artifactTab;
-        [SerializeField] private PartsTabItem skillTab;
-        [SerializeField] private PartsTabItem traitTab;
-        [SerializeField] private GameObject artifactScreen;
-        [SerializeField] private GameObject skillScreen;
+        [SerializeField] private PartsTabItem traitsTab;
+        [SerializeField] private PartsTabItem insightsTab;
+        [SerializeField] private PartsTabItem remnantTab;
         [SerializeField] private TraitTabScreen traitTabScreen;
+        [SerializeField] private InsightsTabScreen insightsTabScreen;
+        [SerializeField] private RemnantTabScreen remnantTabScreen;
 
-        private UnityAction _artifactHandler;
-        private UnityAction _skillHandler;
         private UnityAction _traitHandler;
+        private UnityAction _insightsHandler;
+        private UnityAction _remnantHandler;
 
         private void Awake()
         {
-            _artifactHandler = ShowArtifact;
-            _skillHandler = ShowSkill;
-            _traitHandler = ShowTrait;
+            _traitHandler = ShowTraits;
+            _insightsHandler = ShowInsights;
+            _remnantHandler = ShowRemnant;
 
-            artifactTab.Button.onClick.AddListener(_artifactHandler);
-            skillTab.Button.onClick.AddListener(_skillHandler);
-            traitTab.Button.onClick.AddListener(_traitHandler);
+            traitsTab.Button.onClick.AddListener(_traitHandler);
+            insightsTab.Button.onClick.AddListener(_insightsHandler);
+            remnantTab.Button.onClick.AddListener(_remnantHandler);
+        }
 
-            ShowTrait();
+        private void OnEnable()
+        {
+            remnantTab.gameObject.SetActive(Assets.Scripts.Systems.Save.UserDataManager.EnsureInitialized().CycleProgress.IsResurgence);
+            ShowTraits();
         }
 
         private void OnDestroy()
         {
-            artifactTab.Button.onClick.RemoveListener(_artifactHandler);
-            skillTab.Button.onClick.RemoveListener(_skillHandler);
-            traitTab.Button.onClick.RemoveListener(_traitHandler);
+            traitsTab.Button.onClick.RemoveListener(_traitHandler);
+            insightsTab.Button.onClick.RemoveListener(_insightsHandler);
+            remnantTab.Button.onClick.RemoveListener(_remnantHandler);
         }
 
-        private void ShowArtifact()
+        private void ShowInsights()
         {
-            Select(artifactTab, artifactScreen);
+            Select(insightsTab, insightsTabScreen.gameObject);
         }
 
-        private void ShowSkill()
+        private void ShowRemnant()
         {
-            Select(skillTab, skillScreen);
+            Select(remnantTab, remnantTabScreen.gameObject);
         }
 
-        private void ShowTrait()
+        private void ShowTraits()
         {
-            Select(traitTab, traitTabScreen.gameObject);
+            Select(traitsTab, traitTabScreen.gameObject);
         }
 
         private void Select(PartsTabItem selectedTab, GameObject selectedScreen)
         {
-            artifactScreen.SetActive(selectedScreen == artifactScreen);
-            skillScreen.SetActive(selectedScreen == skillScreen);
+            insightsTabScreen.gameObject.SetActive(selectedScreen == insightsTabScreen.gameObject);
+            remnantTabScreen.gameObject.SetActive(selectedScreen == remnantTabScreen.gameObject);
             traitTabScreen.gameObject.SetActive(selectedScreen == traitTabScreen.gameObject);
 
-            artifactTab.SetNormalState();
-            skillTab.SetNormalState();
-            traitTab.SetNormalState();
+            traitsTab.SetNormalState();
+            insightsTab.SetNormalState();
+            remnantTab.SetNormalState();
             selectedTab.SetFocusedState();
         }
     }

@@ -24,6 +24,7 @@ namespace Assets.Scripts.Systems.Save
         public DeckManager Decks { get; private set; }
         public AbilityProgressManager AbilityProgress { get; private set; }
         public ArmoryManager Armory { get; private set; }
+        public CycleProgressManager CycleProgress { get; private set; }
         public event System.Action ResourceBalancesChanged;
 
         [Description("セッション初期化が完了しているかどうか。起動直後のガードに使う。")]
@@ -92,6 +93,7 @@ namespace Assets.Scripts.Systems.Save
             Appearance = new AppearanceManager(UserDataStore, Inventory, Decks);
             Progress = new ProgressManager(UserDataStore, MasterDataResourceLoader.LoadBattleStageData());
             Armory = new ArmoryManager(UserDataStore, Inventory, Progress, MasterDataResourceLoader.LoadArmoryProductDatabase());
+            CycleProgress = new CycleProgressManager(UserDataStore, MasterDataResourceLoader.LoadBossInsightDatabase());
 
             if (IsDirty)
                 UserDataStore.SaveSession();
