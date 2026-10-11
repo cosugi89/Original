@@ -103,7 +103,7 @@ namespace Assets.Scripts.Editor
             public string Message { get; }
         }
 
-        private const string MenuPath = "Tools/Original/Battle Pattern Board Editor";
+        private const string MenuPath = "Tools/The Red Fever/Battle Pattern Board Editor";
         private const float MinCellSize = 44f;
         private const float MaxCellSize = 84f;
 
@@ -253,7 +253,7 @@ namespace Assets.Scripts.Editor
 
             if (GUILayout.Button("作成メニューを開く", GUILayout.Height(22f)))
             {
-                EditorApplication.ExecuteMenuItem("Assets/Create/Original/Master Data/Battle Pattern");
+                EditorApplication.ExecuteMenuItem("Assets/Create/The Red Fever/Master Data/Battle Pattern");
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();

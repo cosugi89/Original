@@ -55,7 +55,7 @@ namespace Assets.Scripts.Data.MasterData
     /// 1ステージぶんのマスタデータ。
     /// StageMasterDatabase から ID 参照される ScriptableObject として扱う。
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Stage", fileName = "StageMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Stage", fileName = "StageMasterData")]
     public class StageMasterData : ScriptableObject
     {
         [SerializeField]

@@ -10,7 +10,7 @@ namespace Assets.Scripts.Data.MasterData
     /// 敵行動にひもづく固定盤面パターン。
     /// board 情報は pattern と同時に編集できるよう、ここへ展開して持つ。
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Pattern", fileName = "BattlePatternMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Battle Pattern", fileName = "BattlePatternMasterData")]
     public class StageBattlePatternMasterData : ScriptableObject
     {
         [SerializeField]

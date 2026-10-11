@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Item Master Data", fileName = "ItemMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Item Master Data", fileName = "ItemMasterData")]
     public sealed class ItemMasterData : ScriptableObject
     {
         [SerializeField, Tooltip("InventoryData.ItemStacks から参照する一意の ID。0 は未設定です。")]

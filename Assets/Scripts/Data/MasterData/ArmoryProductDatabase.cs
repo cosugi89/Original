@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Armory Product Database", fileName = "ArmoryProductDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Armory Product Database", fileName = "ArmoryProductDatabase")]
     public sealed class ArmoryProductDatabase : ScriptableObject
     {
         [SerializeField] private List<ArmoryProductMasterData> products = new();

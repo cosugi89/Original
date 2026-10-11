@@ -17,7 +17,7 @@ namespace Assets.Scripts.Editor
         private const string DatabaseAssetPath = "Assets/Resources/MasterData/EquipmentDatabase.asset";
         private const string EquipmentsRootFolder = "Assets/Resources/MasterData/Equipments";
 
-        [MenuItem("Tools/Original/Rebuild Equipment Database")]
+        [MenuItem("Tools/The Red Fever/Rebuild Equipment Database")]
         public static void Rebuild()
         {
             var prefabRoot = PrefabUtility.LoadPrefabContents(CharacterPrefabPath);

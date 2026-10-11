@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Skill Master Data", fileName = "BattleSkillMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Battle Skill Master Data", fileName = "BattleSkillMasterData")]
     public class BattleSkillMasterData : ValidatedMasterDataAsset
     {
         [SerializeField][Description("スキルID")]

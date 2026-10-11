@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Stage Master Database", fileName = "StageMasterDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Stage Master Database", fileName = "StageMasterDatabase")]
     public class StageMasterDatabase : ScriptableObject
     {
         [SerializeField]

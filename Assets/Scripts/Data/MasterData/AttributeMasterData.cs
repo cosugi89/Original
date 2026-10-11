@@ -6,7 +6,7 @@ namespace Assets.Scripts.Data.MasterData
     /// <summary>
     /// スキルの属性データ。属性の種別を定義するのみで種別による効果は定義しない。
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Attribute Master Data", fileName = "AttributeMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Attribute Master Data", fileName = "AttributeMasterData")]
     public class AttributeMasterData : ScriptableObject
     {
         [SerializeField]

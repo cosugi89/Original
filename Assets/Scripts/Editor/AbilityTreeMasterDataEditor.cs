@@ -513,7 +513,7 @@ namespace Assets.Scripts.Editor
         private UnityEditor.Editor selectedNodeEditor;
         private string builderMessage = string.Empty;
 
-        [MenuItem("Tools/Original/Ability Tree Graph")]
+        [MenuItem("Tools/The Red Fever/Ability Tree Graph")]
         public static void OpenFromMenu()
         {
             GetWindow<AbilityTreeBuilderWindow>("Ability Tree編集").Show();

@@ -10,7 +10,7 @@ namespace Assets.Scripts.Data.MasterData
         Item
     }
 
-    [CreateAssetMenu(menuName = "Original/Master Data/Armory Product", fileName = "ArmoryProductMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Armory Product", fileName = "ArmoryProductMasterData")]
     public sealed class ArmoryProductMasterData : ScriptableObject
     {
         [SerializeField] private int productId;

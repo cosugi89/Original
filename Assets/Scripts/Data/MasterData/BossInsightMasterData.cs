@@ -25,7 +25,7 @@ namespace Assets.Scripts.Data.MasterData
     /// <summary>
     /// 人間ボス1人に紐付く Insight と Remnant 表示情報の定義。
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Boss Insight", fileName = "BossInsightMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Boss Insight", fileName = "BossInsightMasterData")]
     public sealed class BossInsightMasterData : ScriptableObject
     {
         [SerializeField, Tooltip("対応する人間ボス Mission の StageId。進捗保存との照合に使う。")]

@@ -10,7 +10,7 @@ namespace Assets.Scripts.Data.MasterData
     /// appearance は EquipmentMasterData を再利用した見た目定義参照として扱い、
     /// patterns はこの敵が使用可能な共有固定盤面候補を直接参照する。
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Enemy", fileName = "BattleEnemyMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Battle Enemy", fileName = "BattleEnemyMasterData")]
     public class StageBattleEnemyMasterData : ScriptableObject
     {
         [SerializeField]

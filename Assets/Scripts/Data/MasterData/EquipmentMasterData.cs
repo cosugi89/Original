@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Equipment Master Data", fileName = "EquipmentMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Equipment Master Data", fileName = "EquipmentMasterData")]
     public class EquipmentMasterData : ValidatedMasterDataAsset
     {
         public const int MaxAssignableSkillCount = 2;

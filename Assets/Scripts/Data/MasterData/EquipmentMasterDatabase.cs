@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Equipment Master Database", fileName = "EquipmentMasterDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Equipment Master Database", fileName = "EquipmentMasterDatabase")]
     public class EquipmentMasterDatabase : ScriptableObject
     {
         public readonly struct ValidationIssue

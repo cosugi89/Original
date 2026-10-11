@@ -7,7 +7,7 @@ namespace Assets.Scripts.Data.MasterData
     /// スキルの効果データ。
     /// 例: 敵単体に攻撃力の1.5倍ダメージ、自分のチャージ+1、HP回復など。
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Skill Operation Data", fileName = "BattleSkillOperationData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Battle Skill Operation Data", fileName = "BattleSkillOperationData")]
     public class BattleSkillOperationData : ScriptableObject
     {
         [SerializeField]

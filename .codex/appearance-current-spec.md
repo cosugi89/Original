@@ -24,7 +24,7 @@
 
 - `EquipmentMasterData` は現在、共有の見た目マスターアセットとして使われている。
 - 再生成ツールは次の場所にある。
-  - `Tools > Original > Rebuild Equipment Database`
+  - `Tools > The Red Fever > Rebuild Equipment Database`
 - ツールソース:
   - `Assets/Scripts/Editor/EquipmentMasterCatalogBuilder.cs`
 - ツールは次を読み取る。

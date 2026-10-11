@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Node Visual Database", fileName = "BattleNodeVisualDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Battle Node Visual Database", fileName = "BattleNodeVisualDatabase")]
     public class BattleNodeVisualDatabase : ScriptableObject
     {
         public const string DefaultResourcePath = "MasterData/BattleNodeVisualDatabase";

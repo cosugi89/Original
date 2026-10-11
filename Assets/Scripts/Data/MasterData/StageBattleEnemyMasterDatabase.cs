@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Enemy Database", fileName = "EnemyDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Battle Enemy Database", fileName = "EnemyDatabase")]
     public class StageBattleEnemyMasterDatabase : ScriptableObject
     {
         [SerializeField]

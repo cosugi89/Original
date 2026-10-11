@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Localization", fileName = "LocalizationMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Localization", fileName = "LocalizationMasterData")]
     public sealed class LocalizationMasterData : ScriptableObject
     {
         [SerializeField] private SystemLanguage language = SystemLanguage.Japanese;

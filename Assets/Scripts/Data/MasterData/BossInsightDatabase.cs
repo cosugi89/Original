@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Boss Insight Database", fileName = "BossInsightDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Boss Insight Database", fileName = "BossInsightDatabase")]
     public sealed class BossInsightDatabase : ScriptableObject
     {
         [SerializeField] private List<BossInsightMasterData> entries = new();

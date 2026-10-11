@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Battle Skill Master Database", fileName = "BattleSkillMasterDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Battle Skill Master Database", fileName = "BattleSkillMasterDatabase")]
     public class BattleSkillMasterDatabase : ScriptableObject
     {
         [SerializeField]

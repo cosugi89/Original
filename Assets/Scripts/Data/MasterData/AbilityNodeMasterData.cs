@@ -34,7 +34,7 @@ namespace Assets.Scripts.Data.MasterData
     /// <summary>
     /// Node固有の内容だけを保持する。Tree上の配置と接続はAbilityTreeMasterData側で定義する。
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Ability Node", fileName = "AbilityNodeMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Ability Node", fileName = "AbilityNodeMasterData")]
     public sealed class AbilityNodeMasterData : ValidatedMasterDataAsset
     {
         [SerializeField] private string nodeId = string.Empty;

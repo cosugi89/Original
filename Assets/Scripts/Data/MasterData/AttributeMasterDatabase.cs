@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Attribute Master Database", fileName = "AttributeDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Attribute Master Database", fileName = "AttributeDatabase")]
     public class AttributeMasterDatabase : ScriptableObject
     {
         [SerializeField]

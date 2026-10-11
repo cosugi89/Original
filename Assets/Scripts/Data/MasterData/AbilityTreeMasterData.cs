@@ -88,7 +88,7 @@ namespace Assets.Scripts.Data.MasterData
         }
     }
 
-    [CreateAssetMenu(menuName = "Original/Master Data/Ability Tree", fileName = "AbilityTreeMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Ability Tree", fileName = "AbilityTreeMasterData")]
     public sealed class AbilityTreeMasterData : ValidatedMasterDataAsset
     {
         [SerializeField] private string treeId = "trait";

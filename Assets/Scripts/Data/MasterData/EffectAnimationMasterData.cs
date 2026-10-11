@@ -6,7 +6,7 @@ namespace Assets.Scripts.Data.MasterData
     /// <summary>
     /// スキル発動で再生されるエフェクトデータ
     /// </summary>
-    [CreateAssetMenu(menuName = "Original/Master Data/Effect Animation Master Data", fileName = "EffectAnimationMasterData")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Effect Animation Master Data", fileName = "EffectAnimationMasterData")]
     public class EffectAnimationMasterData : ScriptableObject
     {
         [SerializeField][Description("エフェクトID")]

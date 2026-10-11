@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: Original
+  productName: The Red Fever
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -704,14 +704,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: Original
+  metroPackageName: TheRedFever
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: Original
+  metroApplicationDescription: The Red Fever
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -785,7 +785,7 @@ PlayerSettings:
   cloudProjectId: 566c5cc8-1589-4d36-a955-566795d861d1
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Original
+  projectName: The Red Fever
   organizationId: cosugi89
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Data.MasterData
 {
-    [CreateAssetMenu(menuName = "Original/Master Data/Item Master Database", fileName = "ItemMasterDatabase")]
+    [CreateAssetMenu(menuName = "The Red Fever/Master Data/Item Master Database", fileName = "ItemMasterDatabase")]
     public sealed class ItemMasterDatabase : ScriptableObject
     {
         [SerializeField, Tooltip("Items ダイアログで解決するアイテム定義一覧です。")]
