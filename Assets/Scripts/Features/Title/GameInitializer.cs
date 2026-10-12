@@ -5,17 +5,18 @@ using UnityEngine;
 namespace Assets.Scripts.Features.Title
 {
     /// <summary>
-    /// 現在は MainScene、将来は TitleScene に置くゲーム起動処理。
-    /// 保存データとゲーム全体で共有するサービスを、画面初期化より先に準備する。
+    /// 保存データとゲーム全体で共有するサービスを初期化し、Title UIを開始する。
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     public sealed class GameInitializer : MonoBehaviour
     {
         [SerializeField] private UserDataManager userDataManager;
+        [SerializeField] private TitleSceneController titleSceneController;
 
         private void Awake()
         {
             userDataManager.InitializeGameData();
+            titleSceneController.Initialize(userDataManager);
         }
     }
 }

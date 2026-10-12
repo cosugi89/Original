@@ -210,7 +210,6 @@ namespace Assets.Scripts.Systems.Save
 
             var gameObject = new GameObject(nameof(UserDataManager));
             _instance = gameObject.AddComponent<UserDataManager>();
-            DontDestroyOnLoad(gameObject);
             return _instance;
         }
     }

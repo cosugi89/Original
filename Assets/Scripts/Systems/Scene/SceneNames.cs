@@ -6,6 +6,9 @@ namespace Assets.Scripts.Systems.Scene
     /// </summary>
     public static class SceneNames
     {
+        /// <summary>ゲーム起動時のTitle画面。</summary>
+        public const string Title = "TitleScene";
+
         /// <summary>エントリポイント。アバター生成・HomeScreen 表示を担う。</summary>
         public const string Main = "MainScene";
 

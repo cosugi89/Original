@@ -28,6 +28,9 @@ public class MainScene : MonoBehaviour
     [Header("Home Angel")]
     [SerializeField] private GameObject angelHome;
 
+    [Header("Home Entrance")]
+    [SerializeField] private HomeEntranceDirector homeEntranceDirector;
+
     [Header("Screens")]
     [SerializeField] private HomeScreen homeScreen;
     [FormerlySerializedAs("statusScreen")]
@@ -89,6 +92,16 @@ public class MainScene : MonoBehaviour
 
     private void Start()
     {
+        _userDataManager = UserDataManager.EnsureInitialized();
+        InitializePreviews();
+        InitializeScreens();
+        StartHomeEntrance();
+        _userDataManager.ResourceBalancesChanged += RefreshPointTexts;
+        RefreshPointTexts();
+    }
+
+    private void InitializePreviews()
+    {
         var avatarRenderService = AppearanceAdapter.EnsureInitialized();
 
         _homeCharacterPreview = ResolveHomeCharacterPreview();
@@ -100,12 +113,18 @@ public class MainScene : MonoBehaviour
         _characterPreviewRoot = ResolvePreviewRoot(_characterPreview);
 
         ExcludeAvatarPreviewLayerFromScreenCameras();
+    }
+
+    private void InitializeScreens()
+    {
         homeScreen.Init();
         characterScreen.Init(_characterPreview, _homeCharacterPreview);
-        SetPreviewVisibility(ResolveActivePreviewScreen());
-        _userDataManager = UserDataManager.EnsureInitialized();
-        _userDataManager.ResourceBalancesChanged += RefreshPointTexts;
-        RefreshPointTexts();
+    }
+
+    private void StartHomeEntrance()
+    {
+        var playsHomeEntrance = homeEntranceDirector.StartIfRequested(ShowHomeAngel);
+        SetPreviewVisibility(ResolveActivePreviewScreen(), !playsHomeEntrance);
     }
 
     /// <summary>
@@ -311,11 +330,16 @@ public class MainScene : MonoBehaviour
         }
     }
 
-    private void SetPreviewVisibility(Assets.Scripts.Features.Main.Screen screen)
+    private void SetPreviewVisibility(Assets.Scripts.Features.Main.Screen screen, bool showHomeAngel = true)
     {
         SetActiveIfNeeded(_homeCharacterRoot, false);
-        SetActiveIfNeeded(angelHome, screen == homeScreen);
+        SetActiveIfNeeded(angelHome, showHomeAngel && screen == homeScreen);
         SetActiveIfNeeded(_characterPreviewRoot, screen == characterScreen);
+    }
+
+    private void ShowHomeAngel()
+    {
+        SetActiveIfNeeded(angelHome, homeTabScreen.activeSelf);
     }
 
     private Assets.Scripts.Features.Main.Screen ResolveActivePreviewScreen()
