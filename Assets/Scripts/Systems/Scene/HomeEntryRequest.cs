@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 namespace Assets.Scripts.Systems.Scene
 {
@@ -10,13 +11,13 @@ namespace Assets.Scripts.Systems.Scene
     {
         private static Action<string> _setLoadingStatus;
         private static Action _releaseTitleBackground;
-        private static Action _finishLoading;
+        private static Func<IEnumerator> _finishLoading;
         private static bool _isBuildRequested;
 
         public static void RequestBuild(
             Action<string> setLoadingStatus,
             Action releaseTitleBackground,
-            Action finishLoading)
+            Func<IEnumerator> finishLoading)
         {
             _setLoadingStatus = setLoadingStatus;
             _releaseTitleBackground = releaseTitleBackground;
@@ -27,7 +28,7 @@ namespace Assets.Scripts.Systems.Scene
         public static bool TryConsumeBuild(
             out Action<string> setLoadingStatus,
             out Action releaseTitleBackground,
-            out Action finishLoading)
+            out Func<IEnumerator> finishLoading)
         {
             if (!_isBuildRequested)
             {

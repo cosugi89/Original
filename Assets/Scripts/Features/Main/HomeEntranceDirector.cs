@@ -48,7 +48,7 @@ namespace Assets.Scripts.Features.Main
 
         private Action<string> _setLoadingStatus;
         private Action _releaseTitleBackground;
-        private Action _finishLoading;
+        private Func<IEnumerator> _finishLoading;
         /// <summary>
         /// TitleSceneからの入場要求があれば構築演出を始め、なければ同じ実パーツを即時表示する。
         /// AngelなどHome固有の表示物はMainSceneが所有し、構築完了時だけcallbackで通知する。
@@ -72,6 +72,7 @@ namespace Assets.Scripts.Features.Main
             {
                 propButtons[i].interactable = false;
             }
+            SetHudVisibility(0f, false);
 
             if (!shouldPlay)
             {
@@ -95,16 +96,10 @@ namespace Assets.Scripts.Features.Main
                     propFoliageParts[i].ShowCompleted(false);
                 }
 
-                SetHudVisibility(1f, true);
-                for (var i = 0; i < propButtons.Length; i++)
-                {
-                    propButtons[i].interactable = true;
-                }
-
+                StartCoroutine(ShowReadyHomeRoutine(showHomeContents));
                 return false;
             }
 
-            SetHudVisibility(0f, false);
             _releaseTitleBackground?.Invoke();
             for (var i = 0; i < buildParts.Length; i++)
             {
@@ -201,8 +196,20 @@ namespace Assets.Scripts.Features.Main
 
             yield return new WaitForSecondsRealtime(assemblyHoldDuration);
 
+            // Loadingのフェードと破棄が終わるまで、AngelとHUDは表示しない。
+            if (_finishLoading != null) yield return _finishLoading();
+            yield return ShowReadyHomeRoutine(showHomeContents);
+        }
+
+        private IEnumerator ShowReadyHomeRoutine(Action showHomeContents)
+        {
+            yield return null;
             showHomeContents?.Invoke();
-            _finishLoading?.Invoke();
+            // AngelのAnimatorとPreviewCameraが描画できるフレームを挟む。
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            yield return Assets.Scripts.Features.Tutorial.TutorialManager.Instance.PlayReadyTutorials(
+                Assets.Scripts.Data.MasterData.TutorialSignal.HomeReady, "Main.Home", gameObject);
 
             var elapsed = 0f;
             while (elapsed < homeHudFadeDuration)

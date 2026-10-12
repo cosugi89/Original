@@ -145,18 +145,13 @@ namespace Assets.Scripts.Features.Title
             DontDestroyOnLoad(gameObject);
             DontDestroyOnLoad(titleBackgroundCanvas.gameObject);
             DontDestroyOnLoad(loadingCanvasGroup.transform.root.gameObject);
-            HomeEntryRequest.RequestBuild(null, ReleaseTitleBackground, FinishHomeEntry);
+            HomeEntryRequest.RequestBuild(null, ReleaseTitleBackground, FinishHomeEntryRoutine);
 
             var operation = SceneManager.LoadSceneAsync(SceneNames.Main, LoadSceneMode.Single);
             while (!operation.isDone)
             {
                 yield return null;
             }
-        }
-
-        private void FinishHomeEntry()
-        {
-            StartCoroutine(FinishHomeEntryRoutine());
         }
 
         private void ReleaseTitleBackground()

@@ -123,8 +123,8 @@ public class MainScene : MonoBehaviour
 
     private void StartHomeEntrance()
     {
-        var playsHomeEntrance = homeEntranceDirector.StartIfRequested(ShowHomeAngel);
-        SetPreviewVisibility(ResolveActivePreviewScreen(), !playsHomeEntrance);
+        SetPreviewVisibility(ResolveActivePreviewScreen(), false);
+        homeEntranceDirector.StartIfRequested(ShowHomeAngel);
     }
 
     /// <summary>

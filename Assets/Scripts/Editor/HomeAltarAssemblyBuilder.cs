@@ -203,6 +203,7 @@ public static class HomeAltarAssemblyBuilder
         root.gameObject.SetActive(true);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
+        Assets.Scripts.Editor.TutorialSetupEditor.SetupHomeEntranceHud();
         Debug.Log($"Home祭壇配線完了: 石材{stones.Length} / 祭壇の葉{leaves.Length} / 小道具{props.Length} / 小道具の葉{propLeaves.Length}");
     }
 }
