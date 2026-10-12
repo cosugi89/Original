@@ -1,6 +1,6 @@
 # TitleScene 仕様書
 
-- 最終更新: 2026-10-12
+- 最終更新: 2026-10-13
 - 文書状態: 演出GameObjectの継続表示、小道具自身のButton、祭壇葉37枚・小道具葉16枚を実装。Unity EditorでTitle入場・完成表示・通常起動・タップ導線を確認済み。
 - 位置づけ: 起動時の入口と、MainSceneのHome構築演出へつなぐシーン。
 
@@ -44,14 +44,15 @@ PGSプレイヤーIDは実績・ランキング用のIDとして扱い、現行�
 2. `Loading Canvas` を表示したまま `MainScene` を非同期ロードする。Loading Canvasは背景を見失わない濃度（黒画像 alpha `0.55`）で画面全体を暗くする黒画像と、`Assets/Resources/Sprite/HUD/Loading_01_1.png` を表示する画像で構成する。ロード中はLoading画像を72度ずつZ軸回転させ、Overlayはロードの完了で即消さない。
 3. MainSceneはHomeの基底背景を表示し、配置参照として残す旧祭壇Image・旧小道具Button、Angel、Home HUDを非表示にする。石材・小道具の独立Spriteは完成位置より上、alpha 0から開始する。葉は根元付近を基準とする完成位置を保ち、alpha 0から開始する。小道具の演出GameObjectにあるButtonは構築中に操作できない状態にする。
 4. 「土台／階段 → 左右の石材 → アーチ → 祭壇の葉 → 書見台／戦果碑 → 小道具の葉」の順で組み上げる。石材は各段階内の開始を少しずつずらし、前段階の着地が完了してから次段階を開始する。石材と小道具は上からの落下＋フェードイン、葉は移動なしのフェードインと小さなscale変化で表示する。小道具の葉は本体の着地後に生やす。物理演算は使わない。
-5. 構築中はLoading Overlayとその入力遮断を維持する。小道具の葉まで全表示を終えたら完成表示を短く保持し、Angelを表示し、Loading OverlayとHome HUDをそれぞれフェードする。演出に使った石材・葉・書見台・戦果碑のGameObjectは、そのまま完成画面へ残す。
-6. Home HUDのフェード完了時に、小道具自身のButtonとHome HUDの入力を有効にする。旧祭壇Image・旧小道具Buttonは表示しない。初回導入が必要なら構築完了callbackからチュートリアルへ接続できるが、判定・開始処理は未接続である。
+5. 構築中はLoading Overlayとその入力遮断を維持する。小道具の葉まで全表示を終えたら完成表示を短く保持し、Loading Overlayだけをフェードアウトする。フェード完了と破棄を待ってからAngelを表示する。HUDは非表示のまま。演出に使った石材・葉・書見台・戦果碑は完成画面へ残す。
+6. Angelが描画できるフレームを挟み、TutorialManagerの表示待機を解除してHomeReadyを通知する。通常周回の未完了時とデバッグ繰り返し有効時はAngelの導入会話を開始する。PreviewImageのアルファに沿って暗幕を抜き、透明部分の背景は暗くする。メッセージは下側に表示し、文字送り中の全面タップで全文表示、次のタップで台詞を送る。HUDはまだ非表示・操作不可。
+7. 現在のHomeで開始できるすべての案内と、完了保存で発火した後続案内が終わってからHUDをフェードインする。案内がない場合はHomeReadyの照合後そのまま進む。HUDフェード完了時に小道具自身のButtonとHome HUDの入力を有効にする。旧祭壇Image・旧小道具Buttonは表示しない。別画面・非表示HUDの操作を要求する案内は表示後の判定へ渡し、入場待ちの停止原因にしない。
 
 通常のMainScene起動、BattleSceneからの復帰、Tab切替では、同じ個別SpriteのGameObjectを完成位置・完成alpha・完成scaleで即時表示し、構築演出を再生しない。
 
 ## 4. 現在の実装基盤
 
-- `HomeEntryRequest` はTitleから一度だけ消費されるHome構築要求、Title背景の解除callback、Loading Overlayの更新・完了callbackを渡す。
+- `HomeEntryRequest` はTitleから一度だけ消費されるHome構築要求、Title背景の解除callback、Loading Overlayの更新callbackと終了処理を返すFunc<IEnumerator>を渡す。Directorが終了処理をyieldし、Loadingフェード完了を実際に待ってから次の表示へ進む。
 - `TitleSceneController` は開始入力、3つの遷移Canvas、`MainScene` 非同期ロードを担う。`beginButton` と `resurgenceButton` を別々のInspector参照として持ち、`The Remnant`（ItemId `3`）の所持状態に応じてどちらか一方だけを表示する。`connectPlayGamesButton` はPGS未認証時だけ表示し、`connectPlayGamesRequested` を通じてPGS手動認証を要求する。`loadingImageTransform` はロード中に72度ずつZ軸回転する。
 - 現行の `TitleScene.unity` には描画順を固定した `Title Background Canvas`（順序0）、`Title Canvas`（Title UI、順序1）、`Loading Canvas`（順序2）がある。通常時は3つとも `Main Camera` を参照する `Screen Space - Camera` とし、Title UIを通常どおり描画する。開始入力後に持ち越す `Title Background Canvas` と `Loading Canvas` だけを `Screen Space - Overlay` へ切り替え、シーン切替後のCameraから独立させる。`TitleSceneController` の開始Button、Title背景Canvas、Loading Canvas、Loading画像を含む必須参照はInspectorで配線済みである。`TitleScene_demo.unity` は試作シーンであり、実装対象にはしない。
 - `Title Canvas` 直下の `Image_Title`、`SocialSignButton_Group`、`Text_Ver` は `localPosition.z = 0` とする。Camera背後へUIが配置される不具合を防ぎ、開始Buttonを表示・Raycastできるようにする。X/Y座標・scale・既存スタイルは保持する。
@@ -61,7 +62,7 @@ PGSプレイヤーIDは実績・ランキング用のIDとして扱い、現行�
 - `HomeBuildPart` は `targetTransform`、`referenceTransform`、`partImage`、`additionalImages`、完成位置 `finalOffset`、構築段階 `buildStage`、開始位置 `startOffsetY` をInspectorで受け取る。参照RectTransformの座標系を使って完成位置とscaleをそろえ、Image自身のcolor alphaを変化させる。小道具の本体2Imageは同じHomeBuildPartの `partImage` と `additionalImages` に配線し、同じalphaで落下・フェードする。各ImageにCanvasGroupは使わない。葉のpivotとTransformは根元または自然な接地点付近に置く。
 - MainSceneには `HomeEntranceDirector` を配置し、`buildParts` に石材37個、`foliageParts` に祭壇の葉37枚、`propParts` に書見台・戦果碑／奉納台2個、`propFoliageParts` に小道具の葉16枚、`propButtons` に小道具自身のButtonを配線する。小道具の葉は書見台7枚・戦果碑9枚。`homeStaticAltar` と `legacyPropObjects` は作成時の位置・サイズ参照に使う旧オブジェクトであり、通常起動時も非表示にする。必須参照はInspectorから渡し、実行時の `Resources.Load` や名前による探索を追加しない。
 - 演出用の書見台・戦果碑GameObject自身にButtonを持たせ、`HomeScreen.settingsButton` と `HomeScreen.achievementsButton` をそのButtonへ配線する。既存のSettings／Achievements callbackを使う。小道具Buttonの `targetGraphic` は `Body_Visible`、Transitionは `None`。石材・葉のImageは常に `raycastTarget = false`。小道具Buttonは落下中からHUDフェード終了まで `interactable = false` とし、Loading Overlayで画面入力を遮断し、完了後に有効にする。
-- Home HUDは既存の `PanelContent` のCanvasGroupと、`additionalHudCanvasGroups` に配線する `ResourceBar_Group`、`MainTabLayout` のCanvasGroupを同時に非表示・フェード・入力切替する。通貨表示と下部Tabも構築完了後に表示する。`HomeBuildRoot` はHome直下のfirst siblingに置き、`PanelContent` のCanvasGroup外で、Angel・STARTなどのHUDより下に構築パーツを描画する。Scene Rootの再編は行わない。
+- Home HUDは `PanelBottom` のCanvasGroupと、`additionalHudCanvasGroups` の `ResourceBar_Group`、`MainTabLayout` を同時に非表示・フェード・入力切替する。PreviewImageを含む `PanelContent` のCanvasGroupはalpha=1に維持し、HUDと分離する。通貨・下部Tab・STARTはチュートリアルの終了後に表示する。`HomeBuildRoot` はHome直下のfirst siblingに置き、PanelContent外で構築パーツを描画する。Scene Rootの再編やPreviewImageの親変更は行わない。
 - 完成表示に使う個別Spriteは `HomeBuildRoot` に残す。旧祭壇Image・旧小道具Buttonへの表示切り替えを行わないため、完成後の物体とタップ対象が同じGameObjectにそろう。
 
 ### 4.1 祭壇素材と完成表示の一致
@@ -89,11 +90,12 @@ PGSプレイヤーIDは実績・ランキング用のIDとして扱い、現行�
 | 書見台・戦果碑 | 1個につき0.34秒 | 全葉の表示完了後に開始し、2個目を0.10秒遅らせる。 | 元Buttonの完成位置より+120から落下＋フェードイン。 |
 | 小道具の葉 | 1枚につき0.22秒 | 小道具本体2個の着地後、16枚を0.02秒ずつ開始をずらす。全葉の完了を待つ。 | 根元位置を保ち、alphaとscale 0.94から1への変化で生やす。 |
 | 完成保持 | 0.10秒 | 小道具の葉まで全表示を終えてから待つ。 | 演出GameObjectの完成位置を維持。 |
-| Home HUD／Loading Overlay | 各0.20秒 | 完成保持後、HUD表示とOverlay解除を同時に開始する。 | HUDをフェードイン、Overlayをフェードアウト。HUD完了時に小道具自身のButtonを有効にする。 |
+| Loading Overlay | 0.20秒 | 完成保持後に解除し、完了までAngel・HUDを待機する。 | フェードアウト後に破棄。 |
+| Home HUD | 0.20秒 | Angel登場とチュートリアル全終了の後に開始する。 | フェードイン完了時に小道具Buttonを含めて入力を有効化する。 |
 
-設定上の全構築・完成保持・HUDフェードは約5.03秒。読み込み・frame境界の待機・記録処理の時間は含まない。
+従来の構築・完成保持・HUDフェード設定は約5.03秒。現在はLoading解除とHUD表示を順番に実行するため、さらにLoadingフェードとframe境界の待機が加わる。チュートリアルの所要時間はプレイヤーの台詞送りによって変わる。
 
-### 4.3 Play Mode確認
+### 4.3 変更前のPlay Mode記録
 
 2026-10-12にUnity Editorで、Title → Loading → 祭壇・小道具の構築 → 小道具の葉 → Angel／Home HUDを181描画フレーム、約9.169秒の記録で確認した。記録には読み込み・frame境界・capture処理の時間を含む。開始からMainScene初表示は約1.363秒、小道具の葉の初表示は約7.783秒、全葉完了は約8.625秒、Home操作可能は約8.961秒だった。
 
@@ -110,4 +112,4 @@ PGSプレイヤーIDは実績・ランキング用のIDとして扱い、現行�
 - Build Settingsの起点をTitleSceneへ切り替える。
 - Home入場演出のテンポ、輪郭、葉の位置、Button入力をAndroid実機と異なる解像度で確認し、BattleSceneからMainSceneへの復帰でも個別パーツを即時完成表示することを確認する。
 - Android実機でだけ起動時のPGS自動認証を接続する。PGS失敗時にも開始を止めず、Unity Editorでは認証をスキップする。PGSプラグインは未導入のため、認証処理そのものは未実装である。
-- 初回チュートリアルの開始判定を構築完了callbackへ接続し、チュートリアル完了後にHUDを出す導線を追加する。
+- HomeReady接続済みのAngel導入会話について、Android実機と異なる解像度で輪郭の暗幕透過・メッセージ・全面タップと操作復帰を確認する。詳細は `docs/specs/チュートリアル仕様書.md` を参照する。

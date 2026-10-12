@@ -1,6 +1,6 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-10-12
+- 最終更新: 2026-10-13
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Character / Progress / Missions / Armoryの方針を定義する。
 - 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
@@ -23,7 +23,9 @@ TitleSceneから入場する時だけは、`MainScene` がHome表示物の初期
 
 構築要求がない通常のMainScene表示、BattleSceneからの復帰、Tab切替では同じ個別SpriteのGameObjectを完成位置・完成alpha・完成scaleで即時表示する。Titleから渡す要求とLoading Overlayの引き継ぎは `HomeEntryRequest`、個々のパーツの完成位置・構築段階・移動・alpha表示は `HomeBuildPart` を使い、必須参照はInspectorで配線する。素材構成・時間・最終表示の検証方針は `docs/specs/TitleScene仕様書.md` を正とする。
 
-Home構築パーツの `HomeBuildRoot` はHome直下のfirst siblingにあり、既存HUDの `PanelContent` CanvasGroup外で、Angel・STARTなどのHUDより下に描画する。HUDは `PanelContent` と、追加参照する `ResourceBar_Group`、`MainTabLayout` のCanvasGroupで同時に非表示・フェード・入力切替する。完成後も `HomeBuildRoot` の個別Spriteを表示する。Scene Rootの再編は行わない。
+Home構築パーツの `HomeBuildRoot` はHome直下のfirst siblingにあり、PanelContentの外でAngel・STARTより下に描画する。HUDは `PanelBottom` と、追加参照する `ResourceBar_Group`、`MainTabLayout` のCanvasGroupで同時に非表示・フェード・入力切替する。PreviewImageを含むPanelContentはalpha=1を維持してHUDから分離する。完成後も `HomeBuildRoot` の個別Spriteを表示する。Scene RootやPreviewImageの親は変更しない。
+
+Homeの入場順序は「祭壇と小道具の構築 → Loading表示が完全に消える → Angel登場 → HomeReadyで開始できるチュートリアルをすべて再生 → HUD表示」とする。現在画面で開始できる後続案内も待ち、HUDフェード完了後に操作を有効化する。チュートリアルがない場合も通知の照合後そのままHUDを表示する。直接MainScene起動とBattleからの復帰では構築・Loadingを省き、Angelから先の順序を共通にする。詳細はチュートリアル仕様書を参照する。
 
 ## 2. 現行シーン構成
 
@@ -308,3 +310,7 @@ Skill ロードアウトは、Skill 設定ダイアログ内で候補 Skill を�
 ## 8. 次期実装: 戦闘デッキ
 
 戦闘用の右手・左手・兜・胴と、戦闘Skill4枠はデッキ3件として保存・切替する。見た目用の髪・目・ひげ・色は `AvatarAppearance` に分離し、デッキには含めない。Characterのデッキ一覧ダイアログと、敗戦後の再挑戦導線からデッキを切り替えられるようにする。詳細は `docs/specs/デッキ仕様書.md` を正とする。
+
+## チュートリアルのデバッグ
+
+DebugSheetのTutorialsページで、現在のDatabaseに登録されたチュートリアルごとにCompleted（セーブへ即時反映）、Repeat For Debug（Editor／Development Buildのセッション限定）、Replay（フラグを変えず現在画面で再生）を操作できる。HomeのAngel導入はデバッグ時の繰り返しを初期設定とする。通常ビルドはOncePerSaveで再表示しない。詳細はチュートリアル仕様書を参照する。

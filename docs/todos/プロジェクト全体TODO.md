@@ -52,7 +52,7 @@
 
 ## 1. P0: 基盤とデータ整合
 
-- [ ] **TitleScene導線の残作業**: Build Settingsの起点をTitleSceneへ切り替える。Home入場演出のテンポ・輪郭・葉の位置・Button入力をAndroid実機と異なる解像度で確認し、BattleSceneからMainSceneへの復帰でも個別パーツを即時完成表示することを確認する。初回チュートリアルの開始判定をHome構築完了callbackへ接続する。Android実機での起動時PGS自動認証を実装し、認証失敗時にも開始を止めず、Unity Editorでは認証をスキップする。`The Remnant`獲得後の演出・Resurgence開始処理は `0.1 非戦闘側の着手順` の同名タスクを参照する。
+- [ ] **TitleScene導線の残作業**: Build Settingsの起点をTitleSceneへ切り替える。Home入場演出のテンポ・輪郭・葉の位置・Button入力をAndroid実機と異なる解像度で確認し、BattleSceneからMainSceneへの復帰でも個別パーツを即時完成表示することを確認する。Loading解除→Angel登場→HomeReadyの全案内終了→HUD表示の順序、アルファ輪郭暗幕・文字送り・全面タップ・操作復帰をAndroid実機と異なる解像度で確認する。Android実機での起動時PGS自動認証を実装し、認証失敗時にも開始を止めず、Unity Editorでは認証をスキップする。`The Remnant`獲得後の演出・Resurgence開始処理は `0.1 非戦闘側の着手順` の同名タスクを参照する。
 - [x] ステージ ID を `int` と `string` の混在から数値 `StageId` に統一する
 - [x] `BattleSceneRequest`、`StageData`、`StageMasterData`、`ProgressManager` のキー設計を揃える
 - [x] `StageDatabase` / `StageMasterDatabase` / `StageMasterData` の命名を repo 全体で統一する
@@ -256,7 +256,7 @@
 
 ### 9.4 演出・世界観
 
-- [ ] `docs/specs/世界観仕様書.md` に基づき、冒頭チュートリアルの天使による導入、パス操作の説明、初期会話を実装する。
+- [ ] `docs/specs/世界観仕様書.md` と `docs/specs/チュートリアル仕様書.md` に基づき、実装済みTutorial基盤へAngelのBattle用パス・危険回避・Attack・Skill・Goal説明マスターを登録し、有効化する。Android実機と異なる解像度でメッセージ・手・暗幕の穴・操作制限を確認する。
 - [ ] 赤い目、敵の危険、敵 HP / 敵Skill由来の状態、被弾、敵スキルを赤系で統一し、プレイヤー側・確定済みパスとの配色ルールを UI / VFX へ反映する。
 - [ ] 人間ボスのステージ前後フレーバーと、赤い目から回復する勝利演出を設計・実装する。
 - [ ] ラスボス用の天使形態と赤・黒を基調にした本来の姿、最終ステージ、クリア演出を制作・実装する。
