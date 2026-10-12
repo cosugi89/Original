@@ -21,7 +21,9 @@ namespace Assets.Scripts.Features.Main
         [SerializeField] private int debugBattleStageId = 0;
 
         [Header("Home Actions")]
+        [Tooltip("祭壇構築に使う書見台自身のButton。演出後も同じButtonを使用する。")]
         [SerializeField] private Button settingsButton;
+        [Tooltip("祭壇構築に使う戦果碑自身のButton。演出後も同じButtonを使用する。")]
         [SerializeField] private Button achievementsButton;
 
         private bool _isInitialized;

@@ -1,6 +1,6 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-10-11
+- 最終更新: 2026-10-12
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Character / Progress / Missions / Armoryの方針を定義する。
 - 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
@@ -17,7 +17,13 @@
 戦闘中の一時状態やターン処理は `BattleScene` 側の責務とし、`MainScene` は永続データ、所持品、ロードアウト、見た目状態を編集する入口として扱う。
 独立した `Assets/Scenes/Home.unity` は持たず、`Home` は `MainScene` 内のタブ画面として扱う。
 
-TitleSceneからの初回入場時だけは、`MainScene` がHome表示物の初期状態を決め、`HomeEntranceDirector.StartIfRequested(...)` に入場演出の開始を依頼する。DirectorはHomeの基底背景を有効化してTitle背景の解除を通知した後、Homeの実パーツを組み上げ、HUDを表示する。AngelなどHome固有の表示物は `MainScene` が所有し、Directorから構築完了callbackを受けて表示する。構築要求がない通常のMainScene表示とBattleSceneからの復帰では、従来どおりHomeを即時表示する。Titleから渡す要求とLoading Overlayの引き継ぎは `HomeEntryRequest`、個々のUI石材の移動とalpha表示は `HomeBuildPart` を使う。詳細は `docs/specs/TitleScene仕様書.md` を正とする。
+TitleSceneから入場する時だけは、`MainScene` がHome表示物の初期状態を決め、`HomeEntranceDirector.StartIfRequested(...)` に入場演出の開始を依頼する。DirectorはHomeの基底背景を有効化してTitle背景の解除を通知した後、「土台／階段 → 左右の石材 → アーチ → 祭壇の葉 → 書見台／戦果碑 → 小道具の葉」の順で組み上げる。石材・小道具は上から落下しながらフェードインし、葉は根元付近のTransformを動かさず、小さなscale変化とalphaだけで表示する。Loading Overlayは構築完了まで維持する。AngelなどHome固有の表示物は `MainScene` が所有し、Directorから構築完了callbackを受けて表示する。
+
+演出に使った石材・葉・書見台・戦果碑のGameObjectは完成後も表示を継続する。旧祭壇Imageと旧小道具Buttonは作成時の位置・サイズを参照するためSceneへ残し、通常のMainScene起動時も非表示にする。書見台・戦果碑のGameObject自身にButtonを持たせ、`HomeScreen` のSettings／Achievements参照をそのButtonへ接続する。構築中は操作を遮断し、HUDフェード完了後に有効にする。小道具の葉も葉単位のSpriteとし、本体の着地後に根元固定のalpha・小さなscale変化で生やす。
+
+構築要求がない通常のMainScene表示、BattleSceneからの復帰、Tab切替では同じ個別SpriteのGameObjectを完成位置・完成alpha・完成scaleで即時表示する。Titleから渡す要求とLoading Overlayの引き継ぎは `HomeEntryRequest`、個々のパーツの完成位置・構築段階・移動・alpha表示は `HomeBuildPart` を使い、必須参照はInspectorで配線する。素材構成・時間・最終表示の検証方針は `docs/specs/TitleScene仕様書.md` を正とする。
+
+Home構築パーツの `HomeBuildRoot` はHome直下のfirst siblingにあり、既存HUDの `PanelContent` CanvasGroup外で、Angel・STARTなどのHUDより下に描画する。HUDは `PanelContent` と、追加参照する `ResourceBar_Group`、`MainTabLayout` のCanvasGroupで同時に非表示・フェード・入力切替する。完成後も `HomeBuildRoot` の個別Spriteを表示する。Scene Rootの再編は行わない。
 
 ## 2. 現行シーン構成
 
@@ -60,14 +66,14 @@ Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleS
 
 ### 3.1 起動時のデータ初期化
 
-`GameInitializer` と `UserDataManager` は `TitleScene` の `GameInitializer` GameObjectに置く。`MainScene` は初期化済みの `UserDataManager` を利用する。
+`GameInitializer` と `UserDataManager` は `TitleScene` 内の別々のRoot GameObjectに置く。`UserDataManager` だけを永続化し、`MainScene` は初期化済みの `UserDataManager` を利用する。
 
 - `UserDataManager` は `UserData` の実行時の正本であり、`DontDestroyOnLoad` によってシーン遷移後も保持する。永続データへの外部からの入口は `UserDataManager.Instance` に統一する。
 - `UserDataManager` は `Save`、`Inventory`、`Avatar`、`StageProgress`、`BattleSkillLoadout` を所有する。各領域のロジックは分けたまま、静的な個別サービスとしては公開しない。
 - `GameInitializer` は `UserDataManager.InitializeGameData()` を呼ぶ。ここでローカル JSON をロードまたは新規作成してから、所持品、見た目、ステージ進捗、Skill ロードアウトの管理を順に準備する。
 - 初期所持品、初期見た目、初期解放ステージなどの補完で未保存変更が生じた場合、`GameInitializer` は初期化完了時に保存する。
 - 未保存変更は `UserDataManager` がアプリのバックグラウンド移行時または終了時に保存する。明示的な即時保存を行う既存の UI 導線は維持する。
-- Build Settings の先頭シーンは、Title UIの配線完了後に `TitleScene` へ切り替える。初期化処理の内容は変更しない。
+- 現行Build Settingsの先頭シーンは `MainScene`。`TitleScene` を先頭へ登録する作業は未完了であり、EditorでのTitle起点Play確認は専用の `Title` Buttonから行う。初期化処理の内容は変更しない。
 
 Home と Character の表示サイズ、位置、向きは、それぞれのシーン上の `Transform` で調整する。Dialog 内の表示サイズ、位置、向きは `AvatarDialog` の `previewLocalPosition` / `previewLocalScale` と `PreviewStage` 側で調整する。
 
@@ -101,8 +107,10 @@ Home と Character の表示サイズ、位置、向きは、それぞれのシ�
 `Home` は `HomeScreen` が担当する。
 
 - `battleButton` 押下で `BattleScene` へ遷移する。
-- `settingsButton` はHome左の書見台に設定し、既存の共通DialogでSettings入口を開く。現時点では設定項目の実装前の案内表示とし、実際の設定項目はこの入口へ追加する。
-- `achievementsButton` はHome右の戦果碑／奉納台に設定し、既存の共通DialogでAchievements入口を開く。実績一覧の実装前は準備中の案内表示とする。
+- `settingsButton` はHome左の演出用書見台GameObject自身のButtonへ設定し、既存の共通DialogでSettings入口を開く。現時点では設定項目の実装前の案内表示とし、実際の設定項目はこの入口へ追加する。
+- `achievementsButton` はHome右の演出用戦果碑／奉納台GameObject自身のButtonへ設定し、既存の共通DialogでAchievements入口を開く。実績一覧の実装前は準備中の案内表示とする。
+- 書見台・戦果碑のButtonは `targetGraphic = Body_Visible`、Transition `None` とする。構築中は `interactable = false` とLoading Overlayで入力を遮断し、Home HUDのフェード完了後に有効にする。小道具の葉は書見台7枚・戦果碑9枚の計16枚を、本体着地後に葉ごとに生やす。小道具本体の描画はunderlay・葉・元可視bodyの3層を常時維持し、本体2Imageは同じHomeBuildPartのalphaに連動する。
+- 2026-10-12のEditor Play Mode確認では、Title入場・通常MainScene起動とも92個の個別GameObjectを完成後も維持し、旧祭壇Image・旧小道具Buttonの表示とSprite／GameObject交換は0だった。新Button2個によるSettings／Achievementsの開閉と、Progress Tab → Home Tabの画面Raycast往復を確認した。必須参照の欠落0件、Consoleエラー・警告0件。詳細な記録と完成画面比較は `docs/specs/TitleScene仕様書.md` を正とする。
 - `useDebugBattleStageId` が true の場合は `debugBattleStageId` を使う。
 - false の場合は `ProgressManager.GetRecommendedStageId()` から推奨ステージを取得する。
 - 遷移前に `BattleSceneRequest.SelectedStageId` を設定する。

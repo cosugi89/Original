@@ -1,7 +1,7 @@
 # TitleScene 仕様書
 
 - 最終更新: 2026-10-12
-- 文書状態: 導線と実装基盤を決定。祭壇・葉・Home小道具の構築用Sprite分割とMainSceneへの仮配線は完了。演出の最終調整は未完了。
+- 文書状態: 演出GameObjectの継続表示、小道具自身のButton、祭壇葉37枚・小道具葉16枚を実装。Unity EditorでTitle入場・完成表示・通常起動・タップ導線を確認済み。
 - 位置づけ: 起動時の入口と、MainSceneのHome構築演出へつなぐシーン。
 
 ## 1. 画面構成
@@ -42,30 +42,72 @@ PGSプレイヤーIDは実績・ランキング用のIDとして扱い、現行�
 
 1. `Begin` または `Resurgence` の入力を一度だけ受け付け、`Title UI Canvas` を非表示にする。`Title Background Canvas` は不透明のまま維持し、MainSceneの `HomeBackground` が有効化された通知を受けてから解除することで、シーン切替中に背景の空白や背後の描画を見せない。
 2. `Loading Canvas` を表示したまま `MainScene` を非同期ロードする。Loading Canvasは背景を見失わない濃度（黒画像 alpha `0.55`）で画面全体を暗くする黒画像と、`Assets/Resources/Sprite/HUD/Loading_01_1.png` を表示する画像で構成する。ロード中はLoading画像を72度ずつZ軸回転させ、Overlayはロードの完了で即消さない。
-3. MainSceneはHomeの実パーツを完成位置より少し上、alpha 0の状態で開始する。
-4. 石材パーツは少しずつ開始をずらし、下へ移動しながらフェードインする。物理演算は使わない。
-5. 構築中もLoading Overlayを継続表示する。Angelは必要な状態でのみ構築後に表示する。
-6. 初回導入が必要ならAngel表示後、Home HUD表示前にチュートリアルを開始できる。通常時はHome HUDをフェードインする。
+3. MainSceneはHomeの基底背景を表示し、配置参照として残す旧祭壇Image・旧小道具Button、Angel、Home HUDを非表示にする。石材・小道具の独立Spriteは完成位置より上、alpha 0から開始する。葉は根元付近を基準とする完成位置を保ち、alpha 0から開始する。小道具の演出GameObjectにあるButtonは構築中に操作できない状態にする。
+4. 「土台／階段 → 左右の石材 → アーチ → 祭壇の葉 → 書見台／戦果碑 → 小道具の葉」の順で組み上げる。石材は各段階内の開始を少しずつずらし、前段階の着地が完了してから次段階を開始する。石材と小道具は上からの落下＋フェードイン、葉は移動なしのフェードインと小さなscale変化で表示する。小道具の葉は本体の着地後に生やす。物理演算は使わない。
+5. 構築中はLoading Overlayとその入力遮断を維持する。小道具の葉まで全表示を終えたら完成表示を短く保持し、Angelを表示し、Loading OverlayとHome HUDをそれぞれフェードする。演出に使った石材・葉・書見台・戦果碑のGameObjectは、そのまま完成画面へ残す。
+6. Home HUDのフェード完了時に、小道具自身のButtonとHome HUDの入力を有効にする。旧祭壇Image・旧小道具Buttonは表示しない。初回導入が必要なら構築完了callbackからチュートリアルへ接続できるが、判定・開始処理は未接続である。
 
-通常のBattleSceneからMainSceneへの復帰やTab切替では、この構築演出を再生せず即時表示する。
+通常のMainScene起動、BattleSceneからの復帰、Tab切替では、同じ個別SpriteのGameObjectを完成位置・完成alpha・完成scaleで即時表示し、構築演出を再生しない。
 
 ## 4. 現在の実装基盤
 
 - `HomeEntryRequest` はTitleから一度だけ消費されるHome構築要求、Title背景の解除callback、Loading Overlayの更新・完了callbackを渡す。
 - `TitleSceneController` は開始入力、3つの遷移Canvas、`MainScene` 非同期ロードを担う。`beginButton` と `resurgenceButton` を別々のInspector参照として持ち、`The Remnant`（ItemId `3`）の所持状態に応じてどちらか一方だけを表示する。`connectPlayGamesButton` はPGS未認証時だけ表示し、`connectPlayGamesRequested` を通じてPGS手動認証を要求する。`loadingImageTransform` はロード中に72度ずつZ軸回転する。
 - 現行の `TitleScene.unity` には描画順を固定した `Title Background Canvas`（順序0）、`Title Canvas`（Title UI、順序1）、`Loading Canvas`（順序2）がある。通常時は3つとも `Main Camera` を参照する `Screen Space - Camera` とし、Title UIを通常どおり描画する。開始入力後に持ち越す `Title Background Canvas` と `Loading Canvas` だけを `Screen Space - Overlay` へ切り替え、シーン切替後のCameraから独立させる。`TitleSceneController` の開始Button、Title背景Canvas、Loading Canvas、Loading画像を含む必須参照はInspectorで配線済みである。`TitleScene_demo.unity` は試作シーンであり、実装対象にはしない。
+- `Title Canvas` 直下の `Image_Title`、`SocialSignButton_Group`、`Text_Ver` は `localPosition.z = 0` とする。Camera背後へUIが配置される不具合を防ぎ、開始Buttonを表示・Raycastできるようにする。X/Y座標・scale・既存スタイルは保持する。
 - `GameInitializer`、`UserDataManager`、`TitleSceneController` はTitleSceneの別々のRootに配置する。`UserDataManager` と `TitleSceneController` は自身を一度だけ永続化し、`GameInitializer.Awake()` がローカルセーブを初期化した後、Inspector参照した `TitleSceneController.Initialize(userDataManager)` を呼ぶ。`TitleSceneController` 自身は `Awake()` を持たず、この順序でのみ初期化する。シーン遷移時は `User Data Manager` Root、`Title Scene Controller` Root、`Title Background Canvas` Root、`Loading Canvas` Rootを保持する。`Title Canvas` はStart入力時に非表示となり、Sceneのアンロードとともに破棄する。Home基底背景の表示後にTitle背景を、Home構築完了後にLoading CanvasとTitleSceneControllerを破棄する。
 - Unity Editorでは、Play Buttonの横にある `Title` Buttonから、一度だけTitleScene起点でPlay Modeを開始できる。停止後は、既存のPlay Mode開始Scene設定へ戻す。
-- `HomeEntranceDirector` はMainSceneに置き、構築要求がある時だけ `HomeBuildPart` を開始位置へ準備して再生する。Homeの基底背景、構築パーツ、Home HUDの表示タイミングだけを担当し、Angelを含むHome固有の表示物は `MainScene` が所有する。`StartIfRequested(Action)` が要求の消費、準備、再生開始を一つの入口として行い、構築完了時にcallbackでHome固有表示物の表示を通知する。
-- `HomeBuildPart` は1つのUIパーツImageの最終RectTransform位置を記録し、Image自身のcolor alphaを上方からの移動とともに変化させる。石材・小道具は `Image + HomeBuildPart` の単位とし、CanvasGroupは使わない。葉は移動せず、alphaと小さなscale変化だけで表示する。
-- MainSceneには `HomeEntranceDirector` を配置し、`homeStaticAltar` に通常表示用の元祭壇Image、`buildParts` に石材15枚、`foliageParts` に葉2枚、`propParts` に書見台・戦果碑／奉納台の表示用複製2枚を配線している。`HomeBuildRoot` はHome直下に置き、構築演出中だけ有効化する。通常のMainScene起動では元祭壇Imageと本来の小道具Buttonを表示し、Titleからの入場時だけ元祭壇ImageとHome HUDを隠して構築パーツを使う。小道具の複製は演出完了後に隠し、HUDと一緒に元のButtonを再表示するため、既存のタップ処理は本来のButtonだけが担当する。Home HUD用の `CanvasGroup` とHome基底背景も配線済みである。Titleからの入場時は、基底背景を有効化してからTitle背景の解除を要求する。
-- 祭壇の構築素材は、元画像 `Assets/Resources/Sprite/ChatGPT 画像 2026年10月4日 12_40_51.png` を同一キャンバス・同一原点の透明Spriteへ分割した `Assets/Resources/Sprite/Home/AltarBuild/` 配下の素材を使う。石材は `Granular/` 配下の15枚、葉は `Altar_Foliage_Left.png` と `Altar_Foliage_Right.png` である。石材と小道具は上方からの落下＋フェードイン、葉は石材の後に移動なしで表示する。
+- `HomeEntranceDirector` はMainSceneに置き、構築要求がある時だけ `HomeBuildPart` を開始位置へ準備して再生する。通常表示時には同じパーツを即時完成状態へ設定する。Homeの基底背景、構築パーツ、小道具Button、Home HUDの表示・入力タイミングを担当し、Angelを含むHome固有の表示物は `MainScene` が所有する。構築完了時にcallbackでHome固有表示物の表示を通知する。
+- `HomeBuildPart` は `targetTransform`、`referenceTransform`、`partImage`、`additionalImages`、完成位置 `finalOffset`、構築段階 `buildStage`、開始位置 `startOffsetY` をInspectorで受け取る。参照RectTransformの座標系を使って完成位置とscaleをそろえ、Image自身のcolor alphaを変化させる。小道具の本体2Imageは同じHomeBuildPartの `partImage` と `additionalImages` に配線し、同じalphaで落下・フェードする。各ImageにCanvasGroupは使わない。葉のpivotとTransformは根元または自然な接地点付近に置く。
+- MainSceneには `HomeEntranceDirector` を配置し、`buildParts` に石材37個、`foliageParts` に祭壇の葉37枚、`propParts` に書見台・戦果碑／奉納台2個、`propFoliageParts` に小道具の葉16枚、`propButtons` に小道具自身のButtonを配線する。小道具の葉は書見台7枚・戦果碑9枚。`homeStaticAltar` と `legacyPropObjects` は作成時の位置・サイズ参照に使う旧オブジェクトであり、通常起動時も非表示にする。必須参照はInspectorから渡し、実行時の `Resources.Load` や名前による探索を追加しない。
+- 演出用の書見台・戦果碑GameObject自身にButtonを持たせ、`HomeScreen.settingsButton` と `HomeScreen.achievementsButton` をそのButtonへ配線する。既存のSettings／Achievements callbackを使う。小道具Buttonの `targetGraphic` は `Body_Visible`、Transitionは `None`。石材・葉のImageは常に `raycastTarget = false`。小道具Buttonは落下中からHUDフェード終了まで `interactable = false` とし、Loading Overlayで画面入力を遮断し、完了後に有効にする。
+- Home HUDは既存の `PanelContent` のCanvasGroupと、`additionalHudCanvasGroups` に配線する `ResourceBar_Group`、`MainTabLayout` のCanvasGroupを同時に非表示・フェード・入力切替する。通貨表示と下部Tabも構築完了後に表示する。`HomeBuildRoot` はHome直下のfirst siblingに置き、`PanelContent` のCanvasGroup外で、Angel・STARTなどのHUDより下に構築パーツを描画する。Scene Rootの再編は行わない。
+- 完成表示に使う個別Spriteは `HomeBuildRoot` に残す。旧祭壇Image・旧小道具Buttonへの表示切り替えを行わないため、完成後の物体とタップ対象が同じGameObjectにそろう。
+
+### 4.1 祭壇素材と完成表示の一致
+
+- 元画像は `Assets/Resources/Sprite/ChatGPT 画像 2026年10月4日 12_40_51.png`。石材はレンガ、階段、柱、アーチ石、台座の輪郭と継ぎ目に沿った独立Spriteとして扱い、完成画像を直線的な矩形マスクへ区切る方式は採用しない。
+- 使用する素材は `Assets/Resources/Sprite/Home/AltarBuild/Individual/` 配下。石材37個の内訳は土台／階段14個（外周11個、中央台座1個、階段2個）、左右の石材19個、アーチ4個。祭壇の葉は左側18枚・右側19枚の計37枚で、各1枚を使う。小道具本体と独立葉の素材も同じ表示方針にそろえる。旧 `Granular/` の15枚や左右2塊の葉SpriteはHome入場演出へ配線しない。
+- `Tools/HomeAltar/stones.json` は石材の輪郭・構築段階・順序、`Tools/HomeAltar/leaves.json` は葉の根元・先端位置を持つ素材生成用データである。Sprite自体は物体周囲の透明余白を除いて保存し、個別の完成位置・重なり順を持たせる。
+- 元PNGの `1150 × 1367` に対し、通常表示用Spriteの可視キャンバスは左42・上36を基準とする `1086 × 1290`。構築用の座標はこの可視キャンバスへ合わせ、透明余白による位置ずれを防ぐ。
+- 落下時に必要な、元絵では隠れていた石材の面は元絵と同じ正面視点・色・線で補完する。`Tools/HomeAltar/restored-underlay.png` と `closed-stones-atlas.png` の補描を物体の実寸へ登録し、閉じた輪郭を持つ石材として落下させる。元絵の見える面の内部をなじませ、他の物体の切断線を演出用輪郭へ持ち込まない。
+- 石材内部の `assembledSprite` と `ShowAssembledSprite()` は実行時から廃止し、落下時と完成後に同じSpriteを保持する。補完面は、後続パーツで覆われる元画像のalpha 255領域に限定する。元の可視面をそのまま残し、保持する石材・祭壇葉の完成合成は `parts.json` の `retainedRgbaDiff = 0` で確認する。Unity上の重なり・継ぎ目・隙間はPlay Modeでも確認する。
+- 葉は祭壇・小道具とも葉ごとの独立Spriteとし、根元基準のpivotを使う。落下させず、alphaとscale 0.94から1への変化だけで表示する。小道具本体は着地後に葉を生やせるよう、葉を含む元絵から本体と葉を分ける。完成座標は配置参照として残す旧小道具Buttonを参照する。
+- 小道具の描画順は常時「補描underlay → 根元pivotの独立葉 → 元の可視body（葉を除去）」の3層とし、着地・葉の表示・完成後で層やSpriteを交換しない。木・石本体の輪郭を固定し、葉マスク・多角形の所有領域・補描alpha・本体除外多角形を組み合わせて分類する。元の可視画素は保持する。元alpha 250～254の境界に補描が透けるため、生成画像の合成差は書見台で最大5/255、戦果碑で最大2/255。Play Modeの比較では目立つ外見差は見られなかった。GPU描画の完全画素一致は保証しない。
+- `_Assembled.png` の生成素材は未参照の比較用として残す。通常表示と演出では使用しない。
+- 素材生成は `Tools/HomeAltar/build-parts.mjs` と `build-props.mjs`、Sceneの生成・Inspector配線は `Assets/Scripts/Editor/HomeAltarAssemblyBuilder.cs` が担当する。MainSceneを開いて `Tools/The Red Fever/Rebuild Home Altar Assembly` を実行すると、`parts.json` と `props.json` を結合して個別ImageとHomeBuildPartを作成し、構築順・pivot・完成座標・Sprite・HUD・小道具Button参照を保存する。探索や素材読込はこのEditor作成時に限り、実行時にはInspector参照を使う。
+- 再生成・作成時配線・比較captureの手順は `Tools/HomeAltar/README.md`、補描時の生成指示は `Tools/HomeAltar/generation-prompts.md` を参照する。
+
+### 4.2 演出時間と開始位置
+
+`HomeEntranceDirector` の設定値をInspectorで配線し、`Time.unscaledDeltaTime` と `WaitForSecondsRealtime` で進める。石材は前半で加速し、最後の短い区間で着地を収める。横移動や回転、物理演算は加えない。
+
+| 対象 | 表示時間 | 開始間隔・待機 | 動き |
+| --- | --- | --- | --- |
+| 石材 | 1個につき0.30秒 | 同じ段階内で0.055秒ずつ開始をずらす。前段階の着地完了を待つ。 | 完成位置より上から落下し、前半でalphaを上げる。開始offsetは土台／階段+88、左右+112、アーチ+140（演出RootのUIローカル座標）。 |
+| 葉 | 1枚につき0.22秒 | 全石材の着地後0.06秒待ち、0.02秒ずつ開始をずらす。 | 完成位置を保ち、根元を基準にscale 0.94から1へ拡大しながらフェードイン。 |
+| 書見台・戦果碑 | 1個につき0.34秒 | 全葉の表示完了後に開始し、2個目を0.10秒遅らせる。 | 元Buttonの完成位置より+120から落下＋フェードイン。 |
+| 小道具の葉 | 1枚につき0.22秒 | 小道具本体2個の着地後、16枚を0.02秒ずつ開始をずらす。全葉の完了を待つ。 | 根元位置を保ち、alphaとscale 0.94から1への変化で生やす。 |
+| 完成保持 | 0.10秒 | 小道具の葉まで全表示を終えてから待つ。 | 演出GameObjectの完成位置を維持。 |
+| Home HUD／Loading Overlay | 各0.20秒 | 完成保持後、HUD表示とOverlay解除を同時に開始する。 | HUDをフェードイン、Overlayをフェードアウト。HUD完了時に小道具自身のButtonを有効にする。 |
+
+設定上の全構築・完成保持・HUDフェードは約5.03秒。読み込み・frame境界の待機・記録処理の時間は含まない。
+
+### 4.3 Play Mode確認
+
+2026-10-12にUnity Editorで、Title → Loading → 祭壇・小道具の構築 → 小道具の葉 → Angel／Home HUDを181描画フレーム、約9.169秒の記録で確認した。記録には読み込み・frame境界・capture処理の時間を含む。開始からMainScene初表示は約1.363秒、小道具の葉の初表示は約7.783秒、全葉完了は約8.625秒、Home操作可能は約8.961秒だった。
+
+- 完成GameObjectは92個（石材37・祭壇葉37・小道具2・小道具葉16）、有効な小道具Buttonは2個。旧祭壇Image・旧小道具Buttonが表示されたframe、Spriteが交換された回数、GameObjectが交換された回数はいずれも0。
+- 背景欠落、構築完了前のLoading解除、構築中の小道具Button早期有効化はいずれも0frame。小道具の葉の根元位置の最大誤差は約 `2.3841858e-7` world単位で、位置計算の誤差範囲だった。
+- 通常MainScene起動でも同じ92個を即時完成表示し、旧配置参照は非表示、新Button2個は有効。書見台／戦果碑からSettings／AchievementsのDialogを画面Raycast・pointer clickで開閉できた。Progress Tab → Home Tabも画面Raycastで往復し、Homeの個別パーツ表示を維持した。START Buttonは操作可能で、画面Raycastから `Button_03_Red` のhandlerへ到達したが、Battle遷移の押下は行っていない。
+- 必須参照の欠落0件、Consoleエラー0件・警告0件。Play停止後もエラー・警告0件だった。
+- Unity描画の元画像との比較は、祭壇の平均channel差が約0.0250037/255、差3超のpixelが409,920pixel中1,824pixel。小道具の平均channel差が約0.00118316/255、差3超が81pixel。主に輪郭のsampling差であり、目視で目立つ外見差は見られなかった。素材RGBA検証とGPU描画の比較を区別する。
+
+確認記録は `docs/captures/HomeEntrance/home-entrance-retained-2026-10-12.gif`、同名の `.png`、`home-completed-retained-2026-10-12.png`、`qa-summary-retained-2026-10-12.json`、`trace-retained-2026-10-12.json` に保存する。Android実機・異なる解像度での確認は今回のEditor確認に含めない。
 
 ## 5. 未完了のScene作業
 
-- TitleSceneの背景、`The Red Fever` のタイトルロゴ、別オブジェクトの`Begin` / `Resurgence` 開始Button、`Connect Play Games` Button、バージョン表記、Loading Canvasを配置し、`TitleSceneController` の必須Inspector参照を配線する。Loading Canvasには黒背景画像と`Loading_01_1.png`を配置し、画像を72度ずつZ軸回転させる。
 - Build Settingsの起点をTitleSceneへ切り替える。
+- Home入場演出のテンポ、輪郭、葉の位置、Button入力をAndroid実機と異なる解像度で確認し、BattleSceneからMainSceneへの復帰でも個別パーツを即時完成表示することを確認する。
 - Android実機でだけ起動時のPGS自動認証を接続する。PGS失敗時にも開始を止めず、Unity Editorでは認証をスキップする。PGSプラグインは未導入のため、認証処理そのものは未実装である。
-- 仮配線済みのHome構築演出をPlay Modeで確認し、石材・小道具の開始位置・表示時間を最終調整する。
-- Home HUDを構築パーツから分離したRootへまとめ、`HomeEntranceDirector` の `homeHudCanvasGroup` に設定する。
-- 初回チュートリアルの開始判定と、演出完了後にHUDを出す接続を追加する。
+- 初回チュートリアルの開始判定を構築完了callbackへ接続し、チュートリアル完了後にHUDを出す導線を追加する。

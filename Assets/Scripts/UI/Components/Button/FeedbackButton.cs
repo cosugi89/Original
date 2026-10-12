@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -10,7 +11,8 @@ namespace Assets.Scripts.UI.Components
     public sealed class FeedbackButton : Button
     {
         [Header("Optional Feedback")]
-        [SerializeField, Tooltip("任意。クリック時に Trigger を送る Animator。")] private Animator animator;
+        [FormerlySerializedAs("animator")]
+        [SerializeField, Tooltip("任意。クリック時に Trigger を送る Animator。")] private Animator feedbackAnimator;
         [SerializeField, Tooltip("任意。クリック SE の再生に使う AudioSource。")] private AudioSource audioSource;
         [SerializeField, Tooltip("任意。クリック時に再生する SE。")] private AudioClip clickSound;
         [SerializeField, Tooltip("任意。標準Button Animation Transitionとは別に送る Trigger。")] private string clickTrigger;
@@ -25,38 +27,47 @@ namespace Assets.Scripts.UI.Components
         public override void OnPointerClick(PointerEventData eventData)
         {
             var shouldInvoke = eventData.button == PointerEventData.InputButton.Left && IsActive() && IsInteractable();
+            if (shouldInvoke)
+            {
+                // onClickがButtonのRootを非表示にする前に、音とAnimatorの反応を開始する。
+                InvokeClickFeedback();
+            }
+
             base.OnPointerClick(eventData);
 
             if (shouldInvoke)
             {
-                InvokeClickFeedback();
+                _clickAction?.Invoke();
             }
         }
 
         public override void OnSubmit(BaseEventData eventData)
         {
             var shouldInvoke = IsActive() && IsInteractable();
+            if (shouldInvoke)
+            {
+                InvokeClickFeedback();
+            }
+
             base.OnSubmit(eventData);
 
             if (shouldInvoke)
             {
-                InvokeClickFeedback();
+                _clickAction?.Invoke();
             }
         }
 
         private void InvokeClickFeedback()
         {
-            if (animator != null && !string.IsNullOrWhiteSpace(clickTrigger))
+            if (feedbackAnimator != null && !string.IsNullOrWhiteSpace(clickTrigger))
             {
-                animator.SetTrigger(clickTrigger);
+                feedbackAnimator.SetTrigger(clickTrigger);
             }
 
             if (audioSource != null && clickSound != null)
             {
                 audioSource.PlayOneShot(clickSound);
             }
-
-            _clickAction?.Invoke();
         }
     }
 }

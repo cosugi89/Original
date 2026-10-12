@@ -1,6 +1,6 @@
 # UI 共通部品仕様書
 
-- 最終更新: 2026-10-03
+- 最終更新: 2026-10-12
 - 文書状態: 運用中
 - 位置づけ: プロジェクト内で共通利用する UI 部品の責務と運用方針を定義する。
 
@@ -66,7 +66,9 @@ Hierarchy 上では `GameObject/UI/Game Button` から新規作成できる。
 - `UnityEngine.UI.Button` を継承する。通常の `Button` と同じ GameObject に併置せず、必要な場合は通常 `Button` を `FeedbackButton` へ手動で置き換える。
 - 見た目、サイズ、ラベル、ゲーム固有のクリック処理は持たない。既存の `Button.onClick` はそのまま利用できる。
 - C# 用の追加クリック処理は `SetAction(...)` で設定できる。クリックSE、Animator Trigger、追加クリック処理は有効な click / submit 時だけ実行する。
+- 有効な pointer click / submit 時は、クリックSE・追加Animator Triggerを標準 `Button.onClick` より前に開始し、`SetAction(...)` の追加処理を標準クリック処理の後に呼ぶ。標準 `onClick` がButtonのRootを非表示にする場合も、非表示後のAudioSource再生エラーを起こさない順序にする。
 - `Animator`、`AudioSource`、`AudioClip` は任意参照である。専用Inspectorの `フィードバックをセットアップ` は、必要に応じて `Animator` と `AudioSource` を追加して参照を自動配線し、`Assets/Resources/Animations/Button/Button.controller`、`Assets/Resources/Sounds/Button-1.wav`、2D再生設定を適用する。
+- Animator参照は `feedbackAnimator` に保持し、旧 `animator` の保存値を `FormerlySerializedAs` で引き継ぐ。専用Inspectorとセットアップも同じ参照を使う。
 - セットアップは Unity 標準の Button Animation Transition を使うよう切り替え、`Normal` / `Highlighted` / `Pressed` / `Selected` / `Disabled` trigger を設定する。追加のクリックTriggerは任意で個別に設定できる。
 
 ## 3. Button Transition

@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-10-11
+- 最終更新: 2026-10-12
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と、下記「非戦闘側の着手順」に沿った Character / Progress / Missions / Armory改修タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -52,7 +52,7 @@
 
 ## 1. P0: 基盤とデータ整合
 
-- [ ] **TitleScene UIとHome構築演出の配線**: `TitleScene`、`TitleSceneController`、`HomeEntryRequest`、`HomeEntranceDirector`、`HomeBuildPart` の基盤は作成済み。`GameInitializer`、`UserDataManager`、`TitleSceneController`のTitleScene移設（永続化対象は別Root）、背景／Title UI／Loadingの3 Canvas分離、開始Button・Loading画像のInspector配線、`The Remnant`所持状態による`Begin`／`Resurgence`の切替、Home祭壇の構築用Sprite分割、MainSceneへの仮配線（石材15枚・葉2枚・書見台／戦果碑の表示用複製2枚）は完了。構築演出をPlay Modeで確認して石材・小道具の開始位置・表示時間を最終調整し、Home HUD Rootの分離、初回チュートリアルへの接続を行う。Build Settingsの起点をTitleSceneへ切り替える。`The Remnant`獲得演出と`Resurgence`解放・開始導線、Android実機での起動時PGS自動認証を実装する。PGS失敗時にも開始を止めず、Unity Editorでは認証をスキップする。ゲームデータ連携は別途検討する。
+- [ ] **TitleScene導線の残作業**: Build Settingsの起点をTitleSceneへ切り替える。Home入場演出のテンポ・輪郭・葉の位置・Button入力をAndroid実機と異なる解像度で確認し、BattleSceneからMainSceneへの復帰でも個別パーツを即時完成表示することを確認する。初回チュートリアルの開始判定をHome構築完了callbackへ接続する。Android実機での起動時PGS自動認証を実装し、認証失敗時にも開始を止めず、Unity Editorでは認証をスキップする。`The Remnant`獲得後の演出・Resurgence開始処理は `0.1 非戦闘側の着手順` の同名タスクを参照する。
 - [x] ステージ ID を `int` と `string` の混在から数値 `StageId` に統一する
 - [x] `BattleSceneRequest`、`StageData`、`StageMasterData`、`ProgressManager` のキー設計を揃える
 - [x] `StageDatabase` / `StageMasterDatabase` / `StageMasterData` の命名を repo 全体で統一する

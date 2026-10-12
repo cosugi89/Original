@@ -1,0 +1,44 @@
+{
+  "frameCount": 181,
+  "recordedSeconds": 9.16897964477539,
+  "firstMain": 1.3626823425292969,
+  "firstLeaf": 5.475986480712891,
+  "firstProp": 7.280010223388672,
+  "firstPropLeaf": 7.782688140869141,
+  "allPropLeaves": 8.62491226196289,
+  "homeReady": 8.960941314697266,
+  "maxWhiteFraction": 0.00805279053747654,
+  "maxBlackFraction": 0.017749805003404617,
+  "maxYellowFraction": 0.0005781616200692952,
+  "blankHomeFrames": 0,
+  "earlyLoadingEndFrames": 0,
+  "earlyInteractiveFrames": 0,
+  "visibleStaticAltarFrames": 0,
+  "visibleLegacyPropFrames": 0,
+  "maxSpriteChangedCount": 0,
+  "maxPartObjectChangedCount": 0,
+  "maxPropLeafRootError": 2.384185791015625E-07,
+  "finalPartCount": 92,
+  "finalInteractiveProps": 2,
+  "renderComparison": {
+    "meanChannelDifference": 0.02500365925058548,
+    "maxChannelDifference": 47,
+    "changedPixelsOver3": 1824
+  },
+  "propRenderComparison": {
+    "meanChannelDifference": 0.0011831576893052303,
+    "maxChannelDifference": 54,
+    "changedPixelsOver3": 81
+  },
+  "consoleErrors": 0,
+  "consoleWarnings": 0,
+  "requiredReferenceMissing": 0,
+  "manualChecks": [
+    "通常MainScene起動: 個別パーツ92個・旧Image/旧Button非表示・新Button2個有効",
+    "書見台/戦果碑: 画面RaycastからSettings/Achievements Dialog開閉成功",
+    "Progress→Homeタブ: 画面Raycastで往復・Home個別パーツ保持",
+    "完成画像: 同じ祭壇を背景に旧小道具Spriteと比較・目立つ外見差なし",
+    "Title→Loading→MainScene→構築→Angel/HUD: 181描画フレームを確認",
+    "START: interactable true・画面Raycast handler Button_03_Red（Battle遷移は未実施）"
+  ]
+}

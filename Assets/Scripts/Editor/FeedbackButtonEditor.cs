@@ -20,7 +20,7 @@ namespace Assets.Scripts.Editor
         protected override void OnEnable()
         {
             base.OnEnable();
-            _animator = serializedObject.FindProperty("animator");
+            _animator = serializedObject.FindProperty("feedbackAnimator");
             _audioSource = serializedObject.FindProperty("audioSource");
             _clickSound = serializedObject.FindProperty("clickSound");
             _clickTrigger = serializedObject.FindProperty("clickTrigger");
@@ -85,7 +85,7 @@ namespace Assets.Scripts.Editor
                 };
 
                 var buttonSerializedObject = new SerializedObject(button);
-                buttonSerializedObject.FindProperty("animator").objectReferenceValue = animator;
+                buttonSerializedObject.FindProperty("feedbackAnimator").objectReferenceValue = animator;
                 buttonSerializedObject.FindProperty("audioSource").objectReferenceValue = audioSource;
                 buttonSerializedObject.FindProperty("clickSound").objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<AudioClip>(ClickSoundPath);

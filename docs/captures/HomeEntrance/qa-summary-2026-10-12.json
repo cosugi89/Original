@@ -1,0 +1,34 @@
+{
+  "frameCount": 171,
+  "recordedSeconds": 7.575202941894531,
+  "firstMain": 1.1937408447265625,
+  "firstLeaf": 4.8350982666015625,
+  "firstProp": 6.5045013427734375,
+  "staticAltar": 7.121726989746094,
+  "homeReady": 7.342002868652344,
+  "maxWhiteFraction": 0.008055230602622032,
+  "maxBlackFraction": 0.019437938928604126,
+  "maxYellowFraction": 0.0005952381179668009,
+  "blankHomeFrames": 0,
+  "earlyLoadingEndFrames": 0,
+  "renderComparison": {
+    "meanChannelDifference": 0.02497804449648712,
+    "maxChannelDifference": 47,
+    "changedPixelsOver3": 1820
+  },
+  "editorVersion": "6000.0.84f1",
+  "resolution": "480x854",
+  "consoleErrors": 0,
+  "consoleWarnings": 0,
+  "leafRootDrift": 0,
+  "leafRootReferenceError": 1.1920929E-07,
+  "missingReferences": 0,
+  "inputChecks": [
+    "Begin",
+    "Settings open/close",
+    "Achievements open/close",
+    "Armory to Home"
+  ],
+  "normalMainEntryVerified": true,
+  "startButtonRaycastVerified": true
+}
