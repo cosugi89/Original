@@ -26,6 +26,8 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
 
         public bool HasConfirmedPath => _traceState.HasConfirmedPath;
 
+        public bool IsTracing => _traceState.IsTracing;
+
         public IReadOnlyList<BattleGridPosition> ConfirmedPath => _traceState.ConfirmedPath;
 
         public bool CanConfirmCurrentTrace => _traceState.CanConfirmCurrentTrace;
@@ -172,11 +174,15 @@ namespace Assets.Scripts.Features.Battle.ViewControllers
             if (result.Status == BattlePathTraceStatus.Confirmed)
             {
                 Debug.Log($"[BattleTrace] Trace 確定 PathLength={ConfirmedPath.Count} Path={BattleTextFormatter.FormatPath(ConfirmedPath)}");
+                Assets.Scripts.Features.Tutorial.TutorialManager.Report(
+                    Assets.Scripts.Data.MasterData.TutorialSignal.PathConfirmed, owner: gameObject);
                 PathConfirmed?.Invoke(ConfirmedPath);
             }
             else
             {
                 Debug.LogWarning($"[BattleTrace] Trace 未確定 Status={result.Status} Error={result.ValidationError}");
+                Assets.Scripts.Features.Tutorial.TutorialManager.Report(
+                    Assets.Scripts.Data.MasterData.TutorialSignal.PathRejected, result.ValidationError.ToString(), gameObject);
             }
 
             RefreshVisuals();

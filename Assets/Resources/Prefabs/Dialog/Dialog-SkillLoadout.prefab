@@ -2762,6 +2762,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4035162034513436044}
   - component: {fileID: 1852652227593729990}
+  - component: {fileID: 2541412834214968425}
   m_Layer: 5
   m_Name: Dialog-SkillLoadout
   m_TagString: Untagged
@@ -2816,6 +2817,37 @@ MonoBehaviour:
   candidateSkillContent: {fileID: 6327136691504390135}
   emptyCandidatesText: {fileID: 7685997730724278223}
   closeButton: {fileID: 4364145224788178580}
+--- !u!114 &2541412834214968425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5137500919037491386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d20debc001a3264c96066f312b6e86e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scopeKey: DialogSkillLoadout
+  readySignal: 3
+  targets:
+  - Key: Panel/SelectedSkill/Parts-SkillItem
+    Target: {fileID: 8840759540106605508}
+  - Key: Panel/SelectedSkill/Parts-SkillItem (1)
+    Target: {fileID: 2165219904063518933}
+  - Key: Panel/SelectedSkill/Parts-SkillItem (2)
+    Target: {fileID: 2556397442254911458}
+  - Key: Panel/SelectedSkill/Parts-SkillItem (3)
+    Target: {fileID: 849186422669673740}
+  - Key: Panel/SkillInfoArea/Content/StatusSkillInfoView
+    Target: {fileID: 2335485196465782577}
+  - Key: Panel/Button_Close
+    Target: {fileID: 8923251649360721362}
+  - Key: Panel/Dialog-DeckLoadout/Popup/Main/Item
+    Target: {fileID: 7482913097155750006}
+  - Key: Panel/Dialog-DeckLoadout/Popup/Button_Close
+    Target: {fileID: 9119979583703036517}
 --- !u!1 &5152592750758903376
 GameObject:
   m_ObjectHideFlags: 0
@@ -3758,7 +3790,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  animator: {fileID: 787985520802463359}
+  feedbackAnimator: {fileID: 787985520802463359}
   audioSource: {fileID: 7861910551951265980}
   clickSound: {fileID: 8300000, guid: afac6e611150b4dbdb7ffaa39f1c2e34, type: 3}
   clickTrigger: 
@@ -5427,7 +5459,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2379372870277794768, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 1788169797235915507}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 9119979583703036517}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ba6790e1bfd60540a563f19b28a9be5, type: 3}
@@ -5436,6 +5468,11 @@ MonoBehaviour:
 --- !u!224 &5618872408659858567 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6136968523320012404, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
+  m_PrefabInstance: {fileID: 1788169797235915507}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &9119979583703036517 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7368020830023518358, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 1788169797235915507}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2131810046641405252
@@ -5808,7 +5845,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2379372870277794768, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 2131810046641405252}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 8923251649360721362}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ba6790e1bfd60540a563f19b28a9be5, type: 3}
@@ -5817,6 +5854,11 @@ MonoBehaviour:
 --- !u!224 &5241998282147058480 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6136968523320012404, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
+  m_PrefabInstance: {fileID: 2131810046641405252}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8923251649360721362 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7368020830023518358, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 2131810046641405252}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2133867207784925433

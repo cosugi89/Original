@@ -66,6 +66,7 @@ namespace Assets.Scripts.Systems.GameData
             result.Resolution = resolution;
             result.IsInsightViewed = false;
             Save();
+            Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.BossResultRecorded, stageId.ToString());
         }
 
         public void MarkInsightsViewed()
@@ -91,6 +92,7 @@ namespace Assets.Scripts.Systems.GameData
             progress.HasReachedHigherBeing = false;
             progress.BossResults.Clear();
             Save();
+            Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.ResurgenceStarted);
         }
 
         public void SetHigherBeingReached()
@@ -100,6 +102,7 @@ namespace Assets.Scripts.Systems.GameData
 
             EnsureProgress().HasReachedHigherBeing = true;
             Save();
+            Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.HigherBeingReached);
         }
 
         public bool CanSeekRedemption(int stageId)

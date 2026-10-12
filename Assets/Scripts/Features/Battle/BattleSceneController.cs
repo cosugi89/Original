@@ -157,6 +157,10 @@ namespace Assets.Scripts.Features.Battle
             Debug.Log($"[Battle] 初期化完了 Enemy={_session.EnemyName} HP={_session.InitialEnemyHp}");
 
             SpawnPreviewCharacters();
+            UpdateTutorialBattleContext(true);
+            Assets.Scripts.Features.Tutorial.TutorialManager.Report(
+                TutorialSignal.BattleReady, _currentStageId.ToString(), gameObject);
+            Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.TurnReady, owner: gameObject);
         }
 
         /// <summary>
@@ -196,7 +200,9 @@ namespace Assets.Scripts.Features.Battle
             }
 
             var executingTurnNumber = _session.TurnNumber;
+            var executingSkillSlotIndex = _session.SelectedSkillSlotIndex;
             _isExecutingTurn = true;
+            UpdateTutorialBattleContext(false);
             CancelTurnExecution();
             _turnExecutionCts = new CancellationTokenSource();
 
@@ -217,6 +223,21 @@ namespace Assets.Scripts.Features.Battle
 
                 _turnResultApplier.ApplyFinalization(_session, _playerSnapshot, result, preparedTurn.Pattern, HandleBattleClear);
                 ApplyTurnUi(preparedTurn.Pattern, result.Summary);
+                // 解決済みの意味を通知する。予測やButton押下だけではSkill使用成立にしない。
+                if (result.Summary.SelectedSkillConsumed)
+                    Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.SkillUsed, executingSkillSlotIndex.ToString(), gameObject);
+                if (result.Summary.ResolvedAttackCount > 0)
+                    Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.AttackResolved, owner: gameObject);
+                if (result.Summary.GoalReached)
+                    Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.GoalResolved, owner: gameObject);
+                foreach (var action in result.ResolvedActions)
+                {
+                    if (!action.HasSemantic(BattleResolvedActionSemantics.ResolvedHazard) ||
+                        !action.HasSemantic(BattleResolvedActionSemantics.TookHit)) continue;
+                    Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.HazardHit, owner: gameObject);
+                    break;
+                }
+                Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.TurnResolved, owner: gameObject);
                 if (!_session.BattleEnded)
                 {
                     _session.AdvanceTurn();
@@ -243,6 +264,9 @@ namespace Assets.Scripts.Features.Battle
                 _session.IsPathInputLocked = false;
                 _isExecutingTurn = false;
                 CancelTurnExecution();
+                UpdateTutorialBattleContext(true);
+                Assets.Scripts.Features.Tutorial.TutorialManager.Report(
+                    _session.BattleEnded ? TutorialSignal.BattleEnded : TutorialSignal.TurnReady, owner: gameObject);
             }
         }
 
@@ -289,6 +313,8 @@ namespace Assets.Scripts.Features.Battle
             }
 
             _session.SelectedSkillSlotIndex = _session.SelectedSkillSlotIndex == slotIndex ? -1 : slotIndex;
+            if (_session.SelectedSkillSlotIndex >= 0)
+                Assets.Scripts.Features.Tutorial.TutorialManager.Report(TutorialSignal.SkillSelected, slotIndex.ToString(), gameObject);
             RefreshSkillButtonVisuals();
             _turnViewCoordinator.RefreshPreview();
         }
@@ -465,6 +491,18 @@ namespace Assets.Scripts.Features.Battle
             }
 
             battleProgress.RecordStageClear(clearedStageId);
+        }
+
+        private void UpdateTutorialBattleContext(bool canPresent)
+        {
+            var tutorial = Assets.Scripts.Features.Tutorial.TutorialManager.Instance;
+            if (tutorial != null)
+            {
+                tutorial.SetBattleContext(_currentStageId, _session.TurnNumber,
+                    _session.PlayerHp, _session.InitialPlayerHp, canPresent);
+                for (var i = 0; i < GetSkillSlotCount(); i++)
+                    tutorial.SetSkillReady(i, GetSkillSlotRuntime(i)?.IsReady == true);
+            }
         }
 
         private SkillSlotRuntime GetSelectedSkill()

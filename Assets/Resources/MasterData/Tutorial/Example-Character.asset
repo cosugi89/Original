@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047b31069e66f0d49a3569dacbaf8931, type: 3}
+  m_Name: Example-Character
+  m_EditorClassIdentifier: 
+  TutorialId: 1002
+  IsEnabled: 0
+  RepeatForDebug: 0
+  Trigger: 2
+  TriggerKey: Main.Character
+  RequiredScopeKey: 
+  OnlyFirstVisit: 0
+  Repeat: 0
+  Priority: 0
+  Conditions: []
+  Steps:
+  - Message: Change your equipment and skills here.
+    Speaker: 
+    MessageAtBottom: 0
+    ResurgenceMessage: 
+    Highlights: []
+    AlphaHighlight:
+      ScopeKey: 
+      TargetKey: 
+    InteractionTarget:
+      ScopeKey: 
+      TargetKey: 
+    HandTarget:
+      ScopeKey: 
+      TargetKey: 
+    ShowHand: 0
+    AllowDescendantsAndDrag: 0
+    HighlightPadding: {x: 12, y: 12}
+    HandOffset: {x: 25, y: -45}
+    Advance: 3
+    CompletionSignal: 0
+    CompletionKey: 
+    TargetWaitSeconds: 10

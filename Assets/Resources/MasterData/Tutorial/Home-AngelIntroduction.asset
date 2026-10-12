@@ -1,0 +1,125 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047b31069e66f0d49a3569dacbaf8931, type: 3}
+  m_Name: Home-AngelIntroduction
+  m_EditorClassIdentifier: 
+  TutorialId: 1101
+  IsEnabled: 1
+  RepeatForDebug: 1
+  Trigger: 1
+  TriggerKey: Main.Home
+  RequiredScopeKey: Main.Home
+  OnlyFirstVisit: 0
+  Repeat: 0
+  Priority: 200
+  Conditions:
+  - Type: 6
+    Stage: {fileID: 0}
+    Tutorial: {fileID: 0}
+    Equipment: {fileID: 0}
+    Tree: {fileID: 0}
+    TreeNodeId: 
+    Id: 0
+    Value: 1
+    Expected: 0
+  Steps:
+  - Message: You have found a quiet place. Rest here while you can.
+    Speaker: Angel
+    MessageAtBottom: 1
+    ResurgenceMessage: 
+    Highlights: []
+    AlphaHighlight:
+      ScopeKey: Main.Home
+      TargetKey: AngelPreview
+    InteractionTarget:
+      ScopeKey: 
+      TargetKey: 
+    HandTarget:
+      ScopeKey: 
+      TargetKey: 
+    ShowHand: 0
+    AllowDescendantsAndDrag: 0
+    HighlightPadding: {x: 12, y: 12}
+    HandOffset: {x: 25, y: -45}
+    Advance: 3
+    CompletionSignal: 0
+    CompletionKey: 
+    TargetWaitSeconds: 10
+  - Message: Beyond this refuge, the red-eyed grow restless. You will need to fight
+      to make your way through.
+    Speaker: Angel
+    MessageAtBottom: 1
+    ResurgenceMessage: 
+    Highlights: []
+    AlphaHighlight:
+      ScopeKey: Main.Home
+      TargetKey: AngelPreview
+    InteractionTarget:
+      ScopeKey: 
+      TargetKey: 
+    HandTarget:
+      ScopeKey: 
+      TargetKey: 
+    ShowHand: 0
+    AllowDescendantsAndDrag: 0
+    HighlightPadding: {x: 12, y: 12}
+    HandOffset: {x: 25, y: -45}
+    Advance: 3
+    CompletionSignal: 0
+    CompletionKey: 
+    TargetWaitSeconds: 10
+  - Message: I have gathered requests in Missions. Choose one when you are ready
+      to venture out.
+    Speaker: Angel
+    MessageAtBottom: 1
+    ResurgenceMessage: 
+    Highlights: []
+    AlphaHighlight:
+      ScopeKey: Main.Home
+      TargetKey: AngelPreview
+    InteractionTarget:
+      ScopeKey: 
+      TargetKey: 
+    HandTarget:
+      ScopeKey: 
+      TargetKey: 
+    ShowHand: 0
+    AllowDescendantsAndDrag: 0
+    HighlightPadding: {x: 12, y: 12}
+    HandOffset: {x: 25, y: -45}
+    Advance: 3
+    CompletionSignal: 0
+    CompletionKey: 
+    TargetWaitSeconds: 10
+  - Message: Before you go, visit Character and Armory to prepare your equipment
+      and skills. I will guide you through your first battle.
+    Speaker: Angel
+    MessageAtBottom: 1
+    ResurgenceMessage: 
+    Highlights: []
+    AlphaHighlight:
+      ScopeKey: Main.Home
+      TargetKey: AngelPreview
+    InteractionTarget:
+      ScopeKey: 
+      TargetKey: 
+    HandTarget:
+      ScopeKey: 
+      TargetKey: 
+    ShowHand: 0
+    AllowDescendantsAndDrag: 0
+    HighlightPadding: {x: 12, y: 12}
+    HandOffset: {x: 25, y: -45}
+    Advance: 3
+    CompletionSignal: 0
+    CompletionKey: 
+    TargetWaitSeconds: 10

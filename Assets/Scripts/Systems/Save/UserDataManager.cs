@@ -26,6 +26,8 @@ namespace Assets.Scripts.Systems.Save
         public ArmoryManager Armory { get; private set; }
         public CycleProgressManager CycleProgress { get; private set; }
         public event System.Action ResourceBalancesChanged;
+        public event System.Action UserDataSaved;
+        public void NotifyUserDataSaved() => UserDataSaved?.Invoke();
 
         [Description("セッション初期化が完了しているかどうか。起動直後のガードに使う。")]
         public bool IsInitialized { get; private set; }

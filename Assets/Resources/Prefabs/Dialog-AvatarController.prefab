@@ -2273,6 +2273,7 @@ GameObject:
   - component: {fileID: 6339160662146788014}
   - component: {fileID: 4837988585506223994}
   - component: {fileID: 8826291424594664707}
+  - component: {fileID: 277104773963304293}
   m_Layer: 5
   m_Name: Dialog-AvatarController
   m_TagString: Untagged
@@ -2361,14 +2362,67 @@ MonoBehaviour:
   dialogTitleGraphic: {fileID: 5938899345981920300}
   previewImage: {fileID: 3986189110733403914}
   previewTexture: {fileID: 8400000, guid: a309760c8f9ff8e4cb6cd43a1b8cb79c, type: 2}
-  closeButton: {fileID: 2741035184916309297}
-  saveButton: {fileID: 4394711164850932963}
-  characterPrefab: {fileID: 1056161660013952268, guid: d6c3c650b0b379149a826b54b40b4571, type: 3}
+  closeButton: {fileID: 0}
+  saveButton: {fileID: 0}
+  categoryContent: {fileID: 0}
+  categoryOptionTemplate: {fileID: 0}
+  partOptionContent: {fileID: 0}
+  partOptionTemplate: {fileID: 0}
+  emptyText: {fileID: 0}
+  categoryFallbackIcons: []
+  colorPicker: {fileID: 8484315779615535715}
+  previewCharacterPrefab: {fileID: 1056161660013952268, guid: d6c3c650b0b379149a826b54b40b4571, type: 3}
   previewLocalPosition: {x: 0, y: 0, z: 0}
   previewLocalScale: {x: 1, y: 1, z: 1}
-  panelPartsControl: {fileID: 3243821219196249888}
-  panelPartsListControl: {fileID: 3305675018395302741}
-  colorPicker: {fileID: 8484315779615535715}
+--- !u!114 &277104773963304293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3543786562918653357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d20debc001a3264c96066f312b6e86e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scopeKey: DialogAvatar
+  readySignal: 3
+  targets:
+  - Key: CloseButton
+    Target: {fileID: 1292462188440824014}
+  - Key: PanelPartsList/Viewport/Content/Button_Reset
+    Target: {fileID: 2934109367350749256}
+  - Key: ColorPicker/Content/Color_01
+    Target: {fileID: 3454781784254775310}
+  - Key: ColorPicker/Content/Color_02
+    Target: {fileID: 5482068292012618363}
+  - Key: ColorPicker/Content/Color_03
+    Target: {fileID: 8803141563082386489}
+  - Key: ColorPicker/Content/Color_04
+    Target: {fileID: 5696494745649764548}
+  - Key: ColorPicker/Content/Color_05
+    Target: {fileID: 2725745211812575024}
+  - Key: ColorPicker/Content/Color_06
+    Target: {fileID: 4455323824712307217}
+  - Key: ColorPicker/Content/Color_07
+    Target: {fileID: 5478413415799677194}
+  - Key: ColorPicker/Content/Color_08
+    Target: {fileID: 7759355746874991704}
+  - Key: ColorPicker/Content/Color_09
+    Target: {fileID: 440484371853635304}
+  - Key: ColorPicker/Content/Color_10
+    Target: {fileID: 4116998897228571178}
+  - Key: ColorPicker/Content/Color_11
+    Target: {fileID: 8092715679502065121}
+  - Key: ColorPicker/Content/Color_12
+    Target: {fileID: 8434349334139490479}
+  - Key: ColorPicker/Content/Color_13
+    Target: {fileID: 8695751140839500680}
+  - Key: ColorPicker/Content/Color_14
+    Target: {fileID: 7394267305075287055}
+  - Key: SaveButton
+    Target: {fileID: 8484235408495688691}
 --- !u!1 &3929414148684458946
 GameObject:
   m_ObjectHideFlags: 0

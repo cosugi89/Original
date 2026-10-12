@@ -794,6 +794,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1501128649908568903}
   - component: {fileID: 2075931057349759141}
+  - component: {fileID: 7876771821710292712}
   m_Layer: 5
   m_Name: Dialog-MissionDetail
   m_TagString: Untagged
@@ -848,6 +849,25 @@ MonoBehaviour:
   closeButton: {fileID: 538088876916109016}
   itemDatabase: {fileID: 11400000, guid: d3b5e3b21f5e44bc9ebd6fb5c2ad0f70, type: 2}
   equipmentDatabase: {fileID: 11400000, guid: 84df9e74855b4a4cb9f60577425d1476, type: 2}
+--- !u!114 &7876771821710292712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5924591790031024260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d20debc001a3264c96066f312b6e86e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scopeKey: DialogMissionDetail
+  readySignal: 3
+  targets:
+  - Key: Popup/Footer/EnterButton
+    Target: {fileID: 4221849580001731024}
+  - Key: Popup/CloseButton
+    Target: {fileID: 4626006157189410206}
 --- !u!1 &6633221097649128065
 GameObject:
   m_ObjectHideFlags: 0
@@ -1788,12 +1808,17 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2379372870277794768, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 2770443844124173576}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 4626006157189410206}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ba6790e1bfd60540a563f19b28a9be5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.UI.Components.GameButton
+--- !u!1 &4626006157189410206 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7368020830023518358, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
+  m_PrefabInstance: {fileID: 2770443844124173576}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &8311520261347101564 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6136968523320012404, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}

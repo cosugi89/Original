@@ -2396,6 +2396,7 @@ GameObject:
   - component: {fileID: 7863105179614097921}
   - component: {fileID: 6339160662146788014}
   - component: {fileID: 8826291424594664707}
+  - component: {fileID: 2609737363124025463}
   m_Layer: 5
   m_Name: Dialog-AvatarController 1
   m_TagString: Untagged
@@ -2450,17 +2451,68 @@ MonoBehaviour:
   closeButton: {fileID: 3451720901723158466}
   saveButton: {fileID: 2726505041086587320}
   categoryContent: {fileID: 2195952377424288013}
-  categorySlotTemplate: {fileID: 5735945317020754059}
+  categoryOptionTemplate: {fileID: 5735945317020754059}
   partOptionContent: {fileID: 2195952376434389166}
-  partOptionSlotTemplate: {fileID: 5550485613012478546}
+  partOptionTemplate: {fileID: 5550485613012478546}
   emptyText: {fileID: 841069490723574067}
   categoryFallbackIcons:
   - category: 3
     icon: {fileID: 21300000, guid: b4cfdfb01d2eb4ba3a54d621f338c7f6, type: 3}
   colorPicker: {fileID: 1977846232855123636}
-  characterPrefab: {fileID: 1056161660013952268, guid: d6c3c650b0b379149a826b54b40b4571, type: 3}
+  previewCharacterPrefab: {fileID: 1056161660013952268, guid: d6c3c650b0b379149a826b54b40b4571, type: 3}
   previewLocalPosition: {x: 0, y: 0, z: 0}
   previewLocalScale: {x: 1, y: 1, z: 1}
+--- !u!114 &2609737363124025463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3543786562918653357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d20debc001a3264c96066f312b6e86e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scopeKey: DialogAvatar
+  readySignal: 3
+  targets:
+  - Key: Popup/Parts/ScrollRect/Viewport/Content/List
+    Target: {fileID: 2195952376468953361}
+  - Key: Popup/PartsList/ScrollRect/Viewport/Content/List
+    Target: {fileID: 2195952377071675224}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (1)
+    Target: {fileID: 3437536961601902374}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (2)
+    Target: {fileID: 7040192383983431217}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (3)
+    Target: {fileID: 1349344160118201169}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (4)
+    Target: {fileID: 7697065651231842132}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (5)
+    Target: {fileID: 1295313005530322997}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (6)
+    Target: {fileID: 3901745044654916878}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (7)
+    Target: {fileID: 4090525493756877273}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (8)
+    Target: {fileID: 6566164433184306347}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (9)
+    Target: {fileID: 6573998492414928281}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (10)
+    Target: {fileID: 179497715078874315}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (11)
+    Target: {fileID: 3482014924382062582}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (12)
+    Target: {fileID: 6827542238729516517}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (13)
+    Target: {fileID: 808479103371306719}
+  - Key: Popup/ColorPalette/Viewport/Content/Swatch (14)
+    Target: {fileID: 260128311586075121}
+  - Key: Popup/SaveButton
+    Target: {fileID: 7103074977961747198}
+  - Key: Popup/CloseButton
+    Target: {fileID: 7540069435769943172}
 --- !u!1 &3901745044654916878
 GameObject:
   m_ObjectHideFlags: 0
@@ -3909,7 +3961,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2379372870277794768, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 347699555352652392}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 7103074977961747198}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ba6790e1bfd60540a563f19b28a9be5, type: 3}
@@ -3918,6 +3970,11 @@ MonoBehaviour:
 --- !u!224 &5906931315070272540 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6136968523320012404, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
+  m_PrefabInstance: {fileID: 347699555352652392}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7103074977961747198 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7368020830023518358, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 347699555352652392}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1072915384847563794
@@ -4214,7 +4271,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2379372870277794768, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 1072915384847563794}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 7540069435769943172}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ba6790e1bfd60540a563f19b28a9be5, type: 3}
@@ -4223,6 +4280,11 @@ MonoBehaviour:
 --- !u!224 &6613859863227126374 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6136968523320012404, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
+  m_PrefabInstance: {fileID: 1072915384847563794}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7540069435769943172 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7368020830023518358, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 1072915384847563794}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2195952376292987175

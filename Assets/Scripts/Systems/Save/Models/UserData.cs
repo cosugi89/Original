@@ -27,6 +27,9 @@ namespace Assets.Scripts.Systems.Save.Models
 
         [Description("周回ごとの人間ボス結果、Insight、Resurgence 状態。")]
         public CycleProgressData Cycle { get; set; } = new();
+
+        [Description("チュートリアルの完了と画面訪問記録。周回のMission進捗と独立して保持する。")]
+        public TutorialProgressData Tutorial { get; set; } = new();
     }
 
     public class UserMetaData

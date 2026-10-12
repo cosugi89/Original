@@ -63,6 +63,7 @@ namespace Assets.Scripts.Systems.Save
         {
             Save(Session.UserData);
             Session.ClearDirty();
+            Session.NotifyUserDataSaved();
         }
 
         public void Save(UserData userData)
@@ -92,6 +93,9 @@ namespace Assets.Scripts.Systems.Save
             userData.Ability ??= new AbilityProgressData();
             userData.Armory ??= new ArmoryProgressData();
             userData.Cycle ??= new CycleProgressData();
+            userData.Tutorial ??= new TutorialProgressData();
+            userData.Tutorial.CompletedTutorialIds ??= new List<int>();
+            userData.Tutorial.VisitedScopeKeys ??= new List<string>();
 
             userData.Profile.AvatarAppearance.Parts ??= new System.Collections.Generic.List<AvatarPartStateData>();
             userData.Profile.AvatarAppearance.Colors ??= new System.Collections.Generic.List<AvatarColorData>();

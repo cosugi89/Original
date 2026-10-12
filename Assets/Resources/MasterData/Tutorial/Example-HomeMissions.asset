@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047b31069e66f0d49a3569dacbaf8931, type: 3}
+  m_Name: Example-HomeMissions
+  m_EditorClassIdentifier: 
+  TutorialId: 1001
+  IsEnabled: 0
+  RepeatForDebug: 0
+  Trigger: 1
+  TriggerKey: Main.Home
+  RequiredScopeKey: Main
+  OnlyFirstVisit: 0
+  Repeat: 0
+  Priority: 100
+  Conditions: []
+  Steps:
+  - Message: Choose Missions to enter a battle.
+    Speaker: 
+    MessageAtBottom: 0
+    ResurgenceMessage: 
+    Highlights:
+    - ScopeKey: Main
+      TargetKey: MissionsTab
+    AlphaHighlight:
+      ScopeKey: 
+      TargetKey: 
+    InteractionTarget:
+      ScopeKey: Main
+      TargetKey: MissionsTab
+    HandTarget:
+      ScopeKey: Main
+      TargetKey: MissionsTab
+    ShowHand: 1
+    AllowDescendantsAndDrag: 0
+    HighlightPadding: {x: 12, y: 12}
+    HandOffset: {x: 25, y: -45}
+    Advance: 1
+    CompletionSignal: 0
+    CompletionKey: 
+    TargetWaitSeconds: 10

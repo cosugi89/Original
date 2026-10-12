@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 100001}
   - component: {fileID: 3111267747338241575}
+  - component: {fileID: 2338381171088956664}
   m_Layer: 5
   m_Name: Dialog-DeckLoadout
   m_TagString: Untagged
@@ -54,6 +55,25 @@ MonoBehaviour:
   deckContent: {fileID: 5830834029323818693}
   deckItemTemplate: {fileID: 4085831984024346358}
   closeButton: {fileID: 2949709903664812782}
+--- !u!114 &2338381171088956664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d20debc001a3264c96066f312b6e86e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scopeKey: DialogDeckLoadout
+  readySignal: 3
+  targets:
+  - Key: Popup/Main/Item
+    Target: {fileID: 8566477231302020027}
+  - Key: Popup/Button_Close
+    Target: {fileID: 8046302421556892072}
 --- !u!1 &255527403763637798
 GameObject:
   m_ObjectHideFlags: 0
@@ -2480,7 +2500,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  animator: {fileID: 2005760794066181554}
+  feedbackAnimator: {fileID: 2005760794066181554}
   audioSource: {fileID: 8944577160100705137}
   clickSound: {fileID: 8300000, guid: afac6e611150b4dbdb7ffaa39f1c2e34, type: 3}
   clickTrigger: 
@@ -3158,7 +3178,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2379372870277794768, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 714456623841057086}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 8046302421556892072}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ba6790e1bfd60540a563f19b28a9be5, type: 3}
@@ -3167,6 +3187,11 @@ MonoBehaviour:
 --- !u!224 &6683525297037817674 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6136968523320012404, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
+  m_PrefabInstance: {fileID: 714456623841057086}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8046302421556892072 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7368020830023518358, guid: 78fb7fbcd2cf91c45a563dbc91432b06, type: 3}
   m_PrefabInstance: {fileID: 714456623841057086}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2273323803770294874
