@@ -10,5 +10,6 @@ public sealed class DebugSheetController : MonoBehaviour
         rootPage.AddPageLinkButton<PlayerDataDebugPage>("Player Data");
         rootPage.AddPageLinkButton<StagePage>("Stage");
         rootPage.AddPageLinkButton<EquipmentOwnershipDebugPage>("Equipment");
+        rootPage.AddPageLinkButton<TutorialDebugPage>("Tutorials");
     }
 }
