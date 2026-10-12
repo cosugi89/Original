@@ -1,13 +1,13 @@
 # MainScene 仕様書
 
-- 最終更新: 2026-10-04
+- 最終更新: 2026-10-11
 - 文書状態: 運用中
 - 位置づけ: `MainScene` の画面構成、タブ遷移、ホーム導線、Character / Progress / Missions / Armoryの方針を定義する。
 - 関連文書: `docs/specs/Ability仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/ユーザーデータ構造.md`, `docs/specs/戦闘システム仕様書.md`
 
 ## 1. 基本方針
 
-`MainScene` は、戦闘以外の主要導線を集約するホーム系シーンである。現時点では将来の `TitleScene` に置く起動処理も一時的に持つ。
+`MainScene` は、戦闘以外の主要導線を集約するホーム系シーンである。起動時のデータ初期化は `TitleScene` が担当する。
 
 - プレイヤーの現在状態を確認する。
 - タブで主要機能へ移動する。
@@ -16,6 +16,8 @@
 
 戦闘中の一時状態やターン処理は `BattleScene` 側の責務とし、`MainScene` は永続データ、所持品、ロードアウト、見た目状態を編集する入口として扱う。
 独立した `Assets/Scenes/Home.unity` は持たず、`Home` は `MainScene` 内のタブ画面として扱う。
+
+TitleSceneからの初回入場時だけは、`MainScene` がHome表示物の初期状態を決め、`HomeEntranceDirector.StartIfRequested(...)` に入場演出の開始を依頼する。DirectorはHomeの基底背景を有効化してTitle背景の解除を通知した後、Homeの実パーツを組み上げ、HUDを表示する。AngelなどHome固有の表示物は `MainScene` が所有し、Directorから構築完了callbackを受けて表示する。構築要求がない通常のMainScene表示とBattleSceneからの復帰では、従来どおりHomeを即時表示する。Titleから渡す要求とLoading Overlayの引き継ぎは `HomeEntryRequest`、個々のUI石材の移動とalpha表示は `HomeBuildPart` を使う。詳細は `docs/specs/TitleScene仕様書.md` を正とする。
 
 ## 2. 現行シーン構成
 
@@ -52,20 +54,20 @@ Build Settings には `Assets/Scenes/MainScene.unity` と `Assets/Scenes/BattleS
 
 `MainScene` のタブ切り替え処理は、画面ごとのプレイヤー表示も切り替える。
 
-- `Home` 選択時は `AngelHome` を表示し、Character プレビューを非表示にする。
+- `Home` 選択時は `AngelHome` を表示し、Character プレビューを非表示にする。ただしTitleSceneからのHome入場演出中だけは、構築完了までAngelを非表示にする。
 - `Character` 選択時は Character 用プレビューを表示し、`AngelHome` を非表示にする。
 - その他タブでは、現時点では `AngelHome` と Character プレビューを非表示にする。
 
 ### 3.1 起動時のデータ初期化
 
-現行の `MainScene` には空の `GameInitializer` GameObject を置く。ここには `GameInitializer` と `UserDataManager` をアタッチする。
+`GameInitializer` と `UserDataManager` は `TitleScene` の `GameInitializer` GameObjectに置く。`MainScene` は初期化済みの `UserDataManager` を利用する。
 
 - `UserDataManager` は `UserData` の実行時の正本であり、`DontDestroyOnLoad` によってシーン遷移後も保持する。永続データへの外部からの入口は `UserDataManager.Instance` に統一する。
 - `UserDataManager` は `Save`、`Inventory`、`Avatar`、`StageProgress`、`BattleSkillLoadout` を所有する。各領域のロジックは分けたまま、静的な個別サービスとしては公開しない。
 - `GameInitializer` は `UserDataManager.InitializeGameData()` を呼ぶ。ここでローカル JSON をロードまたは新規作成してから、所持品、見た目、ステージ進捗、Skill ロードアウトの管理を順に準備する。
 - 初期所持品、初期見た目、初期解放ステージなどの補完で未保存変更が生じた場合、`GameInitializer` は初期化完了時に保存する。
 - 未保存変更は `UserDataManager` がアプリのバックグラウンド移行時または終了時に保存する。明示的な即時保存を行う既存の UI 導線は維持する。
-- 将来 `TitleScene` を追加するときは、この `GameInitializer` GameObject を `TitleScene` へ移し、Build Settings の先頭シーンを `TitleScene` に切り替える。初期化処理の内容は移動しない。
+- Build Settings の先頭シーンは、Title UIの配線完了後に `TitleScene` へ切り替える。初期化処理の内容は変更しない。
 
 Home と Character の表示サイズ、位置、向きは、それぞれのシーン上の `Transform` で調整する。Dialog 内の表示サイズ、位置、向きは `AvatarDialog` の `previewLocalPosition` / `previewLocalScale` と `PreviewStage` 側で調整する。
 
@@ -99,6 +101,8 @@ Home と Character の表示サイズ、位置、向きは、それぞれのシ�
 `Home` は `HomeScreen` が担当する。
 
 - `battleButton` 押下で `BattleScene` へ遷移する。
+- `settingsButton` はHome左の書見台に設定し、既存の共通DialogでSettings入口を開く。現時点では設定項目の実装前の案内表示とし、実際の設定項目はこの入口へ追加する。
+- `achievementsButton` はHome右の戦果碑／奉納台に設定し、既存の共通DialogでAchievements入口を開く。実績一覧の実装前は準備中の案内表示とする。
 - `useDebugBattleStageId` が true の場合は `debugBattleStageId` を使う。
 - false の場合は `ProgressManager.GetRecommendedStageId()` から推奨ステージを取得する。
 - 遷移前に `BattleSceneRequest.SelectedStageId` を設定する。
@@ -113,11 +117,20 @@ Armory は `ArmoryProductDatabase` の商品一覧を正本とする。各 `Armo
 
 ### 5.1 Achievements
 
-Homeのトロフィー導線はAchievements画面を開く。Achievementsは、進行、救済を含む選択、収集・成長、Resurgence／結末の到達を対象にするゲーム内実績である。スコア、ランク、クリアタイムは解除条件に使わない。
+Homeの戦果碑／奉納台はAchievements画面を開く。現行は実装前の案内Dialogを表示し、一覧画面は後続タスクで追加する。Achievementsは、進行、救済を含む選択、収集・成長、Resurgence／結末の到達を対象にするゲーム内実績である。スコア、ランク、クリアタイムは解除条件に使わない。
 
 - 解除状態はローカルセーブを正本とし、通信なしでもゲーム内の一覧と解除通知を利用できる。
 - 未解除の隠し実績は、名称と条件を伏せて表示できる。
 - Google Play Games Servicesへの実績送信は、ゲーム内実績IDを起点とする任意のプラットフォーム連携として後から追加する。未認証、オフライン、または連携未対応でもゲーム内の解除状態は変えない。
+
+### 5.2 Settings
+
+Settings は `音量`、`表示`、`アカウント`、`クレジット` の一覧から詳細Dialogを開く構成とする。各項目の実装は段階的に追加する。
+
+- Credits の表示内容は `CreditsPage` を正本とする。
+- 初期登録するゲームエンジンクレジットは、`Unity`（Unity Technologies、https://unity.com/）とする。
+- 初期登録するビジュアル素材クレジットは、`Character Assets / UI Dark Theme`（Layer Lab）とする。
+- 初期登録する音楽クレジットは、`MUSEUM`（作曲：木原眼鏡 / STUDIO AGASHA、https://studio-agasha.booth.pm/items/1683919）とする。購入済みBGM素材を利用し、商品ページに記載された商用BGM利用条件に従う。著作権は作者に帰属する。
 
 ## 6. Character タブ
 

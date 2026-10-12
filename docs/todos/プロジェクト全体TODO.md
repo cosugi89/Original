@@ -1,6 +1,6 @@
 # プロジェクト全体 TODO
 
-- 最終更新: 2026-10-04
+- 最終更新: 2026-10-11
 - 主な参照元: `docs/specs/MainScene仕様書.md`, `docs/specs/UI共通部品仕様書.md`, `docs/specs/戦闘システム仕様書.md`, `docs/specs/戦闘画面仕様書.md`, `docs/specs/装備仕様書.md`, `docs/specs/スキル仕様書.md`, `docs/specs/タグ仕様書.md`
 - 位置づけ: プロジェクト全体の実装 TODO。現時点では Path-Activation System v2 と、下記「非戦闘側の着手順」に沿った Character / Progress / Missions / Armory改修タスクが中心。
 - 方針: 現行実装を正として、仕様との差分と未接続箇所を優先順で並べる
@@ -48,11 +48,11 @@
 
 - [ ] **GuardGainの一時Defense化**: 現在のシールド残量を吸収する `GuardGain` を廃止し、効果成立からターン終了までDefenseを加算する一時補正へ置き換える。複数効果を加算し、Guard加算後のDefenseには上限を設けない。専用のGuard残量UIは作らない。
 - [ ] **敵Guard状態**: 敵Skillによる一時Defense加算、最大HP割合から導出するGuard値、軽減前ダメージと実HPダメージの差分によるGuard値減少、Guard解除時のDefense加算除去を実装する。Guard値が0になるか、Skill設定の持続ターンを経過した時点で解除する。Guard中だけ敵UIにGuard値ゲージと残りターンを表示し、Defenseの正確な数値は出さない。解除後の再付与はSkill設定へ持たせる。
-- [ ] **Danceの廃止**: `Dance` を戦闘仕様から廃止する。既存盤面assetのDanceマスを移行してから `BattleNodeType.Dance` を廃止し、ノード解決、アニメーション、通知、セル表示、Pattern Editor、救済条件候補、`DanceSkill` と装備詳細表示、舞踏タグ候補、関連仕様書を削除する。Unity enumの途中削除による既存assetの値ずれを避けるため、値の明示固定または廃止値保持を経由して移行する。敵Danceの次ターン危険1.5倍はDanceに依存しない `Frenzy` 等の敵行動へ置換するか、敵行動設計時に改めて採否を決める。
+- [ ] **Danceの廃止とFrenzy移行**: `Dance` を戦闘仕様から廃止する。既存盤面assetのDanceマスを移行してから `BattleNodeType.Dance` を廃止し、ノード解決、アニメーション、通知、セル表示、Pattern Editor、救済条件候補、`DanceSkill` と装備詳細表示、舞踏タグ候補、関連仕様書を削除する。Unity enumの途中削除による既存assetの値ずれを避けるため、値の明示固定または廃止値保持を経由して移行する。敵Danceの次ターン危険強化は、任意のボスSkill `Frenzy` へ移行する。倍率はボスごとに設定し、UIは数値を示さず危険マスの見た目と予告で伝える。再付与は重ねがけず、持続を更新する。
 
 ## 1. P0: 基盤とデータ整合
 
-- [ ] `TitleScene` を追加し、現行 `MainScene` の `GameInitializer` を移動して Build Settings の起点を切り替える。`The Remnant`獲得演出と `Resurgence` 解放・開始導線をここへ実装する。
+- [ ] **TitleScene UIとHome構築演出の配線**: `TitleScene`、`TitleSceneController`、`HomeEntryRequest`、`HomeEntranceDirector`、`HomeBuildPart` の基盤は作成済み。`GameInitializer`、`UserDataManager`、`TitleSceneController`のTitleScene移設（永続化対象は別Root）、背景／Title UI／Loadingの3 Canvas分離、開始Button・Loading画像のInspector配線、`The Remnant`所持状態による`Begin`／`Resurgence`の切替、Home祭壇の構築用Sprite分割、MainSceneへの仮配線（石材15枚・葉2枚・書見台／戦果碑の表示用複製2枚）は完了。構築演出をPlay Modeで確認して石材・小道具の開始位置・表示時間を最終調整し、Home HUD Rootの分離、初回チュートリアルへの接続を行う。Build Settingsの起点をTitleSceneへ切り替える。`The Remnant`獲得演出と`Resurgence`解放・開始導線、Android実機での起動時PGS自動認証を実装する。PGS失敗時にも開始を止めず、Unity Editorでは認証をスキップする。ゲームデータ連携は別途検討する。
 - [x] ステージ ID を `int` と `string` の混在から数値 `StageId` に統一する
 - [x] `BattleSceneRequest`、`StageData`、`StageMasterData`、`ProgressManager` のキー設計を揃える
 - [x] `StageDatabase` / `StageMasterDatabase` / `StageMasterData` の命名を repo 全体で統一する
@@ -136,9 +136,13 @@
 
 - [x] Character タブに現在の装備枠一覧を表示する
 - [x] Progress タブ向けに `AbilityNodeMasterData` / `AbilityTreeMasterData`、Inspector検証、Tree Builder Windowを追加する。Node Masterは再利用可能とし、Tree配置ごとの `TreeNodeId`、Rank、Tree接続、排他、循環依存を検証できるようにする
-- [ ] Progress内Tabを `Traits` / `Insights` / Resurgence限定の `Remnant` へ再構成する。旧 `Artifact` / `Skill` Tabを廃止し、`Remnant` の表示可否を周回状態へ接続する。
-- [ ] HomeのAchievementsを実装する。ローカル解除状態、一覧・解除通知、Homeトロフィー導線を追加し、Google Play Games Servicesへの任意連携をゲーム内実績IDから行えるようにする。
+- [ ] Progress内Tabを `Traits` / `Insights` / Resurgence限定の `Remnant` へ再構成する。旧 `Artifact` / `Skill` Tabの置換、一覧Prefab配線、Resurgence限定のタブ表示、救済再挑戦Battle導線は実装済み。ボス結果・Resurgence開始との接続を行う。
+- [ ] HomeのAchievementsを実装する。Homeの戦果碑／奉納台から準備中Dialogを開く導線は実装済み。ローカル解除状態、一覧・解除通知、Google Play Games Servicesへの任意連携をゲーム内実績IDから行えるようにする。
 - [ ] Google Play Games plugin for Unityを導入し、Play Consoleのゲームサービス・実績ID・Android認証設定を接続する。未認証またはオフラインでも本編を止めず、ローカル解除済み実績を認証成功後に同期できるようにする。
+- [ ] Google Play Games ServicesのSaved Gamesを使ったクラウドセーブを実装する。ローカルセーブを正本として、認証済みの場合だけ単一クラウドスロットへ重要な進行確定時と起動時に同期する。ローカルとクラウドが競合した場合は更新日時を示し、ユーザーが採用元を選べるようにする。未認証またはオフラインでも本編とローカルセーブを止めない。
+- [ ] 音・振動の共通基盤を実装する。`AudioManager` がInspector参照の `AudioCueDatabase`、BGM／SE用AudioSource、AudioMixerを管理し、呼び出し側は静的な入口から `AudioCue` だけを渡す。各Buttonが個別のAudioSource／Clipを持つ現行方式を廃止し、BGM／SE音量と振動の有効設定をローカルセーブへ保存する。振動はAudioと分けた `Feedback` 窓口から `HapticCue` を受け取る。
+- [ ] BGM素材の有無に依存しない音楽管理基盤を実装する。`BgmCue`、Inspector参照の `BgmCueDatabase`、常駐する `MusicManager`、BGM用AudioSource 2本のクロスフェード、`Music.Play(BgmCue)` の静的入口を用意する。Cue未設定時は再生せず安全に無視し、BGM音量はAudioMixerとローカル設定へ接続する。
+- [ ] Button反応をProfile化する。各Buttonは自身のInspector参照Transformだけを動かし、拡縮率、時間、Highlight／選択状態、`AudioCue`、`HapticCue` は共通の `ButtonFeedbackProfile` で一元定義する。START、Tab、Icon、Home小道具の種別ごとにProfileを用意し、個別Prefabのアニメーション設定を共通Profileへ移行する。
 - [x] Progress タブのTrait Tree基盤を実装する。Point残高/NodeLevel保存、排他分岐、Tree UIの接続まで完了。
 - [x] `PartsTraitTreeRow` / `PartsTraitLine` のPrefabを作成して`TraitTabScreen`のRow Prefab / Scroll Contentへ配線する。各Line Imageには `UI/Trait Line Reveal` Materialと曲線の進行度を持つReveal Mapを設定する。
 - [x] Trait Itemクリックで詳細Dialogを開き、購入可能Nodeだけ購入ボタンを表示して、結果をTree表示へ即時反映する。
