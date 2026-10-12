@@ -60,7 +60,11 @@ namespace Assets.Scripts.Features.Main
             _canConfirm = request.CanConfirm;
 
             titleText.SetText(TextLocalization.Get(request.Title));
-            numText.SetText($"x{request.Quantity}");
+            numText.gameObject.SetActive(request.Quantity >= 0);
+            if (request.Quantity >= 0)
+            {
+                numText.SetText($"x{request.Quantity}");
+            }
             descriptionText.SetText(TextLocalization.Get(request.Description));
             iconImage.sprite = request.Icon;
             iconImage.enabled = request.Icon != null;
